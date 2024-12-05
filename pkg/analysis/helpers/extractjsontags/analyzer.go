@@ -3,8 +3,9 @@ package extractjsontags
 import (
 	"errors"
 	"go/ast"
-	"go/types"
+	"go/token"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -79,30 +80,41 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		s, ok := n.(*ast.StructType)
+		sTyp, ok := n.(*ast.StructType)
 		if !ok {
 			return
 		}
 
-		styp, ok := pass.TypesInfo.Types[s].Type.(*types.Struct)
-		// Type information may be incomplete.
-		if !ok {
+		if sTyp.Fields == nil {
 			return
 		}
 
-		for i := 0; i < styp.NumFields(); i++ {
-			field := styp.Field(i)
-			tag := styp.Tag(i)
+		for i := 0; i < sTyp.Fields.NumFields(); i++ {
+			field := sTyp.Fields.List[i]
+			if len(field.Names) == 0 || field.Names[0] == nil {
+				continue
+			}
 
-			results.insertFieldTagInfo(s, field.Name(), extractTagInfo(tag))
+			fieldName := field.Names[0].Name
+			results.insertFieldTagInfo(sTyp, fieldName, extractTagInfo(field.Tag))
 		}
 	})
 
 	return results, nil
 }
 
-func extractTagInfo(tag string) FieldTagInfo {
-	tagValue, ok := reflect.StructTag(tag).Lookup("json")
+func extractTagInfo(tag *ast.BasicLit) FieldTagInfo {
+	if tag == nil || tag.Value == "" {
+		return FieldTagInfo{Missing: true}
+	}
+
+	rawTag, err := strconv.Unquote(tag.Value)
+	if err != nil {
+		// This means the way AST is treating tags has changed.
+		panic(err)
+	}
+
+	tagValue, ok := reflect.StructTag(rawTag).Lookup("json")
 	if !ok {
 		return FieldTagInfo{Missing: true}
 	}
@@ -111,15 +123,29 @@ func extractTagInfo(tag string) FieldTagInfo {
 		return FieldTagInfo{}
 	}
 
+	pos := tag.Pos() + token.Pos(strings.Index(tag.Value, tagValue))
+	end := pos + token.Pos(len(tagValue))
+
 	tagValues := strings.Split(tagValue, ",")
 
 	if len(tagValues) == 2 && tagValues[0] == "" && tagValues[1] == "inline" {
-		return FieldTagInfo{Inline: true}
+		return FieldTagInfo{
+			Inline:   true,
+			RawValue: tagValue,
+			Pos:      pos,
+			End:      end,
+		}
 	}
 
 	tagName := tagValues[0]
 
-	return FieldTagInfo{Name: tagName, OmitEmpty: len(tagValues) == 2 && tagValues[1] == "omitempty"}
+	return FieldTagInfo{
+		Name:      tagName,
+		OmitEmpty: len(tagValues) == 2 && tagValues[1] == "omitempty",
+		RawValue:  tagValue,
+		Pos:       pos,
+		End:       end,
+	}
 }
 
 // FieldTagInfo contains information about a field's json tag.
@@ -136,4 +162,13 @@ type FieldTagInfo struct {
 
 	// Missing is true when the field had no json tag.
 	Missing bool
+
+	// RawValue is the raw value from the json tag.
+	RawValue string
+
+	// Pos marks the starting position of the json tag value.
+	Pos token.Pos
+
+	// End marks the end of the json tag value.
+	End token.Pos
 }

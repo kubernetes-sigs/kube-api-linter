@@ -19,6 +19,7 @@ var _ = Describe("Registry", func() {
 				"commentstart",
 				"jsontags",
 				"optionalorrequired",
+				"requiredfields",
 			))
 		})
 	})
@@ -30,6 +31,7 @@ var _ = Describe("Registry", func() {
 				"commentstart",
 				"jsontags",
 				"optionalorrequired",
+				"requiredfields",
 			))
 		})
 	})
