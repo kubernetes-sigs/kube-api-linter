@@ -179,6 +179,28 @@ The `optionalorrequired` linter can automatically fix fields that are using the 
 
 It will also remove the secondary marker where both the preferred and secondary marker are present on a field.
 
+## RequiredFields
+
+The `requiredfields` linter checks that fields that are marked as required, follow the convention of not being pointers,
+and not having an `omitempty` value in their `json` tag.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  requiredFields:
+    pointerPolicy: Warn | SuggestFix # The policy for pointers in required fields. Defaults to `SuggestFix`.
+```
+
+### Fixes (via standalone binary only)
+
+The `requiredfields` linter can automatically fix fields that are marked as required, but are pointers.
+
+It will suggest to remove the pointer from the field, and update the `json` tag to remove the `omitempty` value.
+
+If you prefer not to suggest fixes for pointers in required fields, you can change the `pointerPolicy` to `Warn`.
+The linter will then only suggest to remove the `omitempty` value from the `json` tag.
+
 # Contributing
 
 New linters can be added by following the [New Linter][new-linter] guide.
