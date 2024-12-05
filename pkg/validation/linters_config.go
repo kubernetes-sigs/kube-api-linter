@@ -16,6 +16,7 @@ func ValidateLintersConfig(lc config.LintersConfig, fldPath *field.Path) field.E
 
 	fieldErrors = append(fieldErrors, validateJSONTagsConfig(lc.JSONTags, fldPath.Child("jsonTags"))...)
 	fieldErrors = append(fieldErrors, validateOptionalOrRequiredConfig(lc.OptionalOrRequired, fldPath.Child("optionalOrRequired"))...)
+	fieldErrors = append(fieldErrors, validateRequiredFieldsConfig(lc.RequiredFields, fldPath.Child("requiredFields"))...)
 
 	return fieldErrors
 }
@@ -47,6 +48,19 @@ func validateOptionalOrRequiredConfig(oorc config.OptionalOrRequiredConfig, fldP
 	case "", optionalorrequired.RequiredMarker, optionalorrequired.KubebuilderRequiredMarker:
 	default:
 		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), oorc.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", optionalorrequired.RequiredMarker, optionalorrequired.KubebuilderRequiredMarker)))
+	}
+
+	return fieldErrors
+}
+
+// validateRequiredFieldsConfig is used to validate the configuration in the config.RequiredFieldsConfig struct.
+func validateRequiredFieldsConfig(rfc config.RequiredFieldsConfig, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	switch rfc.PointerPolicy {
+	case "", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix)))
 	}
 
 	return fieldErrors

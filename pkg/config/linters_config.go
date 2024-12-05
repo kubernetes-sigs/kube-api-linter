@@ -7,6 +7,9 @@ type LintersConfig struct {
 
 	// optionalOrRequired contains configuration for the optionalorrequired linter.
 	OptionalOrRequired OptionalOrRequiredConfig `json:"optionalOrRequired"`
+
+	// requiredFields contains configuration for the requiredfields linter.
+	RequiredFields RequiredFieldsConfig `json:"requiredFields"`
 }
 
 // JSONTagsConfig contains configuration for the jsontags linter.
@@ -28,4 +31,25 @@ type OptionalOrRequiredConfig struct {
 	// If this field is not set, the default value is "required".
 	// Valid values are "required" and "kubebuilder:validation:Required".
 	PreferredRequiredMarker string `json:"preferredRequiredMarker"`
+}
+
+// RequiredFieldPointerPolicy is the policy for pointers in required fields.
+type RequiredFieldPointerPolicy string
+
+const (
+	// RequiredFieldPointerWarn indicates that the linter will emit a warning if a required field is a pointer.
+	RequiredFieldPointerWarn RequiredFieldPointerPolicy = "Warn"
+
+	// RequiredFieldPointerSuggestFix indicates that the linter will emit a warning if a required field is a pointer and suggest a fix.
+	RequiredFieldPointerSuggestFix RequiredFieldPointerPolicy = "SuggestFix"
+)
+
+// RequiredFieldsConfig contains configuration for the requiredfields linter.
+type RequiredFieldsConfig struct {
+	// pointerPolicy is the policy for pointers in required fields.
+	// Valid values are "Warn" and "SuggestFix".
+	// When set to "Warn", the linter will emit a warning if a required field is a pointer.
+	// When set to "SuggestFix", the linter will emit a warning if a required field is a pointer and suggest a fix.
+	// When otherwise not specified, the default value is "SuggestFix".
+	PointerPolicy RequiredFieldPointerPolicy `json:"pointerPolicy"`
 }

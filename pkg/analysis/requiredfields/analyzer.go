@@ -8,6 +8,7 @@ import (
 
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
+	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -26,11 +27,17 @@ var (
 	errCouldNotGetJSONTags  = errors.New("could not get json tags")
 )
 
-type analyzer struct{}
+type analyzer struct {
+	pointerPolicy config.RequiredFieldPointerPolicy
+}
 
 // newAnalyzer creates a new analyzer.
-func newAnalyzer() *analysis.Analyzer {
-	a := &analyzer{}
+func newAnalyzer(cfg config.RequiredFieldsConfig) *analysis.Analyzer {
+	defaultConfig(&cfg)
+
+	a := &analyzer{
+		pointerPolicy: cfg.PointerPolicy,
+	}
 
 	return &analysis.Analyzer{
 		Name:     name,
@@ -124,21 +131,34 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 	}
 
 	if starExpr, ok := field.Type.(*ast.StarExpr); ok {
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf("field %s is marked as required, should not be a pointer", fieldName),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "should remove the pointer",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     starExpr.Pos(),
-							End:     starExpr.X.Pos(),
-							NewText: nil,
-						},
+		var suggestedFixes []analysis.SuggestedFix
+
+		switch a.pointerPolicy {
+		case config.RequiredFieldPointerWarn:
+			// Do not suggest a fix.
+		case config.RequiredFieldPointerSuggestFix:
+			suggestedFixes = append(suggestedFixes, analysis.SuggestedFix{
+				Message: "should remove the pointer",
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos:     starExpr.Pos(),
+						End:     starExpr.X.Pos(),
+						NewText: nil,
 					},
 				},
-			},
+			})
+		}
+
+		pass.Report(analysis.Diagnostic{
+			Pos:            field.Pos(),
+			Message:        fmt.Sprintf("field %s is marked as required, should not be a pointer", fieldName),
+			SuggestedFixes: suggestedFixes,
 		})
+	}
+}
+
+func defaultConfig(cfg *config.RequiredFieldsConfig) {
+	if cfg.PointerPolicy == "" {
+		cfg.PointerPolicy = config.RequiredFieldPointerSuggestFix
 	}
 }

@@ -83,5 +83,39 @@ var _ = Describe("LintersConfig", func() {
 			},
 			expectedErr: "lintersConfig.optionalOrRequired.preferredRequiredMarker: Invalid value: \"invalid\": invalid value, must be one of \"required\", \"kubebuilder:validation:Required\" or omitted",
 		}),
+
+		// RequiredFieldsConfig validation
+		Entry("With a valid RequiredFieldsConfig: omitted", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				RequiredFields: config.RequiredFieldsConfig{
+					PointerPolicy: "",
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With a valid RequiredFieldsConfig: SuggestFix", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				RequiredFields: config.RequiredFieldsConfig{
+					PointerPolicy: config.RequiredFieldPointerSuggestFix,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With a valid RequiredFieldsConfig: Warn", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				RequiredFields: config.RequiredFieldsConfig{
+					PointerPolicy: config.RequiredFieldPointerWarn,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With an invalid RequiredFieldsConfig", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				RequiredFields: config.RequiredFieldsConfig{
+					PointerPolicy: "invalid",
+				},
+			},
+			expectedErr: "lintersConfig.requiredFields.pointerPolicy: Invalid value: \"invalid\": invalid value, must be one of \"Warn\", \"SuggestFix\" or omitted",
+		}),
 	)
 })
