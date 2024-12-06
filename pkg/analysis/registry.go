@@ -52,9 +52,9 @@ func NewRegistry() Registry {
 		initializers: []AnalyzerInitializer{
 			commentstart.Initializer(),
 			jsontags.Initializer(),
+			nophase.Initializer(),
 			optionalorrequired.Initializer(),
 			requiredfields.Initializer(),
-			nophase.Initializer(),
 		},
 	}
 }
