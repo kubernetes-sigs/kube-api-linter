@@ -174,6 +174,11 @@ The `commentstart` linter can automatically fix comments that do not start with 
 
 When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
 
+## Integers
+
+The `integers` linter checks for usage of unsupported integer types.
+Only `int32` and `int64` types should be used in APIs, and other integer types, including unsigned integers are forbidden.
+
 ## JSONTags
 
 The `jsontags` linter checks that all fields in the API types have a `json` tag, and that those tags are correctly formatted.

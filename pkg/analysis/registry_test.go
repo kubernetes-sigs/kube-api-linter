@@ -18,6 +18,7 @@ var _ = Describe("Registry", func() {
 			Expect(r.DefaultLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
 				"commentstart",
+				"integers",
 				"jsontags",
 				"nophase",
 				"optionalorrequired",
@@ -32,6 +33,7 @@ var _ = Describe("Registry", func() {
 			Expect(r.AllLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
 				"commentstart",
+				"integers",
 				"jsontags",
 				"nophase",
 				"optionalorrequired",
