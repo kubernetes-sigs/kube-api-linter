@@ -194,6 +194,13 @@ lintersConfig:
     jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
 ```
 
+## NoBools
+
+The `nobools` linter checks that fields in the API types do not contain a `bool` type.
+
+Booleans are limited and do not evolve well over time.
+It is recommended instead to create a string alias with meaningful values, as an enum.
+
 ## Nophase
 
 The `nophase` linter checks that the fields in the API types don't contain a 'Phase', or any field which contains 'Phase' as a substring, e.g MachinePhase.

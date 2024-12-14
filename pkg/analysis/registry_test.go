@@ -35,6 +35,7 @@ var _ = Describe("Registry", func() {
 				"commentstart",
 				"integers",
 				"jsontags",
+				"nobools",
 				"nophase",
 				"optionalorrequired",
 				"requiredfields",
