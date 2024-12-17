@@ -3,7 +3,9 @@ package a
 type Integers struct {
 	String string // want "field String is a string"
 
-	Map map[string]string
+	Map map[string]string // want "field Map map key is a string" "field Map map value is a string"
+
+	MapStringToStringAlias map[string]StringAlias // want "field MapStringToStringAlias map key is a string" "field MapStringToStringAlias map value type StringAlias is a string"
 
 	Int32 int32
 

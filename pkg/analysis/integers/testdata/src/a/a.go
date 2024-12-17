@@ -70,6 +70,22 @@ type Integers struct {
 	InvalidSliceUIntAlias []InvalidUIntAlias // want "field InvalidSliceUIntAlias array element type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
 	InvalidSliceUIntAliasPtr []*InvalidUIntAlias // want "field InvalidSliceUIntAliasPtr array element pointer type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+
+	ValidMapStringToInt32 map[string]int32
+
+	ValidMapStringToInt64 map[string]int64
+
+	InvalidMapStringToInt map[string]int // want "field InvalidMapStringToInt map value should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+
+	InvalidMapStringToUInt map[string]uint // want "field InvalidMapStringToUInt map value should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+
+	ValidMapInt32ToString map[int32]string
+
+	ValidMapInt64ToString map[int64]string
+
+	InvalidMapIntToString map[int]string // want "field InvalidMapIntToString map key should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+
+	InvalidMapUIntToString map[uint]string // want "field InvalidMapUIntToString map key should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 }
 
 type ValidInt32Alias int32

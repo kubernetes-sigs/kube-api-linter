@@ -74,6 +74,9 @@ func (t *typeChecker) checkTypeExpr(pass *analysis.Pass, typeExpr ast.Expr, node
 		t.checkTypeExpr(pass, typ.X, node, fmt.Sprintf("%s pointer", prefix))
 	case *ast.ArrayType:
 		t.checkTypeExpr(pass, typ.Elt, node, fmt.Sprintf("%s array element", prefix))
+	case *ast.MapType:
+		t.checkTypeExpr(pass, typ.Key, node, fmt.Sprintf("%s map key", prefix))
+		t.checkTypeExpr(pass, typ.Value, node, fmt.Sprintf("%s map value", prefix))
 	}
 }
 
