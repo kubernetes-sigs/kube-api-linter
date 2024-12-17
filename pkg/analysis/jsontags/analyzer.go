@@ -7,7 +7,6 @@ import (
 	"regexp"
 
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/structfield"
 	"github.com/JoelSpeed/kal/pkg/config"
 
 	"golang.org/x/tools/go/analysis"
@@ -23,9 +22,8 @@ const (
 )
 
 var (
-	errCouldNotGetInspector      = errors.New("could not get inspector")
-	errCouldNotGetJSONTags       = errors.New("could not get json tags")
-	errCouldNotCreateStructField = errors.New("could not create new structField")
+	errCouldNotGetInspector = errors.New("could not get inspector")
+	errCouldNotGetJSONTags  = errors.New("could not get json tags")
 )
 
 type analyzer struct {
@@ -49,7 +47,7 @@ func newAnalyzer(cfg config.JSONTagsConfig) (*analysis.Analyzer, error) {
 		Name:     name,
 		Doc:      "Check that all struct fields in an API are tagged with json tags",
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer, extractjsontags.Analyzer, structfield.Analyzer},
+		Requires: []*analysis.Analyzer{inspect.Analyzer, extractjsontags.Analyzer},
 	}, nil
 }
 
@@ -64,28 +62,24 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetJSONTags
 	}
 
-	structFields, ok := pass.ResultOf[structfield.Analyzer].(structfield.StructField)
-	if !ok {
-		return nil, errCouldNotCreateStructField
-	}
-
 	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
-		(*ast.Field)(nil),
+		(*ast.StructType)(nil),
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		field, ok := n.(*ast.Field)
+		sTyp, ok := n.(*ast.StructType)
 		if !ok {
 			return
 		}
 
-		if structType := structFields.StructForField(field); structType == nil {
-			// This field does not belong to a struct.
+		if sTyp.Fields == nil {
 			return
 		}
 
-		a.checkField(pass, field, jsonTags)
+		for _, field := range sTyp.Fields.List {
+			a.checkField(pass, field, jsonTags)
+		}
 	})
 
 	return nil, nil //nolint:nilnil

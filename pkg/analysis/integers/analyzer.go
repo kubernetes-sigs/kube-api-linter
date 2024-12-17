@@ -4,7 +4,6 @@ import (
 	"errors"
 	"go/ast"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/structfield"
 	"github.com/JoelSpeed/kal/pkg/analysis/utils"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -14,8 +13,7 @@ import (
 const name = "integers"
 
 var (
-	errCouldNotGetInspector   = errors.New("could not get inspector")
-	errCouldNotGetStructField = errors.New("could not get struct field")
+	errCouldNotGetInspector = errors.New("could not get inspector")
 )
 
 // Analyzer is the analyzer for the integers package.
@@ -24,7 +22,7 @@ var Analyzer = &analysis.Analyzer{
 	Name:     name,
 	Doc:      "All integers should be explicit about their size, int32 and int64 should be used over plain int. Unsigned ints are not allowed.",
 	Run:      run,
-	Requires: []*analysis.Analyzer{inspect.Analyzer, structfield.Analyzer},
+	Requires: []*analysis.Analyzer{inspect.Analyzer},
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
@@ -33,15 +31,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetInspector
 	}
 
-	structField, ok := pass.ResultOf[structfield.Analyzer].(structfield.StructField)
-	if !ok {
-		return nil, errCouldNotGetStructField
-	}
-
 	// Filter to fields so that we can look at fields within structs.
 	// Filter typespecs so that we can look at type aliases.
 	nodeFilter := []ast.Node{
-		(*ast.Field)(nil),
+		(*ast.StructType)(nil),
 		(*ast.TypeSpec)(nil),
 	}
 
@@ -52,13 +45,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	//
 	// We use the filter defined above, ensuring we only look at struct fields and type declarations.
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		if field, ok := n.(*ast.Field); ok {
-			// Do not inspect fields that are not part of a struct.
-			if structType := structField.StructForField(field); structType == nil {
-				return
-			}
-		}
-
 		typeChecker.CheckNode(pass, n)
 	})
 

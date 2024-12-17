@@ -5,7 +5,6 @@ The helpers are used to extract data from the types, and provide common function
 The available helpers are:
   - [extractjsontags]: Extracts JSON tags from struct fields and returns the information in a structured format.
   - [markers]: Extracts marker information from types and returns the information in a structured format.
-  - [structfield]: Provides a mapping of *ast.Field to the parent *ast.StructType.
 
 Helpers should expose an *analysis.Analyzer as a globabl variable.
 Other linters will use the `Requires` configuration to ensure that the helper is run before the linter.

@@ -7,7 +7,6 @@ import (
 
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/structfield"
 	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -31,10 +30,9 @@ const (
 )
 
 var (
-	errCouldNotGetInspector      = errors.New("could not get inspector")
-	errCouldNotGetMarkers        = errors.New("could not get markers")
-	errCouldNotGetJSONTags       = errors.New("could not get jsontags")
-	errCouldNotCreateStructField = errors.New("could not create new structField")
+	errCouldNotGetInspector = errors.New("could not get inspector")
+	errCouldNotGetMarkers   = errors.New("could not get markers")
+	errCouldNotGetJSONTags  = errors.New("could not get jsontags")
 )
 
 type analyzer struct {
@@ -73,7 +71,7 @@ func newAnalyzer(cfg config.OptionalOrRequiredConfig) *analysis.Analyzer {
 		Name:     name,
 		Doc:      "Checks that all struct fields are marked either with the optional or required markers.",
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer, markers.Analyzer, extractjsontags.Analyzer, structfield.Analyzer},
+		Requires: []*analysis.Analyzer{inspect.Analyzer, markers.Analyzer, extractjsontags.Analyzer},
 	}
 }
 
@@ -93,31 +91,27 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetJSONTags
 	}
 
-	structField, ok := pass.ResultOf[structfield.Analyzer].(structfield.StructField)
-	if !ok {
-		return nil, errCouldNotCreateStructField
-	}
-
 	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
-		(*ast.Field)(nil),
+		(*ast.StructType)(nil),
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		field, ok := n.(*ast.Field)
+		sTyp, ok := n.(*ast.StructType)
 		if !ok {
 			return
 		}
 
-		if structType := structField.StructForField(field); structType == nil {
-			// This field does not belong to a struct.
+		if sTyp.Fields == nil {
 			return
 		}
 
-		fieldMarkers := markersAccess.FieldMarkers(field)
-		fieldTagInfo := jsonTags.FieldTags(field)
+		for _, field := range sTyp.Fields.List {
+			fieldMarkers := markersAccess.FieldMarkers(field)
+			fieldTagInfo := jsonTags.FieldTags(field)
 
-		a.checkField(pass, field, fieldMarkers, fieldTagInfo)
+			a.checkField(pass, field, fieldMarkers, fieldTagInfo)
+		}
 	})
 
 	return nil, nil //nolint:nilnil
