@@ -1,5 +1,9 @@
 package a
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type JSONTagTestStruct struct {
 	NoJSONTag            string // want "field NoJSONTag is missing json tag"
 	EmptyJSONTag         string `json:""`                        // want "field EmptyJSONTag has empty json tag"
@@ -20,6 +24,9 @@ type JSONTagTestStruct struct {
 	C             // want "embedded field C is missing json tag"
 	D `json:""`   // want "embedded field D has empty json tag"
 	E `json:"e-"` // want "embedded field E json tag does not match pattern \"\\^\\[a-z\\]\\[a-z0-9\\]\\*\\(\\?:\\[A-Z\\]\\[a-z0-9\\]\\*\\)\\*\\$\": e-"
+
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
 type A struct{}
