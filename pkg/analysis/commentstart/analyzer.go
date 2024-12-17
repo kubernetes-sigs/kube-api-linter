@@ -70,7 +70,7 @@ func checkField(pass *analysis.Pass, sTyp *ast.StructType, field *ast.Field, jso
 
 	fieldName := field.Names[0].Name
 
-	tagInfo := jsonTags.FieldTags(sTyp, fieldName)
+	tagInfo := jsonTags.FieldTags(sTyp, field)
 
 	if tagInfo.Name == "" {
 		return

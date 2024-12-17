@@ -14,4 +14,20 @@ type JSONTagTestStruct struct {
 	JSONTagWithID        string `json:"jsonTagWithID"`
 	JSONTagWithTTL       string `json:"jsonTagWithTTL"`
 	JSONTagWithGiB       string `json:"jsonTagWithGiB"`
+
+	A `json:",inline"`
+	B `json:"bar,omitempty"`
+	C             // want "embedded field C is missing json tag"
+	D `json:""`   // want "embedded field D has empty json tag"
+	E `json:"e-"` // want "embedded field E json tag does not match pattern \"\\^\\[a-z\\]\\[a-z0-9\\]\\*\\(\\?:\\[A-Z\\]\\[a-z0-9\\]\\*\\)\\*\\$\": e-"
 }
+
+type A struct{}
+
+type B struct{}
+
+type C struct{}
+
+type D struct{}
+
+type E struct{}

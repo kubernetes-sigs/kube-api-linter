@@ -76,7 +76,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			}
 
 			// Then check if the json serialization of the field contains 'phase'
-			tagInfo := jsonTags.FieldTags(sTyp, fieldName)
+			tagInfo := jsonTags.FieldTags(sTyp, field)
 
 			if strings.Contains(strings.ToLower(tagInfo.Name), "phase") {
 				pass.Reportf(field.Pos(),

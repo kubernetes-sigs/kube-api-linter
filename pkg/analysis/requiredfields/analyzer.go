@@ -85,7 +85,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 
 			fieldName := field.Names[0].Name
 			fieldMarkers := markersAccess.StructFieldMarkers(sTyp, fieldName)
-			fieldTagInfo := jsonTags.FieldTags(sTyp, fieldName)
+			fieldTagInfo := jsonTags.FieldTags(sTyp, field)
 
 			a.checkField(pass, field, fieldMarkers, fieldTagInfo)
 		}

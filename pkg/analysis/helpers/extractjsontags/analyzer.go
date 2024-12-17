@@ -21,29 +21,29 @@ var (
 // StructFieldTags is used to find information about
 // json tags on fields within struct.
 type StructFieldTags interface {
-	FieldTags(*ast.StructType, string) FieldTagInfo
+	FieldTags(*ast.StructType, *ast.Field) FieldTagInfo
 }
 
 type structFieldTags struct {
-	structToFieldTags map[*ast.StructType]map[string]FieldTagInfo
+	structToFieldTags map[*ast.StructType]map[*ast.Field]FieldTagInfo
 }
 
 func newStructFieldTags() StructFieldTags {
 	return &structFieldTags{
-		structToFieldTags: make(map[*ast.StructType]map[string]FieldTagInfo),
+		structToFieldTags: make(map[*ast.StructType]map[*ast.Field]FieldTagInfo),
 	}
 }
 
-func (s *structFieldTags) insertFieldTagInfo(styp *ast.StructType, field string, tagInfo FieldTagInfo) {
+func (s *structFieldTags) insertFieldTagInfo(styp *ast.StructType, field *ast.Field, tagInfo FieldTagInfo) {
 	if s.structToFieldTags[styp] == nil {
-		s.structToFieldTags[styp] = make(map[string]FieldTagInfo)
+		s.structToFieldTags[styp] = make(map[*ast.Field]FieldTagInfo)
 	}
 
 	s.structToFieldTags[styp][field] = tagInfo
 }
 
 // FieldTags find the tag information for the named field within the given struct.
-func (s *structFieldTags) FieldTags(styp *ast.StructType, field string) FieldTagInfo {
+func (s *structFieldTags) FieldTags(styp *ast.StructType, field *ast.Field) FieldTagInfo {
 	structFields := s.structToFieldTags[styp]
 
 	if structFields != nil {
@@ -91,12 +91,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		for i := 0; i < sTyp.Fields.NumFields(); i++ {
 			field := sTyp.Fields.List[i]
-			if len(field.Names) == 0 || field.Names[0] == nil {
-				continue
-			}
 
-			fieldName := field.Names[0].Name
-			results.insertFieldTagInfo(sTyp, fieldName, extractTagInfo(field.Tag))
+			results.insertFieldTagInfo(sTyp, field, extractTagInfo(field.Tag))
 		}
 	})
 
