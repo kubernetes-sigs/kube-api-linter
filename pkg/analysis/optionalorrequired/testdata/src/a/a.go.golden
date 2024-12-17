@@ -29,4 +29,17 @@ type OptionalOrRequiredTestStruct struct {
 
 	// +required
 	RequiredMarker string
+
+	A `json:",inline"`
+
+	B `json:"b,omitempty"` // want "embedded field B must be marked as optional or required"
+
+	// +optional
+	C `json:"c,omitempty"`
 }
+
+type A struct{}
+
+type B struct{}
+
+type C struct{}

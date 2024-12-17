@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 
+	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis"
@@ -31,6 +32,7 @@ const (
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
 	errCouldNotGetMarkers   = errors.New("could not get markers")
+	errCouldNotGetJSONTags  = errors.New("could not get jsontags")
 )
 
 type analyzer struct {
@@ -69,7 +71,7 @@ func newAnalyzer(cfg config.OptionalOrRequiredConfig) *analysis.Analyzer {
 		Name:     name,
 		Doc:      "Checks that all struct fields are marked either with the optional or required markers.",
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer, markers.Analyzer},
+		Requires: []*analysis.Analyzer{inspect.Analyzer, markers.Analyzer, extractjsontags.Analyzer},
 	}
 }
 
@@ -84,6 +86,11 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetMarkers
 	}
 
+	jsonTags, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
+	if !ok {
+		return nil, errCouldNotGetJSONTags
+	}
+
 	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
 		(*ast.Field)(nil),
@@ -96,20 +103,27 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		fieldMarkers := markersAccess.FieldMarkers(field)
+		fieldTagInfo := jsonTags.FieldTags(field)
 
-		a.checkField(pass, field, fieldMarkers)
+		a.checkField(pass, field, fieldMarkers, fieldTagInfo)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
 //nolint:cyclop
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet) {
-	if field == nil || len(field.Names) == 0 {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet, fieldTagInfo extractjsontags.FieldTagInfo) {
+	if fieldTagInfo.Inline {
+		// Inline fields would have no effect if they were marked as optional/required.
 		return
 	}
 
-	fieldName := field.Names[0].Name
+	var prefix string
+	if len(field.Names) > 0 && field.Names[0] != nil {
+		prefix = fmt.Sprintf("field %s", field.Names[0].Name)
+	} else if ident, ok := field.Type.(*ast.Ident); ok {
+		prefix = fmt.Sprintf("embedded field %s", ident.Name)
+	}
 
 	hasPrimaryOptional := fieldMarkers.Has(a.primaryOptionalMarker)
 	hasPrimaryRequired := fieldMarkers.Has(a.primaryRequiredMarker)
@@ -125,34 +139,32 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 
 	switch {
 	case hasEitherOptional && hasEitherRequired:
-		pass.Reportf(field.Pos(), "field %s must not be marked as both optional and required", fieldName)
+		pass.Reportf(field.Pos(), "%s must not be marked as both optional and required", prefix)
 	case hasSecondaryOptional:
 		marker := fieldMarkers[a.secondaryOptionalMarker]
 		if hasBothOptional {
-			pass.Report(reportShouldRemoveSecondaryMarker(field, marker, a.primaryOptionalMarker, a.secondaryOptionalMarker))
+			pass.Report(reportShouldRemoveSecondaryMarker(field, marker, a.primaryOptionalMarker, a.secondaryOptionalMarker, prefix))
 		} else {
-			pass.Report(reportShouldReplaceSecondaryMarker(field, marker, a.primaryOptionalMarker, a.secondaryOptionalMarker))
+			pass.Report(reportShouldReplaceSecondaryMarker(field, marker, a.primaryOptionalMarker, a.secondaryOptionalMarker, prefix))
 		}
 	case hasSecondaryRequired:
 		marker := fieldMarkers[a.secondaryRequiredMarker]
 		if hasBothRequired {
-			pass.Report(reportShouldRemoveSecondaryMarker(field, marker, a.primaryRequiredMarker, a.secondaryRequiredMarker))
+			pass.Report(reportShouldRemoveSecondaryMarker(field, marker, a.primaryRequiredMarker, a.secondaryRequiredMarker, prefix))
 		} else {
-			pass.Report(reportShouldReplaceSecondaryMarker(field, marker, a.primaryRequiredMarker, a.secondaryRequiredMarker))
+			pass.Report(reportShouldReplaceSecondaryMarker(field, marker, a.primaryRequiredMarker, a.secondaryRequiredMarker, prefix))
 		}
 	case hasPrimaryOptional || hasPrimaryRequired:
 		// This is the correct state.
 	default:
-		pass.Reportf(field.Pos(), "field %s must be marked as %s or %s", fieldName, a.primaryOptionalMarker, a.primaryRequiredMarker)
+		pass.Reportf(field.Pos(), "%s must be marked as %s or %s", prefix, a.primaryOptionalMarker, a.primaryRequiredMarker)
 	}
 }
 
-func reportShouldReplaceSecondaryMarker(field *ast.Field, marker markers.Marker, primaryMarker, secondaryMarker string) analysis.Diagnostic {
-	fieldName := field.Names[0].Name
-
+func reportShouldReplaceSecondaryMarker(field *ast.Field, marker markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
 	return analysis.Diagnostic{
 		Pos:     field.Pos(),
-		Message: fmt.Sprintf("field %s should use marker %s instead of %s", fieldName, primaryMarker, secondaryMarker),
+		Message: fmt.Sprintf("%s should use marker %s instead of %s", prefix, primaryMarker, secondaryMarker),
 		SuggestedFixes: []analysis.SuggestedFix{
 			{
 				Message: fmt.Sprintf("should replace `%s` with `%s`", secondaryMarker, primaryMarker),
@@ -168,12 +180,10 @@ func reportShouldReplaceSecondaryMarker(field *ast.Field, marker markers.Marker,
 	}
 }
 
-func reportShouldRemoveSecondaryMarker(field *ast.Field, marker markers.Marker, primaryMarker, secondaryMarker string) analysis.Diagnostic {
-	fieldName := field.Names[0].Name
-
+func reportShouldRemoveSecondaryMarker(field *ast.Field, marker markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
 	return analysis.Diagnostic{
 		Pos:     field.Pos(),
-		Message: fmt.Sprintf("field %s should use only the marker %s, %s is not required", fieldName, primaryMarker, secondaryMarker),
+		Message: fmt.Sprintf("%s should use only the marker %s, %s is not required", prefix, primaryMarker, secondaryMarker),
 		SuggestedFixes: []analysis.SuggestedFix{
 			{
 				Message: fmt.Sprintf("should remove `// +%s`", secondaryMarker),
