@@ -67,6 +67,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	// Filter to structs so that we can iterate over fields in a struct.
+	// We need a struct here so that we can tell where in the struct the field is.
 	nodeFilter := []ast.Node{
 		(*ast.StructType)(nil),
 	}
@@ -82,12 +83,7 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		for i, field := range sTyp.Fields.List {
-			if field == nil || len(field.Names) == 0 {
-				continue
-			}
-
-			fieldName := field.Names[0].Name
-			fieldMarkers := markersAccess.StructFieldMarkers(sTyp, fieldName)
+			fieldMarkers := markersAccess.FieldMarkers(field)
 
 			a.checkField(pass, i, field, fieldMarkers)
 		}

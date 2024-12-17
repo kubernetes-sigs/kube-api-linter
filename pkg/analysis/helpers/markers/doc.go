@@ -30,9 +30,7 @@ Example:
 			}
 
 			structMarkers := markersAccess.StructMarkers(sTyp)
-
-			fieldName := field.Names[0].Name
-			fieldMarkers := markersAccess.StructFieldMarkers(sTyp, fieldName)
+			fieldMarkers := markersAccess.FieldMarkers(field)
 
 			...
 		}
@@ -45,8 +43,7 @@ Additional information about the marker can be found in the [Marker] struct, for
 
 Example:
 
-	fieldName := field.Names[0].Name
-	fieldMarkers := markersAccess.StructFieldMarkers(sTyp, fieldName)
+	fieldMarkers := markersAccess.FieldMarkers(field)
 
 	if fieldMarkers.Has("required") {
 		requiredMarker := fieldMarkers["required"]

@@ -20,24 +20,40 @@ var (
 // Markers allows access to markers extracted from the
 // go types.
 type Markers interface {
+	// FieldMarkers returns markers associated to the field.
+	FieldMarkers(*ast.Field) MarkerSet
+
 	// StructMarkers returns markers associated to the given sturct.
 	StructMarkers(*ast.StructType) MarkerSet
 
-	// StructFieldMarkers returns markers associated to the named field in the given struct.
-	StructFieldMarkers(*ast.StructType, string) MarkerSet
+	// TypeMarkers returns markers associated to the given type.
+	TypeMarkers(*ast.TypeSpec) MarkerSet
 }
 
 func newMarkers() Markers {
 	return &markers{
-		structMarkers:      make(map[*ast.StructType]MarkerSet),
-		structFieldMarkers: make(map[*ast.StructType]map[string]MarkerSet),
+		fieldMarkers:  make(map[*ast.Field]MarkerSet),
+		structMarkers: make(map[*ast.StructType]MarkerSet),
+		typeMarkers:   make(map[*ast.TypeSpec]MarkerSet),
 	}
 }
 
 // markers implements the storage for the implementation of the Markers interface.
 type markers struct {
-	structMarkers      map[*ast.StructType]MarkerSet
-	structFieldMarkers map[*ast.StructType]map[string]MarkerSet
+	fieldMarkers  map[*ast.Field]MarkerSet
+	structMarkers map[*ast.StructType]MarkerSet
+	typeMarkers   map[*ast.TypeSpec]MarkerSet
+}
+
+// FieldMarkers return the appropriate MarkerSet for the field,
+// or an empty MarkerSet if the appropriate MarkerSet isn't found.
+func (m *markers) FieldMarkers(field *ast.Field) MarkerSet {
+	fMarkers, ok := m.fieldMarkers[field]
+	if !ok {
+		return NewMarkerSet()
+	}
+
+	return fMarkers
 }
 
 // StructMarkers returns the appropriate MarkerSet if found, else
@@ -51,32 +67,27 @@ func (m *markers) StructMarkers(sTyp *ast.StructType) MarkerSet {
 	return sMarkers
 }
 
-// StructFieldMarkers return the appropriate MarkerSet for the named field in the
-// given struct, or an empty MarkerSet if the appropriate MarkerSet isn't found.
-func (m *markers) StructFieldMarkers(sTyp *ast.StructType, field string) MarkerSet {
-	sMarkers, ok := m.structFieldMarkers[sTyp]
+// TypeMarkers return the appropriate MarkerSet for the type,
+// or an empty MarkerSet if the appropriate MarkerSet isn't found.
+func (m *markers) TypeMarkers(typ *ast.TypeSpec) MarkerSet {
+	tMarkers, ok := m.typeMarkers[typ]
 	if !ok {
 		return NewMarkerSet()
 	}
 
-	fMarkers, ok := sMarkers[field]
-	if !ok {
-		return NewMarkerSet()
-	}
+	return tMarkers
+}
 
-	return fMarkers
+func (m *markers) insertFieldMarkers(field *ast.Field, ms MarkerSet) {
+	m.fieldMarkers[field] = ms
 }
 
 func (m *markers) insertStructMarkers(sTyp *ast.StructType, ms MarkerSet) {
 	m.structMarkers[sTyp] = ms
 }
 
-func (m *markers) insertStructFieldMarkers(sTyp *ast.StructType, field string, ms MarkerSet) {
-	if m.structFieldMarkers[sTyp] == nil {
-		m.structFieldMarkers[sTyp] = make(map[string]MarkerSet)
-	}
-
-	m.structFieldMarkers[sTyp][field] = ms
+func (m *markers) insertTypeMarkers(typ *ast.TypeSpec, ms MarkerSet) {
+	m.typeMarkers[typ] = ms
 }
 
 // Analyzer is the analyzer for the markers package.
@@ -95,9 +106,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetInspector
 	}
 
-	// Filter to declarations so that we can look at all types in the package.
-	declFilter := []ast.Node{
-		(*ast.GenDecl)(nil),
+	nodeFilter := []ast.Node{
+		(*ast.TypeSpec)(nil),
+		(*ast.Field)(nil),
 	}
 
 	results, ok := newMarkers().(*markers)
@@ -105,67 +116,50 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotCreateMarkers
 	}
 
-	inspect.Preorder(declFilter, func(n ast.Node) {
-		decl, ok := n.(*ast.GenDecl)
-		if !ok {
-			return
-		}
-
-		for _, spec := range decl.Specs {
-			typeSpec, ok := spec.(*ast.TypeSpec)
-			if !ok {
-				continue
-			}
-
-			// TODO: Add support for other types and remove nolint.
-			switch typeSpec.Type.(type) { //nolint:gocritic
-			case *ast.StructType:
-				sTyp, ok := typeSpec.Type.(*ast.StructType)
-				if !ok {
-					continue
-				}
-
-				extractStructMarkers(decl, sTyp, results)
-			}
+	inspect.Preorder(nodeFilter, func(n ast.Node) {
+		switch typ := n.(type) {
+		case *ast.TypeSpec:
+			extractTypeSpecMarkers(typ, results)
+		case *ast.Field:
+			extractFieldMarkers(typ, results)
 		}
 	})
 
 	return results, nil
 }
 
-func extractStructMarkers(decl *ast.GenDecl, sTyp *ast.StructType, results *markers) {
-	structMarkers := NewMarkerSet()
+func extractTypeSpecMarkers(typ *ast.TypeSpec, results *markers) {
+	typeMarkers := NewMarkerSet()
 
-	if decl.Doc != nil {
-		for _, comment := range decl.Doc.List {
+	if typ.Doc != nil {
+		for _, comment := range typ.Doc.List {
 			if marker := extractMarker(comment); marker.Value != "" {
-				structMarkers.Insert(marker)
+				typeMarkers.Insert(marker)
 			}
 		}
 	}
 
-	results.insertStructMarkers(sTyp, structMarkers)
+	results.insertTypeMarkers(typ, typeMarkers)
 
-	for _, field := range sTyp.Fields.List {
-		if field == nil || len(field.Names) == 0 {
-			continue
-		}
-
-		if field.Doc == nil {
-			continue
-		}
-
-		fieldMarkers := NewMarkerSet()
-
-		for _, comment := range field.Doc.List {
-			if marker := extractMarker(comment); marker.Value != "" {
-				fieldMarkers.Insert(marker)
-			}
-		}
-
-		fieldName := field.Names[0].Name
-		results.insertStructFieldMarkers(sTyp, fieldName, fieldMarkers)
+	if uTyp, ok := typ.Type.(*ast.StructType); ok {
+		results.insertStructMarkers(uTyp, typeMarkers)
 	}
+}
+
+func extractFieldMarkers(field *ast.Field, results *markers) {
+	if field == nil || field.Doc == nil {
+		return
+	}
+
+	fieldMarkers := NewMarkerSet()
+
+	for _, comment := range field.Doc.List {
+		if marker := extractMarker(comment); marker.Value != "" {
+			fieldMarkers.Insert(marker)
+		}
+	}
+
+	results.insertFieldMarkers(field, fieldMarkers)
 }
 
 func extractMarker(comment *ast.Comment) Marker {
