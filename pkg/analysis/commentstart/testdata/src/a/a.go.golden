@@ -29,3 +29,6 @@ type CommentStartTestStruct struct {
 	// This comment just isn't correct at all, doesn't even start with anything resembling the field names. // want "godoc for field IncorrectComment should start with 'incorrectComment ...'"
 	IncorrectComment string `json:"incorrectComment"`
 }
+
+// DoNothing is used to check that the analyser doesn't report on methods.
+func (CommentStartTestStruct) DoNothing() {}

@@ -88,6 +88,11 @@ type Integers struct {
 	InvalidMapUIntToString map[uint]string // want "field InvalidMapUIntToString map key should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 }
 
+// DoNothing is used to check that the analyser doesn't report on methods.
+func (Integers) DoNothing(a int, b uint) (int, uint) {
+	return 0, 0
+}
+
 type ValidInt32Alias int32
 
 type ValidInt32PtrAlias *int32

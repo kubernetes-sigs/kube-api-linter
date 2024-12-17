@@ -19,6 +19,9 @@ type ValidConditions struct {
 	OtherField string `json:"otherField,omitempty"`
 }
 
+// DoNothing is used to check that the analyser doesn't report on methods.
+func (ValidConditions) DoNothing() {}
+
 type ConditionsNotFirst struct {
 	// other fields
 	OtherField string `json:"otherField,omitempty"`

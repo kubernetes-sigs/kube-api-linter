@@ -42,6 +42,9 @@ type OptionalOrRequiredTestStruct struct {
 
 type A struct{}
 
+// DoNothing is used to check that the analyser doesn't report on methods.
+func (A) DoNothing() {}
+
 type B struct{}
 
 type C struct{}

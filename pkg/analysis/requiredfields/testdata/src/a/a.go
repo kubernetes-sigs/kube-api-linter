@@ -37,3 +37,6 @@ type A struct {
 	// +kubebuilder:validation:Required
 	RequiredKubebuilderMarkerPointerOmitEmptyField *string `json:"requiredKubebuilderMarkerPointerOmitEmptyField,omitempty"` // want "field RequiredKubebuilderMarkerPointerOmitEmptyField is marked as required, but has the omitempty tag" "field RequiredKubebuilderMarkerPointerOmitEmptyField is marked as required, should not be a pointer"
 }
+
+// DoNothing is used to check that the analyser doesn't report on methods.
+func (A) DoNothing() {}

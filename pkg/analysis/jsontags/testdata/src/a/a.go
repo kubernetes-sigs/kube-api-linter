@@ -24,6 +24,8 @@ type JSONTagTestStruct struct {
 
 type A struct{}
 
+func (A) DoNothing() {}
+
 type B struct{}
 
 type C struct{}

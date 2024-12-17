@@ -6,6 +6,9 @@ type NoPhaseTestStruct struct {
 
 }
 
+// DoNothing is used to check that the analyser doesn't report on methods.
+func (NoPhaseTestStruct) DoNothing() {}
+
 type NoSubPhaseTestStruct struct {
 	// +optional
 	FooPhase *string `json:"fooPhase,omitempty"` // want "field FooPhase: phase fields are deprecated and conditions should be preferred, avoid phase like enum fields"
