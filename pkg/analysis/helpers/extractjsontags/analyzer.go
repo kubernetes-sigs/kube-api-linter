@@ -21,36 +21,26 @@ var (
 // StructFieldTags is used to find information about
 // json tags on fields within struct.
 type StructFieldTags interface {
-	FieldTags(*ast.StructType, *ast.Field) FieldTagInfo
+	FieldTags(*ast.Field) FieldTagInfo
 }
 
 type structFieldTags struct {
-	structToFieldTags map[*ast.StructType]map[*ast.Field]FieldTagInfo
+	fieldTags map[*ast.Field]FieldTagInfo
 }
 
 func newStructFieldTags() StructFieldTags {
 	return &structFieldTags{
-		structToFieldTags: make(map[*ast.StructType]map[*ast.Field]FieldTagInfo),
+		fieldTags: make(map[*ast.Field]FieldTagInfo),
 	}
 }
 
-func (s *structFieldTags) insertFieldTagInfo(styp *ast.StructType, field *ast.Field, tagInfo FieldTagInfo) {
-	if s.structToFieldTags[styp] == nil {
-		s.structToFieldTags[styp] = make(map[*ast.Field]FieldTagInfo)
-	}
-
-	s.structToFieldTags[styp][field] = tagInfo
+func (s *structFieldTags) insertFieldTagInfo(field *ast.Field, tagInfo FieldTagInfo) {
+	s.fieldTags[field] = tagInfo
 }
 
 // FieldTags find the tag information for the named field within the given struct.
-func (s *structFieldTags) FieldTags(styp *ast.StructType, field *ast.Field) FieldTagInfo {
-	structFields := s.structToFieldTags[styp]
-
-	if structFields != nil {
-		return structFields[field]
-	}
-
-	return FieldTagInfo{}
+func (s *structFieldTags) FieldTags(field *ast.Field) FieldTagInfo {
+	return s.fieldTags[field]
 }
 
 // Analyzer is the analyzer for the jsontags package.
@@ -71,7 +61,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 	// Filter to structs so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
+		(*ast.Field)(nil),
 	}
 
 	results, ok := newStructFieldTags().(*structFieldTags)
@@ -80,20 +70,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		sTyp, ok := n.(*ast.StructType)
+		field, ok := n.(*ast.Field)
 		if !ok {
 			return
 		}
 
-		if sTyp.Fields == nil {
-			return
-		}
-
-		for i := 0; i < sTyp.Fields.NumFields(); i++ {
-			field := sTyp.Fields.List[i]
-
-			results.insertFieldTagInfo(sTyp, field, extractTagInfo(field.Tag))
-		}
+		results.insertFieldTagInfo(field, extractTagInfo(field.Tag))
 	})
 
 	return results, nil

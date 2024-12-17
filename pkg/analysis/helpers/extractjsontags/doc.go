@@ -10,26 +10,21 @@ Example:
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	jsonTags := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
 
-	// Filter to structs so that we can iterate over fields in a struct.
+	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
+		(*ast.Field)(nil),
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		sTyp, ok := n.(*ast.StructType)
+		field, ok := n.(*ast.Field)
 		if !ok {
 			return
 		}
 
-		if sTyp.Fields == nil {
-			return
-		}
+		tagInfo := jsonTags.FieldTags(field)
 
-		for _, field := range sTyp.Fields.List {
-			tagInfo := jsonTags.FieldTags(sTyp, field.Names[0].Name)
+		...
 
-			...
-		}
 	})
 
 For each field, tag information is returned as a [FieldTagInfo] struct.

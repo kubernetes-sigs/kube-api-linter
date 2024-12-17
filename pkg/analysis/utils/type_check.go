@@ -39,6 +39,8 @@ func (t *typeChecker) CheckNode(pass *analysis.Pass, node ast.Node) {
 		for _, field := range n.Fields.List {
 			t.checkField(pass, field)
 		}
+	case *ast.Field:
+		t.checkField(pass, n)
 	case *ast.TypeSpec:
 		t.checkTypeSpec(pass, n, node, "type")
 	}

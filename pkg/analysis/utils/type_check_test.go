@@ -34,7 +34,7 @@ func testAnalyzer() *analysis.Analyzer {
 
 			// Filter to structs so that we can iterate over fields in a struct.
 			nodeFilter := []ast.Node{
-				(*ast.StructType)(nil),
+				(*ast.Field)(nil),
 				(*ast.TypeSpec)(nil),
 			}
 

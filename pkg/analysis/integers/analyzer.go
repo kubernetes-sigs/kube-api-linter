@@ -31,10 +31,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetInspector
 	}
 
-	// Filter to structs so that we can iterate over fields in a struct.
+	// Filter to fields so that we can look at fields within structs.
 	// Filter typespecs so that we can look at type aliases.
 	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
+		(*ast.Field)(nil),
 		(*ast.TypeSpec)(nil),
 	}
 

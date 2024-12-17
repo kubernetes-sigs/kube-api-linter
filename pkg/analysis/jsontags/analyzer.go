@@ -62,31 +62,25 @@ func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
 		return nil, errCouldNotGetJSONTags
 	}
 
-	// Filter to structs so that we can iterate over fields in a struct.
+	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
+		(*ast.Field)(nil),
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		s, ok := n.(*ast.StructType)
+		field, ok := n.(*ast.Field)
 		if !ok {
 			return
 		}
 
-		if s.Fields == nil {
-			return
-		}
-
-		for _, field := range s.Fields.List {
-			a.checkField(pass, s, field, jsonTags)
-		}
+		a.checkField(pass, field, jsonTags)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, sTyp *ast.StructType, field *ast.Field, jsonTags extractjsontags.StructFieldTags) {
-	tagInfo := jsonTags.FieldTags(sTyp, field)
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, jsonTags extractjsontags.StructFieldTags) {
+	tagInfo := jsonTags.FieldTags(field)
 
 	var prefix string
 	if len(field.Names) > 0 && field.Names[0] != nil {
