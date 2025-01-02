@@ -59,34 +59,25 @@ type markers struct {
 // FieldMarkers return the appropriate MarkerSet for the field,
 // or an empty MarkerSet if the appropriate MarkerSet isn't found.
 func (m *markers) FieldMarkers(field *ast.Field) MarkerSet {
-	fMarkers, ok := m.fieldMarkers[field]
-	if !ok {
-		return NewMarkerSet()
-	}
+	fMarkers := m.fieldMarkers[field]
 
-	return fMarkers
+	return NewMarkerSet(fMarkers.UnsortedList()...)
 }
 
 // StructMarkers returns the appropriate MarkerSet if found, else
 // it returns an empty MarkerSet.
 func (m *markers) StructMarkers(sTyp *ast.StructType) MarkerSet {
-	sMarkers, ok := m.structMarkers[sTyp]
-	if !ok {
-		return NewMarkerSet()
-	}
+	sMarkers := m.structMarkers[sTyp]
 
-	return sMarkers
+	return NewMarkerSet(sMarkers.UnsortedList()...)
 }
 
 // TypeMarkers return the appropriate MarkerSet for the type,
 // or an empty MarkerSet if the appropriate MarkerSet isn't found.
 func (m *markers) TypeMarkers(typ *ast.TypeSpec) MarkerSet {
-	tMarkers, ok := m.typeMarkers[typ]
-	if !ok {
-		return NewMarkerSet()
-	}
+	tMarkers := m.typeMarkers[typ]
 
-	return tMarkers
+	return NewMarkerSet(tMarkers.UnsortedList()...)
 }
 
 func (m *markers) insertFieldMarkers(field *ast.Field, ms MarkerSet) {
@@ -376,4 +367,15 @@ func (ms MarkerSet) HasWithExpressions(identifier string, expressions map[string
 	}
 
 	return false
+}
+
+// UnsortedList returns a list of the markers, in no particular order.
+func (ms MarkerSet) UnsortedList() []Marker {
+	markers := []Marker{}
+
+	for _, marker := range ms {
+		markers = append(markers, marker...)
+	}
+
+	return markers
 }
