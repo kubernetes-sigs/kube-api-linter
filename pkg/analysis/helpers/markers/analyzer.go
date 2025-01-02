@@ -118,7 +118,23 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 
 	nodeFilter := []ast.Node{
-		(*ast.TypeSpec)(nil),
+		// In order to get the godoc comments from a type
+		// definition as such:
+		//
+		// // comment
+		// type Foo struct {...}
+		//
+		// We need to use the ast.GenDecl type instead of the
+		// ast.TypeSpec type. The ast.TypeSpec.Doc field will only
+		// be populated if types are defined as such:
+		//
+		// type(
+		//   // comment
+		//   Foo struct {...}
+		// )
+		//
+		// For more information, see https://github.com/golang/go/issues/27477
+		(*ast.GenDecl)(nil),
 		(*ast.Field)(nil),
 	}
 
@@ -129,8 +145,8 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		switch typ := n.(type) {
-		case *ast.TypeSpec:
-			extractTypeSpecMarkers(typ, results)
+		case *ast.GenDecl:
+			extractGenDeclMarkers(typ, results)
 		case *ast.Field:
 			extractFieldMarkers(typ, results)
 		}
@@ -139,21 +155,30 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	return results, nil
 }
 
-func extractTypeSpecMarkers(typ *ast.TypeSpec, results *markers) {
-	typeMarkers := NewMarkerSet()
+func extractGenDeclMarkers(typ *ast.GenDecl, results *markers) {
+	declMarkers := NewMarkerSet()
 
 	if typ.Doc != nil {
 		for _, comment := range typ.Doc.List {
 			if marker := extractMarker(comment); marker.Identifier != "" {
-				typeMarkers.Insert(marker)
+				declMarkers.Insert(marker)
 			}
 		}
 	}
 
-	results.insertTypeMarkers(typ, typeMarkers)
+	if len(typ.Specs) == 0 {
+		return
+	}
 
-	if uTyp, ok := typ.Type.(*ast.StructType); ok {
-		results.insertStructMarkers(uTyp, typeMarkers)
+	tSpec, ok := typ.Specs[0].(*ast.TypeSpec)
+	if !ok {
+		return
+	}
+
+	results.insertTypeMarkers(tSpec, declMarkers)
+
+	if sTyp, ok := tSpec.Type.(*ast.StructType); ok {
+		results.insertStructMarkers(sTyp, declMarkers)
 	}
 }
 
