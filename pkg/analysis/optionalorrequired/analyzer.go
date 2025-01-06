@@ -29,6 +29,15 @@ const (
 	KubebuilderRequiredMarker = "kubebuilder:validation:Required"
 )
 
+func init() {
+	markers.DefaultRegistry().Register(
+		OptionalMarker,
+		RequiredMarker,
+		KubebuilderOptionalMarker,
+		KubebuilderRequiredMarker,
+	)
+}
+
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
 	errCouldNotGetMarkers   = errors.New("could not get markers")
@@ -167,39 +176,57 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 	}
 }
 
-func reportShouldReplaceSecondaryMarker(field *ast.Field, marker markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
+func reportShouldReplaceSecondaryMarker(field *ast.Field, marker []markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
+	textEdits := make([]analysis.TextEdit, len(marker))
+
+	for i, m := range marker {
+		if i == 0 {
+			textEdits[i] = analysis.TextEdit{
+				Pos:     m.Pos,
+				End:     m.End,
+				NewText: []byte(fmt.Sprintf("// +%s", primaryMarker)),
+			}
+
+			continue
+		}
+
+		textEdits[i] = analysis.TextEdit{
+			Pos:     m.Pos,
+			End:     m.End + 1, // Add 1 to position to include the new line
+			NewText: nil,
+		}
+	}
+
 	return analysis.Diagnostic{
 		Pos:     field.Pos(),
 		Message: fmt.Sprintf("%s should use marker %s instead of %s", prefix, primaryMarker, secondaryMarker),
 		SuggestedFixes: []analysis.SuggestedFix{
 			{
-				Message: fmt.Sprintf("should replace `%s` with `%s`", secondaryMarker, primaryMarker),
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     marker.Pos,
-						End:     marker.End,
-						NewText: []byte(fmt.Sprintf("// +%s", primaryMarker)),
-					},
-				},
+				Message:   fmt.Sprintf("should replace `%s` with `%s`", secondaryMarker, primaryMarker),
+				TextEdits: textEdits,
 			},
 		},
 	}
 }
 
-func reportShouldRemoveSecondaryMarker(field *ast.Field, marker markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
+func reportShouldRemoveSecondaryMarker(field *ast.Field, marker []markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
+	textEdits := make([]analysis.TextEdit, len(marker))
+
+	for i, m := range marker {
+		textEdits[i] = analysis.TextEdit{
+			Pos:     m.Pos,
+			End:     m.End + 1, // Add 1 to position to include the new line
+			NewText: nil,
+		}
+	}
+
 	return analysis.Diagnostic{
 		Pos:     field.Pos(),
 		Message: fmt.Sprintf("%s should use only the marker %s, %s is not required", prefix, primaryMarker, secondaryMarker),
 		SuggestedFixes: []analysis.SuggestedFix{
 			{
-				Message: fmt.Sprintf("should remove `// +%s`", secondaryMarker),
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     marker.Pos,
-						End:     marker.End + 1, // Add 1 to position to include the new line
-						NewText: nil,
-					},
-				},
+				Message:   fmt.Sprintf("should remove `// +%s`", secondaryMarker),
+				TextEdits: textEdits,
 			},
 		},
 	}

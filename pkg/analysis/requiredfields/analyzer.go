@@ -21,6 +21,10 @@ const (
 	kubebuilderRequiredMarker = "kubebuilder:validation:Required"
 )
 
+func init() {
+	markers.DefaultRegistry().Register(requiredMarker, kubebuilderRequiredMarker)
+}
+
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
 	errCouldNotGetMarkers   = errors.New("could not get markers")

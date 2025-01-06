@@ -124,6 +124,17 @@ func (l *linter) run(pass *analysis.Pass) (interface{}, error) {
     ...
 }
 ```
+## Marker Registry
+
+If a linter needs to parse marker comments, it needs to register the identifier of the markers it
+cares about with the `markers.MarkerRegistry` to ensure that markers are parsed in the expected way.
+
+Marker identifiers are registered using an `init` function like so:
+```go
+func init() {
+	markers.DefaultRegistry().Register("kubebuilder:object:root", ...)
+}
+```
 
 ## Tests
 

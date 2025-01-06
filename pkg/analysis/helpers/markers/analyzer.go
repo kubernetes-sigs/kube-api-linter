@@ -12,6 +12,17 @@ import (
 	"golang.org/x/tools/go/ast/inspector"
 )
 
+// UnnamedExpression is the expression key used
+// when parsing markers that don't have a specific
+// named expression.
+//
+// An example of a marker without a named expression
+// is "kubebuilder:default:=foo".
+//
+// An example of a marker with named expressions
+// is "kubebuilder:validation:XValidation:rule='...',message='...'".
+const UnnamedExpression = ""
+
 var (
 	errCouldNotGetInspector  = errors.New("could not get inspector")
 	errCouldNotCreateMarkers = errors.New("could not create markers")
@@ -133,7 +144,7 @@ func extractTypeSpecMarkers(typ *ast.TypeSpec, results *markers) {
 
 	if typ.Doc != nil {
 		for _, comment := range typ.Doc.List {
-			if marker := extractMarker(comment); marker.Value != "" {
+			if marker := extractMarker(comment); marker.Identifier != "" {
 				typeMarkers.Insert(marker)
 			}
 		}
@@ -154,7 +165,7 @@ func extractFieldMarkers(field *ast.Field, results *markers) {
 	fieldMarkers := NewMarkerSet()
 
 	for _, comment := range field.Doc.List {
-		if marker := extractMarker(comment); marker.Value != "" {
+		if marker := extractMarker(comment); marker.Identifier != "" {
 			fieldMarkers.Insert(marker)
 		}
 	}
@@ -167,18 +178,113 @@ func extractMarker(comment *ast.Comment) Marker {
 		return Marker{}
 	}
 
+	markerContent := strings.TrimPrefix(comment.Text, "// +")
+	id, expressions := extractMarkerIDAndExpressions(DefaultRegistry(), markerContent)
+
 	return Marker{
-		Value:      strings.TrimPrefix(comment.Text, "// +"),
-		RawComment: comment.Text,
-		Pos:        comment.Pos(),
-		End:        comment.End(),
+		Identifier:  id,
+		Expressions: expressions,
+		RawComment:  comment.Text,
+		Pos:         comment.Pos(),
+		End:         comment.End(),
 	}
+}
+
+func extractMarkerIDAndExpressions(knownMarkers Registry, marker string) (string, map[string]string) {
+	if id, ok := knownMarkers.Match(marker); ok {
+		return extractKnownMarkerIDAndExpressions(id, marker)
+	}
+
+	return extractUnknownMarkerIDAndExpressions(marker)
+}
+
+func extractKnownMarkerIDAndExpressions(id string, marker string) (string, map[string]string) {
+	return id, extractExpressions(strings.TrimPrefix(marker, id))
+}
+
+func extractExpressions(expressions string) map[string]string {
+	expressionsMap := map[string]string{}
+
+	// Do some normalization work to ensure we can parse expressions in
+	// a standard way. Trim any lingering colons (:) and replace all ':='s with '='
+	expressions = strings.TrimPrefix(expressions, ":")
+	expressions = strings.ReplaceAll(expressions, ":=", "=")
+
+	// split expression string on commas (,) to handle multiple expressions
+	// in a single marker
+	chainedExpressions := strings.Split(expressions, ",")
+	for _, chainedExpression := range chainedExpressions {
+		exps := strings.SplitN(chainedExpression, "=", 2)
+		if len(exps) < 2 {
+			continue
+		}
+
+		expressionsMap[exps[0]] = exps[1]
+	}
+
+	return expressionsMap
+}
+
+func extractUnknownMarkerIDAndExpressions(marker string) (string, map[string]string) {
+	// if there is only a single "=" split on the equal sign and trim any
+	// dangling ":" characters.
+	if strings.Count(marker, "=") == 1 {
+		splits := strings.Split(marker, "=")
+		// Trim any dangling ":" characters on the identifier to handle
+		// cases like +kubebuilder:object:root:=true
+		identifier := strings.TrimSuffix(splits[0], ":")
+
+		// If there is a single "=" sign that means the left side of the
+		// marker is the identifier and there is no real expression identifier.
+		expressions := map[string]string{UnnamedExpression: splits[1]}
+
+		return identifier, expressions
+	}
+
+	// split on :
+	separators := strings.Split(marker, ":")
+
+	identifier := ""
+	expressionString := ""
+
+	for _, item := range separators {
+		// Not an expression
+		if strings.Count(item, "=") == 0 {
+			if identifier == "" {
+				identifier = item
+
+				continue
+			}
+
+			identifier = strings.Join([]string{identifier, item}, ":")
+
+			continue
+		}
+
+		// The item is likely an expression, join it with any existing expression string.
+		// While something like 'foo:bar=baz:value=something' isn't a valid marker based on our
+		// current understanding, this logic should ensure we are joining expressions appropriately
+		// in a scenario like this.
+		if expressionString == "" {
+			expressionString = item
+			continue
+		}
+
+		expressionString = strings.Join([]string{expressionString, item}, ",")
+	}
+
+	expressions := extractExpressions(expressionString)
+
+	return identifier, expressions
 }
 
 // Marker represents a marker extracted from a comment on a declaration.
 type Marker struct {
-	// Value is the value of the marker once the leading comment and '+' are trimmed.
-	Value string
+	// Identifier is the value of the marker once the leading comment, '+', and expressions are trimmed.
+	Identifier string
+
+	// Expressions are the set of expressions that have been specified for the marker
+	Expressions map[string]string
 
 	// RawComment is the raw comment line, unfiltered.
 	RawComment string
@@ -191,13 +297,13 @@ type Marker struct {
 }
 
 // MarkerSet is a set implementation for Markers that uses
-// the Marker value as the key, but returns the full Marker
-// as the result.
-type MarkerSet map[string]Marker
+// the Marker identifier as the key, but returns all full Markers
+// with that identifier as the result.
+type MarkerSet map[string][]Marker
 
 // NewMarkerSet initialises a new MarkerSet with the provided values.
-// If any markers have the same value, the latter marker in the list
-// will take precedence, no duplication checks are implemented.
+// If any markers have the same identifier, they will both be added to
+// the list of markers for that identifier. No duplication checks are implemented.
 func NewMarkerSet(markers ...Marker) MarkerSet {
 	ms := make(MarkerSet)
 
@@ -206,18 +312,43 @@ func NewMarkerSet(markers ...Marker) MarkerSet {
 	return ms
 }
 
-// Insert add the given markers to the MarkerSet.
+// Insert adds the given markers to the MarkerSet.
 // If any markers have the same value, the latter marker in the list
 // will take precedence, no duplication checks are implemented.
 func (ms MarkerSet) Insert(markers ...Marker) {
 	for _, marker := range markers {
-		ms[marker.Value] = marker
+		ms[marker.Identifier] = append(ms[marker.Identifier], marker)
 	}
 }
 
-// Has returns whether a marker with the value given is present in the
-// MarkerSet.
-func (ms MarkerSet) Has(value string) bool {
-	_, ok := ms[value]
+// Has returns whether marker(s) with the identifier given is present in the
+// MarkerSet. If Has returns true, there is at least one marker
+// with this identifier.
+func (ms MarkerSet) Has(identifier string) bool {
+	_, ok := ms[identifier]
 	return ok
+}
+
+// HasWithValue returns whether marker(s) with the given identifier and
+// expression values (i.e "kubebuilder:object:root:=true") is present
+// in the MarkerSet.
+func (ms MarkerSet) HasWithValue(marker string) bool {
+	return ms.HasWithExpressions(extractMarkerIDAndExpressions(DefaultRegistry(), marker))
+}
+
+// HasWithExpressions returns whether marker(s) with the identifier and
+// expressions are present in the MarkerSet.
+func (ms MarkerSet) HasWithExpressions(identifier string, expressions map[string]string) bool {
+	markers, ok := ms[identifier]
+	if !ok {
+		return false
+	}
+
+	for _, marker := range markers {
+		if reflect.DeepEqual(marker.Expressions, expressions) {
+			return true
+		}
+	}
+
+	return false
 }

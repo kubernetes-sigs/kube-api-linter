@@ -90,6 +90,7 @@ issues:
         - gosec
         - gochecknoglobals
         - goerr113
+        - funlen
     - path: testdata
       linters:
         - all

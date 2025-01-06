@@ -18,6 +18,11 @@ import (
 const (
 	name = "conditions"
 
+	listTypeMarkerID      = "listType"
+	listMapKeyMarkerID    = "listMapKey"
+	patchStrategyMarkerID = "patchStrategy"
+	patchMergeKeyMarkerID = "patchMergeKey"
+
 	listTypeMap       = "listType=map"
 	listMapKeyType    = "listMapKey=type"
 	patchStrategy     = "patchStrategy=merge"
@@ -27,6 +32,16 @@ const (
 	expectedTagWithProtobufFmt = "`json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,%d,rep,name=conditions\"`"
 	expectedTagWithoutProtobuf = "`json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
 )
+
+func init() {
+	markers.DefaultRegistry().Register(
+		listTypeMarkerID,
+		listMapKeyMarkerID,
+		patchStrategyMarkerID,
+		patchMergeKeyMarkerID,
+		optional,
+	)
+}
 
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
@@ -113,19 +128,19 @@ func (a *analyzer) checkField(pass *analysis.Pass, index int, field *ast.Field, 
 func checkFieldMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet) {
 	missingMarkers := []string{}
 
-	if !fieldMarkers.Has(listTypeMap) {
+	if !fieldMarkers.HasWithValue(listTypeMap) {
 		missingMarkers = append(missingMarkers, listTypeMap)
 	}
 
-	if !fieldMarkers.Has(listMapKeyType) {
+	if !fieldMarkers.HasWithValue(listMapKeyType) {
 		missingMarkers = append(missingMarkers, listMapKeyType)
 	}
 
-	if !fieldMarkers.Has(patchStrategy) {
+	if !fieldMarkers.HasWithValue(patchStrategy) {
 		missingMarkers = append(missingMarkers, patchStrategy)
 	}
 
-	if !fieldMarkers.Has(patchMergeKeyType) {
+	if !fieldMarkers.HasWithValue(patchMergeKeyType) {
 		missingMarkers = append(missingMarkers, patchMergeKeyType)
 	}
 

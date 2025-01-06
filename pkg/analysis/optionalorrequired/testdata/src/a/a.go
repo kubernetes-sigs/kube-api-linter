@@ -32,6 +32,15 @@ type OptionalOrRequiredTestStruct struct {
 	// +required
 	RequiredMarker string
 
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Optional
+	MarkedWithKubeBuilderOptionalTwice string // want "field MarkedWithKubeBuilderOptionalTwice should use marker optional instead of kubebuilder:validation:Optional"
+
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Optional
+	// +optional
+	MarkedWithKubeBuilderOptionalTwiceAndOptional string // want "field MarkedWithKubeBuilderOptionalTwiceAndOptional should use only the marker optional, kubebuilder:validation:Optional is not required"
+
 	A `json:",inline"`
 
 	B `json:"b,omitempty"` // want "embedded field B must be marked as optional or required"
