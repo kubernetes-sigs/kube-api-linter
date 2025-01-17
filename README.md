@@ -201,6 +201,20 @@ lintersConfig:
     jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
 ```
 
+## MaxLength
+
+The `maxlength` linter checks that string and array fields in the API are bounded by a maximum length.
+
+For strings, this means they have a `+kubebuilder:validation:MaxLength` marker.
+
+For arrays, this means they have a `+kubebuilder:validation:MaxItems` marker.
+
+For arrays of strings, the array element should also have a `+kubebuilder:validation:MaxLength` marker if the array element is a type alias,
+or `+kubebuilder:validation:items:MaxLenth` if the array is an element of the built-in string type.
+
+Adding maximum lengths to strings and arrays not only ensures that the API is not abused (used to store overly large data, reduces DDOS etc.),
+but also allows CEL validation cost estimations to be kept within reasonable bounds.
+
 ## NoBools
 
 The `nobools` linter checks that fields in the API types do not contain a `bool` type.
