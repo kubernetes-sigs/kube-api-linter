@@ -86,6 +86,13 @@ linters:
   disable-all: true
   enable:
     - kal
+
+# To only run KAL on specific path
+issues:
+  exclude-rules:
+    - path-except: "api/*"
+      linters:
+        - kal
 ```
 
 The settings for KAL are based on the [GolangCIConfig][golangci-config-struct] struct and allow for finer control over the linter rules.
