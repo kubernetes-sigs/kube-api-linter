@@ -86,13 +86,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 
 func checkIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markers.Markers, prefix, marker string, needsMaxLength func(markers.MarkerSet) bool) {
 	if ident.Obj == nil { // Built-in type
-		if ident.Name == "string" {
-			markers := getCombinedMarkers(markersAccess, node, aliases)
-
-			if needsMaxLength(markers) {
-				pass.Reportf(node.Pos(), "%s must have a maximum length, add %s marker", prefix, marker)
-			}
-		}
+		checkString(pass, ident, node, aliases, markersAccess, prefix, marker, needsMaxLength)
 
 		return
 	}
@@ -103,6 +97,18 @@ func checkIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []
 	}
 
 	checkTypeSpec(pass, tSpec, node, append(aliases, tSpec), markersAccess, fmt.Sprintf("%s type", prefix), marker, needsMaxLength)
+}
+
+func checkString(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markers.Markers, prefix, marker string, needsMaxLength func(markers.MarkerSet) bool) {
+	if ident.Name != "string" {
+		return
+	}
+
+	markers := getCombinedMarkers(markersAccess, node, aliases)
+
+	if needsMaxLength(markers) {
+		pass.Reportf(node.Pos(), "%s must have a maximum length, add %s marker", prefix, marker)
+	}
 }
 
 func checkTypeSpec(pass *analysis.Pass, tSpec *ast.TypeSpec, node ast.Node, aliases []*ast.TypeSpec, markersAccess markers.Markers, prefix, marker string, needsMaxLength func(markers.MarkerSet) bool) {
@@ -143,13 +149,7 @@ func checkArrayType(pass *analysis.Pass, arrayType *ast.ArrayType, node ast.Node
 
 func checkArrayElementIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markers.Markers, prefix string) {
 	if ident.Obj == nil { // Built-in type
-		if ident.Name == "string" {
-			markers := getCombinedMarkers(markersAccess, node, aliases)
-
-			if needsItemsMaxLength(markers) {
-				pass.Reportf(node.Pos(), "%s must have a maximum length, add %s marker", prefix, kubebuilderItemsMaxLength)
-			}
-		}
+		checkString(pass, ident, node, aliases, markersAccess, prefix, kubebuilderItemsMaxLength, needsItemsMaxLength)
 
 		return
 	}
