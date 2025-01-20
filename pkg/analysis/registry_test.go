@@ -40,6 +40,7 @@ var _ = Describe("Registry", func() {
 				"nophase",
 				"optionalorrequired",
 				"requiredfields",
+				"statussubresource",
 			))
 		})
 	})
