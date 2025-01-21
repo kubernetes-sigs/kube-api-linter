@@ -186,7 +186,7 @@ When the `json` tag is present, and matches the first word of the field comment 
 The `integers` linter checks for usage of unsupported integer types.
 Only `int32` and `int64` types should be used in APIs, and other integer types, including unsigned integers are forbidden.
 
-## JSONTags
+## JSONTags
 
 The `jsontags` linter checks that all fields in the API types have a `json` tag, and that those tags are correctly formatted.
 The `json` tag for a field within a Kubernetes API type should use a camel case version of the field name.
