@@ -222,6 +222,14 @@ The `nobools` linter checks that fields in the API types do not contain a `bool`
 Booleans are limited and do not evolve well over time.
 It is recommended instead to create a string alias with meaningful values, as an enum.
 
+## NoFloats
+
+The `nofloats` linter checks that fields in the API types do not contain a `float32` or `float64` type.
+
+Floating-point values cannot be reliably round-tripped without changing and have varying precision and representation across languages and architectures.
+Their use should be avoided as much as possible.
+They should never be used in spec.
+
 ## Nophase
 
 The `nophase` linter checks that the fields in the API types don't contain a 'Phase', or any field which contains 'Phase' as a substring, e.g MachinePhase.
