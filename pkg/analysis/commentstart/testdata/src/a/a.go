@@ -20,6 +20,8 @@ type CommentStartTestStruct struct {
 		NoComment string `json:"noComment"`
 	} `json:"-"`
 
+	StructForInlineField `json:",inline"`
+
 	// IncorrectStartComment is a field with an incorrect start to the comment. // want "godoc for field IncorrectStartComment should start with 'incorrectStartComment ...'"
 	IncorrectStartComment string `json:"incorrectStartComment"`
 
@@ -46,6 +48,10 @@ type CommentStartTestStruct struct {
 
 // DoNothing is used to check that the analyser doesn't report on methods.
 func (CommentStartTestStruct) DoNothing() {}
+
+type StructForInlineField struct {
+	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+}
 
 type unexportedStruct struct {
 	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
