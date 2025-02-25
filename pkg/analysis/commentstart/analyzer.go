@@ -62,6 +62,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if decl.Tok != token.TYPE {
+			// Returning false here means we won't inspect non-type declarations (e.g. var, const, import).
 			return false
 		}
 
@@ -78,11 +79,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 func checkField(pass *analysis.Pass, field *ast.Field, jsonTags extractjsontags.StructFieldTags) (proceed bool) {
 	if field == nil || len(field.Names) == 0 {
+		// Returning false here means we don't inspect inline fields.
+		// Types of inline fields will be inspected on its declaration.
 		return false
 	}
 
 	tagInfo := jsonTags.FieldTags(field)
 	if tagInfo.Ignored {
+		// Returning false here means we won't inspect the children of an ignored field.
 		return false
 	}
 
