@@ -57,6 +57,15 @@ type unexportedStruct struct {
 	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
 }
 
+type (
+	MultipleTypeDeclaration1 struct {
+		NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+	}
+	MultipleTypeDeclaration2 struct {
+		NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+	}
+)
+
 func FunctionWithStructs() {
 	type InaccessibleStruct struct {
 		NoComment string `json:"noComment"`
