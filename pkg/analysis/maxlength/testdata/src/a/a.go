@@ -32,6 +32,18 @@ type MaxLength struct {
 
 	ArrayWithoutMaxItems []int // want "field ArrayWithoutMaxItems must have a maximum items, add kubebuilder:validation:MaxItems"
 
+	ByteSlice []byte // want "field ByteSlice must have a maximum length, add kubebuilder:validation:MaxLength marker"
+
+	// +kubebuilder:validation:MaxLength:=512
+	ByteSliceWithMaxLength []byte
+
+	ByteSliceAlias ByteSliceAlias // want "field ByteSliceAlias type ByteSliceAlias must have a maximum length, add kubebuilder:validation:MaxLength marker"
+
+	// +kubebuilder:validation:MaxLength:=512
+	ByteSliceAliasWithMaxLength ByteSliceAlias
+
+	ByteSliceAliasWithMaxLengthOnAlias ByteSliceAliasWithMaxLength
+
 	// +kubebuilder:validation:MaxItems:=128
 	StringArrayWithMaxItemsWithoutMaxElementLength []string // want "field StringArrayWithMaxItemsWithoutMaxElementLength array element must have a maximum length, add kubebuilder:validation:items:MaxLength"
 
@@ -72,3 +84,10 @@ type StringAliasWithMaxLength string
 // EnumStringAlias is a string alias that is an enum.
 // +kubebuilder:validation:Enum:="A";"B";"C"
 type EnumStringAlias string
+
+// ByteSliceAlias is a byte slice without a MaxLength.
+type ByteSliceAlias []byte
+
+// ByteSliceAliasWithMaxLength is a byte slice with a MaxLength.
+// +kubebuilder:validation:MaxLength:=512
+type ByteSliceAliasWithMaxLength []byte

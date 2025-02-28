@@ -136,6 +136,18 @@ func checkTypeExpr(pass *analysis.Pass, typeExpr ast.Expr, node ast.Node, aliase
 func checkArrayType(pass *analysis.Pass, arrayType *ast.ArrayType, node ast.Node, aliases []*ast.TypeSpec, markersAccess markers.Markers, prefix string) {
 	if arrayType.Elt != nil {
 		if ident, ok := arrayType.Elt.(*ast.Ident); ok {
+			if ident.Name == "byte" {
+				// byte slices are a special case as they are treated as strings.
+				// Pretend the ident is a string so that checkString can process it as expected.
+				i := &ast.Ident{
+					NamePos: ident.NamePos,
+					Name:    "string",
+				}
+				checkString(pass, i, node, aliases, markersAccess, prefix, kubebuilderMaxLength, needsStringMaxLength)
+
+				return
+			}
+
 			checkArrayElementIdent(pass, ident, node, aliases, markersAccess, fmt.Sprintf("%s array element", prefix))
 		}
 	}
