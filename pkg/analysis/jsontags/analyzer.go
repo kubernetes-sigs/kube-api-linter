@@ -4,15 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/token"
 	"regexp"
 
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
+	"github.com/JoelSpeed/kal/pkg/analysis/helpers/inspector"
+	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	"github.com/JoelSpeed/kal/pkg/config"
 
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
 )
 
 const (
@@ -24,7 +23,6 @@ const (
 
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
-	errCouldNotGetJSONTags  = errors.New("could not get json tags")
 )
 
 type analyzer struct {
@@ -48,61 +46,24 @@ func newAnalyzer(cfg config.JSONTagsConfig) (*analysis.Analyzer, error) {
 		Name:     name,
 		Doc:      "Check that all struct fields in an API are tagged with json tags",
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer, extractjsontags.Analyzer},
+		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}, nil
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
-	inspect, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
 		return nil, errCouldNotGetInspector
 	}
 
-	jsonTags, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
-	if !ok {
-		return nil, errCouldNotGetJSONTags
-	}
-
-	// Filter to fields so that we can iterate over fields in a struct.
-	nodeFilter := []ast.Node{
-		(*ast.Field)(nil),
-	}
-
-	inspect.WithStack(nodeFilter, func(n ast.Node, push bool, stack []ast.Node) (proceed bool) {
-		if !push {
-			return false
-		}
-
-		if len(stack) < 2 {
-			return true
-		}
-
-		// The 0th node in the stack is the *ast.File.
-		// The 1st node in the stack is the *ast.GenDecl.
-		decl, ok := stack[1].(*ast.GenDecl)
-		if !ok {
-			return false
-		}
-
-		if decl.Tok != token.TYPE {
-			// Returning false here means we won't inspect non-type declarations (e.g. var, const, import).
-			return false
-		}
-
-		field, ok := n.(*ast.Field)
-		if !ok {
-			return true
-		}
-
-		return a.checkField(pass, field, jsonTags)
+	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
+		a.checkField(pass, field, jsonTagInfo)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, jsonTags extractjsontags.StructFieldTags) (proceed bool) {
-	tagInfo := jsonTags.FieldTags(field)
-
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo) {
 	var prefix string
 	if len(field.Names) > 0 && field.Names[0] != nil {
 		prefix = fmt.Sprintf("field %s", field.Names[0].Name)
@@ -112,29 +73,22 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, jsonTags ex
 
 	if tagInfo.Missing {
 		pass.Reportf(field.Pos(), "%s is missing json tag", prefix)
-		return true
+		return
 	}
 
 	if tagInfo.Inline {
-		return true
-	}
-
-	if tagInfo.Ignored {
-		// Returning false here means we won't inspect the children of an ignored field.
-		return false
+		return
 	}
 
 	if tagInfo.Name == "" {
 		pass.Reportf(field.Pos(), "%s has empty json tag", prefix)
-		return true
+		return
 	}
 
 	matched := a.jsonTagRegex.Match([]byte(tagInfo.Name))
 	if !matched {
 		pass.Reportf(field.Pos(), "%s json tag does not match pattern %q: %s", prefix, a.jsonTagRegex.String(), tagInfo.Name)
 	}
-
-	return true
 }
 
 func defaultConfig(cfg *config.JSONTagsConfig) {

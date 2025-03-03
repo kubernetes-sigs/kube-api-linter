@@ -46,3 +46,7 @@ type C struct{}
 type D struct{}
 
 type E struct{}
+
+type Interface interface {
+	InaccessibleFunction() string
+}

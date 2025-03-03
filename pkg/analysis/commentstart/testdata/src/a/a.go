@@ -22,6 +22,8 @@ type CommentStartTestStruct struct {
 
 	StructForInlineField `json:",inline"`
 
+	A `json:"a"` // want "field A is missing godoc comment"
+
 	// IncorrectStartComment is a field with an incorrect start to the comment. // want "godoc for field IncorrectStartComment should start with 'incorrectStartComment ...'"
 	IncorrectStartComment string `json:"incorrectStartComment"`
 
@@ -53,6 +55,10 @@ type StructForInlineField struct {
 	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
 }
 
+type A struct {
+	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+}
+
 type unexportedStruct struct {
 	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
 }
@@ -70,4 +76,8 @@ func FunctionWithStructs() {
 	type InaccessibleStruct struct {
 		NoComment string `json:"noComment"`
 	}
+}
+
+type Interface interface {
+	InaccessibleFunction() string
 }

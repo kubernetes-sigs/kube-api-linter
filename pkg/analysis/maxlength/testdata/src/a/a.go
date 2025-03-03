@@ -72,6 +72,13 @@ type MaxLength struct {
 	StringAliasArrayWithMaxItemsAndMaxElementLengthOnAlias []StringAliasWithMaxLength
 
 	StringAliasArrayWithoutMaxItemsWithMaxElementLengthOnAlias []StringAliasWithMaxLength // want  "field StringAliasArrayWithoutMaxItemsWithMaxElementLengthOnAlias must have a maximum items, add kubebuilder:validation:MaxItems"
+
+	Struct struct {
+		// +kubebuilder:validation:MaxLength:=256
+		StringWithMaxLength string
+
+		StringWithoutMaxLength string // want "field StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	} `json:"struct"`
 }
 
 // StringAlias is a string without a MaxLength.

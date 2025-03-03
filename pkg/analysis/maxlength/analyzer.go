@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"go/ast"
 
+	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
+	"github.com/JoelSpeed/kal/pkg/analysis/helpers/inspector"
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
 )
 
 const (
@@ -27,7 +27,6 @@ const (
 
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
-	errCouldNotGetMarkers   = errors.New("could not get markers")
 )
 
 // Analyzer is the analyzer for the maxlength package.
@@ -36,38 +35,17 @@ var Analyzer = &analysis.Analyzer{
 	Name:     name,
 	Doc:      "Checks that all strings formatted fields are marked with a maximum length, and that arrays are marked with max items.",
 	Run:      run,
-	Requires: []*analysis.Analyzer{inspect.Analyzer, markers.Analyzer},
+	Requires: []*analysis.Analyzer{inspector.Analyzer},
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
-	inspect, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
 		return nil, errCouldNotGetInspector
 	}
 
-	markersAccess, ok := pass.ResultOf[markers.Analyzer].(markers.Markers)
-	if !ok {
-		return nil, errCouldNotGetMarkers
-	}
-
-	// Filter to structs so that we can iterate over the fields in a struct.
-	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
-	}
-
-	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		sTyp, ok := n.(*ast.StructType)
-		if !ok {
-			return
-		}
-
-		if sTyp.Fields == nil {
-			return
-		}
-
-		for _, field := range sTyp.Fields.List {
-			checkField(pass, field, markersAccess)
-		}
+	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
+		checkField(pass, field, markersAccess)
 	})
 
 	return nil, nil //nolint:nilnil

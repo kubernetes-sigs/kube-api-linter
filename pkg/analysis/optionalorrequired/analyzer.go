@@ -6,11 +6,10 @@ import (
 	"go/ast"
 
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
+	"github.com/JoelSpeed/kal/pkg/analysis/helpers/inspector"
 	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
-	"golang.org/x/tools/go/ast/inspector"
 )
 
 const (
@@ -40,8 +39,6 @@ func init() {
 
 var (
 	errCouldNotGetInspector = errors.New("could not get inspector")
-	errCouldNotGetMarkers   = errors.New("could not get markers")
-	errCouldNotGetJSONTags  = errors.New("could not get jsontags")
 )
 
 type analyzer struct {
@@ -80,47 +77,18 @@ func newAnalyzer(cfg config.OptionalOrRequiredConfig) *analysis.Analyzer {
 		Name:     name,
 		Doc:      "Checks that all struct fields are marked either with the optional or required markers.",
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer, markers.Analyzer, extractjsontags.Analyzer},
+		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
-	inspect, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
 		return nil, errCouldNotGetInspector
 	}
 
-	markersAccess, ok := pass.ResultOf[markers.Analyzer].(markers.Markers)
-	if !ok {
-		return nil, errCouldNotGetMarkers
-	}
-
-	jsonTags, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
-	if !ok {
-		return nil, errCouldNotGetJSONTags
-	}
-
-	// Filter to fields so that we can iterate over fields in a struct.
-	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
-	}
-
-	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		sTyp, ok := n.(*ast.StructType)
-		if !ok {
-			return
-		}
-
-		if sTyp.Fields == nil {
-			return
-		}
-
-		for _, field := range sTyp.Fields.List {
-			fieldMarkers := markersAccess.FieldMarkers(field)
-			fieldTagInfo := jsonTags.FieldTags(field)
-
-			a.checkField(pass, field, fieldMarkers, fieldTagInfo)
-		}
+	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
+		a.checkField(pass, field, markersAccess.FieldMarkers(field), jsonTagInfo)
 	})
 
 	return nil, nil //nolint:nilnil

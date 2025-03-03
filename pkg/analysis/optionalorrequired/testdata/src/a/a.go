@@ -57,3 +57,7 @@ func (A) DoNothing() {}
 type B struct{}
 
 type C struct{}
+
+type Interface interface {
+	InaccessibleFunction() string
+}
