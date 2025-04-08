@@ -4,10 +4,10 @@ import (
 	"errors"
 	"go/ast"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/utils"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 const name = "integers"

@@ -3,9 +3,9 @@ package optionalorrequired_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/optionalorrequired"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestDefaultConfiguration(t *testing.T) {

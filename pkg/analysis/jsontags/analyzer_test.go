@@ -3,9 +3,9 @@ package jsontags_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/jsontags"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestDefaultConfiguration(t *testing.T) {

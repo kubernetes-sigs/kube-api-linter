@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/JoelSpeed/kal/pkg/analysis"
-	"github.com/JoelSpeed/kal/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"

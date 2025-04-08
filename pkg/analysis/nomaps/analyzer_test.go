@@ -3,9 +3,9 @@ package nomaps_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/nomaps"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func Test(t *testing.T) {

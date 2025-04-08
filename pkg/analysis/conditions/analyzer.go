@@ -8,12 +8,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 const (

@@ -8,8 +8,8 @@ import (
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	astinspector "golang.org/x/tools/go/ast/inspector"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
 
 const name = "inspector"

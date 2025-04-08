@@ -3,8 +3,8 @@ package maxlength_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/maxlength"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
 )
 
 func TestMaxLength(t *testing.T) {

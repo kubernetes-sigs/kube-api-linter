@@ -7,8 +7,8 @@ import (
 	goanalysis "golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/sets"
 
-	"github.com/JoelSpeed/kal/pkg/analysis"
-	"github.com/JoelSpeed/kal/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 var _ = Describe("Registry", func() {

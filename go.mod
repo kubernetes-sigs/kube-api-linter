@@ -1,4 +1,4 @@
-module github.com/JoelSpeed/kal
+module sigs.k8s.io/kube-api-linter
 
 go 1.22.1
 

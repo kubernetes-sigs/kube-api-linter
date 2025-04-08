@@ -3,8 +3,8 @@ package integers_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/integers"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 )
 
 func Test(t *testing.T) {

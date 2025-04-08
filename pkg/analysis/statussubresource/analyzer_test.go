@@ -3,9 +3,9 @@ package statussubresource_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/statussubresource"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/statussubresource"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestStatusSubresourceAnalyzer(t *testing.T) {

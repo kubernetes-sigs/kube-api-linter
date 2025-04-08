@@ -8,10 +8,10 @@ import (
 	"go/types"
 	"strings"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/inspector"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	"golang.org/x/tools/go/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
 
 const name = "commentstart"

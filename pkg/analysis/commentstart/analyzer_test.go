@@ -3,8 +3,8 @@ package commentstart_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/commentstart"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 )
 
 func Test(t *testing.T) {

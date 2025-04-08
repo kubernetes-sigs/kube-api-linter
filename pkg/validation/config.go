@@ -1,8 +1,8 @@
 package validation
 
 import (
-	"github.com/JoelSpeed/kal/pkg/config"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // ValidateGolangCIConfig is used to validate the provided configuration once

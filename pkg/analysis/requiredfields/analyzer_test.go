@@ -3,9 +3,9 @@ package requiredfields_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/requiredfields"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestDefaultConfiguration(t *testing.T) {

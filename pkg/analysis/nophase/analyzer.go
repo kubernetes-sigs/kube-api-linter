@@ -5,10 +5,10 @@ import (
 	"go/ast"
 	"strings"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 )
 
 const name = "nophase"

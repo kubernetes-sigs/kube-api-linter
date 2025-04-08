@@ -16,7 +16,7 @@ KAL currently comes in two flavours, a standalone binary, and a golangci-lint pl
 To install the standalone binary, run the following command:
 
 ```shell
-go install github.com/JoelSpeed/kal/cmd/kal@latest
+go install sigs.k8s.io/kube-api-linter/cmd/kal@latest
 ```
 
 The standalone binary can be run with the following command:
@@ -58,7 +58,7 @@ version:  v1.62.0
 name: golangci-kal
 destination: ./bin
 plugins:
-- module: 'github.com/JoelSpeed/kal'
+- module: 'sigs.k8s.io/kube-api-linter'
   version: 'v0.0.0' # Replace with the latest version
 ```
 
@@ -101,7 +101,7 @@ The finer control over linter rules is not currently avaialable outside of the p
 If you wish to use the KAL linters in conjunction with other linters, you can enable the KAL linters in the `.golangci.yml` file by ensuring that `kal` is in the `linters.enabled` list.
 To provide further configuration, add the `custom.kal` section to your `linter-settings` as per the example above.
 
-[golangci-config-struct]: https://pkg.go.dev/github.com/JoelSpeed/kal/pkg/config#GolangCIConfig
+[golangci-config-struct]: https://pkg.go.dev/sigs.k8s.io/kube-api-linter/pkg/config#GolangCIConfig
 
 #### VSCode integration
 

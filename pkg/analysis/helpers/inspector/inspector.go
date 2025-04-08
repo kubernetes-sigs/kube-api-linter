@@ -4,9 +4,9 @@ import (
 	"go/ast"
 	"go/token"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	astinspector "golang.org/x/tools/go/ast/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
 
 // Inspector is an interface that allows for the inspection of fields in structs.

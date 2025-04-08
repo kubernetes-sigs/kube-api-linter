@@ -1,8 +1,8 @@
 package nobools
 
 import (
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this

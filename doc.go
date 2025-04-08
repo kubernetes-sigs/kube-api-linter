@@ -29,6 +29,6 @@ Example `.golangci.yml` configuration file:
 	  enable:
 	    - kal
 
-New linters can be added in the [github.com/JoelSpeed/kal/pkg/analysis] package.
+New linters can be added in the [sigs.k8s.io/kube-api-linter/pkg/analysis] package.
 */
 package kal

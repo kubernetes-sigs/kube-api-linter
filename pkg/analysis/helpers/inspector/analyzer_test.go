@@ -5,11 +5,11 @@ import (
 	"go/ast"
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/extractjsontags"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/inspector"
-	"github.com/JoelSpeed/kal/pkg/analysis/helpers/markers"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
 
 func TestInspector(t *testing.T) {

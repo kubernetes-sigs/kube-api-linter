@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/optionalorrequired"
-	"github.com/JoelSpeed/kal/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )

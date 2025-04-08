@@ -3,8 +3,8 @@ package nobools_test
 import (
 	"testing"
 
-	"github.com/JoelSpeed/kal/pkg/analysis/nobools"
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
 )
 
 func Test(t *testing.T) {

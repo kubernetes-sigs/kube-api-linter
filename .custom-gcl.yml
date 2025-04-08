@@ -2,5 +2,5 @@ version:  v1.62.0
 name: golangci-kal
 destination: ./bin
 plugins:
-- module: 'github.com/JoelSpeed/kal'
+- module: 'sigs.k8s.io/kube-api-linter'
   path: ./

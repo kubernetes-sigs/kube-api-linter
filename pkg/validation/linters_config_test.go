@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/JoelSpeed/kal/pkg/config"
-	"github.com/JoelSpeed/kal/pkg/validation"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/validation"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )

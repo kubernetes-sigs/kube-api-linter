@@ -3,12 +3,12 @@ package kal
 import (
 	"fmt"
 
-	kalanalysis "github.com/JoelSpeed/kal/pkg/analysis"
-	"github.com/JoelSpeed/kal/pkg/config"
-	"github.com/JoelSpeed/kal/pkg/validation"
 	"github.com/golangci/plugin-module-register/register"
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/validation"
 )
 
 func init() {

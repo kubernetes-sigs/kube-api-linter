@@ -1,9 +1,9 @@
 package main
 
 import (
-	kalanalysis "github.com/JoelSpeed/kal/pkg/analysis"
-	"github.com/JoelSpeed/kal/pkg/config"
 	"golang.org/x/tools/go/analysis/multichecker"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func main() {
