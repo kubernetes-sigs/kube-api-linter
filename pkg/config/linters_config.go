@@ -26,6 +26,9 @@ type LintersConfig struct {
 	// nomaps contains configuration for the nomaps linter.
 	NoMaps NoMapsConfig `json:"nomaps"`
 
+	// optionalFields contains configuration for the optionalfields linter.
+	OptionalFields OptionalFieldsConfig `json:"optionalFields"`
+
 	// optionalOrRequired contains configuration for the optionalorrequired linter.
 	OptionalOrRequired OptionalOrRequiredConfig `json:"optionalOrRequired"`
 
@@ -141,6 +144,53 @@ type NoMapsConfig struct {
 	// When otherwise not specified, the default value is "AllowStringToStringMaps".
 	Policy NoMapsPolicy `json:"policy"`
 }
+
+// OptionalFields is the policy for the optionalfields linter.
+type OptionalFieldsConfig struct {
+	// pointers is the policy for pointers in optional fields.
+	// This defines how the linter should handle optional fields, and whether they should be pointers or not.
+	// By default, all fields will be expected to be pointers, and the linter will suggest fixes if they are not.
+	Pointers OptionalFieldsPointers `json:"pointers"`
+}
+
+type OptionalFieldsPointers struct {
+	// preference determines whether the linter should prefer pointers for all optional fields,
+	// or only for optional fields where validation or serialization requires a pointer.
+	// Valid values are "Always" and "WhenRequired".
+	// When set to "Always", the linter will prefer pointers for all optional fields.
+	// When set to "WhenRequired", the linter will prefer pointers for optional fields where validation or serialization requires a pointer.
+	// The "WhenRequired" option requires bounds on strings and numerical values to be able to acurately determine the correct pointer vs non-pointer decision.
+	// When otherwise not specified, the default value is "Always".
+	Preference OptionalFieldsPointerPreference `json:"preference"`
+	// policy is the policy for the pointer preferences for optional fields.
+	// Valid values are "SuggestFix" and "Warn".
+	// When set to "SuggestFix", the linter will emit a warning if the pointer preference is not followed and suggest a fix.
+	// When set to "Warn", the linter will emit a warning if the pointer preference is not followed.
+	// When otherwise not specified, the default value is "SuggestFix".
+	Policy OptionalFieldsPointerPolicy `json:"policy"`
+}
+
+// OptionalFieldsPointerPreference is the preference for pointers in optional fields.
+type OptionalFieldsPointerPreference string
+
+const (
+	// OptionalFieldsPointerPreferenceAlways indicates that the linter should prefer pointers for all optional fields.
+	OptionalFieldsPointerPreferenceAlways OptionalFieldsPointerPreference = "Always"
+
+	// OptionalFieldsPointerPreferenceWhenRequired indicates that the linter should prefer pointers for optional fields where validation or serialization requires a pointer.
+	OptionalFieldsPointerPreferenceWhenRequired OptionalFieldsPointerPreference = "WhenRequired"
+)
+
+// OptionalFieldsPointerPolicy is the policy for pointers in optional fields.
+type OptionalFieldsPointerPolicy string
+
+const (
+	// OptionalFieldsPointerPolicySuggestFix indicates that the linter will emit a warning if the pointer preference is not followed and suggest a fix.
+	OptionalFieldsPointerPolicySuggestFix OptionalFieldsPointerPolicy = "SuggestFix"
+
+	// OptionalFieldsPointerPolicyWarn indicates that the linter will emit a warning if the pointer preference is not followed.
+	OptionalFieldsPointerPolicyWarn OptionalFieldsPointerPolicy = "Warn"
+)
 
 // OptionalOrRequiredConfig contains configuration for the optionalorrequired linter.
 type OptionalOrRequiredConfig struct {
