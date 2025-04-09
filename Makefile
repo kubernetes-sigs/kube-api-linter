@@ -57,11 +57,7 @@ unit: ## Run unit tests.
 ##@ Build
 
 .PHONY: build
-build: fmt vet ## Build KAL binary.
-	go build -o bin/kal ./cmd/kal
-
-.PHONY: build-golangci
-build-golangci: ## Run golangci-lint over the codebase.
+build: ## Build the golangci-lint custom plugin binary.
 	${GOLANGCI_LINT} custom
 
 .PHONY: verify-%

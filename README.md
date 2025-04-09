@@ -1,48 +1,16 @@
-# KAL - The Kubernetes API Linter
+# Kube API Linter
 
-KAL is a Golang based linter for Kubernetes API types. It checks for common mistakes and enforces best practices.
-The rules implemented by KAL, are based on the [Kubernetes API Conventions][api-conventions].
+Kube API Linter (KAL) is a Golang based linter for Kubernetes API types.
+It checks for common mistakes and enforces best practices.
+The rules implemented by the Kube API Linter, are based on the [Kubernetes API Conventions][api-conventions].
 
-KAL is aimed at being an assistant to API review, by catching the mechanical elements of API review, and allowing reviewers to focus on the more complex aspects of API design.
+Kube API Linter is aimed at being an assistant to API review, by catching the mechanical elements of API review, and allowing reviewers to focus on the more complex aspects of API design.
 
 [api-conventions]: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md
 
 ## Installation
 
-KAL currently comes in two flavours, a standalone binary, and a golangci-lint plugin.
-
-### Standalone Binary
-
-To install the standalone binary, run the following command:
-
-```shell
-go install sigs.k8s.io/kube-api-linter/cmd/kal@latest
-```
-
-The standalone binary can be run with the following command:
-
-```shell
-kal path/to/api/types
-```
-
-`kal` currently accepts no complex configuration, and will run all checks considered to be default.
-
-Individual linters can be disabled with the flag corresponding to the linter name. For example, to disable the `commentstart` linter, run the following command:
-
-```shell
-kal -commentstart=false path/to/api/types
-```
-
-Where fixes are available, these can be applied automatically with the `-fix` flag.
-Note, automatic fixing is currently only available via the standalone binary, and is not available via the `golangci-lint` plugin.
-
-```shell
-kal -fix path/to/api/types
-```
-
-Other standard Golang linter flags implemented by [multichecker][multichecker] based linters are also supported.
-
-[multichecker]: https://pkg.go.dev/golang.org/x/tools/go/analysis/multichecker
+Kube API Linter ships as a golangci-lint plugin.
 
 ### Golangci-lint Plugin
 
@@ -55,7 +23,7 @@ You will need to create a `.custom-gcl.yml` file to describe the custom linters 
 
 ```yaml
 version:  v1.62.0
-name: golangci-kal
+name: golangci-kube-api-linter
 destination: ./bin
 plugins:
 - module: 'sigs.k8s.io/kube-api-linter'
@@ -68,47 +36,52 @@ Once you have created the custom configuration file, you can run the following c
 golangci-lint custom
 ```
 
-The output binary will be a combination of the initial `golangci-lint` binary and the KAL linters.
-This means that you can use any of the standard `golangci-lint` configuration or flags to run the binary, but may also include the KAL linters.
+The output binary will be a combination of the initial `golangci-lint` binary and the Kube API linter plugin.
+This means that you can use any of the standard `golangci-lint` configuration or flags to run the binary, but may also include the Kube API Linter rules.
 
-If you wish to only use the KAL linters, you can configure your `.golangci.yml` file to only run the KAL linters:
+If you wish to only use the Kube API Linter rules, you can configure your `.golangci.yml` file to only run the Kube API Linter:
 
 ```yaml
 linters-settings:
   custom:
-    kal:
+    kubeapilinter:
       type: "module"
-      description: KAL is the Kube-API-Linter and lints Kube like APIs based on API conventions and best practices.
+      description: Kube API LInter lints Kube like APIs based on API conventions and best practices.
       settings:
         linters: {}
         lintersConfig: {}
 linters:
   disable-all: true
   enable:
-    - kal
+    - kubeapilinter
 
-# To only run KAL on specific path
+# To only run Kube API Linter on specific path
 issues:
   exclude-rules:
     - path-except: "api/*"
       linters:
-        - kal
+        - kubeapilinter
 ```
 
-The settings for KAL are based on the [GolangCIConfig][golangci-config-struct] struct and allow for finer control over the linter rules.
-The finer control over linter rules is not currently avaialable outside of the plugin based version of KAL.
+The settings for Kube API Linter are based on the [GolangCIConfig][golangci-config-struct] struct and allow for finer control over the linter rules.
 
-If you wish to use the KAL linters in conjunction with other linters, you can enable the KAL linters in the `.golangci.yml` file by ensuring that `kal` is in the `linters.enabled` list.
-To provide further configuration, add the `custom.kal` section to your `linter-settings` as per the example above.
+If you wish to use the Kube API Linter in conjunction with other linters, you can enable the Kube API Linter in the `.golangci.yml` file by ensuring that `kubeapilinter` is in the `linters.enabled` list.
+To provide further configuration, add the `custom.kubeapilinter` section to your `linter-settings` as per the example above.
 
 [golangci-config-struct]: https://pkg.go.dev/sigs.k8s.io/kube-api-linter/pkg/config#GolangCIConfig
+
+Where fixes are available within a rule, these can be applied automatically with the `--fix` flag.
+
+```shell
+golangci-kube-api-linter run path/to/api/types --fix
+```
 
 #### VSCode integration
 
 Since VSCode already integrates with `golangci-lint` via the [Go][vscode-go] extension, you can use the `golangci-kal` binary as a linter in VSCode.
 If your project authors are already using VSCode and have the configuration to lint their code when saving, this can be a seamless integration.
 
-Ensure that your project setup includes building the `golangci-kal` binary, and then configure the `go.lintTool` and `go.alternateTools` settings in your project `.vscode/settings.json` file.
+Ensure that your project setup includes building the `golangci-kube-api-linter` binary, and then configure the `go.lintTool` and `go.alternateTools` settings in your project `.vscode/settings.json` file.
 
 [vscode-go]: https://code.visualstudio.com/docs/languages/go
 
@@ -116,12 +89,12 @@ Ensure that your project setup includes building the `golangci-kal` binary, and 
 {
     "go.lintTool": "golangci-lint",
     "go.alternateTools": {
-        "golangci-lint": "${workspaceFolder}/bin/golangci-kal",
+        "golangci-lint": "${workspaceFolder}/bin/golangci-kube-api-linter",
     }
 }
 ```
 
-Alternatively, you can also replace the binary with a script that runs the `golangci-kal` binary,
+Alternatively, you can also replace the binary with a script that runs the `golangci-kube-api-linter` binary,
 allowing for customisation or automatic copmilation of the project should it not already exist.
 
 ```json
@@ -164,7 +137,7 @@ lintersConfig:
     usePatchStrategy: SuggestFix | Warn | Ignore | Forbid # The policy for the patchStrategy tag on the Conditions field. Defaults to `SuggestFix`.
 ```
 
-### Fixes (via standalone binary only)
+### Fixes
 
 The `conditions` linter can automatically fix the tags on the `Conditions` field.
 When they do not match the expected format, the linter will suggest to update the tags to match the expected format.
@@ -184,7 +157,7 @@ When `usePatchStrategy` is set to `Forbid`, the linter will suggest to remove th
 The `commentstart` linter checks that all comments in the API types start with the serialized form of the type they are commenting on.
 This helps to ensure that generated documentation reflects the most common usage of the field, the serialized YAML form.
 
-### Fixes (via standalone binary only)
+### Fixes
 
 The `commentstart` linter can automatically fix comments that do not start with the serialized form of the type.
 
@@ -276,7 +249,7 @@ lintersConfig:
     preferredRequiredMarker: required | kubebuilder:validation:Required # The preferred required marker to use, fixes will suggest to use this marker. Defaults to `required`.
 ```
 
-### Fixes (via standalone binary only)
+### Fixes
 
 The `optionalorrequired` linter can automatically fix fields that are using the incorrect form of either the optional or required marker.
 
@@ -295,7 +268,7 @@ lintersConfig:
     pointerPolicy: Warn | SuggestFix # The policy for pointers in required fields. Defaults to `SuggestFix`.
 ```
 
-### Fixes (via standalone binary only)
+### Fixes
 
 The `requiredfields` linter can automatically fix fields that are marked as required, but are pointers.
 
@@ -313,7 +286,7 @@ OR when the `kubebuilder:subresource:status` marker is present on the struct the
 
 This linter is not enabled by default as it is only applicable to CustomResourceDefinitions.
 
-### Fixes (via standalone binary only)
+### Fixes
 
 In the case where there is a status field present but no `kubebuilder:subresource:status` marker, the
 linter will suggest adding the comment `// +kubebuilder:subresource:status` above the struct.

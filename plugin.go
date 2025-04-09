@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package kal
+package kubeapilinter
 
 import (
 	"fmt"
@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	register.Plugin("kal", New)
+	register.Plugin("kubeapilinter", New)
 }
 
 // New creates a new golangci-lint plugin based on the KAL analyzers.

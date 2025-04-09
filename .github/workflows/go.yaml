@@ -20,7 +20,5 @@ jobs:
         run: make verify-vendor
       - name: Build
         run: make build
-      - name: Build GolangCI-Lint
-        run: make build-golangci
       - name: Test
         run: make test
