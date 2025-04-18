@@ -35,3 +35,23 @@ func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
 }
+
+func TestWhenRequiredWithOmitEmptyIgnorePreferenceConfiguration(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := requiredfields.Initializer().Init(config.LintersConfig{
+		OptionalFields: config.OptionalFieldsConfig{
+			Pointers: config.OptionalFieldsPointers{
+				Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
+			},
+			OmitEmpty: config.OptionalFieldsOmitEmpty{
+				Policy: config.OptionalFieldsOmitEmptyPolicyIgnore,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "c")
+}

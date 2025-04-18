@@ -21,13 +21,25 @@ type A struct {
 	// +optional
 	String *string `json:"string,omitempty"` // want "field String is optional and should be a pointer"
 
+	// NonOmittedString is a string field without omitempty
+	// +optional
+	NonOmittedString *string `json:"nonOmittedString,omitempty"` // want "field NonOmittedString is optional and should be a pointer" "field NonOmittedString is optional and should be omitempty"
+
 	// int is an int field.
 	// +optional
 	Int *int `json:"int,omitempty"` // want "field Int is optional and should be a pointer"
 
+	// nonOmittedInt is an int field without omitempty
+	// +optional
+	NonOmittedInt *int `json:"nonOmittedInt,omitempty"` // want "field NonOmittedInt is optional and should be a pointer" "field NonOmittedInt is optional and should be omitempty"
+
 	// struct is a struct field.
 	// +optional
 	Struct *B `json:"struct,omitempty"` // want "field Struct is optional and should be a pointer"
+
+    // nonOmittedStruct is a struct field without omitempty.
+	// +optional
+	NonOmittedStruct *B `json:"nonOmittedStruct,omitempty"` // want "field NonOmittedStruct is optional and should be a pointer" "field NonOmittedStruct is optional and should be omitempty"
 
 	// slice is a slice field.
 	// +optional
