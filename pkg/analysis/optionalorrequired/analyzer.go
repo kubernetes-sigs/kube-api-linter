@@ -92,7 +92,7 @@ func newAnalyzer(cfg config.OptionalOrRequiredConfig) *analysis.Analyzer {
 	}
 }
 
-func (a *analyzer) run(pass *analysis.Pass) (interface{}, error) {
+func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
 		return nil, kalerrors.ErrCouldNotGetInspector
@@ -163,7 +163,7 @@ func reportShouldReplaceSecondaryMarker(field *ast.Field, marker []markers.Marke
 			textEdits[i] = analysis.TextEdit{
 				Pos:     m.Pos,
 				End:     m.End,
-				NewText: []byte(fmt.Sprintf("// +%s", primaryMarker)),
+				NewText: fmt.Appendf(nil, "// +%s", primaryMarker),
 			}
 
 			continue
