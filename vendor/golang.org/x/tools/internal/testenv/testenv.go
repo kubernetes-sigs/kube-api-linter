@@ -7,10 +7,12 @@
 package testenv
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
 	"go/build"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -147,7 +149,7 @@ func HasTool(tool string) error {
 func cgoEnabled(bypassEnvironment bool) (bool, error) {
 	cmd := exec.Command("go", "env", "CGO_ENABLED")
 	if bypassEnvironment {
-		cmd.Env = append(append([]string(nil), os.Environ()...), "CGO_ENABLED=")
+		cmd.Env = append(os.Environ(), "CGO_ENABLED=")
 	}
 	out, err := cmd.Output()
 	if err != nil {
@@ -249,8 +251,8 @@ func NeedsGoPackagesEnv(t testing.TB, env []string) {
 	t.Helper()
 
 	for _, v := range env {
-		if strings.HasPrefix(v, "GOPACKAGESDRIVER=") {
-			tool := strings.TrimPrefix(v, "GOPACKAGESDRIVER=")
+		if after, ok := strings.CutPrefix(v, "GOPACKAGESDRIVER="); ok {
+			tool := after
 			if tool == "off" {
 				NeedsTool(t, "go")
 			} else {
@@ -273,6 +275,16 @@ func NeedsGoBuild(t testing.TB) {
 	// This logic was derived from internal/testing.HasGoBuild and
 	// may need to be updated as that function evolves.
 
+	NeedsTool(t, "go")
+}
+
+// NeedsDefaultImporter skips t if the test uses the default importer,
+// returned by [go/importer.Default].
+func NeedsDefaultImporter(t testing.TB) {
+	t.Helper()
+	// The default importer may call `go list`
+	// (in src/internal/exportdata/exportdata.go:lookupGorootExport),
+	// so check for the go tool.
 	NeedsTool(t, "go")
 }
 
@@ -364,7 +376,7 @@ func NeedsGo1Point(t testing.TB, x int) {
 	}
 }
 
-// SkipAfterGo1Point skips t if the ambient go command version in the PATH of
+// SkipAfterGoCommand1Point skips t if the ambient go command version in the PATH of
 // the current process is newer than 1.x.
 //
 // SkipAfterGoCommand1Point memoizes the result of running the go command, so
@@ -552,4 +564,46 @@ func NeedsGOROOTDir(t *testing.T, dir string) {
 			t.Skipf("skipping: GOROOT/%s not present", dir)
 		}
 	}
+}
+
+// RedirectStderr causes os.Stderr (and the global logger) to be
+// temporarily replaced so that writes to it are sent to t.Log.
+// It is restored at test cleanup.
+func RedirectStderr(t testing.TB) {
+	t.Setenv("RedirectStderr", "") // side effect: assert t.Parallel wasn't called
+
+	// TODO(adonovan): if https://go.dev/issue/59928 is accepted,
+	// simply set w = t.Output() and dispense with the pipe.
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	done := make(chan struct{})
+	go func() {
+		for sc := bufio.NewScanner(r); sc.Scan(); {
+			t.Log(sc.Text())
+		}
+		r.Close()
+		close(done)
+	}()
+
+	// Also do the same for the global logger.
+	savedWriter, savedPrefix, savedFlags := log.Writer(), log.Prefix(), log.Flags()
+	log.SetPrefix("log: ")
+	log.SetOutput(w)
+	log.SetFlags(0)
+
+	oldStderr := os.Stderr
+	os.Stderr = w
+	t.Cleanup(func() {
+		w.Close() // ignore error
+		os.Stderr = oldStderr
+
+		log.SetOutput(savedWriter)
+		log.SetPrefix(savedPrefix)
+		log.SetFlags(savedFlags)
+
+		// Don't let test finish before final t.Log.
+		<-done
+	})
 }

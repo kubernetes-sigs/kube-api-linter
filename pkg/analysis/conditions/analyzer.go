@@ -242,7 +242,7 @@ func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMa
 		additionalMarkerValues = append(additionalMarkerValues, marker.String())
 
 		suggestedFixes = append(suggestedFixes, analysis.SuggestedFix{
-			Message: "Remove additional marker",
+			Message: fmt.Sprintf("Remove additional marker %s", marker.String()),
 			TextEdits: []analysis.TextEdit{
 				{
 					Pos:     marker.Pos,
@@ -256,7 +256,7 @@ func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMa
 	pass.Report(analysis.Diagnostic{
 		Pos:            field.Pos(),
 		End:            field.End(),
-		Message:        "Conditions field has the following additional markers: " + strings.Join(additionalMarkerValues, ", "),
+		Message:        fmt.Sprintf("Conditions field has the following additional markers: %s", strings.Join(additionalMarkerValues, ", ")),
 		SuggestedFixes: suggestedFixes,
 	})
 }
@@ -278,10 +278,10 @@ func (a *analyzer) checkFieldTags(pass *analysis.Pass, index int, field *ast.Fie
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			End:     field.End(),
-			Message: "Conditions field is missing tags, should be: " + expectedTag,
+			Message: fmt.Sprintf("Conditions field is missing tags, should be: %s", expectedTag),
 			SuggestedFixes: []analysis.SuggestedFix{
 				{
-					Message: "Add missing tags",
+					Message: fmt.Sprintf("Add missing tags: %s", expectedTag),
 					TextEdits: []analysis.TextEdit{
 						{
 							Pos:     field.End(),
@@ -306,10 +306,10 @@ func (a *analyzer) checkFieldTags(pass *analysis.Pass, index int, field *ast.Fie
 			pass.Report(analysis.Diagnostic{
 				Pos:     field.Tag.ValuePos,
 				End:     field.Tag.End(),
-				Message: "Conditions field has incorrect tags, should be: " + expectedTag,
+				Message: fmt.Sprintf("Conditions field has incorrect tags, should be: %s", expectedTag),
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: "Update tags",
+						Message: fmt.Sprintf("Update tags to: %s", expectedTag),
 						TextEdits: []analysis.TextEdit{
 							{
 								Pos:     field.Tag.ValuePos,
