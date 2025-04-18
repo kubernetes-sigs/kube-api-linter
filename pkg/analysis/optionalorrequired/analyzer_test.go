@@ -49,3 +49,14 @@ func TestSwappedMarkerPriority(t *testing.T) {
 
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
 }
+
+func TestTypeSpec(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "c")
+}
