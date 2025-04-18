@@ -33,6 +33,7 @@ var _ = Describe("Registry", func() {
 			Expect(r.DefaultLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
 				"commentstart",
+				"duplicatemarkers",
 				"integers",
 				"jsontags",
 				"nofloats",
@@ -50,6 +51,7 @@ var _ = Describe("Registry", func() {
 			Expect(r.AllLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
 				"commentstart",
+				"duplicatemarkers",
 				"integers",
 				"jsontags",
 				"maxlength",
