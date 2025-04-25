@@ -48,7 +48,6 @@ type A struct {
 	// +optional
 	PointerIntWithPositiveMaximumValue *int `json:"pointerIntWithPositiveMaximumValue,omitempty"` // want "field PointerIntWithPositiveMaximumValue has a positive maximum value and does not have a minimum value. A minimum value should be set"
 
-
 	// pointerIntWithRange is a pointer int field with a range of values including 0.
 	// +kubebuilder:validation:Minimum=-10
 	// +kubebuilder:validation:Maximum=10
@@ -168,6 +167,15 @@ type A struct {
 	// +optional
 	StructWithOptionalFields B `json:"structWithOptionalFields,omitempty"`
 
+    // structWithMinProperties is a struct field with a minimum number of properties.
+	// +kubebuilder:validation:MinProperties=1
+	// +optional
+	StructWithMinProperties *B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties has a greater than zero minimum number of properties and should be a pointer"
+
+	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
+	// +optional
+	StructWithMinPropertiesOnStruct *D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct has a greater than zero minimum number of properties and should be a pointer"
+
 	// structWithRequiredFields is a struct field.
 	// +optional
 	StructWithRequiredFields *C `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFields is optional, but contains required field\\(s\\) and should be a pointer"
@@ -220,4 +228,16 @@ type C struct {
 	// tsring is a string field.
 	// +required
 	String string `json:"string"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+type D struct {
+	// string is a string field.
+	// +optional
+	String string `json:"string,omitempty"` // want "field String is an optional string and does not have a minimum length. Either set a minimum length or make String a pointer where the difference between omitted and the empty string is significant"
+
+	// stringWithMinLength1 with minimum length is a string field.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	StringWithMinLength1 string `json:"stringWithMinLength1,omitempty"`
 }
