@@ -290,6 +290,23 @@ type A struct {
 	// +optional
 	StructWithOptionalFieldsWithoutOmitEmpty B `json:"structWithOptionalFieldsWithoutOmitEmpty"`
 
+    // structWithMinProperties is a struct field with a minimum number of properties.
+	// +kubebuilder:validation:MinProperties=1
+	// +optional
+	StructWithMinProperties *B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties has a greater than zero minimum number of properties and should be a pointer"
+
+	// structWithMinPropertiesWithoutOmitEmpty is a struct field with a minimum number of properties without omitempty.
+	// +optional
+	StructWithMinPropertiesWithoutOmitEmpty B `json:"structWithMinPropertiesWithoutOmitEmpty"` // want "field StructWithMinPropertiesWithoutOmitEmpty has a greater than zero minimum number of properties without omitempty. The minimum number of properties should be removed."
+
+	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
+	// +optional
+	StructWithMinPropertiesOnStruct *D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct has a greater than zero minimum number of properties and should be a pointer"
+
+	// structWithMinPropertiesOnStructWithoutOmitEmpty is a struct field with a minimum number of properties on the struct without omitempty.
+	// +optional
+	StructWithMinPropertiesOnStructWithoutOmitEmpty *D `json:"structWithMinPropertiesOnStructWithoutOmitEmpty"` // want "field StructWithMinPropertiesOnStructWithoutOmitEmpty has a greater than zero minimum number of properties and should be a pointer"
+
 	// structWithRequiredFields is a struct field.
 	// +optional
 	StructWithRequiredFields *C `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFields is optional, but contains required field\\(s\\) and should be a pointer"
@@ -377,7 +394,19 @@ type B struct {
 }
 
 type C struct {
-	// tsring is a string field.
+	// string is a string field.
 	// +required
 	String string `json:"string"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+type D struct {
+	// string is a string field.
+	// +optional
+	String string `json:"string"`
+
+	// stringWithMinLength1 with minimum length is a string field.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	StringWithMinLength1 string `json:"stringWithMinLength1,omitempty"`
 }
