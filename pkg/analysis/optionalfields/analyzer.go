@@ -247,23 +247,57 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIdentObj(pass *analys
 
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructType(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, typeExpr *ast.StructType, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
-		if isStarExpr {
-			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional struct without omitempty. It should not be a pointer")
-		}
-
+		a.checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass, field, fieldName, isStarExpr, typeExpr, markersAccess)
 		return
 	}
 
-	mustBePointer := structContainsRequiredFields(typeExpr, markersAccess)
-	if mustBePointer == isStarExpr {
-		// The field is already a pointer and should be a pointer, or it should not be a pointer and isn't a pointer.
+	hasRequiredFields := structContainsRequiredFields(typeExpr, markersAccess)
+
+	hasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.StructMarkers(typeExpr))
+	if err != nil {
+		pass.Reportf(field.Pos(), "error checking struct for min properties: %v", err)
 		return
 	}
 
-	if mustBePointer {
+	fieldHasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.FieldMarkers(field))
+	if err != nil {
+		pass.Reportf(field.Pos(), "error checking field for min properties: %v", err)
+		return
+	}
+
+	switch {
+	case hasRequiredFields && !isStarExpr:
 		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s is optional, but contains required field(s) and should be a pointer")
-	} else {
+	case hasMinimumProperties && !isStarExpr, fieldHasMinimumProperties && !isStarExpr:
+		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s has a greater than zero minimum number of properties and should be a pointer")
+	case isStarExpr && !hasRequiredFields && !hasMinimumProperties && !fieldHasMinimumProperties:
 		reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is optional, and contains no required field(s) and does not need to be a pointer")
+	}
+}
+
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, typeExpr *ast.StructType, markersAccess markers.Markers) {
+	hasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.StructMarkers(typeExpr))
+	if err != nil {
+		pass.Reportf(field.Pos(), "error checking struct for min properties: %v", err)
+		return
+	}
+
+	fieldHasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.FieldMarkers(field))
+	if err != nil {
+		pass.Reportf(field.Pos(), "error checking field for min properties: %v", err)
+		return
+	}
+
+	switch {
+	case hasMinimumProperties && isStarExpr, fieldHasMinimumProperties && isStarExpr:
+		// The field is already a pointer and should be a pointer, so we don't need to do anything.
+	case hasMinimumProperties && !isStarExpr:
+		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s has a greater than zero minimum number of properties and should be a pointer")
+	case fieldHasMinimumProperties && !isStarExpr:
+		reportShouldRemoveMarker(pass, field, markersAccess.FieldMarkers(field).Get(minPropertiesMarker)[0], fieldName, "field %s has a greater than zero minimum number of properties without omitempty. The minimum number of properties should be removed.")
+	case isStarExpr:
+		// The field is a pointer and should not be a pointer, so we need to remove the pointer.
+		reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional struct without omitempty. It should not be a pointer")
 	}
 }
 
@@ -626,4 +660,25 @@ func getMarkerIntegerValue(marker markers.Marker) (int, error) {
 	}
 
 	return value, nil
+}
+
+func structHasGreaterThanZeroMinProperties(structType *ast.StructType, structMarkers markers.MarkerSet) (bool, error) {
+	if structType == nil {
+		return false, nil
+	}
+
+	if structMarkers.Has(minPropertiesMarker) {
+		for _, marker := range structMarkers.Get(minPropertiesMarker) {
+			markerValue, err := getMarkerIntegerValue(marker)
+			if err != nil {
+				return false, fmt.Errorf("error getting marker value: %w", err)
+			}
+
+			if markerValue > 0 {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }

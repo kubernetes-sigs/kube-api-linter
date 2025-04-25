@@ -41,6 +41,15 @@ type A struct {
 	// +optional
 	NonOmittedStruct B `json:"nonOmittedStruct"` // want "field NonOmittedStruct is optional and should be a pointer" "field NonOmittedStruct is optional and should be omitempty"
 
+	// structWithMinProperties is a struct field with a minimum number of properties.
+	// +kubebuilder:validation:MinProperties=1
+	// +optional
+	StructWithMinProperties B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties is optional and should be a pointer"
+
+	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
+	// +optional
+	StructWithMinPropertiesOnStruct D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct is optional and should be a pointer"
+
 	// slice is a slice field.
 	// +optional
 	Slice []string `json:"slice,omitempty"`
@@ -66,4 +75,16 @@ type B struct {
 	// pointerString is a pointer string field.
 	// +optional
 	PointerString *string `json:"pointerString,omitempty"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+type D struct {
+	// string is a string field.
+	// +optional
+	String *string `json:"string,omitempty"`
+
+	// stringWithMinLength1 with minimum length is a string field.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	StringWithMinLength1 *string `json:"stringWithMinLength1,omitempty"`
 }
