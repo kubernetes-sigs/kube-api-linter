@@ -69,6 +69,30 @@ type A struct {
 	// PointerPointerString is a double pointer string field.
 	// +optional
 	DoublePointerString *string `json:"doublePointerString,omitempty"` // want "field DoublePointerString is a pointer type and should not be a pointer"
+
+    // PointerStringAlias is a pointer string alias field.
+	// +optional
+	PointerStringAlias *StringAlias `json:"pointerStringAlias,omitempty"`
+
+	// PointerIntAlias is a pointer int alias field.
+	// +optional
+	PointerIntAlias *IntAlias `json:"pointerIntAlias,omitempty"`
+
+	// PointerFloatAlias is a pointer float alias field.
+	// +optional
+	PointerFloatAlias *FloatAlias `json:"pointerFloatAlias,omitempty"`
+
+	// PointerBoolAlias is a pointer bool alias field.
+	// +optional
+	PointerBoolAlias *BoolAlias `json:"pointerBoolAlias,omitempty"`
+
+	// PointerSliceAlias is a pointer slice alias field.
+	// +optional
+	PointerSliceAlias *SliceAlias `json:"pointerSliceAlias,omitempty"`
+
+	// PointerMapAlias is a pointer map alias field.
+	// +optional
+	PointerMapAlias *MapAlias `json:"pointerMapAlias,omitempty"`
 }
 
 type B struct {
@@ -88,3 +112,15 @@ type D struct {
 	// +optional
 	StringWithMinLength1 *string `json:"stringWithMinLength1,omitempty"`
 }
+
+type StringAlias string
+
+type IntAlias int
+
+type FloatAlias float64
+
+type BoolAlias bool
+
+type SliceAlias []string
+
+type MapAlias map[string]string

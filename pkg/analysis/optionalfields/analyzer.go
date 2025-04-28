@@ -240,8 +240,6 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequired(pass *analysis.Pass,
 		a.checkFieldPointersPreferenceWhenRequiredBool(pass, field, fieldName, isStarExpr, jsonTags)
 	case "float32", "float64":
 		a.checkFieldPointersPreferenceWhenRequiredFloat(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
-	default:
-		panic(fmt.Sprintf("unknown type: %s", ident.Name))
 	}
 }
 
@@ -249,8 +247,11 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIdentObj(pass *analys
 	switch t := decl.Type.(type) {
 	case *ast.StructType:
 		a.checkFieldPointersPreferenceWhenRequiredStructType(pass, field, fieldName, isStarExpr, t, markersAccess, jsonTags)
-	default:
-		panic(fmt.Sprintf("unknown type: %T", decl.Type))
+	case *ast.Ident:
+		// The field is using a type alias.
+		a.checkFieldPointersPreferenceWhenRequired(pass, field, fieldName, isStarExpr, t, markersAccess, jsonTags)
+	case *ast.ArrayType, *ast.MapType:
+		a.checkFieldPointersPointerTypes(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
 	}
 }
 
