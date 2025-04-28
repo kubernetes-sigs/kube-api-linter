@@ -1,3 +1,18 @@
+/*
+Copyright 2025 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package optionalfields
 
 import (
@@ -5,7 +20,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"strconv"
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
@@ -13,6 +27,8 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+
+	"k8s.io/utils/ptr"
 )
 
 const (
@@ -90,7 +106,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 
 	fieldName := field.Names[0].Name
 
-	if !fieldMarkers.Has(optionalMarker) && !fieldMarkers.Has(kubebuilderOptinalMarker) {
+	if !isFieldOptional(fieldMarkers) {
 		// The field is not marked optional, so we don't need to check it.
 		return
 	}
@@ -105,6 +121,11 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	a.checkFieldPointers(pass, field, fieldName, markersAccess, jsonTags)
 }
 
+// checkFieldOmitEmpty checks if the field has the omitempty tag.
+// Normally, all optional fields should have the omitempty tag.
+// In certain cases, you may not want to have the omitempty tag
+// (such as to be able to marshal an empty object with all possible options shown)
+// and when this is desired, there is an option to ignore the omitempty tag.
 func (a *analyzer) checkFieldOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo) {
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore {
 		return
@@ -129,6 +150,7 @@ func (a *analyzer) checkFieldOmitEmpty(pass *analysis.Pass, field *ast.Field, fi
 	}
 }
 
+// checkFieldPointers is used to determine if a field should be a pointer, and advise on the correct action.
 func (a *analyzer) checkFieldPointers(pass *analysis.Pass, field *ast.Field, fieldName string, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	isStarExpr, underlyingType := isStarExpr(field.Type)
 
@@ -146,6 +168,10 @@ func (a *analyzer) checkFieldPointers(pass *analysis.Pass, field *ast.Field, fie
 	}
 }
 
+// checkFieldPointersPointerTypes checks for pointer types (eg Maps and Arrays)
+// and ensures that they aren't pointered again (e.g. no *[]string).
+// It will also check for the presence of non-zero min-properties and min-items
+// when omitempty is missing, as this will.
 func (a *analyzer) checkFieldPointersPointerTypes(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
 		a.checkFieldPointersPointerTypesWithoutOmitEmpty(pass, field, fieldName, markersAccess)
@@ -154,48 +180,25 @@ func (a *analyzer) checkFieldPointersPointerTypes(pass *analysis.Pass, field *as
 	// Pointer types should not be pointered again.
 	if !isStarExpr {
 		return
-
 	}
 
 	reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is a pointer type and should not be a pointer")
 }
 
+// checkFieldPointersPointerTypesWithoutOmitEmpty handles the case where the field is a pointer type (array or map)
+// and does not have the omitempty tag.
+// In both cases, the field should not have a minimum number of items or properties greater than 0.
+// Without omitempty, empty json objects and arrays would be rendered ('{}' and '[]') and would breach the minimum properties/items.
 func (a *analyzer) checkFieldPointersPointerTypesWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, markersAccess markers.Markers) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
-
 	switch field.Type.(type) {
 	case *ast.MapType:
-		if fieldMarkers.Has(minPropertiesMarker) {
-			for _, marker := range fieldMarkers.Get(minPropertiesMarker) {
-				markerValue, err := getMarkerIntegerValue(marker)
-				if err != nil {
-					pass.Reportf(marker.Pos, fmt.Sprintf("invalid value for %s marker: %v", minPropertiesMarker, err))
-					return
-				}
-
-				if markerValue > 0 {
-					reportShouldRemoveMarker(pass, field, marker, fieldName, "field %s has a greater than zero minimum number of properties without omitempty. The minimum number of properties should be removed.")
-				}
-			}
-		}
+		reportShouldRemoveAllInstancesOfIntegerMarker(pass, field, markersAccess, minPropertiesMarker, fieldName, "field %s has a greater than zero minimum number of properties without omitempty. The minimum number of properties should be removed.")
 	case *ast.ArrayType:
-		if fieldMarkers.Has(minItemsMarker) {
-			for _, marker := range fieldMarkers.Get(minItemsMarker) {
-				markerValue, err := getMarkerIntegerValue(marker)
-				if err != nil {
-					pass.Reportf(marker.Pos, fmt.Sprintf("invalid value for %s marker: %v", minItemsMarker, err))
-					return
-				}
-
-				if markerValue > 0 {
-					reportShouldRemoveMarker(pass, field, marker, fieldName, "field %s has a greater than zero minimum number of items without omitempty. The minimum number of items should be removed.")
-				}
-			}
-		}
+		reportShouldRemoveAllInstancesOfIntegerMarker(pass, field, markersAccess, minItemsMarker, fieldName, "field %s has a greater than zero minimum number of items without omitempty. The minimum number of items should be removed.")
 	}
-
 }
 
+// checkFieldPointersPreferenceAlways checks if the field is a pointer and if not, suggests that it should be.
 func (a *analyzer) checkFieldPointersPreferenceAlways(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool) {
 	if isStarExpr {
 		return // The field is already a pointer, so we don't need to do anything.
@@ -204,6 +207,11 @@ func (a *analyzer) checkFieldPointersPreferenceAlways(pass *analysis.Pass, field
 	reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s is optional and should be a pointer")
 }
 
+// checkFieldPointersPreferenceWhenRequired checks if the field needs to be a pointer.
+// This means, is the zero value valid as a user desired value.
+// For example, if it's an integer range that includes 0, then it should be a pointer.
+// If the range doesn't include zero, and the field has omitempty, then the field doesn't need to be a pointer
+// As `0` should never be committed to the API, and round trips would not be affected by the JSON library omitting the zero value when marshalling.
 func (a *analyzer) checkFieldPointersPreferenceWhenRequired(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, underlyingType ast.Expr, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	ident, ok := underlyingType.(*ast.Ident)
 	if !ok {
@@ -212,8 +220,14 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequired(pass *analysis.Pass,
 	}
 
 	if ident.Obj != nil {
-		// The field is not a simple type, check the object.
-		a.checkFieldPointersPreferenceWhenRequiredIdentObj(pass, field, fieldName, isStarExpr, ident.Obj, markersAccess, jsonTags)
+		// The field is not a simple type, check the object if it is a type spec.
+		decl, ok := ident.Obj.Decl.(*ast.TypeSpec)
+		if !ok {
+			return
+		}
+
+		a.checkFieldPointersPreferenceWhenRequiredIdentObj(pass, field, fieldName, isStarExpr, decl, markersAccess, jsonTags)
+
 		return
 	}
 
@@ -223,7 +237,7 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequired(pass *analysis.Pass,
 	case "string":
 		a.checkFieldPointersPreferenceWhenRequiredString(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
 	case "bool":
-		a.checkFieldPointersPreferenceWhenRequiredBool(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
+		a.checkFieldPointersPreferenceWhenRequiredBool(pass, field, fieldName, isStarExpr, jsonTags)
 	case "float32", "float64":
 		a.checkFieldPointersPreferenceWhenRequiredFloat(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
 	default:
@@ -231,26 +245,20 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequired(pass *analysis.Pass,
 	}
 }
 
-func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIdentObj(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, obj *ast.Object, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
-	decl, ok := obj.Decl.(*ast.TypeSpec)
-	if !ok {
-		return
-	}
-
-	switch decl.Type.(type) {
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIdentObj(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, decl *ast.TypeSpec, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
+	switch t := decl.Type.(type) {
 	case *ast.StructType:
-		a.checkFieldPointersPreferenceWhenRequiredStructType(pass, field, fieldName, isStarExpr, decl.Type.(*ast.StructType), markersAccess, jsonTags)
+		a.checkFieldPointersPreferenceWhenRequiredStructType(pass, field, fieldName, isStarExpr, t, markersAccess, jsonTags)
 	default:
 		panic(fmt.Sprintf("unknown type: %T", decl.Type))
 	}
 }
 
+// checkFieldPointersPreferenceWhenRequiredStructType determines if the struct field needs to be a pointer.
+// Any struct that has a minimum number of properties, or has required fields, should be a pointer.
+// Without a pointer, the JSON library cannot omit the field, and will always render a `{}`.
+// A rendered empty object would then violate the minimum number of properties/required field checks.
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructType(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, typeExpr *ast.StructType, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
-	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
-		a.checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass, field, fieldName, isStarExpr, typeExpr, markersAccess)
-		return
-	}
-
 	hasRequiredFields := structContainsRequiredFields(typeExpr, markersAccess)
 
 	hasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.StructMarkers(typeExpr))
@@ -265,50 +273,53 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructType(pass *anal
 		return
 	}
 
+	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
+		a.checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass, field, fieldName, isStarExpr, hasMinimumProperties, fieldHasMinimumProperties, markersAccess)
+	} else {
+		a.checkFieldPointersPreferenceWhenRequiredStructTypeWithOmitEmpty(pass, field, fieldName, isStarExpr, hasRequiredFields, hasMinimumProperties || fieldHasMinimumProperties)
+	}
+}
+
+// checkFieldPointersPreferenceWhenRequiredStructTypeWithOmitEmpty recommends adding/removing pointers based on whether the struct
+// has any required fields or minimum properties present.
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructTypeWithOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr, hasRequiredFields, hasMinimumProperties bool) {
 	switch {
 	case hasRequiredFields && !isStarExpr:
 		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s is optional, but contains required field(s) and should be a pointer")
-	case hasMinimumProperties && !isStarExpr, fieldHasMinimumProperties && !isStarExpr:
+	case hasMinimumProperties && !isStarExpr:
 		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s has a greater than zero minimum number of properties and should be a pointer")
-	case isStarExpr && !hasRequiredFields && !hasMinimumProperties && !fieldHasMinimumProperties:
+	case isStarExpr && !hasRequiredFields && !hasMinimumProperties:
 		reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is optional, and contains no required field(s) and does not need to be a pointer")
 	}
 }
 
-func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, typeExpr *ast.StructType, markersAccess markers.Markers) {
-	hasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.StructMarkers(typeExpr))
-	if err != nil {
-		pass.Reportf(field.Pos(), "error checking struct for min properties: %v", err)
-		return
-	}
-
-	fieldHasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.FieldMarkers(field))
-	if err != nil {
-		pass.Reportf(field.Pos(), "error checking field for min properties: %v", err)
-		return
-	}
-
+// checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty recommends adding/removing pointers based on whether the struct
+// has any required fields or minimum properties present, where the struct does not have omitempty as a tag.
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr, hasMinimumProperties, fieldHasMinimumProperties bool, markersAccess markers.Markers) {
 	switch {
 	case hasMinimumProperties && isStarExpr, fieldHasMinimumProperties && isStarExpr:
 		// The field is already a pointer and should be a pointer, so we don't need to do anything.
 	case hasMinimumProperties && !isStarExpr:
 		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s has a greater than zero minimum number of properties and should be a pointer")
 	case fieldHasMinimumProperties && !isStarExpr:
-		reportShouldRemoveMarker(pass, field, markersAccess.FieldMarkers(field).Get(minPropertiesMarker)[0], fieldName, "field %s has a greater than zero minimum number of properties without omitempty. The minimum number of properties should be removed.")
+		reportShouldRemoveAllInstancesOfIntegerMarker(pass, field, markersAccess, minPropertiesMarker, fieldName, "field %s has a greater than zero minimum number of properties without omitempty. The minimum number of properties should be removed.")
 	case isStarExpr:
 		// The field is a pointer and should not be a pointer, so we need to remove the pointer.
 		reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional struct without omitempty. It should not be a pointer")
 	}
 }
 
+// checkFieldPointersPreferenceWhenRequiredString checks string fields for the minimum length marker.
+// Where the minimum allowable length is 0, the field should be a pointer.
+// Where the minimum length is greater than 0, the field should not be a pointer.
+// When the field does not have omitempty, it should not be a pointer, and should not have a minimum length marker.
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredString(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
-
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
-		a.checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty(pass, field, fieldName, isStarExpr, fieldMarkers)
+		a.checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty(pass, field, fieldName, isStarExpr, markersAccess)
 		return
 	}
 
+	fieldMarkers := markersAccess.FieldMarkers(field)
 	if !fieldMarkers.Has(minLengthMarker) {
 		if isStarExpr {
 			pass.Reportf(field.Pos(), "field %s is an optional string and does not have a minimum length. Where the difference between omitted and the empty string is significant, set the minmum length to 0", fieldName)
@@ -335,20 +346,10 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredString(pass *analysis
 	}
 }
 
-func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, fieldMarkers markers.MarkerSet) {
-	if fieldMarkers.Has(minLengthMarker) {
-		for _, marker := range fieldMarkers.Get(minLengthMarker) {
-			markerValue, err := getMarkerIntegerValue(marker)
-			if err != nil {
-				pass.Reportf(marker.Pos, fmt.Sprintf("invalid value for %s marker: %v", minLengthMarker, err))
-				return
-			}
-
-			if markerValue > 0 {
-				reportShouldRemoveMarker(pass, field, marker, fieldName, "field %s has a greater than zero minimum length without omitempty. The minimum length should be removed.")
-			}
-		}
-	}
+// checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty checks string fields for minimum length markers
+// and pointers and suggests that both are removed.
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markers.Markers) {
+	reportShouldRemoveAllInstancesOfIntegerMarker(pass, field, markersAccess, minLengthMarker, fieldName, "field %s has a greater than zero minimum length without omitempty. The minimum length should be removed.")
 
 	// When non-omitempty, the string field should not be a pointer.
 	// The empty string should be a valid/acceptable value.
@@ -357,48 +358,38 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpt
 	}
 }
 
-func (a *analyzer) checkFieldPointersPreferenceWhenRequiredBool(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredBool(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, jsonTags extractjsontags.FieldTagInfo) {
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
 		if isStarExpr {
 			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional boolean without omitempty. It should not be a pointer")
 		}
+
 		return
 	}
 
 	// Optional bools should always be pointers.
 	// When the bool is not a pointer, setting the value to false won't round trip.
+	// You wouldn't create a bool where the only valid value is true or omitted.
 	// This could be confusing for users.
 	if !isStarExpr {
 		reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional boolean and should be a pointer")
 	}
 }
 
+//nolint:dupl
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredInteger(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
-	// These are pointers so that we can determine if they are set, or not.
-	var minValue, maxValue *int
-
-	if minimum := fieldMarkers.Get(minimumMarker); len(minimum) > 0 {
-		// Where there are multiple minimum markers, we only care about the first one.
-		// Other rules should deduplicate them.
-		min, err := strconv.Atoi(minimum[0].Expressions[""])
-		if err != nil {
-			pass.Reportf(field.Pos(), "field %s has a minimum value of %s, but it is not an integer", fieldName, minimum[0].Expressions[""])
-			return
-		}
-		minValue = &min
+	minValue, err := getMarkerIntegerValueByName(fieldMarkers, minimumMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "field %s has a minimum value of %s, but it is not an integer", fieldName, fieldMarkers.Get(minimumMarker)[0].Expressions[""])
+		return
 	}
 
-	if maximum := fieldMarkers.Get(maximumMarker); len(maximum) > 0 {
-		// Where there are multiple maximum markers, we only care about the first one.
-		// Other rules should deduplicate them.
-		max, err := strconv.Atoi(maximum[0].Expressions[""])
-		if err != nil {
-			pass.Reportf(field.Pos(), "field %s has a maximum value of %s, but it is not an integer", fieldName, maximum[0].Expressions[""])
-			return
-		}
-		maxValue = &max
+	maxValue, err := getMarkerIntegerValueByName(fieldMarkers, maximumMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "field %s has a maximum value of %s, but it is not an integer", fieldName, fieldMarkers.Get(maximumMarker)[0].Expressions[""])
+		return
 	}
 
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
@@ -406,24 +397,32 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredInteger(pass *analysi
 		return
 	}
 
+	a.checkFieldPointersPreferenceWhenRequiredIntegerWithOmitEmpty(pass, field, fieldName, isStarExpr, minValue, maxValue)
+}
+
+// checkFieldPointersPreferenceWhenRequiredIntegerWithOmitEmpty checks integers based on their minimum and maximum values
+// to determine whether or not 0 is a valid value for the integer.
+// Where 0 is a valid value, the field should be a pointer.
+// Where the limits are ambiguous or missing, the linter will suggest adding a minimum/maximum value to help it decide.
+//
+//nolint:cyclop
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIntegerWithOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, minValue, maxValue *int) {
 	switch {
-	case minValue != nil && *minValue > 0:
+	case ptr.Deref(minValue, 0) > 0:
 		if isStarExpr {
 			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s has a greater than 0 minimum value and does not need to be a pointer")
 		}
-	case maxValue != nil && *maxValue < 0:
+	case ptr.Deref(maxValue, 0) < 0:
 		if isStarExpr {
 			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s has a negative maximum value and does not need to be a pointer")
 		}
-	case minValue != nil && *minValue == 0,
-		maxValue != nil && *maxValue == 0,
-		minValue != nil && maxValue != nil && *minValue < 0 && *maxValue > 0:
+	case integerRangeIncludesZero(minValue, maxValue):
 		if !isStarExpr {
 			reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s has a range of values including 0. The difference between omitted and 0 is significant and therefore the field should be a pointer")
 		}
-	case minValue != nil && *minValue < 0 && maxValue == nil:
+	case ptr.Deref(minValue, 0) < 0 && maxValue == nil:
 		pass.Reportf(field.Pos(), "field %s has a negative minimum value and does not have a maximum value. A maximum value should be set", fieldName)
-	case maxValue != nil && *maxValue > 0 && minValue == nil:
+	case ptr.Deref(maxValue, 0) > 0 && minValue == nil:
 		pass.Reportf(field.Pos(), "field %s has a positive maximum value and does not have a minimum value. A minimum value should be set", fieldName)
 	case minValue == nil || maxValue == nil:
 		if isStarExpr {
@@ -434,6 +433,10 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredInteger(pass *analysi
 	}
 }
 
+// checkFieldPointersPreferenceWhenRequiredIntegerWithoutOmitEmpty checks integers based on their minimum and maximum values
+// to determine whether or not 0 is a valid value for the integer.
+// Where 0 is not a valid value, the field should either add omitempty, or remove the limits.
+// We assume since there's no omitempty that the API author wants the zero value to be marshalled and as such, suggest to remove the limits.
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIntegerWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, minValue, maxValue *int, isStarExpr bool, fieldMarkers markers.MarkerSet) {
 	switch {
 	case minValue != nil && *minValue > 0:
@@ -447,32 +450,20 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIntegerWithoutOmitEmp
 	}
 }
 
+//nolint:dupl
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredFloat(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markers.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
-	// These are pointers so that we can determine if they are set, or not.
-	var minValue, maxValue *float64
-
-	if minimum := fieldMarkers.Get(minimumMarker); len(minimum) > 0 {
-		// Where there are multiple minimum markers, we only care about the first one.
-		// Other rules should deduplicate them.
-		min, err := strconv.ParseFloat(minimum[0].Expressions[""], 64)
-		if err != nil {
-			pass.Reportf(field.Pos(), "field %s has a minimum value of %s, but it is not a float", fieldName, minimum[0].Expressions[""])
-			return
-		}
-		minValue = &min
+	minValue, err := getMarkerFloatValueByName(fieldMarkers, minimumMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "field %s has a minimum value of %s, but it is not a float", fieldName, fieldMarkers.Get(minimumMarker)[0].Expressions[""])
+		return
 	}
 
-	if maximum := fieldMarkers.Get(maximumMarker); len(maximum) > 0 {
-		// Where there are multiple maximum markers, we only care about the first one.
-		// Other rules should deduplicate them.
-		max, err := strconv.ParseFloat(maximum[0].Expressions[""], 64)
-		if err != nil {
-			pass.Reportf(field.Pos(), "field %s has a maximum value of %s, but it is not a float", fieldName, maximum[0].Expressions[""])
-			return
-		}
-		maxValue = &max
+	maxValue, err := getMarkerFloatValueByName(fieldMarkers, maximumMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "field %s has a maximum value of %s, but it is not a float", fieldName, fieldMarkers.Get(maximumMarker)[0].Expressions[""])
+		return
 	}
 
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
@@ -480,24 +471,32 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredFloat(pass *analysis.
 		return
 	}
 
+	a.checkFieldPointersPreferenceWhenRequiredFloatWithOmitEmpty(pass, field, fieldName, isStarExpr, minValue, maxValue)
+}
+
+// checkFieldPointersPreferenceWhenRequiredFloatWithOmitEmpty checks floats based on their minimum and maximum values
+// to determine whether or not 0 is a valid value for the float.
+// Where 0 is a valid value, the field should be a pointer.
+// Where the limits are ambiguous or missing, the linter will suggest adding a minimum/maximum value to help it decide.
+//
+//nolint:cyclop
+func (a *analyzer) checkFieldPointersPreferenceWhenRequiredFloatWithOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, minValue, maxValue *float64) {
 	switch {
-	case minValue != nil && *minValue > 0:
+	case ptr.Deref(minValue, 0) > 0:
 		if isStarExpr {
 			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s has a greater than 0 minimum value and does not need to be a pointer")
 		}
-	case maxValue != nil && *maxValue < 0:
+	case ptr.Deref(maxValue, 0) < 0:
 		if isStarExpr {
 			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s has a negative maximum value and does not need to be a pointer")
 		}
-	case minValue != nil && *minValue == 0,
-		maxValue != nil && *maxValue == 0,
-		minValue != nil && maxValue != nil && *minValue < 0 && *maxValue > 0:
+	case floatRangeIncludesZero(minValue, maxValue):
 		if !isStarExpr {
 			reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s has a range of values including 0. The difference between omitted and 0 is significant and therefore the field should be a pointer")
 		}
-	case minValue != nil && *minValue < 0 && maxValue == nil:
+	case ptr.Deref(minValue, 0) < 0 && maxValue == nil:
 		pass.Reportf(field.Pos(), "field %s has a negative minimum value and does not have a maximum value. A maximum value should be set", fieldName)
-	case maxValue != nil && *maxValue > 0 && minValue == nil:
+	case ptr.Deref(maxValue, 0) > 0 && minValue == nil:
 		pass.Reportf(field.Pos(), "field %s has a positive maximum value and does not have a minimum value. A minimum value should be set", fieldName)
 	case minValue == nil || maxValue == nil:
 		if isStarExpr {
@@ -508,6 +507,10 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredFloat(pass *analysis.
 	}
 }
 
+// checkFieldPointersPreferenceWhenRequiredFloatWithoutOmitEmpty checks floats based on their minimum and maximum values
+// to determine whether or not 0 is a valid value for the float.
+// Where 0 is not a valid value, the field should either add omitempty, or remove the limits.
+// We assume since there's no omitempty that the API author wants the zero value to be marshalled and as such, suggest to remove the limits.
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredFloatWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, minValue, maxValue *float64, isStarExpr bool, fieldMarkers markers.MarkerSet) {
 	switch {
 	case minValue != nil && *minValue > 0:
@@ -533,152 +536,4 @@ func defaultConfig(cfg *config.OptionalFieldsConfig) {
 	if cfg.OmitEmpty.Policy == "" {
 		cfg.OmitEmpty.Policy = config.OptionalFieldsOmitEmptyPolicySuggestFix
 	}
-}
-
-// isStarExpr checks if the expression is a pointer type.
-func isStarExpr(expr ast.Expr) (bool, ast.Expr) {
-	if ptrType, ok := expr.(*ast.StarExpr); ok {
-		return true, ptrType.X
-	}
-
-	return false, expr
-}
-
-// isPointerType checks if the expression is a pointer type.
-// This is for types that are always implemented as pointers and therefore should
-// not be the underlying type of a star expr.
-func isPointerType(expr ast.Expr) bool {
-	switch expr.(type) {
-	case *ast.StarExpr, *ast.MapType, *ast.ArrayType:
-		return true
-	default:
-		return false
-	}
-}
-
-func structContainsRequiredFields(structType *ast.StructType, markersAccess markers.Markers) bool {
-	if structType == nil {
-		return false
-	}
-
-	for _, field := range structType.Fields.List {
-		fieldMarkers := markersAccess.FieldMarkers(field)
-
-		if isFieldRequired(fieldMarkers) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isFieldRequired(fieldMarkers markers.MarkerSet) bool {
-	return fieldMarkers.Has("required") || fieldMarkers.Has("kubebuilder:validation:Required")
-}
-
-func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy config.OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
-	switch pointerPolicy {
-	case config.OptionalFieldsPointerPolicySuggestFix:
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf(messageFmt, fieldName),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "should make the field a pointer",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     field.Pos() + token.Pos(len(fieldName)+1),
-							NewText: []byte("*"),
-						},
-					},
-				},
-			},
-		})
-	case config.OptionalFieldsPointerPolicyWarn:
-		pass.Reportf(field.Pos(), messageFmt, fieldName)
-	default:
-		panic(fmt.Sprintf("unknown pointer policy: %s", pointerPolicy))
-	}
-
-}
-
-func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPolicy config.OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
-	switch pointerPolicy {
-	case config.OptionalFieldsPointerPolicySuggestFix:
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf(messageFmt, fieldName),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "should remove the pointer",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos: field.Pos() + token.Pos(len(fieldName)+1),
-							End: field.Pos() + token.Pos(len(fieldName)+2),
-						},
-					},
-				},
-			},
-		})
-	case config.OptionalFieldsPointerPolicyWarn:
-		pass.Reportf(field.Pos(), messageFmt, fieldName)
-	default:
-		panic(fmt.Sprintf("unknown pointer policy: %s", pointerPolicy))
-	}
-}
-
-func reportShouldRemoveMarker(pass *analysis.Pass, field *ast.Field, marker markers.Marker, fieldName, messageFmt string) {
-	pass.Report(analysis.Diagnostic{
-		Pos:     field.Pos(),
-		Message: fmt.Sprintf(messageFmt, fieldName),
-		SuggestedFixes: []analysis.SuggestedFix{
-			{
-				Message: fmt.Sprintf("should remove the marker: %s", marker.RawComment),
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos: marker.Pos,
-						End: marker.End + 1,
-					},
-				},
-			},
-		},
-	})
-}
-
-// getMarkerIntegerValue extracts a numeric value from the default
-// value of a marker.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerIntegerValue(marker markers.Marker) (int, error) {
-	rawValue, ok := marker.Expressions[""]
-	if !ok {
-		return 0, errMarkerMissingValue
-	}
-
-	value, err := strconv.Atoi(rawValue)
-	if err != nil {
-		return 0, fmt.Errorf("error converting value to integer: %w", err)
-	}
-
-	return value, nil
-}
-
-func structHasGreaterThanZeroMinProperties(structType *ast.StructType, structMarkers markers.MarkerSet) (bool, error) {
-	if structType == nil {
-		return false, nil
-	}
-
-	if structMarkers.Has(minPropertiesMarker) {
-		for _, marker := range structMarkers.Get(minPropertiesMarker) {
-			markerValue, err := getMarkerIntegerValue(marker)
-			if err != nil {
-				return false, fmt.Errorf("error getting marker value: %w", err)
-			}
-
-			if markerValue > 0 {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
 }

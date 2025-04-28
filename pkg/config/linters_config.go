@@ -145,7 +145,7 @@ type NoMapsConfig struct {
 	Policy NoMapsPolicy `json:"policy"`
 }
 
-// OptionalFields is the policy for the optionalfields linter.
+// OptionalFieldsConfig is the configuration for the optionalfields linter.
 type OptionalFieldsConfig struct {
 	// pointers is the policy for pointers in optional fields.
 	// This defines how the linter should handle optional fields, and whether they should be pointers or not.
@@ -158,6 +158,7 @@ type OptionalFieldsConfig struct {
 	OmitEmpty OptionalFieldsOmitEmpty `json:"omitempty"`
 }
 
+// OptionalFieldsPointers is the configuration for pointers in optional fields.
 type OptionalFieldsPointers struct {
 	// preference determines whether the linter should prefer pointers for all optional fields,
 	// or only for optional fields where validation or serialization requires a pointer.
@@ -175,6 +176,7 @@ type OptionalFieldsPointers struct {
 	Policy OptionalFieldsPointerPolicy `json:"policy"`
 }
 
+// OptionalFieldsOmitEmpty is the configuration for the `omitempty` tag on optional fields.
 type OptionalFieldsOmitEmpty struct {
 	// policy determines whether the linter should require omitempty for all optional fields.
 	// Valid values are "SuggestFix" and "Ignore".
