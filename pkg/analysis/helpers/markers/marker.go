@@ -20,14 +20,12 @@ package markers
 type KubebuilderMarker struct {
 	// Name is the marker's name.
 	Name string
-
 	// RequiredFields is the list of required fields for this marker. If this field is not empty, the marker is considered to be unique including with this.
 	RequiredFields []string
 }
 
 var DefaultMarker = KubebuilderMarker{
 	Name: "default",
-
 	RequiredFields: []string{
 		"value",
 	},
@@ -55,7 +53,6 @@ var KubebuilderMetadataMarker = KubebuilderMarker{
 
 var KubebuilderPrintcolumnMarker = KubebuilderMarker{
 	Name: "kubebuilder:printcolumn",
-
 	RequiredFields: []string{
 		"JSONPath",
 		"name",
@@ -73,7 +70,6 @@ var KubebuilderResourceMarker = KubebuilderMarker{
 
 var KubebuilderSelectablefieldMarker = KubebuilderMarker{
 	Name: "kubebuilder:selectablefield",
-
 	RequiredFields: []string{
 		"JSONPath",
 	},
@@ -93,7 +89,6 @@ var KubebuilderStorageversionMarker = KubebuilderMarker{
 
 var KubebuilderSubresourceScaleMarker = KubebuilderMarker{
 	Name: "kubebuilder:subresource:scale",
-
 	RequiredFields: []string{
 		"specpath",
 		"statuspath",
@@ -202,7 +197,6 @@ var KubebuilderValidationXpreserveunknownfieldsMarker = KubebuilderMarker{
 
 var KubebuilderValidationXvalidationMarker = KubebuilderMarker{
 	Name: "kubebuilder:validation:XValidation",
-
 	RequiredFields: []string{
 		"rule",
 	},
@@ -286,7 +280,6 @@ var KubebuilderValidationItemsXpreserveunknownfieldsMarker = KubebuilderMarker{
 
 var KubebuilderValidationItemsXvalidationMarker = KubebuilderMarker{
 	Name: "kubebuilder:validation:items:XValidation",
-
 	RequiredFields: []string{
 		"rule",
 	},
@@ -324,73 +317,73 @@ var VersionnameMarker = KubebuilderMarker{
 	Name: "versionName",
 }
 
-var AllDefinitions []KubebuilderMarker = []KubebuilderMarker{
-	DefaultMarker,
-	GroupnameMarker,
-	KubebuilderDefaultMarker,
-	KubebuilderDeprecatedversionMarker,
-	KubebuilderExampleMarker,
-	KubebuilderMetadataMarker,
-	KubebuilderPrintcolumnMarker,
-	KubebuilderPruningPreserveunknownfieldsMarker,
-	KubebuilderResourceMarker,
-	KubebuilderSelectablefieldMarker,
-	KubebuilderSkipMarker,
-	KubebuilderSkipversionMarker,
-	KubebuilderStorageversionMarker,
-	KubebuilderSubresourceScaleMarker,
-	KubebuilderSubresourceStatusMarker,
-	KubebuilderUnservedversionMarker,
-	KubebuilderValidationEmbeddedresourceMarker,
-	KubebuilderValidationEnumMarker,
-	KubebuilderValidationExclusivemaximumMarker,
-	KubebuilderValidationExclusiveminimumMarker,
-	KubebuilderValidationFormatMarker,
-	KubebuilderValidationMaxitemsMarker,
-	KubebuilderValidationMaxlengthMarker,
-	KubebuilderValidationMaxpropertiesMarker,
-	KubebuilderValidationMaximumMarker,
-	KubebuilderValidationMinitemsMarker,
-	KubebuilderValidationMinlengthMarker,
-	KubebuilderValidationMinpropertiesMarker,
-	KubebuilderValidationMinimumMarker,
-	KubebuilderValidationMultipleofMarker,
-	KubebuilderValidationOptionalMarker,
-	KubebuilderValidationPatternMarker,
-	KubebuilderValidationRequiredMarker,
-	KubebuilderValidationSchemalessMarker,
-	KubebuilderValidationTypeMarker,
-	KubebuilderValidationUniqueitemsMarker,
-	KubebuilderValidationXembeddedresourceMarker,
-	KubebuilderValidationXintorstringMarker,
-	KubebuilderValidationXpreserveunknownfieldsMarker,
-	KubebuilderValidationXvalidationMarker,
-	KubebuilderValidationItemsEnumMarker,
-	KubebuilderValidationItemsExclusivemaximumMarker,
-	KubebuilderValidationItemsExclusiveminimumMarker,
-	KubebuilderValidationItemsFormatMarker,
-	KubebuilderValidationItemsMaxitemsMarker,
-	KubebuilderValidationItemsMaxlengthMarker,
-	KubebuilderValidationItemsMaxpropertiesMarker,
-	KubebuilderValidationItemsMaximumMarker,
-	KubebuilderValidationItemsMinitemsMarker,
-	KubebuilderValidationItemsMinlengthMarker,
-	KubebuilderValidationItemsMinpropertiesMarker,
-	KubebuilderValidationItemsMinimumMarker,
-	KubebuilderValidationItemsMultipleofMarker,
-	KubebuilderValidationItemsPatternMarker,
-	KubebuilderValidationItemsTypeMarker,
-	KubebuilderValidationItemsUniqueitemsMarker,
-	KubebuilderValidationItemsXembeddedresourceMarker,
-	KubebuilderValidationItemsXintorstringMarker,
-	KubebuilderValidationItemsXpreserveunknownfieldsMarker,
-	KubebuilderValidationItemsXvalidationMarker,
-	ListmapkeyMarker,
-	ListtypeMarker,
-	MaptypeMarker,
-	NullableMarker,
-	OptionalMarker,
-	RequiredMarker,
-	StructtypeMarker,
-	VersionnameMarker,
+var AllDefinitions map[string]KubebuilderMarker = map[string]KubebuilderMarker{
+	"default":                                             DefaultMarker,
+	"groupName":                                           GroupnameMarker,
+	"kubebuilder:default":                                 KubebuilderDefaultMarker,
+	"kubebuilder:deprecatedversion":                       KubebuilderDeprecatedversionMarker,
+	"kubebuilder:example":                                 KubebuilderExampleMarker,
+	"kubebuilder:metadata":                                KubebuilderMetadataMarker,
+	"kubebuilder:printcolumn":                             KubebuilderPrintcolumnMarker,
+	"kubebuilder:pruning:PreserveUnknownFields":           KubebuilderPruningPreserveunknownfieldsMarker,
+	"kubebuilder:resource":                                KubebuilderResourceMarker,
+	"kubebuilder:selectablefield":                         KubebuilderSelectablefieldMarker,
+	"kubebuilder:skip":                                    KubebuilderSkipMarker,
+	"kubebuilder:skipversion":                             KubebuilderSkipversionMarker,
+	"kubebuilder:storageversion":                          KubebuilderStorageversionMarker,
+	"kubebuilder:subresource:scale":                       KubebuilderSubresourceScaleMarker,
+	"kubebuilder:subresource:status":                      KubebuilderSubresourceStatusMarker,
+	"kubebuilder:unservedversion":                         KubebuilderUnservedversionMarker,
+	"kubebuilder:validation:EmbeddedResource":             KubebuilderValidationEmbeddedresourceMarker,
+	"kubebuilder:validation:Enum":                         KubebuilderValidationEnumMarker,
+	"kubebuilder:validation:ExclusiveMaximum":             KubebuilderValidationExclusivemaximumMarker,
+	"kubebuilder:validation:ExclusiveMinimum":             KubebuilderValidationExclusiveminimumMarker,
+	"kubebuilder:validation:Format":                       KubebuilderValidationFormatMarker,
+	"kubebuilder:validation:MaxItems":                     KubebuilderValidationMaxitemsMarker,
+	"kubebuilder:validation:MaxLength":                    KubebuilderValidationMaxlengthMarker,
+	"kubebuilder:validation:MaxProperties":                KubebuilderValidationMaxpropertiesMarker,
+	"kubebuilder:validation:Maximum":                      KubebuilderValidationMaximumMarker,
+	"kubebuilder:validation:MinItems":                     KubebuilderValidationMinitemsMarker,
+	"kubebuilder:validation:MinLength":                    KubebuilderValidationMinlengthMarker,
+	"kubebuilder:validation:MinProperties":                KubebuilderValidationMinpropertiesMarker,
+	"kubebuilder:validation:Minimum":                      KubebuilderValidationMinimumMarker,
+	"kubebuilder:validation:MultipleOf":                   KubebuilderValidationMultipleofMarker,
+	"kubebuilder:validation:Optional":                     KubebuilderValidationOptionalMarker,
+	"kubebuilder:validation:Pattern":                      KubebuilderValidationPatternMarker,
+	"kubebuilder:validation:Required":                     KubebuilderValidationRequiredMarker,
+	"kubebuilder:validation:Schemaless":                   KubebuilderValidationSchemalessMarker,
+	"kubebuilder:validation:Type":                         KubebuilderValidationTypeMarker,
+	"kubebuilder:validation:UniqueItems":                  KubebuilderValidationUniqueitemsMarker,
+	"kubebuilder:validation:XEmbeddedResource":            KubebuilderValidationXembeddedresourceMarker,
+	"kubebuilder:validation:XIntOrString":                 KubebuilderValidationXintorstringMarker,
+	"kubebuilder:validation:XPreserveUnknownFields":       KubebuilderValidationXpreserveunknownfieldsMarker,
+	"kubebuilder:validation:XValidation":                  KubebuilderValidationXvalidationMarker,
+	"kubebuilder:validation:items:Enum":                   KubebuilderValidationItemsEnumMarker,
+	"kubebuilder:validation:items:ExclusiveMaximum":       KubebuilderValidationItemsExclusivemaximumMarker,
+	"kubebuilder:validation:items:ExclusiveMinimum":       KubebuilderValidationItemsExclusiveminimumMarker,
+	"kubebuilder:validation:items:Format":                 KubebuilderValidationItemsFormatMarker,
+	"kubebuilder:validation:items:MaxItems":               KubebuilderValidationItemsMaxitemsMarker,
+	"kubebuilder:validation:items:MaxLength":              KubebuilderValidationItemsMaxlengthMarker,
+	"kubebuilder:validation:items:MaxProperties":          KubebuilderValidationItemsMaxpropertiesMarker,
+	"kubebuilder:validation:items:Maximum":                KubebuilderValidationItemsMaximumMarker,
+	"kubebuilder:validation:items:MinItems":               KubebuilderValidationItemsMinitemsMarker,
+	"kubebuilder:validation:items:MinLength":              KubebuilderValidationItemsMinlengthMarker,
+	"kubebuilder:validation:items:MinProperties":          KubebuilderValidationItemsMinpropertiesMarker,
+	"kubebuilder:validation:items:Minimum":                KubebuilderValidationItemsMinimumMarker,
+	"kubebuilder:validation:items:MultipleOf":             KubebuilderValidationItemsMultipleofMarker,
+	"kubebuilder:validation:items:Pattern":                KubebuilderValidationItemsPatternMarker,
+	"kubebuilder:validation:items:Type":                   KubebuilderValidationItemsTypeMarker,
+	"kubebuilder:validation:items:UniqueItems":            KubebuilderValidationItemsUniqueitemsMarker,
+	"kubebuilder:validation:items:XEmbeddedResource":      KubebuilderValidationItemsXembeddedresourceMarker,
+	"kubebuilder:validation:items:XIntOrString":           KubebuilderValidationItemsXintorstringMarker,
+	"kubebuilder:validation:items:XPreserveUnknownFields": KubebuilderValidationItemsXpreserveunknownfieldsMarker,
+	"kubebuilder:validation:items:XValidation":            KubebuilderValidationItemsXvalidationMarker,
+	"listMapKey":  ListmapkeyMarker,
+	"listType":    ListtypeMarker,
+	"mapType":     MaptypeMarker,
+	"nullable":    NullableMarker,
+	"optional":    OptionalMarker,
+	"required":    RequiredMarker,
+	"structType":  StructtypeMarker,
+	"versionName": VersionnameMarker,
 }

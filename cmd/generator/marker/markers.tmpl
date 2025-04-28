@@ -20,7 +20,6 @@ package markers
 type KubebuilderMarker struct {
 	// Name is the marker's name.
 	Name string
-
 	// RequiredFields is the list of required fields for this marker. If this field is not empty, the marker is considered to be unique including with this.
 	RequiredFields []string
 }
@@ -28,15 +27,18 @@ type KubebuilderMarker struct {
 {{ range .Markers }}
 var {{ .StructName }}Marker = KubebuilderMarker {
 	Name: "{{ .Name }}",
-	{{ if ne (len .RequiredFields) 0 }} 
-	RequiredFields: []string{ {{ range .RequiredFields }}
-		"{{ . }}",{{ end }}
+	{{ if ne (len .RequiredFields) 0 -}}
+    RequiredFields: []string{
+    {{ range .RequiredFields -}}
+		"{{ . }}",
+    {{ end }}
 	},
 	{{ end }}
 }
 {{ end }}
 
-var AllDefinitions []KubebuilderMarker = []KubebuilderMarker{
-	{{ range .Markers }}{{ .StructName }}Marker,
-	{{ end }}
+var AllDefinitions map[string]KubebuilderMarker = map[string]KubebuilderMarker{
+    {{ range .Markers -}}
+        "{{ .Name }}": {{ .StructName }}Marker,
+    {{ end }}
 }

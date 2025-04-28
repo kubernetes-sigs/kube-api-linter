@@ -64,3 +64,8 @@ build: ## Build the golangci-lint custom plugin binary.
 verify-%:
 	make $*
 	git diff --exit-code
+
+.PHONY: generate
+generate: ## Generate code.
+	go run cmd/generator/marker/marker.go
+
