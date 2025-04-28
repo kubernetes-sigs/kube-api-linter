@@ -163,6 +163,16 @@ The `commentstart` linter can automatically fix comments that do not start with 
 
 When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
 
+## DuplicateMarkers
+
+The `duplicatemarkers` linter checks that all markers in the API types which have duplicated markers related with field and type.
+
+### Fixes
+
+The `duplicatemarkers` linter can automatically fix markers that are duplicated.
+
+When the marker is duplicated, the linter will suggest to remove the duplicate marker.
+
 ## Integers
 
 The `integers` linter checks for usage of unsupported integer types.

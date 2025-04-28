@@ -21,6 +21,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
@@ -74,6 +75,7 @@ func NewRegistry() Registry {
 		initializers: []AnalyzerInitializer{
 			conditions.Initializer(),
 			commentstart.Initializer(),
+			duplicatemarkers.Initializer(),
 			integers.Initializer(),
 			jsontags.Initializer(),
 			maxlength.Initializer(),

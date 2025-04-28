@@ -1,0 +1,69 @@
+package a
+
+// It must be ignored since it is not a type
+// +kubebuilder:validation:Enum=foo;bar;baz
+var Variable string
+
+// +kubebuilder:validation:Enum=foo;bar;baz
+// +kubebuilder:validation:Enum=foo;bar;baz
+type Enum string // want "Enum has duplicated markers kubebuilder:validation:Enum"
+
+// +kubebuilder:validation:MaxLength=10
+// +kubebuilder:validation:MaxLength=11
+type MaxLength int // want "MaxLength has duplicated markers kubebuilder:validation:MaxLength"
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+type DuplicateMarkerSpec struct { // want "DuplicateMarkerSpec has duplicated markers kubebuilder:object:root"
+	// +kubebuilder:validation:Required
+	// shpuld be ignored since it only has single marker
+	UniqueRequired string `json:"uniqueRequired"`
+
+	// +listType=map
+	// +listMapKey=primaryKey
+	// +listMapKey=secondaryKey
+	// +required
+	// should be ignored since listMapKey is allowed to have different values
+	Map Map `json:"map"`
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="replicas must be immutable"
+	// should be ignored since XValidation is allowed to have different values
+	Replicas *int `json:"replicas"`
+
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Required
+	DuplicatedRequired string `json:"duplicatedRequired"` // want "DuplicatedRequired has duplicated markers kubebuilder:validation:Required"
+
+	// +kubebuilder:validation:Enum=foo;bar;baz
+	// +kubebuilder:validation:Enum=foo;bar;baz
+	DuplicatedEnum string `json:"duplicatedEnum"` // want "DuplicatedEnum has duplicated markers kubebuilder:validation:Enum"
+
+	// +kubebuilder:validation:MaxLength=11
+	// +kubebuilder:validation:MaxLength=10
+	DuplicatedMaxlength int `json:"maxlength"` // want "DuplicatedMaxlength has duplicated markers kubebuilder:validation:MaxLength"
+
+	// +listType=map
+	// +listMapKey=primaryKey
+	// +listMapKey=secondaryKey
+	// +listType=map
+	// +required
+	DuplicatedListTypeMap Map `json:"duplicatedListTypeMap"` // want "DuplicatedListTypeMap has duplicated markers listType=map, listMapKey=primaryKey, listMapKey=secondaryKey"
+
+	// +optional
+	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"
+	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="replicas must be immutable"
+	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"
+	DuplicatedReplicas *int `json:"duplicatedReplicas"` // want "DuplicatedReplicas has duplicated markers kubebuilder:validation:XValidation:rule=\"self >= 1 && self <= 3\",message=\"must be 1 to 5\""
+}
+
+type Map struct {
+	// +required
+	PrimaryKey string `json:"primaryKey"`
+	// +required
+	SecondaryKey string `json:"secondaryKey"`
+	// +required
+	Value string `json:"value"`
+}
