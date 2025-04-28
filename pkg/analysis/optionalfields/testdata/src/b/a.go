@@ -214,6 +214,54 @@ type A struct {
 	// PointerPointerString is a double pointer string field.
 	// +optional
 	DoublePointerString **string `json:"doublePointerString,omitempty"` // want "field DoublePointerString is a pointer type and should not be a pointer"
+
+	// PointerStringAlias is a pointer string alias field.
+	// +optional
+	PointerStringAlias *StringAlias `json:"pointerStringAlias,omitempty"` // want "field PointerStringAlias is an optional string and does not have a minimum length. Where the difference between omitted and the empty string is significant, set the minmum length to 0"
+
+	// PointerIntAlias is a pointer int alias field.
+	// +optional
+	PointerIntAlias *IntAlias `json:"pointerIntAlias,omitempty"` // want "field PointerIntAlias is an optional integer and does not have a minimum/maximum value. Where the difference between omitted and 0 is significant, set the minimum/maximum value to a range including 0"
+
+	// PointerFloatAlias is a pointer float alias field.
+	// +optional
+	PointerFloatAlias *FloatAlias `json:"pointerFloatAlias,omitempty"` // want "field PointerFloatAlias is an optional float and does not have a minimum/maximum value. Where the difference between omitted and 0 is significant, set the minimum/maximum value to a range including 0"
+
+	// PointerBoolAlias is a pointer bool alias field.
+	// +optional
+	PointerBoolAlias *BoolAlias `json:"pointerBoolAlias,omitempty"`
+
+	// PointerSliceAlias is a pointer slice alias field.
+	// +optional
+	PointerSliceAlias *SliceAlias `json:"pointerSliceAlias,omitempty"` // want "field PointerSliceAlias is a pointer type and should not be a pointer"
+
+	// PointerMapAlias is a pointer map alias field.
+	// +optional
+	PointerMapAlias *MapAlias `json:"pointerMapAlias,omitempty"` // want "field PointerMapAlias is a pointer type and should not be a pointer"
+
+	// StringAlias is a string alias field.
+	// +optional
+	StringAlias StringAlias `json:"stringAlias,omitempty"` // want "field StringAlias is an optional string and does not have a minimum length. Either set a minimum length or make StringAlias a pointer where the difference between omitted and the empty string is significant"
+
+	// IntAlias is an int alias field.
+	// +optional
+	IntAlias IntAlias `json:"intAlias,omitempty"` // want "field IntAlias is an optional integer and does not have a minimum/maximum value. Either set a minimum/maximum value or make IntAlias a pointer where the difference between omitted and 0 is significant"
+
+	// FloatAlias is a float alias field.
+	// +optional
+	FloatAlias FloatAlias `json:"floatAlias,omitempty"` // want "field FloatAlias is an optional float and does not have a minimum/maximum value. Either set a minimum/maximum value or make FloatAlias a pointer where the difference between omitted and 0 is significant"
+
+	// BoolAlias is a bool alias field.
+	// +optional
+	BoolAlias BoolAlias `json:"boolAlias,omitempty"` // want "field BoolAlias is an optional boolean and should be a pointer"
+
+	// SliceAlias is a slice alias field.
+	// +optional
+	SliceAlias SliceAlias `json:"sliceAlias,omitempty"`
+
+	// MapAlias is a map alias field.
+	// +optional
+	MapAlias MapAlias `json:"mapAlias,omitempty"`
 }
 
 type B struct {
@@ -240,3 +288,15 @@ type D struct {
 	// +optional
 	StringWithMinLength1 string `json:"stringWithMinLength1,omitempty"`
 }
+
+type StringAlias string
+
+type IntAlias int
+
+type FloatAlias float64
+
+type BoolAlias bool
+
+type SliceAlias []string
+
+type MapAlias map[string]string
