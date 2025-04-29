@@ -1,6 +1,6 @@
 module sigs.k8s.io/kube-api-linter/tools
 
-go 1.24.0
+go 1.24.2
 
 tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
