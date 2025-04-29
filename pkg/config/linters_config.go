@@ -31,6 +31,9 @@ type LintersConfig struct {
 
 	// requiredFields contains configuration for the requiredfields linter.
 	RequiredFields RequiredFieldsConfig `json:"requiredFields"`
+
+	// statusOptional contains configuration for the statusoptional linter.
+	StatusOptional StatusOptionalConfig `json:"statusOptional"`
 }
 
 // ConditionsFirstField is the policy for the conditions linter.
@@ -171,4 +174,12 @@ type RequiredFieldsConfig struct {
 	// When set to "SuggestFix", the linter will emit a warning if a required field is a pointer and suggest a fix.
 	// When otherwise not specified, the default value is "SuggestFix".
 	PointerPolicy RequiredFieldPointerPolicy `json:"pointerPolicy"`
+}
+
+// StatusOptionalConfig contains configuration for the statusoptional linter.
+type StatusOptionalConfig struct {
+	// preferredOptionalMarker is the preferred marker to use for optional fields.
+	// If this field is not set, the default value is "optional".
+	// Valid values are "optional", "kubebuilder:validation:Optional" and "k8s:optional".
+	PreferredOptionalMarker string `json:"preferredOptionalMarker"`
 }
