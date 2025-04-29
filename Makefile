@@ -33,12 +33,6 @@ fmt: ## Run go fmt against code.
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: vendor
-vendor: ## Ensure the vendor directory is up to date.
-	go mod tidy
-	go mod vendor
-	go mod verify
-
 .PHONY: lint
 lint: ## Run golangci-lint over the codebase.
 	${GOLANGCI_LINT} run ./... --timeout 5m -v ${GOLANGCI_LINT_EXTRA_ARGS}
