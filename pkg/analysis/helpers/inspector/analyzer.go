@@ -40,7 +40,7 @@ var Analyzer = &analysis.Analyzer{
 	ResultType: reflect.TypeOf(newInspector(nil, nil, nil)),
 }
 
-func run(pass *analysis.Pass) (interface{}, error) {
+func run(pass *analysis.Pass) (any, error) {
 	astinspector, ok := pass.ResultOf[inspect.Analyzer].(*astinspector.Inspector)
 	if !ok {
 		return nil, kalerrors.ErrCouldNotGetInspector
