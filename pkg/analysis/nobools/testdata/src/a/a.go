@@ -32,6 +32,10 @@ type Bools struct {
 	InvalidMapBoolToString map[bool]string // want "field InvalidMapBoolToString map key should not use a bool. Use a string type with meaningful constant values as an enum."
 
 	InvalidMapBoolPtrToString map[*bool]string // want "field InvalidMapBoolPtrToString map key pointer should not use a bool. Use a string type with meaningful constant values as an enum."
+
+	InvalidBoolAliasFromAnotherFile BoolAliasB // want "field InvalidBoolAliasFromAnotherFile type BoolAliasB should not use a bool. Use a string type with meaningful constant values as an enum."
+
+	InvalidBoolPtrAliasFromAnotherFile *BoolAliasB // want "field InvalidBoolPtrAliasFromAnotherFile pointer type BoolAliasB should not use a bool. Use a string type with meaningful constant values as an enum."
 }
 
 // DoNothing is used to check that the analyser doesn't report on methods.

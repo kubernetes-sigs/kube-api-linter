@@ -38,6 +38,13 @@ type NoMapsTestStructWithDefiningType struct {
 	MapIntString          MapIntString          `json:"mapIntString"`          // want "MapIntString should not use a map type, use a list type with a unique name/identifier instead"
 }
 
+type NoMapsTestStructWithDefiningTypeAcrossFiles struct {
+	MapStringComponent    MapStringComponentB    `json:"mapStringComponent"`    // want "MapStringComponent should not use a map type, use a list type with a unique name/identifier instead"
+	PtrMapStringComponent PtrMapStringComponentB `json:"ptrMapStringComponent"` // want "PtrMapStringComponent should not use a map type, use a list type with a unique name/identifier instead"
+	MapStringInt          MapStringIntB          `json:"mapStringInt"`          // want "MapStringInt should not use a map type, use a list type with a unique name/identifier instead"
+	MapIntString          MapIntStringB          `json:"mapIntString"`          // want "MapIntString should not use a map type, use a list type with a unique name/identifier instead"
+}
+
 type NoMapsTestStructWithAlias struct {
 	MapStringComponentAlias           MapStringComponentAlias           `json:"mapStringComponentAlias"`           // want "MapStringComponentAlias should not use a map type, use a list type with a unique name/identifier instead"
 	MapStringPtrComponentAlias        MapStringPtrComponentAlias        `json:"mapStringPtrComponentAlias"`        // want "MapStringPtrComponentAlias should not use a map type, use a list type with a unique name/identifier instead"

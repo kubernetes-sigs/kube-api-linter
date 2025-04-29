@@ -9,6 +9,13 @@ type MaxLength struct {
 
 	StringAliasWithMaxLengthOnAlias StringAliasWithMaxLength
 
+	StringAliasFromAnotherFile StringAliasB // want "field StringAliasFromAnotherFile type StringAliasB must have a maximum length, add kubebuilder:validation:MaxLength marker"
+
+	// +kubebuilder:validation:MaxLength:=128
+	StringAliasFromAnotherFileWithMaxLengthOnField StringAliasB
+
+	StringAliasWithMaxLengthFromAnotherFile StringAliasWithMaxLengthB
+
 	StringWithoutMaxLength string // want "field StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength marker"
 
 	StringAliasWithoutMaxLength StringAlias // want "field StringAliasWithoutMaxLength type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength marker"
