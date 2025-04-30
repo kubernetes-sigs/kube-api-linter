@@ -56,6 +56,10 @@ type Floats struct {
 	InvalidMapFloat32PtrToString map[*float32]string // want "field InvalidMapFloat32PtrToString map key pointer should not use a float value because they cannot be reliably round-tripped."
 
 	InvalidMapFloat64PtrToString map[*float64]string // want "field InvalidMapFloat64PtrToString map key pointer should not use a float value because they cannot be reliably round-tripped."
+
+	InvalidFloat32AliasFromAnotherFile Float32AliasB // want "field InvalidFloat32AliasFromAnotherFile type Float32AliasB should not use a float value because they cannot be reliably round-tripped."
+
+	InvalidFloat32PtrAliasFromAnotherFile Float32AliasPtrB // want "field InvalidFloat32PtrAliasFromAnotherFile type Float32AliasPtrB pointer should not use a float value because they cannot be reliably round-tripped."
 }
 
 // DoNothingFloat32 is used to check that the analyser doesn't report on methods.

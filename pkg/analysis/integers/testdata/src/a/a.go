@@ -86,6 +86,10 @@ type Integers struct {
 	InvalidMapIntToString map[int]string // want "field InvalidMapIntToString map key should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
 	InvalidMapUIntToString map[uint]string // want "field InvalidMapUIntToString map key should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+
+	InvalidIntFromAnotherFile IntB // want "field InvalidIntFromAnotherFile type IntB should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+
+	InvalidSliceIntAliasFromAnotherFile InvalidSliceIntAliasB // want "field InvalidSliceIntAliasFromAnotherFile type InvalidSliceIntAliasB array element should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 }
 
 // DoNothing is used to check that the analyser doesn't report on methods.

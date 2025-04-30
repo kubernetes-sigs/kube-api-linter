@@ -26,6 +26,8 @@ type Integers struct {
 	StringAliasSlice []StringAlias // want "field StringAliasSlice array element type StringAlias is a string"
 
 	StringAliasPtrSlice []*StringAlias // want "field StringAliasPtrSlice array element pointer type StringAlias is a string"
+
+	StringAliasFromAnotherFile StringAliasB // want "field StringAliasFromAnotherFile type StringAliasB is a string"
 }
 
 type StringAlias string // want "type StringAlias is a string"
