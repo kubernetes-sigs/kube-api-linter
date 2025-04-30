@@ -1,5 +1,6 @@
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 GOLANGCI_LINT = go tool -modfile tools/go.mod github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+MODERNIZE = go tool -modfile tools/go.mod golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 
 VERSION     ?= $(shell git describe --always --abbrev=7)
 
@@ -34,12 +35,26 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint
-lint: ## Run golangci-lint over the codebase.
-	${GOLANGCI_LINT} run ./... --timeout 5m -v ${GOLANGCI_LINT_EXTRA_ARGS}
+lint: golangci-lint modernize
 
 .PHONY: lint-fix
-lint-fix: GOLANGCI_LINT_EXTRA_ARGS := --fix
-lint-fix: lint ## Run golangci-lint over the codebase and run auto-fixers if supported by the linter
+lint-fix: golangci-lint-fix modernize-fix
+
+.PHONY: golangci-lint
+golangci-lint: ## Run golangci-lint over the codebase.
+	${GOLANGCI_LINT} run ./... --timeout 5m -v ${GOLANGCI_LINT_EXTRA_ARGS}
+
+.PHONY: golangci-lint-fix
+golangci-lint-fix: GOLANGCI_LINT_EXTRA_ARGS := --fix
+golangci-lint-fix: golangci-lint ## Run golangci-lint over the codebase and run auto-fixers if supported by the linter
+
+.PHONY: modernize
+modernize: ## Run modernize on the codebase.
+	${MODERNIZE} -diff ./...
+
+.PHONY: modernize-fix
+modernize-fix: ## Run modernize on the codebase and apply fixes.
+	${MODERNIZE} -fix ./...
 
 .PHONY: test
 test: fmt vet unit ## Run tests.

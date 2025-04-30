@@ -41,7 +41,7 @@ func testAnalyzer() *analysis.Analyzer {
 		Name:     "test",
 		Doc:      "test",
 		Requires: []*analysis.Analyzer{inspect.Analyzer},
-		Run: func(pass *analysis.Pass) (interface{}, error) {
+		Run: func(pass *analysis.Pass) (any, error) {
 			inspect, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 			if !ok {
 				return nil, errCouldNotGetInspector
