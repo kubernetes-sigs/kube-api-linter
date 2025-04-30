@@ -1,9 +1,8 @@
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 GOLANGCI_LINT = go tool -modfile tools/go.mod github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+MODERNIZE = go tool -modfile tools/go.mod golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 
 VERSION     ?= $(shell git describe --always --abbrev=7)
-
-MODERNIZE_VERSION ?= 0.18.1
 
 .PHONY: all
 all: build
@@ -51,11 +50,11 @@ golangci-lint-fix: golangci-lint ## Run golangci-lint over the codebase and run 
 
 .PHONY: modernize
 modernize: ## Run modernize on the codebase.
-	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v${MODERNIZE_VERSION} -diff ./...
+	${MODERNIZE} -diff ./...
 
 .PHONY: modernize-fix
 modernize-fix: ## Run modernize on the codebase and apply fixes.
-	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v${MODERNIZE_VERSION} -fix ./...
+	${MODERNIZE} -fix ./...
 
 .PHONY: test
 test: fmt vet unit ## Run tests.
