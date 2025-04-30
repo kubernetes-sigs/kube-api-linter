@@ -1,5 +1,9 @@
 package A
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 var (
 	String string
 )
@@ -56,4 +60,35 @@ var Var = struct {
 	Field string
 }{
 	Field: "field",
+}
+
+// AItems is a list of A.
+// This represents the Items types in Kubernetes APIs.
+// We don't need to lint this type as it doesn't affect the API behaviour in general.
+type AItems struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []A `json:"items"`
+}
+
+type NotItems struct {
+	metav1.TypeMeta `json:",inline"`            // want "field: "
+	metav1.ListMeta `json:"metadata,omitempty"` // want "field: " "json tag: metadata"
+
+	Items A `json:"items"` // want "field: Items" "json tag: items"
+}
+
+type NotItemsWrongMetadata struct {
+	metav1.TypeMeta   `json:",inline"`            // want "field: "
+	metav1.ObjectMeta `json:"metadata,omitempty"` // want "field: " "json tag: metadata"
+
+	Items []A `json:"items"` // want "field: Items" "json tag: items"
+}
+
+type NotItemsWrongTypeMeta struct {
+	metav1.ObjectMeta `json:",inline"`            // want "field: "
+	metav1.ListMeta   `json:"metadata,omitempty"` // want "field: " "json tag: metadata"
+
+	Items []A `json:"items"` // want "field: Items" "json tag: items"
 }
