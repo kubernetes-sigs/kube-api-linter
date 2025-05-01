@@ -18,9 +18,9 @@ type RequiredEnum string // want "type RequiredEnum should not be marked as requ
 // +kubebuilder:validation:Enum=Foo;Bar;Baz
 type KubeBuilderRequiredEnum string // want "type KubeBuilderRequiredEnum should not be marked as kubebuilder:validation:Required"
 
-// +k8s:Required
+// +k8s:required
 // +kubebuilder:validation:Enum=Foo;Bar;Baz
-type K8sRequiredEnum string // want "type K8sRequiredEnum should not be marked as k8s:Required"
+type K8sRequiredEnum string // want "type K8sRequiredEnum should not be marked as k8s:required"
 
 // +optional
 // +kubebuilder:validation:Enum=Foo;Bar;Baz
@@ -30,6 +30,6 @@ type OptionalEnum string // want "type OptionalEnum should not be marked as opti
 // +kubebuilder:validation:Enum=Foo;Bar;Baz
 type KubeBuilderOptionalEnum string // want "type KubeBuilderOptionalEnum should not be marked as kubebuilder:validation:Optional"
 
-// +k8s:Optional
+// +k8s:optional
 // +kubebuilder:validation:Enum=Foo;Bar;Baz
-type K8sOptionalEnum string // want "type K8sOptionalEnum should not be marked as k8s:Optional"
+type K8sOptionalEnum string // want "type K8sOptionalEnum should not be marked as k8s:optional"
