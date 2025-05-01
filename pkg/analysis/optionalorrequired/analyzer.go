@@ -43,10 +43,10 @@ const (
 	KubebuilderRequiredMarker = "kubebuilder:validation:Required"
 
 	// K8sOptionalMarker is the marker that indicates that a field is optional in k8s declarative validation.
-	K8sOptionalMarker = "k8s:Optional"
+	K8sOptionalMarker = "k8s:optional"
 
 	// K8sRequiredMarker is the marker that indicates that a field is required in k8s declarative validation.
-	K8sRequiredMarker = "k8s:Required"
+	K8sRequiredMarker = "k8s:required"
 )
 
 func init() {
