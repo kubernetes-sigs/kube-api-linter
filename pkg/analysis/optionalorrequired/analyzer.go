@@ -23,40 +23,23 @@ import (
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 const (
 	name = "optionalorrequired"
-
-	// OptionalMarker is the marker that indicates that a field is optional.
-	OptionalMarker = "optional"
-
-	// RequiredMarker is the marker that indicates that a field is required.
-	RequiredMarker = "required"
-
-	// KubebuilderOptionalMarker is the marker that indicates that a field is optional in kubebuilder.
-	KubebuilderOptionalMarker = "kubebuilder:validation:Optional"
-
-	// KubebuilderRequiredMarker is the marker that indicates that a field is required in kubebuilder.
-	KubebuilderRequiredMarker = "kubebuilder:validation:Required"
-
-	// K8sOptionalMarker is the marker that indicates that a field is optional in k8s declarative validation.
-	K8sOptionalMarker = "k8s:optional"
-
-	// K8sRequiredMarker is the marker that indicates that a field is required in k8s declarative validation.
-	K8sRequiredMarker = "k8s:required"
 )
 
 func init() {
-	markers.DefaultRegistry().Register(
-		OptionalMarker,
-		RequiredMarker,
-		KubebuilderOptionalMarker,
-		KubebuilderRequiredMarker,
-		K8sOptionalMarker,
-		K8sRequiredMarker,
+	markershelper.DefaultRegistry().Register(
+		markers.OptionalMarker,
+		markers.RequiredMarker,
+		markers.KubebuilderOptionalMarker,
+		markers.KubebuilderRequiredMarker,
+		markers.K8sOptionalMarker,
+		markers.K8sRequiredMarker,
 	)
 }
 
@@ -75,21 +58,21 @@ func newAnalyzer(cfg config.OptionalOrRequiredConfig) *analysis.Analyzer {
 	a := &analyzer{}
 
 	switch cfg.PreferredOptionalMarker {
-	case OptionalMarker:
-		a.primaryOptionalMarker = OptionalMarker
-		a.secondaryOptionalMarker = KubebuilderOptionalMarker
-	case KubebuilderOptionalMarker:
-		a.primaryOptionalMarker = KubebuilderOptionalMarker
-		a.secondaryOptionalMarker = OptionalMarker
+	case markers.OptionalMarker:
+		a.primaryOptionalMarker = markers.OptionalMarker
+		a.secondaryOptionalMarker = markers.KubebuilderOptionalMarker
+	case markers.KubebuilderOptionalMarker:
+		a.primaryOptionalMarker = markers.KubebuilderOptionalMarker
+		a.secondaryOptionalMarker = markers.OptionalMarker
 	}
 
 	switch cfg.PreferredRequiredMarker {
-	case RequiredMarker:
-		a.primaryRequiredMarker = RequiredMarker
-		a.secondaryRequiredMarker = KubebuilderRequiredMarker
-	case KubebuilderRequiredMarker:
-		a.primaryRequiredMarker = KubebuilderRequiredMarker
-		a.secondaryRequiredMarker = RequiredMarker
+	case markers.RequiredMarker:
+		a.primaryRequiredMarker = markers.RequiredMarker
+		a.secondaryRequiredMarker = markers.KubebuilderRequiredMarker
+	case markers.KubebuilderRequiredMarker:
+		a.primaryRequiredMarker = markers.KubebuilderRequiredMarker
+		a.secondaryRequiredMarker = markers.RequiredMarker
 	}
 
 	return &analysis.Analyzer{
@@ -106,11 +89,11 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
+	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
 		a.checkField(pass, field, markersAccess.FieldMarkers(field), jsonTagInfo)
 	})
 
-	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
+	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
 		a.checkTypeSpec(pass, typeSpec, markersAccess)
 	})
 
@@ -118,7 +101,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 //nolint:cyclop
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet, fieldTagInfo extractjsontags.FieldTagInfo) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, fieldTagInfo extractjsontags.FieldTagInfo) {
 	if fieldTagInfo.Inline {
 		// Inline fields would have no effect if they were marked as optional/required.
 		return
@@ -169,24 +152,24 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 	}
 }
 
-func (a *analyzer) checkK8sMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet, prefix string, hasEitherOptional, hasEitherRequired bool) {
-	hasK8sOptional := fieldMarkers.Has(K8sOptionalMarker)
-	hasK8sRequired := fieldMarkers.Has(K8sRequiredMarker)
+func (a *analyzer) checkK8sMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, prefix string, hasEitherOptional, hasEitherRequired bool) {
+	hasK8sOptional := fieldMarkers.Has(markers.K8sOptionalMarker)
+	hasK8sRequired := fieldMarkers.Has(markers.K8sRequiredMarker)
 
 	if hasK8sOptional && hasK8sRequired {
-		pass.Reportf(field.Pos(), "%s must not be marked as both %s and %s", prefix, K8sOptionalMarker, K8sRequiredMarker)
+		pass.Reportf(field.Pos(), "%s must not be marked as both %s and %s", prefix, markers.K8sOptionalMarker, markers.K8sRequiredMarker)
 	}
 
 	if hasK8sOptional && hasEitherRequired {
-		pass.Reportf(field.Pos(), "%s must not be marked as both %s and %s", prefix, K8sOptionalMarker, RequiredMarker)
+		pass.Reportf(field.Pos(), "%s must not be marked as both %s and %s", prefix, markers.K8sOptionalMarker, markers.RequiredMarker)
 	}
 
 	if hasK8sRequired && hasEitherOptional {
-		pass.Reportf(field.Pos(), "%s must not be marked as both %s and %s", prefix, OptionalMarker, K8sRequiredMarker)
+		pass.Reportf(field.Pos(), "%s must not be marked as both %s and %s", prefix, markers.OptionalMarker, markers.K8sRequiredMarker)
 	}
 }
 
-func reportShouldReplaceSecondaryMarker(field *ast.Field, marker []markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
+func reportShouldReplaceSecondaryMarker(field *ast.Field, marker []markershelper.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
 	textEdits := make([]analysis.TextEdit, len(marker))
 
 	for i, m := range marker {
@@ -219,7 +202,7 @@ func reportShouldReplaceSecondaryMarker(field *ast.Field, marker []markers.Marke
 	}
 }
 
-func reportShouldRemoveSecondaryMarker(field *ast.Field, marker []markers.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
+func reportShouldRemoveSecondaryMarker(field *ast.Field, marker []markershelper.Marker, primaryMarker, secondaryMarker, prefix string) analysis.Diagnostic {
 	textEdits := make([]analysis.TextEdit, len(marker))
 
 	for i, m := range marker {
@@ -242,13 +225,13 @@ func reportShouldRemoveSecondaryMarker(field *ast.Field, marker []markers.Marker
 	}
 }
 
-func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
+func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
 	name := typeSpec.Name.Name
 	set := markersAccess.TypeMarkers(typeSpec)
 
 	for _, marker := range set.UnsortedList() {
 		switch marker.Identifier {
-		case a.primaryOptionalMarker, a.secondaryOptionalMarker, a.primaryRequiredMarker, a.secondaryRequiredMarker, K8sOptionalMarker, K8sRequiredMarker:
+		case a.primaryOptionalMarker, a.secondaryOptionalMarker, a.primaryRequiredMarker, a.secondaryRequiredMarker, markers.K8sOptionalMarker, markers.K8sRequiredMarker:
 			pass.Report(analysis.Diagnostic{
 				Pos:     typeSpec.Pos(),
 				Message: fmt.Sprintf("type %s should not be marked as %s", name, marker.String()),
@@ -271,10 +254,10 @@ func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, ma
 
 func defaultConfig(cfg *config.OptionalOrRequiredConfig) {
 	if cfg.PreferredOptionalMarker == "" {
-		cfg.PreferredOptionalMarker = OptionalMarker
+		cfg.PreferredOptionalMarker = markers.OptionalMarker
 	}
 
 	if cfg.PreferredRequiredMarker == "" {
-		cfg.PreferredRequiredMarker = RequiredMarker
+		cfg.PreferredRequiredMarker = markers.RequiredMarker
 	}
 }
