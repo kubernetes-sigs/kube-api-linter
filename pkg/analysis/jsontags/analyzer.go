@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 
 	"golang.org/x/tools/go/analysis"
@@ -75,15 +76,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo) {
-	var prefix string
+	prefix := "embedded field %s"
 	if len(field.Names) > 0 && field.Names[0] != nil {
-		prefix = fmt.Sprintf("field %s", field.Names[0].Name)
-	} else if ident, ok := field.Type.(*ast.Ident); ok {
-		prefix = fmt.Sprintf("embedded field %s", ident.Name)
+		prefix = "field %s"
 	}
 
 	if tagInfo.Missing {
-		pass.Reportf(field.Pos(), "%s is missing json tag", prefix)
+		pass.Reportf(field.Pos(), "%s is missing json tag", fmt.Sprintf(prefix, utils.FieldName(field)))
 		return
 	}
 
@@ -92,13 +91,13 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo ext
 	}
 
 	if tagInfo.Name == "" {
-		pass.Reportf(field.Pos(), "%s has empty json tag", prefix)
+		pass.Reportf(field.Pos(), "%s has empty json tag", fmt.Sprintf(prefix, utils.FieldName(field)))
 		return
 	}
 
 	matched := a.jsonTagRegex.Match([]byte(tagInfo.Name))
 	if !matched {
-		pass.Reportf(field.Pos(), "%s json tag does not match pattern %q: %s", prefix, a.jsonTagRegex.String(), tagInfo.Name)
+		pass.Reportf(field.Pos(), "%s json tag does not match pattern %q: %s", fmt.Sprintf(prefix, utils.FieldName(field)), a.jsonTagRegex.String(), tagInfo.Name)
 	}
 }
 
