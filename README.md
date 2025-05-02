@@ -10,11 +10,11 @@ Kube API Linter is aimed at being an assistant to API review, by catching the me
 
 ## Installation
 
-Kube API Linter ships as a golangci-lint plugin.
+Kube API Linter ships as a golangci-lint plugin, and a golangci-lint module.
 
-### Golangci-lint Plugin
+### Golangci-lint Module
 
-To install the `golangci-lint` plugin, first you must have `golangci-lint` installed.
+To install the `golangci-lint` module, first you must have `golangci-lint` installed.
 If you do not have `golangci-lint` installed, review the `golangci-lint` [install guide][golangci-lint-install].
 
 [golangci-lint-install]: https://golangci-lint.run/welcome/install/
@@ -22,7 +22,7 @@ If you do not have `golangci-lint` installed, review the `golangci-lint` [instal
 You will need to create a `.custom-gcl.yml` file to describe the custom linters you want to run. The following is an example of a `.custom-gcl.yml` file:
 
 ```yaml
-version:  v1.62.0
+version:  v1.64.8
 name: golangci-kube-api-linter
 destination: ./bin
 plugins:
@@ -75,6 +75,37 @@ Where fixes are available within a rule, these can be applied automatically with
 ```shell
 golangci-kube-api-linter run path/to/api/types --fix
 ```
+
+### Golangci-lint Plugin
+
+The Kube API Linter can also be used as a plugin for `golangci-lint`.
+To do this, you will need to install the `golangci-lint` binary and then install the Kube API Linter plugin.
+
+More information about golangci-lint plugins can be found in the [golangci-lint plugin documentation][golangci-lint-plugin-docs].
+
+[golangci-lint-plugin-docs]: https://golangci-lint.run/plugins/go-plugins/
+
+```shell
+go build -buildmode=plugin -o bin/kube-api-linter.so sigs.k8s.io/kube-api-linter/pkg/plugin
+```
+
+This will create a `kube-api-linter.so` file in the `bin` directory.
+
+The `golangci-lint` configuration is similar to the module configuration, however, you will need to specify the plugin path instead.
+
+```yaml
+linters-settings:
+  custom:
+    kubeapilinter:
+      path: "bin/kube-api-linter.so"
+      description: Kube API LInter lints Kube like APIs based on API conventions and best practices.
+      original-url: sigs.k8s.io/kube-api-linter
+      settings:
+        linters: {}
+        lintersConfig: {}
+```
+
+The rest of the configuration is the same as the module configuration, except the standard `golangci-lint` binary is invoked, rather than a custom binary.
 
 #### VSCode integration
 
