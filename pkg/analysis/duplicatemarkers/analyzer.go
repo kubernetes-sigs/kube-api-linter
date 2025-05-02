@@ -20,6 +20,7 @@ import (
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
@@ -47,37 +48,56 @@ func run(pass *analysis.Pass) (any, error) {
 	}
 
 	inspect.InspectFields(func(field *ast.Field, _ []ast.Node, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		if len(field.Names) == 0 {
-			return
-		}
 		checkField(pass, field, markersAccess)
+	})
+
+	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
+		checkTypeSpec(pass, typeSpec, markersAccess)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
 func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers) {
-	set := markersAccess.FieldMarkers(field)
+	if field == nil || len(field.Names) == 0 {
+		return
+	}
 
-	fieldName := field.Names[0].Name
+	fieldMarkers := markersAccess.FieldMarkers(field)
 
-	for _, marker := range set.UnsortedList() {
-		// TODO: Add check whether the marker is a duuplicate or not.
+	set := sets.New[string]()
+
+	for _, marker := range fieldMarkers.UnsortedList() {
+		if !set.Has(marker.String()) {
+			set.Insert(marker.String())
+			continue
+		}
+
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("%s has duplicated markers %s", fieldName, marker.String()),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: fmt.Sprintf("should remove `// +%s`", marker.String()),
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     marker.Pos,
-							End:     marker.End,
-							NewText: nil,
-						},
-					},
-				},
-			},
+			Message: fmt.Sprintf("%s has duplicated markers %s", field.Names[0].Name, marker.String()),
+		})
+	}
+}
+
+func checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
+	if typeSpec == nil {
+		return
+	}
+
+	typeMarkers := markersAccess.TypeMarkers(typeSpec)
+
+	set := sets.New[string]()
+
+	for _, marker := range typeMarkers.UnsortedList() {
+		if !set.Has(marker.String()) {
+			set.Insert(marker.String())
+			continue
+		}
+
+		pass.Report(analysis.Diagnostic{
+			Pos:     typeSpec.Pos(),
+			Message: fmt.Sprintf("%s has duplicated markers %s", typeSpec.Name.Name, marker.String()),
 		})
 	}
 }

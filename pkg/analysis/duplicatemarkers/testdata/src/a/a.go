@@ -10,7 +10,7 @@ type Enum string // want "Enum has duplicated markers kubebuilder:validation:Enu
 
 // +kubebuilder:validation:MaxLength=10
 // +kubebuilder:validation:MaxLength=11
-type MaxLength int // want "MaxLength has duplicated markers kubebuilder:validation:MaxLength"
+type MaxLength int
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
@@ -43,14 +43,14 @@ type DuplicateMarkerSpec struct { // want "DuplicateMarkerSpec has duplicated ma
 
 	// +kubebuilder:validation:MaxLength=11
 	// +kubebuilder:validation:MaxLength=10
-	DuplicatedMaxlength int `json:"maxlength"` // want "DuplicatedMaxlength has duplicated markers kubebuilder:validation:MaxLength"
+	DuplicatedMaxlength int `json:"maxlength"`
 
 	// +listType=map
 	// +listMapKey=primaryKey
 	// +listMapKey=secondaryKey
 	// +listType=map
 	// +required
-	DuplicatedListTypeMap Map `json:"duplicatedListTypeMap"` // want "DuplicatedListTypeMap has duplicated markers listType=map, listMapKey=primaryKey, listMapKey=secondaryKey"
+	DuplicatedListTypeMap Map `json:"duplicatedListTypeMap"` // want "DuplicatedListTypeMap has duplicated markers listType=map"
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"

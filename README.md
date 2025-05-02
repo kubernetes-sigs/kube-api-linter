@@ -165,13 +165,10 @@ When the `json` tag is present, and matches the first word of the field comment 
 
 ## DuplicateMarkers
 
-The `duplicatemarkers` linter checks that all markers in the API types which have duplicated markers related with field and type.
+The `duplicatemarkers` linter checks for duplicate markers related with specific type or field.
+This linter diagnose _only_ if the marker and value together are completely unique. e.g. the `duplicatemarkers` will not diagnose the field has kubebuilder:validation:MaxLength=10 and kubebuilder:validation:MaxLength=11
 
-### Fixes
-
-The `duplicatemarkers` linter can automatically fix markers that are duplicated.
-
-When the marker is duplicated, the linter will suggest to remove the duplicate marker.
+About the duplicated markers which has different value, it requires specific rule for each marker, these are processed by its corresponding linter.
 
 ## Integers
 
