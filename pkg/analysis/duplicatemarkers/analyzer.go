@@ -18,6 +18,7 @@ package duplicatemarkers
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 
 	"golang.org/x/tools/go/analysis"
 
@@ -72,10 +73,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 			continue
 		}
 
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf("%s has duplicated markers %s", field.Names[0].Name, marker.String()),
-		})
+		report(pass, field.Pos(), field.Names[0].Name, marker)
 	}
 }
 
@@ -94,9 +92,25 @@ func checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess ma
 			continue
 		}
 
-		pass.Report(analysis.Diagnostic{
-			Pos:     typeSpec.Pos(),
-			Message: fmt.Sprintf("%s has duplicated markers %s", typeSpec.Name.Name, marker.String()),
-		})
+		report(pass, typeSpec.Pos(), typeSpec.Name.Name, marker)
 	}
+}
+
+func report(pass *analysis.Pass, pos token.Pos, fieldName string, marker markers.Marker) {
+	pass.Report(analysis.Diagnostic{
+		Pos:     pos,
+		Message: fmt.Sprintf("%s has duplicated markers %s", fieldName, marker),
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message: fmt.Sprintf("Remove duplicated marker %s", marker),
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos: marker.Pos,
+						// To remove the duplicated marker, we need to remove the whole line.
+						End: marker.End + 1,
+					},
+				},
+			},
+		},
+	})
 }
