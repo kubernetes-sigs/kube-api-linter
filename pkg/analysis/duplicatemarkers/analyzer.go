@@ -20,7 +20,6 @@ import (
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
@@ -65,11 +64,11 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
-	set := sets.New[string]()
+	markerSet := markers.NewMarkerSet()
 
 	for _, marker := range fieldMarkers.UnsortedList() {
-		if !set.Has(marker.String()) {
-			set.Insert(marker.String())
+		if !markerSet.HasWithValue(marker.String()) {
+			markerSet.Insert(marker)
 			continue
 		}
 
@@ -87,11 +86,11 @@ func checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess ma
 
 	typeMarkers := markersAccess.TypeMarkers(typeSpec)
 
-	set := sets.New[string]()
+	markerSet := markers.NewMarkerSet()
 
 	for _, marker := range typeMarkers.UnsortedList() {
-		if !set.Has(marker.String()) {
-			set.Insert(marker.String())
+		if !markerSet.HasWithValue(marker.String()) {
+			markerSet.Insert(marker)
 			continue
 		}
 
