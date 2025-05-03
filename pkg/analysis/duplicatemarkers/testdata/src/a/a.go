@@ -22,8 +22,8 @@ type DuplicatedMaxLength int // want "DuplicatedMaxLength has duplicated markers
 // +kubebuilder:object:root=true
 type DuplicateMarkerSpec struct { // want "DuplicateMarkerSpec has duplicated markers kubebuilder:object:root"
 	// +kubebuilder:validation:Required
-	// shpuld be ignored since it only has single marker
-	UniqueRequired string `json:"uniqueRequired"`
+	// should be ignored since it only has single marker
+	Required string `json:"required"`
 
 	// +listType=map
 	// +listMapKey=primaryKey
