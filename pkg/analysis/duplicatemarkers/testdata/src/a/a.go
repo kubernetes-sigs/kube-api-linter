@@ -55,6 +55,9 @@ type DuplicateMarkerSpec struct { // want "DuplicateMarkerSpec has duplicated ma
 	// +kubebuilder:validation:MaxLength=10
 	DuplicatedMaxLength int `json:"duplicatedMaxLength"` // want "DuplicatedMaxLength has duplicated markers kubebuilder:validation:MaxLength=10"
 
+	// +kubebuilder:validation:MaxLength=10
+	DuplicatedMaxLengthIncludingTypeMarker MaxLength `json:"duplicatedMaxLengthIncludingTypeMarker"` // want "DuplicatedMaxLengthIncludingTypeMarker has duplicated markers kubebuilder:validation:MaxLength=10"
+
 	// +listType=map
 	// +listMapKey=primaryKey
 	// +listMapKey=secondaryKey
