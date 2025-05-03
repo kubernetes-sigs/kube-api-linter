@@ -176,6 +176,11 @@ Will be flagged by this linter, while something like:
 // +kubebuilder:validation:MaxLength=11
 will not.
 
+### Fixes
+
+The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
+If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
+
 ## Integers
 
 The `integers` linter checks for usage of unsupported integer types.

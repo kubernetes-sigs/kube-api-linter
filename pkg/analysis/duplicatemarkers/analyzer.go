@@ -37,7 +37,7 @@ const (
 // It checks for duplicate markers on struct fields.
 var Analyzer = &analysis.Analyzer{
 	Name:     name,
-	Doc:      "Check for duplicate markers on struct fields.",
+	Doc:      "Check for duplicate markers on defined types and struct fields.",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspector.Analyzer},
 }

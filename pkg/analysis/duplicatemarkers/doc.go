@@ -16,21 +16,27 @@ limitations under the License.
 
 /*
 duplicatemarkers is an analyzer that checks for duplicate markers in the API types.
+It reports exact matches for marker definitions.
 
-It reports only if the marker and value together are completely unique now. For example, the `duplicatemarkers` will not diagnose the field has kubebuilder:validation:MaxLength=10 and kubebuilder:validation:MaxLength=11
-
-Example:
+For example, something like:
 
 	type Foo struct {
 		// +kubebuilder:validation:MaxLength=10
 		// +kubebuilder:validation:MaxLength=11
-		Field string `json:"field"`
+		type Bar string
 	}
 
-	// +kubebuilder:validation:MaxLength=10
-	// +kubebuilder:validation:MaxLength=11
-	type Bar string
+would not be reported while something like:
 
-About the duplicated markers which has different value, it requires specific rule for each marker, these are processed by its corresponding linter.
+	type Foo struct {
+		// +kubebuilder:validation:MaxLength=10
+		// +kubebuilder:validation:MaxLength=10
+		type Bar string
+	}
+
+would be reported.
+
+This linter also be able to automatically fix all markers that are exact match to another markers.
+If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
 */
 package duplicatemarkers
