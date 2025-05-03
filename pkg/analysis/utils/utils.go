@@ -80,7 +80,7 @@ func LookupTypeSpec(pass *analysis.Pass, ident *ast.Ident) (*ast.TypeSpec, bool)
 // FieldName returns the name of the field. If the field has a name, it returns that name.
 // If the field is embedded and it can be converted to an identifier, it returns the name of the identifier.
 func FieldName(field *ast.Field) string {
-	if len(field.Names) > 0 {
+	if len(field.Names) > 0 && field.Names[0] != nil {
 		return field.Names[0].Name
 	}
 
