@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/validation"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -224,8 +225,8 @@ var _ = Describe("LintersConfig", func() {
 		Entry("With a valid OptionalOrRequiredConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
 				OptionalOrRequired: config.OptionalOrRequiredConfig{
-					PreferredOptionalMarker: "optional",
-					PreferredRequiredMarker: "required",
+					PreferredOptionalMarker: markers.OptionalMarker,
+					PreferredRequiredMarker: markers.RequiredMarker,
 				},
 			},
 			expectedErr: "",
@@ -233,8 +234,8 @@ var _ = Describe("LintersConfig", func() {
 		Entry("With kubebuilder preferred markers", validateLintersConfigTableInput{
 			config: config.LintersConfig{
 				OptionalOrRequired: config.OptionalOrRequiredConfig{
-					PreferredOptionalMarker: "kubebuilder:validation:Optional",
-					PreferredRequiredMarker: "kubebuilder:validation:Required",
+					PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+					PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
 				},
 			},
 			expectedErr: "",

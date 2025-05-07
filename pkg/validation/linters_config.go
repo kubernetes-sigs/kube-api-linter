@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
@@ -95,15 +95,15 @@ func validateOptionalOrRequiredConfig(oorc config.OptionalOrRequiredConfig, fldP
 	fieldErrors := field.ErrorList{}
 
 	switch oorc.PreferredOptionalMarker {
-	case "", optionalorrequired.OptionalMarker, optionalorrequired.KubebuilderOptionalMarker:
+	case "", markers.OptionalMarker, markers.KubebuilderOptionalMarker:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), oorc.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", optionalorrequired.OptionalMarker, optionalorrequired.KubebuilderOptionalMarker)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), oorc.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.OptionalMarker, markers.KubebuilderOptionalMarker)))
 	}
 
 	switch oorc.PreferredRequiredMarker {
-	case "", optionalorrequired.RequiredMarker, optionalorrequired.KubebuilderRequiredMarker:
+	case "", markers.RequiredMarker, markers.KubebuilderRequiredMarker:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), oorc.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", optionalorrequired.RequiredMarker, optionalorrequired.KubebuilderRequiredMarker)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), oorc.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.RequiredMarker, markers.KubebuilderRequiredMarker)))
 	}
 
 	return fieldErrors

@@ -21,6 +21,7 @@ import (
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 func TestDefaultConfiguration(t *testing.T) {
@@ -39,8 +40,8 @@ func TestSwappedMarkerPriority(t *testing.T) {
 
 	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{
 		OptionalOrRequired: config.OptionalOrRequiredConfig{
-			PreferredOptionalMarker: optionalorrequired.KubebuilderOptionalMarker,
-			PreferredRequiredMarker: optionalorrequired.KubebuilderRequiredMarker,
+			PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+			PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
 		},
 	})
 	if err != nil {
