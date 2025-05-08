@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 func TestInspector(t *testing.T) {
@@ -49,14 +50,7 @@ func run(pass *analysis.Pass) (any, error) {
 	}
 
 	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		var fieldName string
-		if len(field.Names) > 0 {
-			fieldName = field.Names[0].Name
-		} else if ident, ok := field.Type.(*ast.Ident); ok {
-			fieldName = ident.Name
-		}
-
-		pass.Reportf(field.Pos(), "field: %v", fieldName)
+		pass.Reportf(field.Pos(), "field: %v", utils.FieldName(field))
 
 		if jsonTagInfo.Name != "" {
 			pass.Reportf(field.Pos(), "json tag: %v", jsonTagInfo.Name)

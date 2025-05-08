@@ -55,11 +55,11 @@ func run(pass *analysis.Pass) (any, error) {
 }
 
 func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	if len(field.Names) == 0 || field.Names[0] == nil {
+	fieldName := utils.FieldName(field)
+	if fieldName == "" {
 		return
 	}
 
-	fieldName := field.Names[0].Name
 	prefix := fmt.Sprintf("field %s", fieldName)
 
 	checkTypeExpr(pass, field.Type, field, nil, markersAccess, prefix, markers.KubebuilderMaxLengthMarker, needsStringMaxLength)

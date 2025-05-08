@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
@@ -107,12 +108,12 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 		return
 	}
 
-	var prefix string
-	if len(field.Names) > 0 && field.Names[0] != nil {
-		prefix = fmt.Sprintf("field %s", field.Names[0].Name)
-	} else if ident, ok := field.Type.(*ast.Ident); ok {
-		prefix = fmt.Sprintf("embedded field %s", ident.Name)
+	prefix := "field %s"
+	if len(field.Names) == 0 || field.Names[0] == nil {
+		prefix = "embedded field %s"
 	}
+
+	prefix = fmt.Sprintf(prefix, utils.FieldName(field))
 
 	hasPrimaryOptional := fieldMarkers.Has(a.primaryOptionalMarker)
 	hasPrimaryRequired := fieldMarkers.Has(a.primaryRequiredMarker)

@@ -77,6 +77,26 @@ func LookupTypeSpec(pass *analysis.Pass, ident *ast.Ident) (*ast.TypeSpec, bool)
 	return nil, false
 }
 
+// FieldName returns the name of the field. If the field has a name, it returns that name.
+// If the field is embedded and it can be converted to an identifier, it returns the name of the identifier.
+// If it doesn't have a name and can't be converted to an identifier, it returns an empty string.
+func FieldName(field *ast.Field) string {
+	if len(field.Names) > 0 && field.Names[0] != nil {
+		return field.Names[0].Name
+	}
+
+	switch typ := field.Type.(type) {
+	case *ast.Ident:
+		return typ.Name
+	case *ast.StarExpr:
+		if ident, ok := typ.X.(*ast.Ident); ok {
+			return ident.Name
+		}
+	}
+
+	return ""
+}
+
 func getFilesForType(pass *analysis.Pass, ident *ast.Ident) (*token.File, *ast.File) {
 	namedType, ok := pass.TypesInfo.TypeOf(ident).(*types.Named)
 	if !ok {
