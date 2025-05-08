@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
@@ -71,11 +72,10 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, fieldTagInfo extractjsontags.FieldTagInfo) {
-	if field == nil || len(field.Names) == 0 {
+	fieldName := utils.FieldName(field)
+	if fieldName == "" {
 		return
 	}
-
-	fieldName := field.Names[0].Name
 
 	if !fieldMarkers.Has(markers.RequiredMarker) && !fieldMarkers.Has(markers.KubebuilderRequiredMarker) {
 		// The field is not marked required, so we don't need to check it.

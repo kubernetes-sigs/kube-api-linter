@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 const name = "commentstart"
@@ -58,10 +59,8 @@ func checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.F
 		return
 	}
 
-	var fieldName string
-	if len(field.Names) > 0 {
-		fieldName = field.Names[0].Name
-	} else {
+	fieldName := utils.FieldName(field)
+	if fieldName == "" {
 		fieldName = types.ExprString(field.Type)
 	}
 

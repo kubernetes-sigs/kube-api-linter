@@ -62,11 +62,11 @@ func (t *typeChecker) CheckNode(pass *analysis.Pass, node ast.Node) {
 }
 
 func (t *typeChecker) checkField(pass *analysis.Pass, field *ast.Field) {
-	if field == nil || len(field.Names) == 0 || field.Names[0] == nil {
+	fieldName := FieldName(field)
+	if fieldName == "" {
 		return
 	}
 
-	fieldName := field.Names[0].Name
 	prefix := fmt.Sprintf("field %s", fieldName)
 
 	t.checkTypeExpr(pass, field.Type, field, prefix)

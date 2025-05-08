@@ -76,13 +76,15 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo) {
-	prefix := "embedded field %s"
-	if len(field.Names) > 0 && field.Names[0] != nil {
-		prefix = "field %s"
+	prefix := "field %s"
+	if len(field.Names) == 0 || field.Names[0] == nil {
+		prefix = "embedded field %s"
 	}
 
+	prefix = fmt.Sprintf(prefix, utils.FieldName(field))
+
 	if tagInfo.Missing {
-		pass.Reportf(field.Pos(), "%s is missing json tag", fmt.Sprintf(prefix, utils.FieldName(field)))
+		pass.Reportf(field.Pos(), "%s is missing json tag", prefix)
 		return
 	}
 
@@ -91,13 +93,13 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo ext
 	}
 
 	if tagInfo.Name == "" {
-		pass.Reportf(field.Pos(), "%s has empty json tag", fmt.Sprintf(prefix, utils.FieldName(field)))
+		pass.Reportf(field.Pos(), "%s has empty json tag", prefix)
 		return
 	}
 
 	matched := a.jsonTagRegex.Match([]byte(tagInfo.Name))
 	if !matched {
-		pass.Reportf(field.Pos(), "%s json tag does not match pattern %q: %s", fmt.Sprintf(prefix, utils.FieldName(field)), a.jsonTagRegex.String(), tagInfo.Name)
+		pass.Reportf(field.Pos(), "%s json tag does not match pattern %q: %s", prefix, a.jsonTagRegex.String(), tagInfo.Name)
 	}
 }
 
