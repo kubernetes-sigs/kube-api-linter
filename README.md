@@ -310,6 +310,20 @@ It will suggest to remove the pointer from the field, and update the `json` tag 
 If you prefer not to suggest fixes for pointers in required fields, you can change the `pointerPolicy` to `Warn`.
 The linter will then only suggest to remove the `omitempty` value from the `json` tag.
 
+## StatusOptional
+
+The `statusoptional` linter checks that all first-level children fields within a status struct are marked as optional.
+
+This is important because status fields should be optional to allow for partial updates and backward compatibility.
+The linter ensures that all direct child fields of any status struct have either the `// +optional` or 
+`// +kubebuilder:validation:Optional` marker.
+
+### Fixes
+
+The `statusoptional` linter can automatically fix fields in status structs that are not marked as optional.
+
+It will suggest adding the `// +optional` marker to any status field that is missing it.
+
 ## StatusSubresource
 
 The `statussubresource` linter checks that the status subresource is configured correctly for

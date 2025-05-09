@@ -34,6 +34,7 @@ func ValidateLintersConfig(lc config.LintersConfig, fldPath *field.Path) field.E
 	fieldErrors = append(fieldErrors, validateNoMapsConfig(lc.NoMaps, fldPath.Child("nomaps"))...)
 	fieldErrors = append(fieldErrors, validateOptionalOrRequiredConfig(lc.OptionalOrRequired, fldPath.Child("optionalOrRequired"))...)
 	fieldErrors = append(fieldErrors, validateRequiredFieldsConfig(lc.RequiredFields, fldPath.Child("requiredFields"))...)
+	fieldErrors = append(fieldErrors, validateStatusOptionalConfig(lc.StatusOptional, fldPath.Child("statusOptional"))...)
 
 	return fieldErrors
 }
@@ -104,6 +105,19 @@ func validateOptionalOrRequiredConfig(oorc config.OptionalOrRequiredConfig, fldP
 	case "", markers.RequiredMarker, markers.KubebuilderRequiredMarker:
 	default:
 		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), oorc.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.RequiredMarker, markers.KubebuilderRequiredMarker)))
+	}
+
+	return fieldErrors
+}
+
+// validateStatusOptionalConfig is used to validate the configuration in the config.StatusOptionalConfig struct.
+func validateStatusOptionalConfig(soc config.StatusOptionalConfig, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	switch soc.PreferredOptionalMarker {
+	case "", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), soc.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker)))
 	}
 
 	return fieldErrors
