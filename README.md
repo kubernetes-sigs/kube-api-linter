@@ -415,6 +415,36 @@ This linter is not enabled by default as it is only applicable to CustomResource
 In the case where there is a status field present but no `kubebuilder:subresource:status` marker, the
 linter will suggest adding the comment `// +kubebuilder:subresource:status` above the struct.
 
+## UniqueMarkers
+
+The `uniquemarkers` linter ensures that types and fields do not contain more than a single definition of a marker that should only be present once.
+
+Because this linter has no way of determining which marker definition was intended it does not suggest any fixes 
+
+### Configuration
+It can configured to include a set of custom markers in the analysis by setting:
+```yaml
+lintersConfig:
+  uniqueMarkers:
+    customMarkers:
+      - identifier: custom:SomeCustomMarker
+        attributes:
+          - fruit
+```
+
+For each custom marker, it must specify an `identifier` and optionally some `attributes`.
+As an example, take the marker definition `kubebuilder:validation:XValidation:rule='has(self.foo)',message='should have foo',fieldPath='.foo'`.
+The identifier for the marker is `kubebuilder:validation:XValidation` and its attributes are `rule`, `message`, and `fieldPath`.
+
+When specifying `attributes`, those attributes are included in the uniqueness identification of a marker definition.
+
+Taking the example configuration from above:
+
+- Marker definitions of `custom:SomeCustomMarker:fruit=apple,color=red` and `custom:SomeCustomMarker:fruit=apple,color=green` would violate the uniqueness requirement and be flagged.
+- Marker definitions of `custom:SomeCustomMarker:fruit=apple,color=red` and `custom:SomeCustomMarker:fruit=orange,color=red` would _not_ violate the uniqueness requirement.
+
+Each entry in `customMarkers` must have a unique `identifier`.
+
 # Contributing
 
 New linters can be added by following the [New Linter][new-linter] guide.
