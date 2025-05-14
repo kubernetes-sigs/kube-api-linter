@@ -194,6 +194,24 @@ The `commentstart` linter can automatically fix comments that do not start with 
 
 When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
 
+## DuplicateMarkers
+
+The duplicatemarkers linter checks for exact duplicates of markers for types and fields.
+This means that something like:
+
+// +kubebuilder:validation:MaxLength=10
+// +kubebuilder:validation:MaxLength=10 
+Will be flagged by this linter, while something like:
+
+// +kubebuilder:validation:MaxLength=10
+// +kubebuilder:validation:MaxLength=11
+will not.
+
+### Fixes
+
+The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
+If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
+
 ## Integers
 
 The `integers` linter checks for usage of unsupported integer types.
