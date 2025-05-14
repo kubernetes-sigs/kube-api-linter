@@ -127,11 +127,10 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 // (such as to be able to marshal an empty object with all possible options shown)
 // and when this is desired, there is an option to ignore the omitempty tag.
 func (a *analyzer) checkFieldOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo) {
-	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore {
-		return
-	}
-
-	if !jsonTags.OmitEmpty {
+	switch {
+	case jsonTags.OmitEmpty, a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore:
+		// Nothing to do, either we have omitempty, or we are ignoring it.
+	case a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf("field %s is optional and should be omitempty", fieldName),
@@ -147,6 +146,8 @@ func (a *analyzer) checkFieldOmitEmpty(pass *analysis.Pass, field *ast.Field, fi
 				},
 			},
 		})
+	case a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyWarn:
+		pass.Reportf(field.Pos(), "field %s is optional and should be omitempty", fieldName)
 	}
 }
 

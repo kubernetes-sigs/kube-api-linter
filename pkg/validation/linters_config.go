@@ -126,9 +126,9 @@ func validateOptionFieldsOmitEmpty(oec config.OptionalFieldsOmitEmpty, fldPath *
 	fieldErrors := field.ErrorList{}
 
 	switch oec.Policy {
-	case "", config.OptionalFieldsOmitEmptyPolicyIgnore, config.OptionalFieldsOmitEmptyPolicySuggestFix:
+	case "", config.OptionalFieldsOmitEmptyPolicyIgnore, config.OptionalFieldsOmitEmptyPolicyWarn, config.OptionalFieldsOmitEmptyPolicySuggestFix:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), oec.Policy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.OptionalFieldsOmitEmptyPolicyIgnore, config.OptionalFieldsOmitEmptyPolicySuggestFix)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), oec.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", config.OptionalFieldsOmitEmptyPolicyIgnore, config.OptionalFieldsOmitEmptyPolicyWarn, config.OptionalFieldsOmitEmptyPolicySuggestFix)))
 	}
 
 	return fieldErrors

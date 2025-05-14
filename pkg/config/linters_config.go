@@ -181,6 +181,7 @@ type OptionalFieldsOmitEmpty struct {
 	// policy determines whether the linter should require omitempty for all optional fields.
 	// Valid values are "SuggestFix" and "Ignore".
 	// When set to "SuggestFix", the linter will suggest adding the `omitempty` tag when an optional field does not have it.
+	// When set to "Warn", the linter will emit a warning if the field does not have the `omitempty` tag.
 	// When set to "Ignore", and optional field missing the `omitempty` tag will be ignored.
 	// Note, when set to "Ignore", and a field does not have the `omitempty` tag, this may affect whether the field should be a pointer or not.
 	Policy OptionalFieldsOmitEmptyPolicy `json:"policy"`
@@ -214,6 +215,9 @@ type OptionalFieldsOmitEmptyPolicy string
 const (
 	// OptionalFieldsOmitEmptyPolicySuggestFix indicates that the linter will emit a warning if the field does not have omitempty, and suggest a fix.
 	OptionalFieldsOmitEmptyPolicySuggestFix OptionalFieldsOmitEmptyPolicy = "SuggestFix"
+
+	// OptionalFieldsOmitEmptyPolicyWarn indicates that the linter will emit a warning if the field does not have omitempty.
+	OptionalFieldsOmitEmptyPolicyWarn OptionalFieldsOmitEmptyPolicy = "Warn"
 
 	// OptionalFieldsOmitEmptyPolicyIgnore indicates that the linter will ignore any field missing the omitempty tag.
 	OptionalFieldsOmitEmptyPolicyIgnore OptionalFieldsOmitEmptyPolicy = "Ignore"
