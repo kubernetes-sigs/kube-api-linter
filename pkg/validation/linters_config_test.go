@@ -290,5 +290,38 @@ var _ = Describe("LintersConfig", func() {
 			},
 			expectedErr: "lintersConfig.requiredFields.pointerPolicy: Invalid value: \"invalid\": invalid value, must be one of \"Warn\", \"SuggestFix\" or omitted",
 		}),
+
+		// StatusOptionalConfig validation
+		Entry("With a valid StatusOptionalConfig", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				StatusOptional: config.StatusOptionalConfig{
+					PreferredOptionalMarker: markers.OptionalMarker,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With a valid StatusOptionalConfig: k8s optional marker", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				StatusOptional: config.StatusOptionalConfig{
+					PreferredOptionalMarker: markers.K8sOptionalMarker,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With a valid StatusOptionalConfig: kubebuilder optional marker", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				StatusOptional: config.StatusOptionalConfig{
+					PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+				},
+			},
+		}),
+		Entry("With an invalid StatusOptionalConfig", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				StatusOptional: config.StatusOptionalConfig{
+					PreferredOptionalMarker: "invalid",
+				},
+			},
+			expectedErr: "lintersConfig.statusOptional.preferredOptionalMarker: Invalid value: \"invalid\": invalid value, must be one of \"optional\", \"kubebuilder:validation:Optional\", \"k8s:optional\" or omitted",
+		}),
 	)
 })

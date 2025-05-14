@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/statusoptional"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/statussubresource"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 
@@ -85,6 +86,7 @@ func NewRegistry() Registry {
 			nophase.Initializer(),
 			optionalorrequired.Initializer(),
 			requiredfields.Initializer(),
+			statusoptional.Initializer(),
 			statussubresource.Initializer(),
 		},
 	}
