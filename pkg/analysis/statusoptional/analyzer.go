@@ -84,7 +84,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 			return
 		}
 
-		statusStructType := getStructFromField(field)
+		statusStructType := getStructFromField(pass, field)
 		if statusStructType == nil {
 			return
 		}
@@ -114,7 +114,7 @@ func (a *analyzer) checkStatusStruct(pass *analysis.Pass, statusType *ast.Struct
 				continue
 			}
 			// Check embedded structs recursively
-			a.checkStatusStruct(pass, getStructFromField(childField), markersAccess, jsonTags)
+			a.checkStatusStruct(pass, getStructFromField(pass, childField), markersAccess, jsonTags)
 		default:
 			// Check if the field has the required optional markers
 			a.checkFieldOptionalMarker(pass, childField, fieldName, markersAccess)
@@ -240,13 +240,13 @@ func createMarkerRemovalEdits(fieldMarkers markershelper.MarkerSet) []analysis.T
 }
 
 // getStructFromField extracts the struct type from an AST Field.
-func getStructFromField(field *ast.Field) *ast.StructType {
+func getStructFromField(pass *analysis.Pass, field *ast.Field) *ast.StructType {
 	ident, ok := field.Type.(*ast.Ident)
 	if !ok {
 		return nil
 	}
 
-	typeSpec, ok := ident.Obj.Decl.(*ast.TypeSpec)
+	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
 	if !ok {
 		return nil
 	}

@@ -24,6 +24,12 @@ type StatusWithEmbeddings struct {
 	// Pointer to non-inlined embed with omitempty
 	// +optional
 	*PointerOmitEmptyEmbed `json:"pointerOmitEmpty,omitempty"` // want "status field \"PointerOmitEmptyEmbed\" must be marked as optional"
+
+	// NonInlinedStructFromAnotherFile imports a type from another file
+    // +optional
+	NonInlinedStructFromAnotherFile StructFromAnotherFile `json:"nonInlinedStructFromAnotherFile"` // want "status field \"NonInlinedStructFromAnotherFile\" must be marked as optional"
+
+	StructFromAnotherFile `json:",inline"`
 }
 
 type InlineEmbed struct {

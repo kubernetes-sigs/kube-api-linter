@@ -76,6 +76,11 @@ type DuplicateMarkerSpec struct { // want "DuplicateMarkerSpec has duplicated ma
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="replicas must be immutable"
 	// +kubebuilder:validation:XValidation:message="must be 1 to 5",rule="self >= 1 && self <= 3"
 	DuplicatedUnorderedValidationReplicas *int `json:"duplicatedUnorderedValidationReplicas"` // want "DuplicatedUnorderedValidationReplicas has duplicated markers kubebuilder:validation:XValidation:message=\"must be 1 to 5\",rule=\"self >= 1 && self <= 3\""
+
+	StringFromAnotherFile StringFromAnotherFile `json:"stringFromAnotherFile"`
+
+	// +kubebuilder:validation:MaxLength=10
+	StringFromAnotherFileWithMaxLength StringFromAnotherFile `json:"stringFromAnotherFileWithMaxLength"` // want "StringFromAnotherFileWithMaxLength has duplicated markers kubebuilder:validation:MaxLength=10"
 }
 
 type Map struct {

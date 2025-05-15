@@ -27,6 +27,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 const (
@@ -90,7 +91,7 @@ func collectMarkers(pass *analysis.Pass, markersAccess markers.Markers, field *a
 		return markers
 	}
 
-	typeSpec, ok := ident.Obj.Decl.(*ast.TypeSpec)
+	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
 	if !ok {
 		return markers
 	}
