@@ -13,6 +13,7 @@
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
 - [RequiredFields](#requiredfields) - Validates required field conventions
+- [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
 - [StatusSubresource](#statussubresource) - Validates status subresource configuration
 - [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
@@ -247,6 +248,45 @@ It will suggest to remove the pointer from the field, and update the `json` tag 
 
 If you prefer not to suggest fixes for pointers in required fields, you can change the `pointerPolicy` to `Warn`.
 The linter will then only suggest to remove the `omitempty` value from the `json` tag.
+
+## SSATags
+
+The `ssatags` linter ensures that array fields in Kubernetes API objects have the appropriate
+listType markers (atomic, set, or map) for proper Server-Side Apply behavior.
+
+Server-Side Apply (SSA) is a Kubernetes feature that allows multiple controllers to manage
+different parts of an object. The listType markers help SSA understand how to merge arrays:
+
+- listType=atomic: The entire list is replaced when updated
+- listType=set: List elements are treated as a set (no duplicates, order doesn't matter)
+- listType=map: Elements are identified by specific key fields for granular updates
+
+**Important Note on listType=set:**
+The use of listType=set is discouraged for object arrays due to Server-Side Apply
+compatibility issues. When multiple controllers attempt to apply changes to an object
+array with listType=set, the merge behavior can be unpredictable and may lead to
+data loss or unexpected conflicts. For object arrays, use listType=atomic for simple
+replacement semantics or listType=map for granular field-level merging.
+listType=set is safe to use with primitive arrays (strings, integers, etc.).
+
+The linter checks for:
+
+1. Missing listType markers on array fields
+2. Invalid listType values (must be atomic, set, or map)
+3. Usage of listType=set on object arrays (discouraged due to compatibility issues)
+4. Missing listMapKey markers for listType=map arrays
+5. Incorrect usage of listType=map on primitive arrays
+
+### Configuration
+
+```yaml
+lintersConfig:
+  ssaTags:
+    listTypeSetUsage: Warn | Ignore # The policy for listType=set usage on object arrays. Defaults to `Warn`.
+```
+
+**Note:** listMapKey validation is always enforced and cannot be disabled. This ensures proper
+Server-Side Apply behavior for arrays using listType=map.
 
 ## StatusOptional
 

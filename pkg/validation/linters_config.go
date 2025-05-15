@@ -36,6 +36,7 @@ func ValidateLintersConfig(lc config.LintersConfig, fldPath *field.Path) field.E
 	fieldErrors = append(fieldErrors, validateOptionalFieldsConfig(lc.OptionalFields, fldPath.Child("optionalFields"))...)
 	fieldErrors = append(fieldErrors, validateOptionalOrRequiredConfig(lc.OptionalOrRequired, fldPath.Child("optionalOrRequired"))...)
 	fieldErrors = append(fieldErrors, validateRequiredFieldsConfig(lc.RequiredFields, fldPath.Child("requiredFields"))...)
+	fieldErrors = append(fieldErrors, validateSSATagsConfig(lc.SSATags, fldPath.Child("ssatags"))...)
 	fieldErrors = append(fieldErrors, validateStatusOptionalConfig(lc.StatusOptional, fldPath.Child("statusOptional"))...)
 	fieldErrors = append(fieldErrors, validateUniqueMarkersConfig(lc.UniqueMarkers, fldPath.Child("uniqueMarkers"))...)
 
@@ -150,6 +151,19 @@ func validateOptionalOrRequiredConfig(oorc config.OptionalOrRequiredConfig, fldP
 	case "", markers.RequiredMarker, markers.KubebuilderRequiredMarker:
 	default:
 		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), oorc.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.RequiredMarker, markers.KubebuilderRequiredMarker)))
+	}
+
+	return fieldErrors
+}
+
+// validateSSATagsConfig is used to validate the configuration in the config.SSATagsConfig struct.
+func validateSSATagsConfig(stc config.SSATagsConfig, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	switch stc.ListTypeSetUsage {
+	case "", config.SSATagsListTypeSetUsageWarn, config.SSATagsListTypeSetUsageIgnore:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("listTypeSetUsage"), stc.ListTypeSetUsage, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.SSATagsListTypeSetUsageWarn, config.SSATagsListTypeSetUsageIgnore)))
 	}
 
 	return fieldErrors

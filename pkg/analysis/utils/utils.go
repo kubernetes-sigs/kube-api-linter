@@ -145,3 +145,114 @@ func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess marker
 
 	return typeMarkers
 }
+
+// IsArrayTypeOrAlias checks if the field type is an array type or an alias to an array type.
+func IsArrayTypeOrAlias(pass *analysis.Pass, field *ast.Field) bool {
+	if _, ok := field.Type.(*ast.ArrayType); ok {
+		return true
+	}
+
+	if ident, ok := field.Type.(*ast.Ident); ok {
+		typeOf := pass.TypesInfo.TypeOf(ident)
+		if typeOf == nil {
+			return false
+		}
+
+		return isArrayType(typeOf)
+	}
+
+	return false
+}
+
+// IsObjectList checks if the field represents a list of objects (not primitives).
+func IsObjectList(pass *analysis.Pass, field *ast.Field) bool {
+	if arrayType, ok := field.Type.(*ast.ArrayType); ok {
+		return inspectType(pass, arrayType.Elt)
+	}
+
+	if ident, ok := field.Type.(*ast.Ident); ok {
+		typeOf := pass.TypesInfo.TypeOf(ident)
+		if typeOf == nil {
+			return false
+		}
+
+		return isObjectListFromType(typeOf)
+	}
+
+	return false
+}
+
+func isArrayType(t types.Type) bool {
+	if aliasType, ok := t.(*types.Alias); ok {
+		return isArrayType(aliasType.Underlying())
+	}
+
+	if namedType, ok := t.(*types.Named); ok {
+		return isArrayType(namedType.Underlying())
+	}
+
+	if _, ok := t.(*types.Slice); ok {
+		return true
+	}
+
+	return false
+}
+
+func isObjectListFromType(t types.Type) bool {
+	if aliasType, ok := t.(*types.Alias); ok {
+		return isObjectListFromType(aliasType.Underlying())
+	}
+
+	if namedType, ok := t.(*types.Named); ok {
+		return isObjectListFromType(namedType.Underlying())
+	}
+
+	if sliceType, ok := t.(*types.Slice); ok {
+		return !isTypeBasic(sliceType.Elem())
+	}
+
+	return false
+}
+
+func inspectType(pass *analysis.Pass, expr ast.Expr) bool {
+	switch elementType := expr.(type) {
+	case *ast.Ident:
+		return !isBasicOrAliasToBasic(pass, elementType)
+	case *ast.StarExpr:
+		return inspectType(pass, elementType.X)
+	case *ast.ArrayType:
+		return inspectType(pass, elementType.Elt)
+	case *ast.SelectorExpr:
+		return true
+	}
+
+	return false
+}
+
+func isBasicOrAliasToBasic(pass *analysis.Pass, ident *ast.Ident) bool {
+	typeOf := pass.TypesInfo.TypeOf(ident)
+	if typeOf == nil {
+		return false
+	}
+
+	return isTypeBasic(typeOf)
+}
+
+func isTypeBasic(t types.Type) bool {
+	// Direct basic type
+	if _, ok := t.(*types.Basic); ok {
+		return true
+	}
+
+	// Handle type aliases (type T = U)
+	if aliasType, ok := t.(*types.Alias); ok {
+		return isTypeBasic(aliasType.Underlying())
+	}
+
+	// Handle defined types (type T U)
+	if namedType, ok := t.(*types.Named); ok {
+		return isTypeBasic(namedType.Underlying())
+	}
+
+	return false
+}
