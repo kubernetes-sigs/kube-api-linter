@@ -154,6 +154,227 @@ allowing for customisation or automatic copmilation of the project should it not
 }
 ```
 
+<<<<<<< HEAD
+||||||| parent of e73e64a (initialize ssa tags linter)
+# Linters
+
+## Conditions
+
+The `conditions` linter checks that `Conditions` fields in the API types are correctly formatted.
+The `Conditions` field should be a slice of `metav1.Condition` with the following tags and markers:
+
+```go
+// +listType=map
+// +listMapKey=type
+// +patchStrategy=merge
+// +patchMergeKey=type
+// +optional
+Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,opt,name=conditions"`
+```
+
+Conditions are idiomatically the first field within the status struct, and the linter will highlight when the Conditions are not the first field.
+
+Protobuf tags and patch strategy are required for in-tree API types, but not for CRDs.
+When linting CRD based types, set the `useProtobuf` and `usePatchStrategy` config option to `Ignore` or `Forbid`.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  conditions:
+    isFirstField: Warn | Ignore # The policy for the Conditions field being the first field. Defaults to `Warn`.
+    useProtobuf: SuggestFix | Warn | Ignore | Forbid # The policy for the protobuf tag on the Conditions field. Defaults to `SuggestFix`.
+    usePatchStrategy: SuggestFix | Warn | Ignore | Forbid # The policy for the patchStrategy tag on the Conditions field. Defaults to `SuggestFix`.
+```
+
+### Fixes
+
+The `conditions` linter can automatically fix the tags on the `Conditions` field.
+When they do not match the expected format, the linter will suggest to update the tags to match the expected format.
+
+For CRDs, protobuf tags and patch strategy are not expected.
+By setting the `useProtobuf`/`usePatchStrategy` configuration to `Ignore`, the linter will not suggest to add the protobuf/patch strategy tag to the `Conditions` field tags.
+By setting the `useProtobuf`/`usePatchStrategy` configuration to `Forbid`, the linter will suggest to remove the protobuf/patch strategy tag from the `Conditions` field tags.
+
+The linter will also suggest to add missing markers.
+If any of the 5 markers in the example above are missing, the linter will suggest to add them directly above the field.
+
+When `usePatchStrategy` is set to `Ignore`, the linter will not suggest to add the `patchStrategy` and `patchMergeKey` tags to the `Conditions` field markers.
+When `usePatchStrategy` is set to `Forbid`, the linter will suggest to remove the `patchStrategy` and `patchMergeKey` tags from the `Conditions` field markers.
+
+## CommentStart
+
+The `commentstart` linter checks that all comments in the API types start with the serialized form of the type they are commenting on.
+This helps to ensure that generated documentation reflects the most common usage of the field, the serialized YAML form.
+
+### Fixes
+
+The `commentstart` linter can automatically fix comments that do not start with the serialized form of the type.
+
+When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
+
+## DuplicateMarkers
+
+The duplicatemarkers linter checks for exact duplicates of markers for types and fields.
+This means that something like:
+
+// +kubebuilder:validation:MaxLength=10
+// +kubebuilder:validation:MaxLength=10 
+Will be flagged by this linter, while something like:
+
+// +kubebuilder:validation:MaxLength=10
+// +kubebuilder:validation:MaxLength=11
+will not.
+
+### Fixes
+
+The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
+If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
+
+## Integers
+
+The `integers` linter checks for usage of unsupported integer types.
+Only `int32` and `int64` types should be used in APIs, and other integer types, including unsigned integers are forbidden.
+
+## JSONTags
+
+The `jsontags` linter checks that all fields in the API types have a `json` tag, and that those tags are correctly formatted.
+The `json` tag for a field within a Kubernetes API type should use a camel case version of the field name.
+
+The `jsontags` linter checks the tag name against the regex `"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$"` which allows consecutive upper case characters, to allow for acronyms, e.g. `requestTTL`.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  jsonTags:
+    jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
+```
+
+## MaxLength
+
+The `maxlength` linter checks that string and array fields in the API are bounded by a maximum length.
+
+For strings, this means they have a `+kubebuilder:validation:MaxLength` marker.
+
+For arrays, this means they have a `+kubebuilder:validation:MaxItems` marker.
+
+For arrays of strings, the array element should also have a `+kubebuilder:validation:MaxLength` marker if the array element is a type alias,
+or `+kubebuilder:validation:items:MaxLenth` if the array is an element of the built-in string type.
+
+Adding maximum lengths to strings and arrays not only ensures that the API is not abused (used to store overly large data, reduces DDOS etc.),
+but also allows CEL validation cost estimations to be kept within reasonable bounds.
+
+## NoBools
+
+The `nobools` linter checks that fields in the API types do not contain a `bool` type.
+
+Booleans are limited and do not evolve well over time.
+It is recommended instead to create a string alias with meaningful values, as an enum.
+
+## NoFloats
+
+The `nofloats` linter checks that fields in the API types do not contain a `float32` or `float64` type.
+
+Floating-point values cannot be reliably round-tripped without changing and have varying precision and representation across languages and architectures.
+Their use should be avoided as much as possible.
+They should never be used in spec.
+
+## Nomaps
+
+The `nomaps` linter checks the usage of map types.
+
+Maps are discouraged apart from `map[string]string` which is used for labels and annotations in Kubernetes APIs since it's hard to distinguish between structs and maps in spec. Instead of plain map, lists of named subobjects are preferred.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  nomaps:
+    policy: Enforce | AllowStringToStringMaps | Ignore # Determines how the linter should handle maps of simple types. Defaults to AllowStringToStringMaps.
+```
+
+## Nophase
+
+The `nophase` linter checks that the fields in the API types don't contain a 'Phase', or any field which contains 'Phase' as a substring, e.g MachinePhase.
+
+## OptionalOrRequired
+
+The `optionalorrequired` linter checks that all fields in the API types are either optional or required, and are marked explicitly as such.
+
+The linter expects to find a comment marker `// +optional` or `// +required` within the comment for the field.
+
+It also supports the `// +kubebuilder:validation:Optional` and `// +kubebuilder:validation:Required` markers, but will suggest to use the `// +optional` and `// +required` markers instead.
+
+If you prefer to use the Kubebuilder markers instead, you can change the preference in the configuration.
+
+The `optionalorrequired` linter also checks for the presence of optional or required markers on type declarations, and forbids this pattern.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  optionalOrRequired:
+    preferredOptionalMarker: optional | kubebuilder:validation:Optional # The preferred optional marker to use, fixes will suggest to use this marker. Defaults to `optional`.
+    preferredRequiredMarker: required | kubebuilder:validation:Required # The preferred required marker to use, fixes will suggest to use this marker. Defaults to `required`.
+```
+
+### Fixes
+
+The `optionalorrequired` linter can automatically fix fields that are using the incorrect form of either the optional or required marker.
+
+It will also remove the secondary marker where both the preferred and secondary marker are present on a field.
+
+## RequiredFields
+
+The `requiredfields` linter checks that fields that are marked as required, follow the convention of not being pointers,
+and not having an `omitempty` value in their `json` tag.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  requiredFields:
+    pointerPolicy: Warn | SuggestFix # The policy for pointers in required fields. Defaults to `SuggestFix`.
+```
+
+### Fixes
+
+The `requiredfields` linter can automatically fix fields that are marked as required, but are pointers.
+
+It will suggest to remove the pointer from the field, and update the `json` tag to remove the `omitempty` value.
+
+If you prefer not to suggest fixes for pointers in required fields, you can change the `pointerPolicy` to `Warn`.
+The linter will then only suggest to remove the `omitempty` value from the `json` tag.
+
+## StatusOptional
+
+The `statusoptional` linter checks that all first-level children fields within a status struct are marked as optional.
+
+This is important because status fields should be optional to allow for partial updates and backward compatibility.
+The linter ensures that all direct child fields of any status struct have either the `// +optional` or 
+`// +kubebuilder:validation:Optional` marker.
+
+### Fixes
+
+The `statusoptional` linter can automatically fix fields in status structs that are not marked as optional.
+
+It will suggest adding the `// +optional` marker to any status field that is missing it.
+
+## StatusSubresource
+
+The `statussubresource` linter checks that the status subresource is configured correctly for
+structs marked with the `kubebuilder:object:root:=true` marker. Correct configuration is that
+when there is a status field the `kubebuilder:subresource:status` marker is present on the struct
+OR when the `kubebuilder:subresource:status` marker is present on the struct there is a status field.
+
+This linter is not enabled by default as it is only applicable to CustomResourceDefinitions.
+
+### Fixes
+
+In the case where there is a status field present but no `kubebuilder:subresource:status` marker, the
+linter will suggest adding the comment `// +kubebuilder:subresource:status` above the struct.
+
 # Contributing
 
 New linters can be added by following the [New Linter][new-linter] guide.
