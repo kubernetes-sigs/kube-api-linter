@@ -279,6 +279,28 @@ lintersConfig:
 
 The `nophase` linter checks that the fields in the API types don't contain a 'Phase', or any field which contains 'Phase' as a substring, e.g MachinePhase.
 
+## OptionalFields
+
+The `optionalfields` linter checks that all fields marked as optional adhere to being pointers and having the `omitempty` value in their `json` tag where appropriate.
+
+If you prefer to avoid pointers where possible, the linter can be configured with the `WhenRequired` preference to determine, based on the serialization and valid values for the field, whether the field should be a pointer or not.
+For example, an optional string with a non-zero minimum length does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
+
+In certain use cases, it can be desirable to not omit optional fields from the serialized form of the object.
+In this case, the `omitempty` policy can be set to `Ignore`, and the linter will ensure that the zero value of the object is an acceptable value for the field.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  optionalFields:
+    pointers:
+      preference: Always | WhenRequired # Whether to always require pointers, or only when required. Defaults to `Always`.
+      policy: SuggestFix | Warn # The policy for pointers in optional fields. Defaults to `SuggestFix`.
+    omitempty:
+        policy: SuggestFix | Warn | Ignore # The policy for omitempty in optional fields. Defaults to `SuggestFix`.
+```
+
 ## OptionalOrRequired
 
 The `optionalorrequired` linter checks that all fields in the API types are either optional or required, and are marked explicitly as such.
