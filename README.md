@@ -12,6 +12,14 @@ Kube API Linter is aimed at being an assistant to API review, by catching the me
 
 Kube API Linter ships as a golangci-lint plugin, and a golangci-lint module.
 
+## Standalone executable
+
+You can run KAL directly like this:
+
+```console
+go run sigs.k8s.io/kube-api-linter/cmd@latest run ./...
+```
+
 ### Golangci-lint Module
 
 To install the `golangci-lint` module, first you must have `golangci-lint` installed.
@@ -200,7 +208,7 @@ The duplicatemarkers linter checks for exact duplicates of markers for types and
 This means that something like:
 
 // +kubebuilder:validation:MaxLength=10
-// +kubebuilder:validation:MaxLength=10 
+// +kubebuilder:validation:MaxLength=10
 Will be flagged by this linter, while something like:
 
 // +kubebuilder:validation:MaxLength=10
@@ -333,7 +341,7 @@ The linter will then only suggest to remove the `omitempty` value from the `json
 The `statusoptional` linter checks that all first-level children fields within a status struct are marked as optional.
 
 This is important because status fields should be optional to allow for partial updates and backward compatibility.
-The linter ensures that all direct child fields of any status struct have either the `// +optional` or 
+The linter ensures that all direct child fields of any status struct have either the `// +optional` or
 `// +kubebuilder:validation:Optional` marker.
 
 ### Fixes
