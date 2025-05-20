@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 
@@ -231,28 +232,28 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequired(pass *analysis.Pass,
 		return
 	}
 
-	if ident.Obj != nil {
-		// The field is not a simple type, check the object if it is a type spec.
-		decl, ok := ident.Obj.Decl.(*ast.TypeSpec)
-		if !ok {
-			return
-		}
-
-		a.checkFieldPointersPreferenceWhenRequiredIdentObj(pass, field, fieldName, isStarExpr, decl, markersAccess, jsonTags)
-
-		return
-	}
-
 	switch ident.Name {
 	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
 		a.checkFieldPointersPreferenceWhenRequiredInteger(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
+		return
 	case "string":
 		a.checkFieldPointersPreferenceWhenRequiredString(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
+		return
 	case "bool":
 		a.checkFieldPointersPreferenceWhenRequiredBool(pass, field, fieldName, isStarExpr, jsonTags)
+		return
 	case "float32", "float64":
 		a.checkFieldPointersPreferenceWhenRequiredFloat(pass, field, fieldName, isStarExpr, markersAccess, jsonTags)
+		return
 	}
+
+	// The field is not a simple type in our switch, so try looking up the type spec.
+	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
+	if !ok {
+		return
+	}
+
+	a.checkFieldPointersPreferenceWhenRequiredIdentObj(pass, field, fieldName, isStarExpr, typeSpec, markersAccess, jsonTags)
 }
 
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIdentObj(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, decl *ast.TypeSpec, markersAccess markershelper.Markers, jsonTags extractjsontags.FieldTagInfo) {

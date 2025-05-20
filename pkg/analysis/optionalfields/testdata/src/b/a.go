@@ -179,6 +179,10 @@ type A struct {
 	// +optional
 	StructWithRequiredFields C `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFields is optional, but contains required field\\(s\\) and should be a pointer"
 
+	// structWithRequiredFieldsFromAnotherFile is a struct field.
+	// +optional
+	StructWithRequiredFieldsFromAnotherFile StructWithRequiredField `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFieldsFromAnotherFile is optional, but contains required field\\(s\\) and should be a pointer"
+
 	// pointerStructWithOptionalFields is a pointer struct field.
 	// +optional
 	PointerStructWithOptionalFields *B `json:"pointerStructWithOptionalFields,omitempty"` // want "field PointerStructWithOptionalFields is optional, and contains no required field\\(s\\) and does not need to be a pointer"
@@ -186,6 +190,10 @@ type A struct {
 	// pointerStructWithRequiredFields is a pointer struct field.
 	// +optional
 	PointerStructWithRequiredFields *C `json:"pointerStructWithRequiredFields,omitempty"`
+
+	// pointerStructWithRequiredFromAnotherFile is a pointer struct field.
+	// +optional
+	PointerStructWithRequiredFromAnotherFile *StructWithRequiredField `json:"pointerStructWithRequiredFromAnotherFile,omitempty"`
 
 	// bool is a boolean field.
 	// +optional

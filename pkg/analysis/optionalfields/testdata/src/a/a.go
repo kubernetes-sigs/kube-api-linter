@@ -74,6 +74,11 @@ type A struct {
 	// +optional
 	PointerStringAlias *StringAlias `json:"pointerStringAlias,omitempty"`
 
+	// PointerStringAliasFromAnotherFile is a pointer string alias field.
+	// It proves that we can use types defined in other files.
+	// +optional
+	StringAliasFromAnotherFile *StringAliasFromAnotherFile `json:"pointerStringAliasFromAnotherFile,omitempty"`
+
 	// PointerIntAlias is a pointer int alias field.
 	// +optional
 	PointerIntAlias *IntAlias `json:"pointerIntAlias,omitempty"`
