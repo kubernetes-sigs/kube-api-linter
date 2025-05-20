@@ -70,12 +70,12 @@ func structContainsRequiredFields(structType *ast.StructType, markersAccess mark
 
 // isFieldRequired checks if a field has a required marker.
 func isFieldRequired(fieldMarkers markers.MarkerSet) bool {
-	return fieldMarkers.Has("required") || fieldMarkers.Has("kubebuilder:validation:Required")
+	return fieldMarkers.Has(requiredMarker) || fieldMarkers.Has(kubebuilderRequiredMarker)
 }
 
 // isFieldOptional checks if a field has an optional marker.
 func isFieldOptional(fieldMarkers markers.MarkerSet) bool {
-	return fieldMarkers.Has("optional") || fieldMarkers.Has("kubebuilder:validation:Optional")
+	return fieldMarkers.Has(optionalMarker) || fieldMarkers.Has(kubebuilderOptionalMarker)
 }
 
 // reportShouldAddPointer adds an analysis diagnostic that explains that a pointer should be added.
