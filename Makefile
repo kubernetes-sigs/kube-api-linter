@@ -67,7 +67,7 @@ unit: ## Run unit tests.
 
 .PHONY: build
 build: ## Build the golangci-lint custom plugin binary.
-	${GOLANGCI_LINT} custom
+	go build -o ./bin ./cmd/golangci-lint-kube-api-linter 
 
 .PHONY: verify-%
 verify-%:
