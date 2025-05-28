@@ -106,7 +106,7 @@ func getFilesForType(pass *analysis.Pass, ident *ast.Ident) (*token.File, *ast.F
 	tokenFile := pass.Fset.File(namedType.Obj().Pos())
 
 	for _, astFile := range pass.Files {
-		if astFile.Package == token.Pos(tokenFile.Base()) {
+		if astFile.FileStart == token.Pos(tokenFile.Base()) {
 			return tokenFile, astFile
 		}
 	}
