@@ -47,6 +47,8 @@ const (
 
 	minimumMarker = markers.KubebuilderMinimumMarker
 	maximumMarker = markers.KubebuilderMaximumMarker
+
+	enumMarker = markers.KubebuilderEnumMarker
 )
 
 func init() {
@@ -92,7 +94,7 @@ func newAnalyzer(cfg config.OptionalFieldsConfig) *analysis.Analyzer {
 		Where structs include required fields, they must be a pointer when they themselves are optional.
 		`,
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspector.Analyzer},
+		Requires: []*analysis.Analyzer{inspector.Analyzer, extractjsontags.Analyzer},
 	}
 }
 
@@ -272,8 +274,12 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredIdentObj(pass *analys
 // Any struct that has a minimum number of properties, or has required fields, should be a pointer.
 // Without a pointer, the JSON library cannot omit the field, and will always render a `{}`.
 // A rendered empty object would then violate the minimum number of properties/required field checks.
+//
+//nolint:cyclop
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructType(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, typeExpr *ast.StructType, markersAccess markershelper.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	hasRequiredFields := structContainsRequiredFields(typeExpr, markersAccess)
+
+	validZeroValueStruct := isStructZeroValueValid(pass, typeExpr, markersAccess)
 
 	hasMinimumProperties, err := structHasGreaterThanZeroMinProperties(typeExpr, markersAccess.StructMarkers(typeExpr))
 	if err != nil {
@@ -287,9 +293,13 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructType(pass *anal
 		return
 	}
 
-	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
+	switch {
+	case a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty && validZeroValueStruct:
 		a.checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmitEmpty(pass, field, fieldName, isStarExpr, hasMinimumProperties, fieldHasMinimumProperties, markersAccess)
-	} else {
+	case a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty && !validZeroValueStruct:
+		reportShouldAddOmitEmpty(pass, field, fieldName, "field %s is an optional struct without omitempty, but the zero value is not valid. Omitempty must be added.", jsonTags)
+		fallthrough // Check as if it did have omitempty, since it requires the omitempty.
+	default:
 		a.checkFieldPointersPreferenceWhenRequiredStructTypeWithOmitEmpty(pass, field, fieldName, isStarExpr, hasRequiredFields, hasMinimumProperties || fieldHasMinimumProperties)
 	}
 }
@@ -327,6 +337,8 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStructTypeWithoutOmit
 // Where the minimum allowable length is 0, the field should be a pointer.
 // Where the minimum length is greater than 0, the field should not be a pointer.
 // When the field does not have omitempty, it should not be a pointer, and should not have a minimum length marker.
+//
+//nolint:cyclop
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredString(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markershelper.Markers, jsonTags extractjsontags.FieldTagInfo) {
 	if a.omitEmptyPolicy == config.OptionalFieldsOmitEmptyPolicyIgnore && !jsonTags.OmitEmpty {
 		a.checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty(pass, field, fieldName, isStarExpr, markersAccess)
@@ -334,6 +346,17 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredString(pass *analysis
 	}
 
 	fieldMarkers := markersAccess.FieldMarkers(field)
+	if stringFieldIsEnum(fieldMarkers) {
+		switch {
+		case enumFieldAllowsEmpty(fieldMarkers) && !isStarExpr:
+			reportShouldAddPointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional string enum allowing the empty value and should be a pointer")
+		case !enumFieldAllowsEmpty(fieldMarkers) && isStarExpr:
+			reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, "field %s is an optional string enum not allowing the empty value and should not be a pointer")
+		}
+
+		return
+	}
+
 	if !fieldMarkers.Has(minLengthMarker) {
 		if isStarExpr {
 			pass.Reportf(field.Pos(), "field %s is an optional string and does not have a minimum length. Where the difference between omitted and the empty string is significant, set the minmum length to 0", fieldName)
@@ -364,6 +387,11 @@ func (a *analyzer) checkFieldPointersPreferenceWhenRequiredString(pass *analysis
 // and pointers and suggests that both are removed.
 func (a *analyzer) checkFieldPointersPreferenceWhenRequiredStringWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, isStarExpr bool, markersAccess markershelper.Markers) {
 	reportShouldRemoveAllInstancesOfIntegerMarker(pass, field, markersAccess, minLengthMarker, fieldName, "field %s has a greater than zero minimum length without omitempty. The minimum length should be removed.")
+
+	fieldMarkers := markersAccess.FieldMarkers(field)
+	if stringFieldIsEnum(fieldMarkers) && !enumFieldAllowsEmpty(fieldMarkers) {
+		pass.Reportf(field.Pos(), "field %s is an optional string enum not allowing the empty value without omitempty. Either allow the empty string or add omitempty.", fieldName)
+	}
 
 	// When non-omitempty, the string field should not be a pointer.
 	// The empty string should be a valid/acceptable value.

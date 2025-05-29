@@ -129,6 +129,16 @@ type A struct {
 	// +optional
 	StringWithMinLength0 string `json:"stringWithMinLength0,omitempty"` // want "field StringWithMinLength0 has a minimum length of 0. The empty string is a valid value and therefore the field should be a pointer"
 
+	// EnumString is a string field with an enum.
+	// +kubebuilder:validation:Enum=foo;bar;baz
+	// +optional
+	EnumString string `json:"enumString,omitempty"`
+
+	// EnumStringWithEmptyValue is a string field with an enum, also allowing the empty string.
+	// +kubebuilder:validation:Enum=foo;bar;baz;""
+	// +optional
+	EnumStringWithEmptyValue string `json:"enumStringWithEmptyValue,omitempty"` // want "field EnumStringWithEmptyValue is an optional string enum allowing the empty value and should be a pointer"
+
 	// stringWithMinLength0WithoutOmitEmpty with minimum length is a string field without omitempty.
 	// +kubebuilder:validation:MinLength=0
 	// +optional
@@ -322,7 +332,19 @@ type A struct {
 
 	// structWithRequiredFieldsWithoutOmitEmpty is a struct field without omitempty.
 	// +optional
-	StructWithRequiredFieldsWithoutOmitEmpty C `json:"structWithRequiredFieldsWithoutOmitEmpty"`
+	StructWithRequiredFieldsWithoutOmitEmpty E `json:"structWithRequiredFieldsWithoutOmitEmpty"`
+
+	// structWithRequiredFieldsWithNonZeroAllowedValuesWithoutOmitEmpty is a struct field with required fields but where the zero values are not valid.
+	// +optional
+	StructWithRequiredFieldsWithNonZeroAllowedValuesWithoutOmitEmpty C `json:"structWithRequiredFieldsWithNonZeroAllowedValuesWithoutOmitEmpty"` // want "field StructWithRequiredFieldsWithNonZeroAllowedValuesWithoutOmitEmpty is optional, but contains required field\\(s\\) and should be a pointer" "field StructWithRequiredFieldsWithNonZeroAllowedValuesWithoutOmitEmpty is an optional struct without omitempty, but the zero value is not valid. Omitempty must be added."
+
+	// structWithNonZeroByteArray is a struct field with a non-zero byte array.
+	// +optional
+	StructWithNonZeroByteArray F `json:"structWithNonZeroByteArray"` // want "field StructWithNonZeroByteArray is an optional struct without omitempty, but the zero value is not valid. Omitempty must be added."
+
+	// structWithInvalidEmptyEnum is a struct field with an invalid empty enum.
+	// +optional
+	StructWithInvalidEmptyEnum G `json:"structWithInvalidEmptyEnum"` // want "field StructWithInvalidEmptyEnum is an optional struct without omitempty, but the zero value is not valid. Omitempty must be added"
 
 	// pointerStructWithOptionalFields is a pointer struct field.
 	// +optional
@@ -338,7 +360,7 @@ type A struct {
 
 	// pointerStructWithRequiredFieldsWithoutOmitEmpty is a pointer struct field without omitempty.
 	// +optional
-	PointerStructWithRequiredFieldsWithoutOmitEmpty *C `json:"pointerStructWithRequiredFieldsWithoutOmitEmpty"` // want "field PointerStructWithRequiredFieldsWithoutOmitEmpty is an optional struct without omitempty. It should not be a pointer"
+	PointerStructWithRequiredFieldsWithoutOmitEmpty *C `json:"pointerStructWithRequiredFieldsWithoutOmitEmpty"` // want "field PointerStructWithRequiredFieldsWithoutOmitEmpty is an optional struct without omitempty, but the zero value is not valid. Omitempty must be added"
 
 	// bool is a boolean field.
 	// +optional
@@ -407,6 +429,7 @@ type B struct {
 type C struct {
 	// string is a string field.
 	// +required
+	// +kubebuilder:validation:MinLength=1
 	String string `json:"string"`
 }
 
@@ -420,4 +443,85 @@ type D struct {
 	// +kubebuilder:validation:MinLength=1
 	// +optional
 	StringWithMinLength1 string `json:"stringWithMinLength1,omitempty"`
+}
+
+// E is a struct with required fields but where the zero values are valid.
+// In this case the struct does not need to be a pointer when there is no omitempty.
+type E struct {
+	// string is a string field.
+	// +required
+	// +kubebuilder:validation:MinLength=0
+	String string `json:"string"`
+
+	// stringWithMinLength1 with minimum length is a string field.
+	// +optional
+	// +kubebuilder:validation:MinLength=1
+	StringWithMinLength1 string `json:"stringWithMinLength1,omitempty"`
+
+	// enumWithOmitEmpty is an enum field with omitempty.
+	// It does not need to allow the zero value.
+	// +optional
+	// +kubebuilder:validation:Enum=foo;bar
+	EnumWithOmitEmpty string `json:"enumWithOmitEmpty,omitempty"`
+
+	// enumWithoutOmitEmpty is an enum field without omitempty.
+	// It does need to allow the zero value.
+	// +optional
+	// +kubebuilder:validation:Enum=foo;bar;""
+	EnumWithoutOmitEmpty string `json:"enumWithoutOmitEmpty"`
+
+	// int is an int field.
+	// +required
+	// +kubebuilder:validation:Minimum=0
+	Int int `json:"int"`
+
+	// intWithMinValue1 with minimum value is an int field.
+	// +optional
+	// +kubebuilder:validation:Minimum=1
+	IntWithMinValue1 int `json:"intWithMinValue1,omitempty"`
+
+	// intWithMinValue1WithoutOmitEmpty with minimum value is an int field without omitempty.
+	// +optional
+	// +kubebuilder:validation:Maximum=1
+	IntWithNoMinimum int `json:"intWithNoMinimum"`
+
+	// intWithNoMaximum with no maximum value is an int field.
+	// +optional
+	// +kubebuilder:validation:Minimum=-1
+	IntWithNoMaximum int `json:"intWithNoMaximum"`
+
+	// float is a float field.
+	// +required
+	// +kubebuilder:validation:Minimum=0.0
+	Float float64 `json:"float"`
+
+	// floatWithMinValue1 with minimum value is a float field.
+	// +optional
+	// +kubebuilder:validation:Minimum=1.0
+	FloatWithMinValue1 float64 `json:"floatWithMinValue1,omitempty"`
+
+	// B is a struct with optional fields.
+	B B `json:"b"`
+
+	// D is a struct that's optional, but does not have any required fields.
+	D D `json:"d"`
+
+	// ByteArry is a byte array field.
+	// +optional
+	ByteArray []byte `json:"byteArray"`
+}
+
+type F struct {
+	// nonZeroByteArray is a byte array field that does not allow the zero value.
+	// +kubebuilder:validation:MinLength=1
+	// +optional
+	NonZeroByteArray []byte `json:"nonZeroByteArray"`
+}
+
+type G struct {
+	// enumWithoutOmitEmpty is an enum field without omitempty.
+	// It does need to allow the zero value, else the parent zero value is not valid.
+	// +optional
+	// +kubebuilder:validation:Enum=foo;bar
+	EnumWithoutOmitEmpty string `json:"enumWithoutOmitEmpty"` // want "field EnumWithoutOmitEmpty is an optional string enum not allowing the empty value without omitempty. Either allow the empty string or add omitempty."
 }

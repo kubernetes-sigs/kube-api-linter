@@ -21,6 +21,9 @@ const (
 
 	// RequiredMarker is the marker that indicates that a field is required.
 	RequiredMarker = "required"
+
+	// NullableMarker is the marker that indicates that a field can be null.
+	NullableMarker = "nullable"
 )
 
 const (
