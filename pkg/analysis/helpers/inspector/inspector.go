@@ -16,12 +16,14 @@ limitations under the License.
 package inspector
 
 import (
+	"fmt"
 	"go/ast"
 	"go/token"
 
 	astinspector "golang.org/x/tools/go/ast/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 // Inspector is an interface that allows for the inspection of fields in structs.
@@ -103,6 +105,14 @@ func (i *inspector) InspectFields(inspectField func(field *ast.Field, stack []as
 			return false
 		}
 
+		defer func() {
+			if r := recover(); r != nil {
+				// If the inspectField function panics, we recover and log information that will help identify the issue.
+				debug := printDebugInfo(field)
+				panic(fmt.Sprintf("%s %v", debug, r)) // Re-panic to propagate the error.
+			}
+		}()
+
 		inspectField(field, stack, tagInfo, i.markers)
 
 		return true
@@ -151,4 +161,14 @@ func isItemsType(structType *ast.StructType) bool {
 	}
 
 	return true
+}
+
+// printDebugInfo prints debug information about the field that caused a panic during inspection.
+// This function is designed to allow us to help identify which fields are causing issues during inspection.
+func printDebugInfo(field *ast.Field) string {
+	var debug string
+
+	debug += fmt.Sprintf("Panic observed while inspecting field: %v (type: %v)\n", utils.FieldName(field), field.Type)
+
+	return debug
 }
