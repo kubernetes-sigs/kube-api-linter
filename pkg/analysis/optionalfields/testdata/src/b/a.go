@@ -7,12 +7,12 @@ type A struct {
 
 	// pointerString is a pointer string field.
 	// +optional
-	PointerString *string `json:"pointerString,omitempty"` // want "field PointerString is an optional string and does not have a minimum length. Where the difference between omitted and the empty string is significant, set the minmum length to 0"
+	PointerString *string `json:"pointerString,omitempty"`
 
 	// pointerStringWithMinLength1 with minimum length is a pointer string field.
 	// +kubebuilder:validation:MinLength=1
 	// +optional
-	PointerStringWithMinLength1 *string `json:"pointerStringWithMinLength1,omitempty"` // want "field PointerStringWithMinLength1 has a greater than 0 length and does not need to be a pointer"
+	PointerStringWithMinLength1 *string `json:"pointerStringWithMinLength1,omitempty"` // want "field PointerStringWithMinLength1 is optional and does not allow the zero value. The field does not need to be a pointer."
 
 	// pointerStringWithMinLength0 with minimum length is a pointer string field.
 	// +kubebuilder:validation:MinLength=0
@@ -21,12 +21,12 @@ type A struct {
 
 	// pointerInt is a pointer int field.
 	// +optional
-	PointerInt *int `json:"pointerInt,omitempty"` // want "field PointerInt is an optional integer and does not have a minimum/maximum value. Where the difference between omitted and 0 is significant, set the minimum/maximum value to a range including 0"
+	PointerInt *int `json:"pointerInt,omitempty"`
 
 	// pointerIntWithMinValue1 with minimum value is a pointer int field.
 	// +kubebuilder:validation:Minimum=1
 	// +optional
-	PointerIntWithMinValue1 *int `json:"pointerIntWithMinValue1,omitempty"` // want "field PointerIntWithMinValue1 has a greater than 0 minimum value and does not need to be a pointer"
+	PointerIntWithMinValue1 *int `json:"pointerIntWithMinValue1,omitempty"` // want "field PointerIntWithMinValue1 is optional and does not allow the zero value. The field does not need to be a pointer."
 
 	// pointerIntWithMinValue0 with minimum value is a pointer int field.
 	// +kubebuilder:validation:Minimum=0
@@ -36,17 +36,17 @@ type A struct {
 	// pointerIntWithNegativeMaximumValue with negative maximum value is a pointer int field.
 	// +kubebuilder:validation:Maximum=-1
 	// +optional
-	PointerIntWithNegativeMaximumValue *int `json:"pointerIntWithNegativeMaximumValue,omitempty"` // want "field PointerIntWithNegativeMaximumValue has a negative maximum value and does not need to be a pointer"
+	PointerIntWithNegativeMaximumValue *int `json:"pointerIntWithNegativeMaximumValue,omitempty"` // want "field PointerIntWithNegativeMaximumValue is optional and does not allow the zero value. The field does not need to be a pointer."
 
 	// pointerIntWithNegativeMinimumValue with negative minimum value is a pointer int field.
 	// +kubebuilder:validation:Minimum=-1
 	// +optional
-	PointerIntWithNegativeMinimumValue *int `json:"pointerIntWithNegativeMinimumValue,omitempty"` // want "field PointerIntWithNegativeMinimumValue has a negative minimum value and does not have a maximum value. A maximum value should be set"
+	PointerIntWithNegativeMinimumValue *int `json:"pointerIntWithNegativeMinimumValue,omitempty"`
 
 	// pointerIntWithPositiveMaximumValue with positive maximum value is a pointer int field.
 	// +kubebuilder:validation:Maximum=1
 	// +optional
-	PointerIntWithPositiveMaximumValue *int `json:"pointerIntWithPositiveMaximumValue,omitempty"` // want "field PointerIntWithPositiveMaximumValue has a positive maximum value and does not have a minimum value. A minimum value should be set"
+	PointerIntWithPositiveMaximumValue *int `json:"pointerIntWithPositiveMaximumValue,omitempty"`
 
 	// pointerIntWithRange is a pointer int field with a range of values including 0.
 	// +kubebuilder:validation:Minimum=-10
@@ -56,11 +56,11 @@ type A struct {
 
 	// pointerStruct is a pointer struct field.
 	// +optional
-	PointerStruct *B `json:"pointerStruct,omitempty"` // want "field PointerStruct is optional, and contains no required field\\(s\\) and does not need to be a pointer"
+	PointerStruct *B `json:"pointerStruct,omitempty"`
 
 	// string is a string field.
 	// +optional
-	String string `json:"string,omitempty"` // want "field String is an optional string and does not have a minimum length. Either set a minimum length or make String a pointer where the difference between omitted and the empty string is significant"
+	String string `json:"string,omitempty"` // want "field String is optional and should be a pointer" "field String is optional and has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// stringWithMinLength1 with minimum length is a string field.
 	// +kubebuilder:validation:MinLength=1
@@ -70,11 +70,11 @@ type A struct {
 	// stringWithMinLength0 with minimum length is a string field.
 	// +kubebuilder:validation:MinLength=0
 	// +optional
-	StringWithMinLength0 string `json:"stringWithMinLength0,omitempty"` // want "field StringWithMinLength0 has a minimum length of 0. The empty string is a valid value and therefore the field should be a pointer"
+	StringWithMinLength0 string `json:"stringWithMinLength0,omitempty"` // want "field StringWithMinLength0 is optional and should be a pointer"
 
 	// int is an int field.
 	// +optional
-	Int int `json:"int,omitempty"` // want "field Int is an optional integer and does not have a minimum/maximum value. Either set a minimum/maximum value or make Int a pointer where the difference between omitted and 0 is significant"
+	Int int `json:"int,omitempty"` // want "field Int is optional and should be a pointer" "field Int is optional and has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// intWithMinValue1 with minimum value is an int field.
 	// +kubebuilder:validation:Minimum=1
@@ -84,7 +84,7 @@ type A struct {
 	// intWithMinValue0 with minimum value is an int field.
 	// +kubebuilder:validation:Minimum=0
 	// +optional
-	IntWithMinValue0 int `json:"intWithMinValue0,omitempty"` // want "field IntWithMinValue0 has a range of values including 0. The difference between omitted and 0 is significant and therefore the field should be a pointer"
+	IntWithMinValue0 int `json:"intWithMinValue0,omitempty"` // want "field IntWithMinValue0 is optional and should be a pointer"
 
 	// intWithNegativeMaximumValue with negative maximum value is an int field.
 	// +kubebuilder:validation:Maximum=-1
@@ -94,32 +94,32 @@ type A struct {
 	// intWithNegativeMinimumValue with negative minimum value is an int field.
 	// +kubebuilder:validation:Minimum=-1
 	// +optional
-	IntWithNegativeMinimumValue int `json:"intWithNegativeMinimumValue,omitempty"` // want "field IntWithNegativeMinimumValue has a negative minimum value and does not have a maximum value. A maximum value should be set"
+	IntWithNegativeMinimumValue int `json:"intWithNegativeMinimumValue,omitempty"` // want "field IntWithNegativeMinimumValue is optional and should be a pointer" "field IntWithNegativeMinimumValue is optional and has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// intWithPositiveMaximumValue with positive maximum value is an int field.
 	// +kubebuilder:validation:Maximum=1
 	// +optional
-	IntWithPositiveMaximumValue int `json:"intWithPositiveMaximumValue,omitempty"` // want "field IntWithPositiveMaximumValue has a positive maximum value and does not have a minimum value. A minimum value should be set"
+	IntWithPositiveMaximumValue int `json:"intWithPositiveMaximumValue,omitempty"` // want "field IntWithPositiveMaximumValue is optional and should be a pointer" "field IntWithPositiveMaximumValue is optional and has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// intWithRange is an int field with a range of values including 0.
 	// +kubebuilder:validation:Minimum=-10
 	// +kubebuilder:validation:Maximum=10
 	// +optional
-	IntWithRange int `json:"intWithRange,omitempty"` // want "field IntWithRange has a range of values including 0. The difference between omitted and 0 is significant and therefore the field should be a pointer"
+	IntWithRange int `json:"intWithRange,omitempty"` // want "field IntWithRange is optional and should be a pointer"
 
 	// intWithInvalidMinimumValue with invalid minimum value is an int field.
 	// +kubebuilder:validation:Minimum=foo
 	// +optional
-	IntWithInvalidMinimumValue int `json:"intWithInvalidMinimumValue,omitempty"` // want "field IntWithInvalidMinimumValue has a minimum value of foo, but it is not an integer"
+	IntWithInvalidMinimumValue int `json:"intWithInvalidMinimumValue,omitempty"` // want "field IntWithInvalidMinimumValue has an invalid minimum marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"foo\\\": invalid syntax"
 
 	// intWithInvalidMaximumValue with invalid maximum value is an int field.
 	// +kubebuilder:validation:Maximum=foo
 	// +optional
-	IntWithInvalidMaximumValue int `json:"intWithInvalidMaximumValue,omitempty"` // want "field IntWithInvalidMaximumValue has a maximum value of foo, but it is not an integer"
+	IntWithInvalidMaximumValue int `json:"intWithInvalidMaximumValue,omitempty"` // want "field IntWithInvalidMaximumValue has an invalid maximum marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"foo\\\": invalid syntax"
 
 	// float is a float field.
 	// +optional
-	Float float64 `json:"float,omitempty"` // want "field Float is an optional float and does not have a minimum/maximum value. Either set a minimum/maximum value or make Float a pointer where the difference between omitted and 0 is significant"
+	Float float64 `json:"float,omitempty"` // want "field Float is optional and should be a pointer" "field Float is optional and has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// floatWithMinValue1 with minimum value is a float field.
 	// +kubebuilder:validation:Minimum=1.0
@@ -129,7 +129,7 @@ type A struct {
 	// floatWithMinValue0 with minimum value is a float field.
 	// +kubebuilder:validation:Minimum=0.0
 	// +optional
-	FloatWithMinValue0 float64 `json:"floatWithMinValue0,omitempty"` // want "field FloatWithMinValue0 has a range of values including 0. The difference between omitted and 0 is significant and therefore the field should be a pointer"
+	FloatWithMinValue0 float64 `json:"floatWithMinValue0,omitempty"` // want "field FloatWithMinValue0 is optional and should be a pointer"
 
 	// floatWithNegativeMaximumValue with negative maximum value is a float field.
 	// +kubebuilder:validation:Maximum=-1.0
@@ -139,53 +139,53 @@ type A struct {
 	// floatWithNegativeMinimumValue with negative minimum value is a float field.
 	// +kubebuilder:validation:Minimum=-1.0
 	// +optional
-	FloatWithNegativeMinimumValue float64 `json:"floatWithNegativeMinimumValue,omitempty"` // want "field FloatWithNegativeMinimumValue has a negative minimum value and does not have a maximum value. A maximum value should be set"
+	FloatWithNegativeMinimumValue float64 `json:"floatWithNegativeMinimumValue,omitempty"` // want "field FloatWithNegativeMinimumValue is optional and should be a pointer" "field FloatWithNegativeMinimumValue is optional and has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// floatWithPositiveMaximumValue with positive maximum value is a float field.
 	// +kubebuilder:validation:Maximum=1.0
 	// +optional
-	FloatWithPositiveMaximumValue float64 `json:"floatWithPositiveMaximumValue,omitempty"` // want "field FloatWithPositiveMaximumValue has a positive maximum value and does not have a minimum value. A minimum value should be set"
+	FloatWithPositiveMaximumValue float64 `json:"floatWithPositiveMaximumValue,omitempty"` // want "field FloatWithPositiveMaximumValue is optional and should be a pointer" "field FloatWithPositiveMaximumValue is optional and has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// floatWithRange is a float field with a range of values including 0.
 	// +kubebuilder:validation:Minimum=-10.0
 	// +kubebuilder:validation:Maximum=10.0
 	// +optional
-	FloatWithRange float64 `json:"floatWithRange,omitempty"` // want "field FloatWithRange has a range of values including 0. The difference between omitted and 0 is significant and therefore the field should be a pointer"
+	FloatWithRange float64 `json:"floatWithRange,omitempty"` // want "field FloatWithRange is optional and should be a pointer"
 
 	// floatWithInvalidMinimumValue with invalid minimum value is a float field.
 	// +kubebuilder:validation:Minimum=foo
 	// +optional
-	FloatWithInvalidMinimumValue float64 `json:"floatWithInvalidMinimumValue,omitempty"` // want "field FloatWithInvalidMinimumValue has a minimum value of foo, but it is not a float"
+	FloatWithInvalidMinimumValue float64 `json:"floatWithInvalidMinimumValue,omitempty"` // want "field FloatWithInvalidMinimumValue has an invalid minimum marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"foo\\\": invalid syntax"
 
 	// floatWithInvalidMaximumValue with invalid maximum value is a float field.
 	// +kubebuilder:validation:Maximum=foo
 	// +optional
-	FloatWithInvalidMaximumValue float64 `json:"floatWithInvalidMaximumValue,omitempty"` // want "field FloatWithInvalidMaximumValue has a maximum value of foo, but it is not a float"
+	FloatWithInvalidMaximumValue float64 `json:"floatWithInvalidMaximumValue,omitempty"` // want "field FloatWithInvalidMaximumValue has an invalid maximum marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"foo\\\": invalid syntax"
 
 	// structWithOptionalFields is a struct field.
 	// +optional
-	StructWithOptionalFields B `json:"structWithOptionalFields,omitempty"`
+	StructWithOptionalFields B `json:"structWithOptionalFields,omitempty"` // want "field StructWithOptionalFields is optional and should be a pointer" "field StructWithOptionalFields is optional and has a valid zero value \\(\\{\\}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// structWithMinProperties is a struct field with a minimum number of properties.
 	// +kubebuilder:validation:MinProperties=1
 	// +optional
-	StructWithMinProperties B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties has a greater than zero minimum number of properties and should be a pointer"
+	StructWithMinProperties B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties is optional and should be a pointer"
 
 	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
 	// +optional
-	StructWithMinPropertiesOnStruct D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct has a greater than zero minimum number of properties and should be a pointer"
+	StructWithMinPropertiesOnStruct D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct is optional and should be a pointer"
 
 	// structWithRequiredFields is a struct field.
 	// +optional
-	StructWithRequiredFields C `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFields is optional, but contains required field\\(s\\) and should be a pointer"
+	StructWithRequiredFields C `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFields is optional and should be a pointer"
 
 	// structWithRequiredFieldsFromAnotherFile is a struct field.
 	// +optional
-	StructWithRequiredFieldsFromAnotherFile StructWithRequiredField `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFieldsFromAnotherFile is optional, but contains required field\\(s\\) and should be a pointer"
+	StructWithRequiredFieldsFromAnotherFile StructWithRequiredField `json:"structWithRequiredFields,omitempty"` // want "field StructWithRequiredFieldsFromAnotherFile is optional and should be a pointer"
 
 	// pointerStructWithOptionalFields is a pointer struct field.
 	// +optional
-	PointerStructWithOptionalFields *B `json:"pointerStructWithOptionalFields,omitempty"` // want "field PointerStructWithOptionalFields is optional, and contains no required field\\(s\\) and does not need to be a pointer"
+	PointerStructWithOptionalFields *B `json:"pointerStructWithOptionalFields,omitempty"`
 
 	// pointerStructWithRequiredFields is a pointer struct field.
 	// +optional
@@ -197,7 +197,7 @@ type A struct {
 
 	// bool is a boolean field.
 	// +optional
-	Bool bool `json:"bool,omitempty"` // want "field Bool is an optional boolean and should be a pointer"
+	Bool bool `json:"bool,omitempty"` // want "field Bool is optional and should be a pointer"
 
 	// boolPointer is a pointer boolean field.
 	// +optional
@@ -213,27 +213,27 @@ type A struct {
 
 	// PointerSlice is a pointer slice field.
 	// +optional
-	PointerSlice *[]string `json:"pointerSlice,omitempty"` // want "field PointerSlice is a pointer type and should not be a pointer"
+	PointerSlice *[]string `json:"pointerSlice,omitempty"` // want "field PointerSlice is optional but the underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerMap is a pointer map field.
 	// +optional
-	PointerMap *map[string]string `json:"pointerMap,omitempty"` // want "field PointerMap is a pointer type and should not be a pointer"
+	PointerMap *map[string]string `json:"pointerMap,omitempty"` // want "field PointerMap is optional but the underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerPointerString is a double pointer string field.
 	// +optional
-	DoublePointerString **string `json:"doublePointerString,omitempty"` // want "field DoublePointerString is a pointer type and should not be a pointer"
+	DoublePointerString **string `json:"doublePointerString,omitempty"` // want "field DoublePointerString is optional but the underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerStringAlias is a pointer string alias field.
 	// +optional
-	PointerStringAlias *StringAlias `json:"pointerStringAlias,omitempty"` // want "field PointerStringAlias is an optional string and does not have a minimum length. Where the difference between omitted and the empty string is significant, set the minmum length to 0"
+	PointerStringAlias *StringAlias `json:"pointerStringAlias,omitempty"`
 
 	// PointerIntAlias is a pointer int alias field.
 	// +optional
-	PointerIntAlias *IntAlias `json:"pointerIntAlias,omitempty"` // want "field PointerIntAlias is an optional integer and does not have a minimum/maximum value. Where the difference between omitted and 0 is significant, set the minimum/maximum value to a range including 0"
+	PointerIntAlias *IntAlias `json:"pointerIntAlias,omitempty"`
 
 	// PointerFloatAlias is a pointer float alias field.
 	// +optional
-	PointerFloatAlias *FloatAlias `json:"pointerFloatAlias,omitempty"` // want "field PointerFloatAlias is an optional float and does not have a minimum/maximum value. Where the difference between omitted and 0 is significant, set the minimum/maximum value to a range including 0"
+	PointerFloatAlias *FloatAlias `json:"pointerFloatAlias,omitempty"`
 
 	// PointerBoolAlias is a pointer bool alias field.
 	// +optional
@@ -241,27 +241,27 @@ type A struct {
 
 	// PointerSliceAlias is a pointer slice alias field.
 	// +optional
-	PointerSliceAlias *SliceAlias `json:"pointerSliceAlias,omitempty"` // want "field PointerSliceAlias is a pointer type and should not be a pointer"
+	PointerSliceAlias *SliceAlias `json:"pointerSliceAlias,omitempty"` // want "field PointerSliceAlias is optional but the underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerMapAlias is a pointer map alias field.
 	// +optional
-	PointerMapAlias *MapAlias `json:"pointerMapAlias,omitempty"` // want "field PointerMapAlias is a pointer type and should not be a pointer"
+	PointerMapAlias *MapAlias `json:"pointerMapAlias,omitempty"` // want "field PointerMapAlias is optional but the underlying type does not need to be a pointer. The pointer should be removed."
 
 	// StringAlias is a string alias field.
 	// +optional
-	StringAlias StringAlias `json:"stringAlias,omitempty"` // want "field StringAlias is an optional string and does not have a minimum length. Either set a minimum length or make StringAlias a pointer where the difference between omitted and the empty string is significant"
+	StringAlias StringAlias `json:"stringAlias,omitempty"` // want "field StringAlias is optional and should be a pointer" "field StringAlias is optional and has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// IntAlias is an int alias field.
 	// +optional
-	IntAlias IntAlias `json:"intAlias,omitempty"` // want "field IntAlias is an optional integer and does not have a minimum/maximum value. Either set a minimum/maximum value or make IntAlias a pointer where the difference between omitted and 0 is significant"
+	IntAlias IntAlias `json:"intAlias,omitempty"` // want "field IntAlias is optional and should be a pointer" "field IntAlias is optional and has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// FloatAlias is a float alias field.
 	// +optional
-	FloatAlias FloatAlias `json:"floatAlias,omitempty"` // want "field FloatAlias is an optional float and does not have a minimum/maximum value. Either set a minimum/maximum value or make FloatAlias a pointer where the difference between omitted and 0 is significant"
+	FloatAlias FloatAlias `json:"floatAlias,omitempty"` // want "field FloatAlias is optional and should be a pointer" "field FloatAlias is optional and has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// BoolAlias is a bool alias field.
 	// +optional
-	BoolAlias BoolAlias `json:"boolAlias,omitempty"` // want "field BoolAlias is an optional boolean and should be a pointer"
+	BoolAlias BoolAlias `json:"boolAlias,omitempty"` // want "field BoolAlias is optional and should be a pointer"
 
 	// SliceAlias is a slice alias field.
 	// +optional
@@ -280,7 +280,7 @@ type B struct {
 }
 
 type C struct {
-	// tsring is a string field.
+	// string is a string field.
 	// +required
 	String string `json:"string"`
 }
@@ -289,7 +289,7 @@ type C struct {
 type D struct {
 	// string is a string field.
 	// +optional
-	String string `json:"string,omitempty"` // want "field String is an optional string and does not have a minimum length. Either set a minimum length or make String a pointer where the difference between omitted and the empty string is significant"
+	String string `json:"string,omitempty"` // want "field String is optional and should be a pointer" "field String is optional and has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// stringWithMinLength1 with minimum length is a string field.
 	// +kubebuilder:validation:MinLength=1

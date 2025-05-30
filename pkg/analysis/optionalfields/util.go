@@ -46,42 +46,26 @@ func isStarExpr(expr ast.Expr) (bool, ast.Expr) {
 // isPointerType checks if the expression is a pointer type.
 // This is for types that are always implemented as pointers and therefore should
 // not be the underlying type of a star expr.
-func isPointerType(expr ast.Expr) bool {
-	switch expr.(type) {
+func isPointerType(pass *analysis.Pass, expr ast.Expr) bool {
+	switch t := expr.(type) {
 	case *ast.StarExpr, *ast.MapType, *ast.ArrayType:
 		return true
+	case *ast.Ident:
+		// If the ident is a type alias, keep checking until we find the underlying type.
+		typeSpec, ok := utils.LookupTypeSpec(pass, t)
+		if !ok {
+			return false
+		}
+
+		return isPointerType(pass, typeSpec.Type)
 	default:
 		return false
 	}
 }
 
-// structContainsRequiredFields checks whether the struct has any required fields.
-// Having a required field means that `{}` is not a valid entity for the struct,
-// and therefore the struct should be a pointer when optional.
-func structContainsRequiredFields(structType *ast.StructType, markersAccess markershelper.Markers) bool {
-	if structType == nil {
-		return false
-	}
-
-	for _, field := range structType.Fields.List {
-		fieldMarkers := markersAccess.FieldMarkers(field)
-
-		if isFieldRequired(fieldMarkers) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// isFieldRequired checks if a field has a required marker.
-func isFieldRequired(fieldMarkers markershelper.MarkerSet) bool {
-	return fieldMarkers.Has(requiredMarker) || fieldMarkers.Has(kubebuilderRequiredMarker)
-}
-
 // isFieldOptional checks if a field has an optional marker.
 func isFieldOptional(fieldMarkers markershelper.MarkerSet) bool {
-	return fieldMarkers.Has(optionalMarker) || fieldMarkers.Has(kubebuilderOptionalMarker)
+	return fieldMarkers.Has(markers.OptionalMarker) || fieldMarkers.Has(markers.KubebuilderOptionalMarker)
 }
 
 // reportShouldAddPointer adds an analysis diagnostic that explains that a pointer should be added.
@@ -138,182 +122,47 @@ func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPol
 	}
 }
 
-// reportShouldRemoveAllInstancesOfIntegerMarker adds an analysis diagnostic that explains that a marker should be removed.
-// This function is used to find non-zero valued markers, and suggest that they are removed when the field is not a pointer.
-// This is used for markers like MinLength and MinProperties.
-func reportShouldRemoveAllInstancesOfIntegerMarker(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, markerName, fieldName, messageFmt string) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
-
-	for _, marker := range fieldMarkers.Get(markerName) {
-		markerValue, err := getMarkerIntegerValue(marker)
-		if err != nil {
-			pass.Reportf(marker.Pos, "invalid value for %s marker: %v", markerName, err)
-			return
-		}
-
-		if markerValue > 0 {
-			reportShouldRemoveMarker(pass, field, marker, fieldName, messageFmt)
-		}
-	}
-}
-
-// reportShouldAddMarker adds an analysis diagnostic that explains that a marker should be removed.
-// This is used where we see a marker that would conflict with a field that lacks omitempty.
-func reportShouldRemoveMarker(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, fieldName, messageFmt string) {
-	pass.Report(analysis.Diagnostic{
-		Pos:     field.Pos(),
-		Message: fmt.Sprintf(messageFmt, fieldName),
-		SuggestedFixes: []analysis.SuggestedFix{
-			{
-				Message: fmt.Sprintf("should remove the marker: %s", marker.RawComment),
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos: marker.Pos,
-						End: marker.End + 1,
-					},
-				},
-			},
-		},
-	})
-}
-
 // reportShouldAddOmitEmpty adds an analysis diagnostic that explains that an omitempty tag should be added.
-func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
-	pass.Report(analysis.Diagnostic{
-		Pos:     field.Pos(),
-		Message: fmt.Sprintf(messageFmt, fieldName),
-		SuggestedFixes: []analysis.SuggestedFix{
-			{
-				Message: fmt.Sprintf("should add 'omitempty' to the field tag for field %s", fieldName),
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos:     fieldTagInfo.Pos + token.Pos(len(fieldTagInfo.Name)),
-						NewText: []byte(",omitempty"),
+func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPolicy config.OptionalFieldsOmitEmptyPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
+	switch omitEmptyPolicy {
+	case config.OptionalFieldsOmitEmptyPolicySuggestFix:
+		pass.Report(analysis.Diagnostic{
+			Pos:     field.Pos(),
+			Message: fmt.Sprintf(messageFmt, fieldName),
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: fmt.Sprintf("should add 'omitempty' to the field tag for field %s", fieldName),
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     fieldTagInfo.Pos + token.Pos(len(fieldTagInfo.Name)),
+							NewText: []byte(",omitempty"),
+						},
 					},
 				},
 			},
-		},
-	})
+		})
+	case config.OptionalFieldsOmitEmptyPolicyWarn:
+		pass.Reportf(field.Pos(), messageFmt, fieldName)
+	case config.OptionalFieldsOmitEmptyPolicyIgnore:
+		// Do nothing, as the policy is to ignore the missing omitempty tag.
+	default:
+		panic(fmt.Sprintf("unknown omit empty policy: %s", omitEmptyPolicy))
+	}
 }
 
-// getMarkerIntegerValueByName extracts the numeric value from the first
-// instace of the marker with the given name.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerIntegerValueByName(marker markershelper.MarkerSet, markerName string) (*int, error) {
-	markerList := marker.Get(markerName)
-	if len(markerList) == 0 {
-		return nil, errMarkerMissingValue
-	}
-
-	markerValue, err := getMarkerIntegerValue(markerList[0])
-	if err != nil {
-		return nil, fmt.Errorf("error getting marker value: %w", err)
-	}
-
-	return &markerValue, nil
-}
-
-// getMarkerIntegerValue extracts a numeric value from the default
-// value of a marker.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerIntegerValue(marker markershelper.Marker) (int, error) {
-	rawValue, ok := marker.Expressions[""]
-	if !ok {
-		return 0, errMarkerMissingValue
-	}
-
-	value, err := strconv.Atoi(rawValue)
-	if err != nil {
-		return 0, fmt.Errorf("error converting value to integer: %w", err)
-	}
-
-	return value, nil
-}
-
-// getMarkerFloatValueByName extracts the numeric value from the first
-// instace of the marker with the given name.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerFloatValueByName(marker markershelper.MarkerSet, markerName string) (*float64, error) {
-	markerList := marker.Get(markerName)
-	if len(markerList) == 0 {
-		return nil, errMarkerMissingValue
-	}
-
-	markerValue, err := getMarkerFloatValue(markerList[0])
-	if err != nil {
-		return nil, fmt.Errorf("error getting marker value: %w", err)
-	}
-
-	return &markerValue, nil
-}
-
-// getMarkerFloatValue extracts a numeric value from the default
-// value of a marker.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerFloatValue(marker markershelper.Marker) (float64, error) {
-	rawValue, ok := marker.Expressions[""]
-	if !ok {
-		return 0, errMarkerMissingValue
-	}
-
-	value, err := strconv.ParseFloat(rawValue, 64)
-	if err != nil {
-		return 0, fmt.Errorf("error converting value to float: %w", err)
-	}
-
-	return value, nil
-}
-
-// structHasGreaterThanZeroMaxProperties checks if the struct has a minProperties marker.
-// It inspects the minProperties marker on the struct type itself.
-func structHasGreaterThanZeroMinProperties(structType *ast.StructType, structMarkers markershelper.MarkerSet) (bool, error) {
-	if structType == nil {
-		return false, nil
-	}
-
-	for _, marker := range structMarkers.Get(minPropertiesMarker) {
-		markerValue, err := getMarkerIntegerValue(marker)
-		if err != nil {
-			return false, fmt.Errorf("error getting marker value: %w", err)
-		}
-
-		if markerValue > 0 {
-			return true, nil
-		}
-	}
-
-	return false, nil
-}
-
-func integerRangeIncludesZero(minimum, maximum *int) bool {
-	return ptr.Deref(minimum, -1) == 0 ||
-		ptr.Deref(maximum, -1) == 0 ||
-		ptr.Deref(minimum, 0) < 0 && ptr.Deref(maximum, 0) > 0
-}
-
-func floatRangeIncludesZero(minimum, maximum *float64) bool {
-	return ptr.Deref(minimum, -1) == 0 ||
-		ptr.Deref(maximum, -1) == 0 ||
-		ptr.Deref(minimum, 0) < 0 && ptr.Deref(maximum, 0) > 0
-}
-
-func isZeroValueValid(pass *analysis.Pass, field *ast.Field, typeExpr ast.Expr, markersAccess markershelper.Markers, fieldTagInfo extractjsontags.FieldTagInfo) bool {
-	if fieldTagInfo.OmitEmpty {
-		// If the field is omitted, we can use a zero value.
-		// For structs, if they aren't a pointer another error will be raised.
-		return true
-	}
-
-	isPointer, underlyingType := isStarExpr(typeExpr)
-	if isPointer {
-		// The field is a pointer without omitempty, so we cannot use a zero value unless the field is nullable.
-		return markersAccess.FieldMarkers(field).Has(markers.NullableMarker)
-	}
+// isZeroValueValid determines whether the zero value of the field is valid per the validation markers.
+// For example, if the string has a minimum length greater than 0, the zero value is not valid.
+// Or if the minimum value of an integer field is greater than 0, the zero value is not valid.
+// For structs, for the zero value to be valid, all fields within the struct that would not be omitted must accept their zero values.
+// The second return value indicates whether the field validation is complete. Complete validation means that we are certain whether or not the zero value is valid.
+// Incomplete validation means that if additional validation were added (e.g. to add a min length to a string), the zero value might become invalid.
+func isZeroValueValid(pass *analysis.Pass, field *ast.Field, typeExpr ast.Expr, markersAccess markershelper.Markers) (bool, bool) {
+	_, underlyingType := isStarExpr(typeExpr)
 
 	switch t := underlyingType.(type) {
 	case *ast.StructType:
 		// For structs, we have to check if there are any non-omitted fields, that do not accept a zero value.
-		return isStructZeroValueValid(pass, t, markersAccess)
+		return isStructZeroValueValid(pass, field, t, markersAccess)
 	case *ast.Ident:
 		return isIdentZeroValueValid(pass, field, t, markersAccess)
 	case *ast.MapType:
@@ -321,15 +170,20 @@ func isZeroValueValid(pass *analysis.Pass, field *ast.Field, typeExpr ast.Expr, 
 	case *ast.ArrayType:
 		// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
 		return isArrayZeroValueValid(field, t, markersAccess)
+	case *ast.StarExpr:
+		return isZeroValueValid(pass, field, t.X, markersAccess)
 	}
 
-	// For other types, we assume that zero value is valid.
-	return true
+	// We don't know what the type is so can't assert the zero value is valid.
+	return false, false
 }
 
-func isStructZeroValueValid(pass *analysis.Pass, structType *ast.StructType, markersAccess markershelper.Markers) bool {
+// isStructZeroValueValid checks if the zero value of a struct is valid.
+// It checks if all non-omitted fields within the struct accept their zero values.
+// It also checks if the struct has a minProperties marker, and if so, whether the number of non-omitted fields is greater than or equal to the minProperties value.
+func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *ast.StructType, markersAccess markershelper.Markers) (bool, bool) {
 	if structType == nil {
-		return true
+		return false, false
 	}
 
 	jsonTagInfo, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
@@ -337,106 +191,112 @@ func isStructZeroValueValid(pass *analysis.Pass, structType *ast.StructType, mar
 		panic("could not get struct field tags from pass result")
 	}
 
+	zeroValueValid, nonOmittedFields := areStructFieldZeroValuesValid(pass, structType, markersAccess, jsonTagInfo)
+
+	markerSet := combinedMarkers(markersAccess, field, structType)
+
+	minProperties, err := getMarkerNumericValueByName[int](markerSet, markers.KubebuilderMinPropertiesMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "struct %s has an invalid minProperties marker: %v", utils.FieldName(field), err)
+		return false, false
+	}
+
+	if minProperties != nil && *minProperties > nonOmittedFields {
+		// The struct requires more properties than would be marshalled in the zero value of the struct.
+		zeroValueValid = false
+	}
+
+	var completeStructValidation = true
+	if minProperties == nil && nonOmittedFields == 0 {
+		// If the struct has no non-omitted fields, then the zero value of the struct is `{}`.
+		// This generally means that the validation is incomplete as the difference between omitting the field and not omitting is not clear.
+		completeStructValidation = false
+	}
+
+	return zeroValueValid, completeStructValidation
+}
+
+// areStructFieldZeroValuesValid checks if all non-omitted fields within a struct accept their zero values.
+func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructType, markersAccess markershelper.Markers, jsonTagInfo extractjsontags.StructFieldTags) (bool, int) {
+	zeroValueValid := true
+	nonOmittedFields := 0
+
 	for _, field := range structType.Fields.List {
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
 
-		if !isZeroValueValid(pass, field, field.Type, markersAccess, fieldTagInfo) {
-			return false
+		if fieldTagInfo.OmitEmpty {
+			// If the field is omitted, we can use a zero value.
+			// For structs, if they aren't a pointer another error will be raised.
+			continue
 		}
+
+		nonOmittedFields++
+
+		validValue, _ := isZeroValueValid(pass, field, field.Type, markersAccess)
+
+		// If either value is false then the collected values will be false.
+		zeroValueValid = zeroValueValid && validValue
 	}
 
-	return true
+	return zeroValueValid, nonOmittedFields
 }
 
-func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ident, markersAccess markershelper.Markers) bool {
+// isIdentZeroValueValid checks if the zero value of an identifier is valid.
+func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ident, markersAccess markershelper.Markers) (bool, bool) {
 	if ident == nil {
-		return true
+		return false, false
 	}
 
 	// Check if the identifier is a known type that can have a zero value.
-	switch ident.Name {
-	case "string":
+	switch {
+	case isStringIdent(ident):
 		return isStringZeroValueValid(field, markersAccess)
-	case "int", "int8", "int16", "int32", "int64",
-		"uint", "uint8", "uint16", "uint32", "uint64":
-		return isIntegerZeroValueValid(field, markersAccess)
-	case "float32", "float64":
-		return isFloatZeroValueValid(field, markersAccess)
-	case "bool":
+	case isIntegerIdent(ident):
+		return isNumericZeroValueValid[int](pass, field, markersAccess)
+	case isFloatIdent(ident):
+		return isNumericZeroValueValid[float64](pass, field, markersAccess)
+	case isBoolIdent(ident):
 		// For bool, we can always use a zero value.
-		return true
+		return true, true
 	}
 
 	// If the ident isn't one of the above, check the underlying type spec.
 	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
 	if !ok {
-		return false
+		return false, false
 	}
 
-	jsonTagInfo, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
-	if !ok {
-		panic("could not get struct field tags from pass result")
-	}
-
-	return isZeroValueValid(pass, field, typeSpec.Type, markersAccess, jsonTagInfo.FieldTags(field))
+	return isZeroValueValid(pass, field, typeSpec.Type, markersAccess)
 }
 
 // isStringZeroValueValid checks if a string field can have a zero value.
 // This would be true when either there is no minimum length marker, or when the minimmum length marker is set to 0.
-func isStringZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) bool {
+func isStringZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
 	if stringFieldIsEnum(fieldMarkers) {
-		return enumFieldAllowsEmpty(fieldMarkers)
+		return enumFieldAllowsEmpty(fieldMarkers), true
 	}
 
-	return !fieldMarkers.Has(markers.KubebuilderMinLengthMarker) || fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinLengthMarker))
-}
+	hasMinLengthMarker := fieldMarkers.Has(markers.KubebuilderMinLengthMarker)
+	minLengthMarkerIsZero := fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinLengthMarker))
 
-// isIntegerZeroValueValid checks if an integer field can have a zero value.
-func isIntegerZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) bool {
-	fieldMarkers := markersAccess.FieldMarkers(field)
-
-	minimum, err := getMarkerIntegerValueByName(fieldMarkers, markers.KubebuilderMinimumMarker)
-	if err != nil && !errors.Is(err, errMarkerMissingValue) {
-		return false
-	}
-
-	maximum, err := getMarkerIntegerValueByName(fieldMarkers, markers.KubebuilderMaximumMarker)
-	if err != nil && !errors.Is(err, errMarkerMissingValue) {
-		return false
-	}
-
-	return ptr.Deref(minimum, -1) <= 0 && ptr.Deref(maximum, 1) >= 0
-}
-
-// isFloatZeroValueValid checks if a float field can have a zero value.
-func isFloatZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) bool {
-	fieldMarkers := markersAccess.FieldMarkers(field)
-
-	minimum, err := getMarkerFloatValueByName(fieldMarkers, markers.KubebuilderMinimumMarker)
-	if err != nil && !errors.Is(err, errMarkerMissingValue) {
-		return false
-	}
-
-	maximum, err := getMarkerFloatValueByName(fieldMarkers, markers.KubebuilderMaximumMarker)
-	if err != nil && !errors.Is(err, errMarkerMissingValue) {
-		return false
-	}
-
-	return ptr.Deref(minimum, -1) <= 0 && ptr.Deref(maximum, 1) >= 0
+	return !hasMinLengthMarker || minLengthMarkerIsZero, hasMinLengthMarker
 }
 
 // isMapZeroValueValid checks if a map field can have a zero value.
 // For maps, this means there is no minProperties marker, or the minProperties marker is set to 0.
-func isMapZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) bool {
+func isMapZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
-	return !fieldMarkers.Has(markers.KubebuilderMinPropertiesMarker) || fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinPropertiesMarker))
+	hasMinPropertiesMarker := fieldMarkers.Has(markers.KubebuilderMinPropertiesMarker)
+	minPropertiesMarkerIsZero := fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinPropertiesMarker))
+
+	return !hasMinPropertiesMarker || minPropertiesMarkerIsZero, hasMinPropertiesMarker
 }
 
 // isArrayZeroValueValid checks if an array field can have a zero value.
-func isArrayZeroValueValid(field *ast.Field, arrayType *ast.ArrayType, markersAccess markershelper.Markers) bool {
+func isArrayZeroValueValid(field *ast.Field, arrayType *ast.ArrayType, markersAccess markershelper.Markers) (bool, bool) {
 	// Arrays of bytes are special cased and treated as strings.
 	if ident, ok := arrayType.Elt.(*ast.Ident); ok && ident.Name == "byte" {
 		return isStringZeroValueValid(field, markersAccess)
@@ -445,22 +305,22 @@ func isArrayZeroValueValid(field *ast.Field, arrayType *ast.ArrayType, markersAc
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
 	// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
-	minItems, err := getMarkerIntegerValueByName(fieldMarkers, markers.KubebuilderMinItemsMarker)
+	minItems, err := getMarkerNumericValueByName[int](fieldMarkers, markers.KubebuilderMinItemsMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
-		return false
+		return false, false
 	}
 
-	return minItems == nil || *minItems == 0
+	return minItems == nil || *minItems == 0, minItems != nil
 }
 
 func stringFieldIsEnum(fieldMarkers markershelper.MarkerSet) bool {
 	// Check if the field has a kubebuilder enum marker.
-	return fieldMarkers.Has(enumMarker)
+	return fieldMarkers.Has(markers.KubebuilderEnumMarker)
 }
 
 func enumFieldAllowsEmpty(fieldMarkers markershelper.MarkerSet) bool {
 	// Check if the field has a kubebuilder enum marker with an empty value.
-	enumMarker := fieldMarkers.Get(enumMarker)
+	enumMarker := fieldMarkers.Get(markers.KubebuilderEnumMarker)
 	if len(enumMarker) == 0 {
 		return false
 	}
@@ -470,4 +330,101 @@ func enumFieldAllowsEmpty(fieldMarkers markershelper.MarkerSet) bool {
 	}
 
 	return false
+}
+
+func combinedMarkers(markersAccess markershelper.Markers, field *ast.Field, structType *ast.StructType) markershelper.MarkerSet {
+	markers := markersAccess.FieldMarkers(field)
+	structMarkers := markersAccess.StructMarkers(structType)
+
+	markers.Insert(structMarkers.UnsortedList()...)
+
+	return markers
+}
+
+// number is a type constraint for numeric types.
+// It allows us to create a generic extraction function for numeric values from markers.
+type number interface {
+	int | float64
+}
+
+// isIntegerZeroValueValid checks if an integer field can have a zero value.
+//
+//nolint:cyclop
+func isNumericZeroValueValid[N number](pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	minimum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMinimumMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "field %s has an invalid minimum marker: %v", utils.FieldName(field), err)
+		return false, false
+	}
+
+	maximum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMaximumMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		pass.Reportf(field.Pos(), "field %s has an invalid maximum marker: %v", utils.FieldName(field), err)
+		return false, false
+	}
+
+	hasGreaterThanZeroMinimum := minimum != nil && *minimum >= 0
+	hasLessThanZeroMaximum := maximum != nil && *maximum <= 0
+	hasCompleteRange := minimum != nil && maximum != nil && *minimum <= *maximum
+
+	return ptr.Deref(minimum, -1) <= 0 && ptr.Deref(maximum, 1) >= 0, hasCompleteRange || hasGreaterThanZeroMinimum || hasLessThanZeroMaximum
+}
+
+// getMarkerNumericValueByName extracts the numeric value from the first instance of the marker with the given name.
+// Works for markers like MaxLength, MinLength, etc.
+func getMarkerNumericValueByName[N number](marker markershelper.MarkerSet, markerName string) (*N, error) {
+	markerList := marker.Get(markerName)
+	if len(markerList) == 0 {
+		return nil, errMarkerMissingValue
+	}
+
+	markerValue, err := getMarkerNumericValue[N](markerList[0])
+	if err != nil {
+		return nil, fmt.Errorf("error getting marker value: %w", err)
+	}
+
+	return &markerValue, nil
+}
+
+// getMarkerNumericValue extracts a numeric value from the default value of a marker.
+// Works for markers like MaxLength, MinLength, etc.
+func getMarkerNumericValue[N number](marker markershelper.Marker) (N, error) {
+	rawValue, ok := marker.Expressions[""]
+	if !ok {
+		return N(0), errMarkerMissingValue
+	}
+
+	value, err := strconv.ParseFloat(rawValue, 64)
+	if err != nil {
+		return N(0), fmt.Errorf("error converting value to number: %w", err)
+	}
+
+	return N(value), nil
+}
+
+// isIntegerIdent checks if the identifier is one of the integer types.
+func isIntegerIdent(ident *ast.Ident) bool {
+	switch ident.Name {
+	case "int", "int8", "int16", "int32", "int64", "uint", "uint8", "uint16", "uint32", "uint64":
+		return true
+	}
+
+	return false
+}
+
+// isStringIdent checks if the identifier is a string type.
+func isStringIdent(ident *ast.Ident) bool {
+	return ident.Name == "string"
+}
+
+// isBoolIdent checks if the identifier is a boolean type.
+func isBoolIdent(ident *ast.Ident) bool {
+	return ident.Name == "bool"
+}
+
+// isFloatIdent checks if the identifier is one of the float types.
+func isFloatIdent(ident *ast.Ident) bool {
+	return ident.Name == "float32" || ident.Name == "float64"
 }
