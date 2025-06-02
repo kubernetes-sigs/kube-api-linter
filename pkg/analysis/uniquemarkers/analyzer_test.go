@@ -24,12 +24,12 @@ import (
 
 func TestWithDefaults(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, newAnalyzer(config.UniqueMarkersConfig{}), "a/...")
+	analysistest.Run(t, testdata, newAnalyzer(config.UniqueMarkersConfig{}), "a/...")
 }
 
 func TestWithConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, newAnalyzer(config.UniqueMarkersConfig{
+	analysistest.Run(t, testdata, newAnalyzer(config.UniqueMarkersConfig{
 		CustomMarkers: []string{"custom:SomeCustomMarker"},
 	}), "b/...")
 }

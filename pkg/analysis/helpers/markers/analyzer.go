@@ -403,7 +403,7 @@ func (ms MarkerSet) UnsortedList() []Marker {
 	return markers
 }
 
-// MarkersForIdentifier returns the list of markers associated with the provided identifier.
-func (ms MarkerSet) MarkersForIdentifier(identifier string) []Marker {
+// Get returns the list of markers associated with the provided identifier.
+func (ms MarkerSet) Get(identifier string) []Marker {
 	return ms[identifier]
 }

@@ -12,6 +12,10 @@ type B struct {
 	NonUniqueCustomMarkerFromAliasWithCustomMarker UniqueCustomMarkerAlias // want "field NonUniqueCustomMarkerFromAliasWithCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
 
 	NonUniqueCustomMarkerOnlyFromAliasWithCustomMarker NonUniqueCustomMarkerAlias // want "field NonUniqueCustomMarkerOnlyFromAliasWithCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
+
+	// +custom:SomeCustomMarker:=value
+	// +custom:SomeCustomMarker:=value
+	NonUniqueSameValueCustomMarker string // want "field NonUniqueSameValueCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
 }
 
 // +custom:SomeCustomMarker:=diffvalue

@@ -87,9 +87,9 @@ func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess marker
 	check(markers, uniqueMarkers, reportType(pass, typeSpec))
 }
 
-func check(markers markers.MarkerSet, uniqueMarkers []string, reportFunc func(id string)) {
+func check(markerSet markers.MarkerSet, uniqueMarkers []string, reportFunc func(id string)) {
 	for _, identifier := range uniqueMarkers {
-		marks := markers.MarkersForIdentifier(identifier)
+		marks := markerSet.Get(identifier)
 		if len(marks) > 1 {
 			reportFunc(identifier)
 		}

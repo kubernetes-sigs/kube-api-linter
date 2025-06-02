@@ -272,5 +272,7 @@ type StatusOptionalConfig struct {
 type UniqueMarkersConfig struct {
 	// customMarkers is the set of custom markers that
 	// should not appear more than once on a type/field.
+	// entries must be unique.
+	// entries must start and end with alpha characters and must consist of only alpha characters and colons (':').
 	CustomMarkers []string `json:"customMarkers"`
 }

@@ -60,8 +60,6 @@ type A struct { // want "type A has multiple definitions of marker kubebuilder:v
 
 	NonUniqueMinLengthOnlyFromAliasWithMinLength NonUniqueMinLengthStringAlias // want "field NonUniqueMinLengthOnlyFromAliasWithMinLength has multiple definitions of marker kubebuilder:validation:MinLength when only a single definition should exist"
 
-	// --- Added fields start here (from previous request) ---
-
 	// +kubebuilder:validation:Enum:=Foo;Bar
 	UniqueEnum string
 
@@ -458,8 +456,6 @@ type UniqueMinLengthStringAlias string
 // +kubebuilder:validation:MinLength:=5
 // +kubebuilder:validation:MinLength:=1
 type NonUniqueMinLengthStringAlias string // want "type NonUniqueMinLengthStringAlias has multiple definitions of marker kubebuilder:validation:MinLength when only a single definition should exist"
-
-// --- Added type aliases start here (from previous request) ---
 
 // +kubebuilder:validation:Enum:=Baz;Qux
 type UniqueEnumAlias string
