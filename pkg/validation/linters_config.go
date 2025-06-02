@@ -37,6 +37,7 @@ func ValidateLintersConfig(lc config.LintersConfig, fldPath *field.Path) field.E
 	fieldErrors = append(fieldErrors, validateOptionalOrRequiredConfig(lc.OptionalOrRequired, fldPath.Child("optionalOrRequired"))...)
 	fieldErrors = append(fieldErrors, validateRequiredFieldsConfig(lc.RequiredFields, fldPath.Child("requiredFields"))...)
 	fieldErrors = append(fieldErrors, validateStatusOptionalConfig(lc.StatusOptional, fldPath.Child("statusOptional"))...)
+	fieldErrors = append(fieldErrors, validateUniqueMarkersConfig(lc.UniqueMarkers, fldPath.Child("uniqueMarkers"))...)
 
 	return fieldErrors
 }
