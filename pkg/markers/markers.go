@@ -21,6 +21,9 @@ const (
 
 	// RequiredMarker is the marker that indicates that a field is required.
 	RequiredMarker = "required"
+
+	// NullableMarker is the marker that indicates that a field can be null.
+	NullableMarker = "nullable"
 )
 
 const (
@@ -36,11 +39,26 @@ const (
 	// KubebuilderFormatMarker is the marker that indicates that a field has a format in kubebuilder.
 	KubebuilderFormatMarker = "kubebuilder:validation:Format"
 
+	// KubebuilderMaximumMarker is the marker that indicates that a field has a maximum value in kubebuilder.
+	KubebuilderMaximumMarker = "kubebuilder:validation:Maximum"
+
 	// KubebuilderMaxItemsMarker is the marker that indicates that a field has a maximum number of items in kubebuilder.
 	KubebuilderMaxItemsMarker = "kubebuilder:validation:MaxItems"
 
 	// KubebuilderMaxLengthMarker is the marker that indicates that a field has a maximum length in kubebuilder.
 	KubebuilderMaxLengthMarker = "kubebuilder:validation:MaxLength"
+
+	// KubebuilderMinimumMarker is the marker that indicates that a field has a minimum value in kubebuilder.
+	KubebuilderMinimumMarker = "kubebuilder:validation:Minimum"
+
+	// KubebuilderMinItemsMarker is the marker that indicates that a field has a minimum number of items in kubebuilder.
+	KubebuilderMinItemsMarker = "kubebuilder:validation:MinItems"
+
+	// KubebuilderMinLengthMarker is the marker that indicates that a field has a minimum length in kubebuilder.
+	KubebuilderMinLengthMarker = "kubebuilder:validation:MinLength"
+
+	// KubebuilderMinPropertiesMarker is the marker that indicates that a field has a minimum number of properties in kubebuilder.
+	KubebuilderMinPropertiesMarker = "kubebuilder:validation:MinProperties"
 
 	// KubebuilderOptionalMarker is the marker that indicates that a field is optional in kubebuilder.
 	KubebuilderOptionalMarker = "kubebuilder:validation:Optional"
