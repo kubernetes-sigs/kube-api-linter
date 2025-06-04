@@ -30,6 +30,16 @@ func TestWithDefaults(t *testing.T) {
 func TestWithConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.Run(t, testdata, newAnalyzer(config.UniqueMarkersConfig{
-		CustomMarkers: []string{"custom:SomeCustomMarker"},
+		CustomMarkers: []config.UniqueMarker{
+			{
+				Identifier: "custom:SomeCustomMarker",
+			},
+			{
+				Identifier: "custom:OtherMarker",
+				Attributes: []string{
+					"attribute",
+				},
+			},
+		},
 	}), "b/...")
 }

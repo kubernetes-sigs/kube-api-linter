@@ -270,9 +270,14 @@ type StatusOptionalConfig struct {
 
 // UniqueMarkersConfig contains the configuration for the uniquemarkers linter.
 type UniqueMarkersConfig struct {
-	// customMarkers is the set of custom markers that
+	// customMarkers is the set of custom marker/attribute combinations that
 	// should not appear more than once on a type/field.
-	// entries must be unique.
+	// entries must have unique identifiers.
 	// entries must start and end with alpha characters and must consist of only alpha characters and colons (':').
-	CustomMarkers []string `json:"customMarkers"`
+	CustomMarkers []UniqueMarker `json:"customMarkers"`
+}
+
+type UniqueMarker struct {
+	Identifier string `json:"identifier"`
+	Attributes []string `json:"attributes"`
 }

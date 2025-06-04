@@ -18,8 +18,10 @@ package uniquemarkers
 import (
 	"fmt"
 	"go/ast"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/sets"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
@@ -32,11 +34,13 @@ import (
 const name = "uniquemarkers"
 
 func init() {
-	markers.DefaultRegistry().Register(defaultUniqueMarkers()...)
+	for _, uniqueMarker := range defaultUniqueMarkers() {
+		markers.DefaultRegistry().Register(uniqueMarker.Identifier)
+	}
 }
 
 type analyzer struct {
-	uniqueMarkers []string
+	uniqueMarkers []config.UniqueMarker
 }
 
 func newAnalyzer(cfg config.UniqueMarkersConfig) *analysis.Analyzer {
@@ -69,7 +73,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, uniqueMarkers []string) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, uniqueMarkers []config.UniqueMarker) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
@@ -78,7 +82,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 	check(markers, uniqueMarkers, reportField(pass, field))
 }
 
-func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, uniqueMarkers []string) {
+func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, uniqueMarkers []config.UniqueMarker) {
 	if typeSpec == nil {
 		return
 	}
@@ -87,11 +91,29 @@ func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess marker
 	check(markers, uniqueMarkers, reportType(pass, typeSpec))
 }
 
-func check(markerSet markers.MarkerSet, uniqueMarkers []string, reportFunc func(id string)) {
-	for _, identifier := range uniqueMarkers {
-		marks := markerSet.Get(identifier)
-		if len(marks) > 1 {
-			reportFunc(identifier)
+func check(markerSet markers.MarkerSet, uniqueMarkers []config.UniqueMarker, reportFunc func(id string)) {
+	for _, marker := range uniqueMarkers {
+		marks := markerSet.Get(marker.Identifier)
+		markSet := sets.New[string]()
+		for _, mark := range marks {
+			id := mark.Identifier
+
+			if len(marker.Attributes) > 0 {
+				id += ":"
+			}
+
+			for _, attr := range marker.Attributes {
+				id += fmt.Sprintf("%s=%s,", attr, mark.Expressions[attr])
+			}
+
+			id = strings.TrimSuffix(id, ",")
+
+			if markSet.Has(id) {
+				reportFunc(id)
+				continue
+			}
+
+			markSet.Insert(id)
 		}
 	}
 }
@@ -114,50 +136,120 @@ func reportType(pass *analysis.Pass, typeSpec *ast.TypeSpec) func(id string) {
 	}
 }
 
-func defaultUniqueMarkers() []string {
-	return []string{
+func defaultUniqueMarkers() []config.UniqueMarker {
+	return []config.UniqueMarker{
 		// Basic unique markers
 		// ------
-		markersutil.DefaultMarker,
+		{
+			Identifier: markersutil.DefaultMarker,
+		},
 		// ------
 
 		// Kubebuilder-specific unique markers
 		// ------
-		markersutil.KubebuilderDefaultMarker,
-		markersutil.KubebuilderExampleMarker,
-		markersutil.KubebuilderEnumMarker,
-		markersutil.KubebuilderExclusiveMaximumMarker,
-		markersutil.KubebuilderExclusiveMinimumMarker,
-		markersutil.KubebuilderFormatMarker,
-		markersutil.KubebuilderMaxItemsMarker,
-		markersutil.KubebuilderMaxLengthMarker,
-		markersutil.KubebuilderMaxPropertiesMarker,
-		markersutil.KubebuilderMaximumMarker,
-		markersutil.KubebuilderMinItemsMarker,
-		markersutil.KubebuilderMinLengthMarker,
-		markersutil.KubebuilderMinPropertiesMarker,
-		markersutil.KubebuilderMinimumMarker,
-		markersutil.KubebuilderMultipleOfMarker,
-		markersutil.KubebuilderPatternMarker,
-		markersutil.KubebuilderTypeMarker,
-		markersutil.KubebuilderUniqueItemsMarker,
+		{
+			Identifier: markersutil.KubebuilderDefaultMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderExampleMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderEnumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderExclusiveMaximumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderExclusiveMinimumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderFormatMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMaxItemsMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMaxLengthMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMaxPropertiesMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMaximumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMinItemsMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMinLengthMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMinPropertiesMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMinimumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderMultipleOfMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderPatternMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderTypeMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderUniqueItemsMarker,
+		},
 
-		markersutil.KubebuilderItemsEnumMarker,
-		markersutil.KubebuilderItemsFormatMarker,
-		markersutil.KubebuilderItemsMaxLengthMarker,
-		markersutil.KubebuilderItemsMaxItemsMarker,
-		markersutil.KubebuilderItemsMaxPropertiesMarker,
-		markersutil.KubebuilderItemsMaximumMarker,
-		markersutil.KubebuilderItemsMinLengthMarker,
-		markersutil.KubebuilderItemsMinItemsMarker,
-		markersutil.KubebuilderItemsMinPropertiesMarker,
-		markersutil.KubebuilderItemsMinimumMarker,
-		markersutil.KubebuilderItemsExclusiveMaximumMarker,
-		markersutil.KubebuilderItemsExclusiveMinimumMarker,
-		markersutil.KubebuilderItemsMultipleOfMarker,
-		markersutil.KubebuilderItemsPatternMarker,
-		markersutil.KubebuilderItemsTypeMarker,
-		markersutil.KubebuilderItemsUniqueItemsMarker,
+		{
+			Identifier: markersutil.KubebuilderItemsEnumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsFormatMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMaxLengthMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMaxItemsMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMaxPropertiesMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMaximumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMinLengthMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMinItemsMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMinPropertiesMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMinimumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsExclusiveMaximumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsExclusiveMinimumMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsMultipleOfMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsPatternMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsTypeMarker,
+		},
+		{
+			Identifier: markersutil.KubebuilderItemsUniqueItemsMarker,
+		},
 		// ------
 	}
 }
