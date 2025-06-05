@@ -63,6 +63,23 @@ issues:
         - kubeapilinter
 ```
 
+If you wish to only run selected linters you can do so by specifying the linters you want to enable in the `linters` section:
+
+```yaml
+linters-settings:
+  custom:
+    kubeapilinter:
+      type: "module"
+      settings:
+        linters:
+          disable:
+            - "*"
+          enable:
+            - requiredfields
+            - statusoptional
+            - statussubresource
+```
+
 The settings for Kube API Linter are based on the [GolangCIConfig][golangci-config-struct] struct and allow for finer control over the linter rules.
 
 If you wish to use the Kube API Linter in conjunction with other linters, you can enable the Kube API Linter in the `.golangci.yml` file by ensuring that `kubeapilinter` is in the `linters.enabled` list.
@@ -199,12 +216,18 @@ When the `json` tag is present, and matches the first word of the field comment 
 The duplicatemarkers linter checks for exact duplicates of markers for types and fields.
 This means that something like:
 
+```go
 // +kubebuilder:validation:MaxLength=10
-// +kubebuilder:validation:MaxLength=10 
+// +kubebuilder:validation:MaxLength=10
+```
+
 Will be flagged by this linter, while something like:
 
+```go
 // +kubebuilder:validation:MaxLength=10
 // +kubebuilder:validation:MaxLength=11
+```
+
 will not.
 
 ### Fixes
@@ -369,7 +392,7 @@ The linter will then only suggest to remove the `omitempty` value from the `json
 The `statusoptional` linter checks that all first-level children fields within a status struct are marked as optional.
 
 This is important because status fields should be optional to allow for partial updates and backward compatibility.
-The linter ensures that all direct child fields of any status struct have either the `// +optional` or 
+The linter ensures that all direct child fields of any status struct have either the `// +optional` or
 `// +kubebuilder:validation:Optional` marker.
 
 ### Fixes
