@@ -37,6 +37,9 @@ type LintersConfig struct {
 
 	// statusOptional contains configuration for the statusoptional linter.
 	StatusOptional StatusOptionalConfig `json:"statusOptional"`
+
+	// uniqueMarkers contains configuration for the uniquemarkers linter.
+	UniqueMarkers UniqueMarkersConfig `json:"uniqueMarkers"`
 }
 
 // ConditionsFirstField is the policy for the conditions linter.
@@ -263,4 +266,18 @@ type StatusOptionalConfig struct {
 	// If this field is not set, the default value is "optional".
 	// Valid values are "optional", "kubebuilder:validation:Optional" and "k8s:optional".
 	PreferredOptionalMarker string `json:"preferredOptionalMarker"`
+}
+
+// UniqueMarkersConfig contains the configuration for the uniquemarkers linter.
+type UniqueMarkersConfig struct {
+	// customMarkers is the set of custom marker/attribute combinations that
+	// should not appear more than once on a type/field.
+	// entries must have unique identifiers.
+	// entries must start and end with alpha characters and must consist of only alpha characters and colons (':').
+	CustomMarkers []UniqueMarker `json:"customMarkers"`
+}
+
+type UniqueMarker struct {
+	Identifier string `json:"identifier"`
+	Attributes []string `json:"attributes"`
 }

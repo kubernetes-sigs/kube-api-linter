@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
-	"go/types"
 
 	"golang.org/x/tools/go/analysis"
 
@@ -65,7 +64,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 		return
 	}
 
-	markerSet := collectMarkers(pass, markersAccess, field)
+	markerSet := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	seen := markers.NewMarkerSet()
 
@@ -77,32 +76,6 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 
 		report(pass, field.Pos(), field.Names[0].Name, marker)
 	}
-}
-
-func collectMarkers(pass *analysis.Pass, markersAccess markers.Markers, field *ast.Field) markers.MarkerSet {
-	markers := markersAccess.FieldMarkers(field)
-
-	if _, ok := pass.TypesInfo.TypeOf(field.Type).(*types.Basic); ok {
-		return markers
-	}
-
-	ident, ok := field.Type.(*ast.Ident)
-	if !ok {
-		return markers
-	}
-
-	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-	if !ok {
-		return markers
-	}
-
-	typeMarkers := markersAccess.TypeMarkers(typeSpec)
-
-	// duplicatemarkers removes duplicate markers without the first line.
-	// By inserting the field markers after the type markers, it allows the markers to be removed from the field.
-	typeMarkers.Insert(markers.UnsortedList()...)
-
-	return typeMarkers
 }
 
 func checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
