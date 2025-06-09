@@ -21,6 +21,7 @@ import (
 	"go/types"
 
 	"golang.org/x/tools/go/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
 
 // IsBasicType checks if the type of the given identifier is a basic type.
@@ -116,4 +117,31 @@ func getFilesForType(pass *analysis.Pass, ident *ast.Ident) (*token.File, *ast.F
 
 func isInPassPackage(pass *analysis.Pass, namedType *types.Named) bool {
 	return namedType.Obj().Pkg() != nil && namedType.Obj().Pkg() == pass.Pkg
+}
+
+// TypeAwareMarkerCollectionForField collects the markers for a given field into a single markers.MarkerSet.
+// If the field has a type that is not a basic type (i.e a custom type) then it will also gather any markers from
+// the type and include them in the markers.MarkerSet that is returned.
+// Markers on the type will always come before markers on the field in the list of markers for an identifier.
+func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess markers.Markers, field *ast.Field) markers.MarkerSet {
+	markers := markersAccess.FieldMarkers(field)
+
+	ident, ok := field.Type.(*ast.Ident)
+	if !ok {
+		return markers
+	}
+
+	if IsBasicType(pass, ident) {
+		return markers
+	}
+
+	typeSpec, ok := LookupTypeSpec(pass, ident)
+	if !ok {
+		return markers
+	}
+
+	typeMarkers := markersAccess.TypeMarkers(typeSpec)
+	typeMarkers.Insert(markers.UnsortedList()...)
+
+	return typeMarkers
 }

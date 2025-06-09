@@ -193,7 +193,7 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 
 	zeroValueValid, nonOmittedFields := areStructFieldZeroValuesValid(pass, structType, markersAccess, jsonTagInfo)
 
-	markerSet := combinedMarkers(markersAccess, field, structType)
+	markerSet := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	minProperties, err := getMarkerNumericValueByName[int](markerSet, markers.KubebuilderMinPropertiesMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
@@ -330,15 +330,6 @@ func enumFieldAllowsEmpty(fieldMarkers markershelper.MarkerSet) bool {
 	}
 
 	return false
-}
-
-func combinedMarkers(markersAccess markershelper.Markers, field *ast.Field, structType *ast.StructType) markershelper.MarkerSet {
-	markers := markersAccess.FieldMarkers(field)
-	structMarkers := markersAccess.StructMarkers(structType)
-
-	markers.Insert(structMarkers.UnsortedList()...)
-
-	return markers
 }
 
 // number is a type constraint for numeric types.

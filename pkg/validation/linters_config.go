@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
@@ -36,6 +37,7 @@ func ValidateLintersConfig(lc config.LintersConfig, fldPath *field.Path) field.E
 	fieldErrors = append(fieldErrors, validateOptionalOrRequiredConfig(lc.OptionalOrRequired, fldPath.Child("optionalOrRequired"))...)
 	fieldErrors = append(fieldErrors, validateRequiredFieldsConfig(lc.RequiredFields, fldPath.Child("requiredFields"))...)
 	fieldErrors = append(fieldErrors, validateStatusOptionalConfig(lc.StatusOptional, fldPath.Child("statusOptional"))...)
+	fieldErrors = append(fieldErrors, validateUniqueMarkersConfig(lc.UniqueMarkers, fldPath.Child("uniqueMarkers"))...)
 
 	return fieldErrors
 }
@@ -174,6 +176,37 @@ func validateRequiredFieldsConfig(rfc config.RequiredFieldsConfig, fldPath *fiel
 	case "", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix:
 	default:
 		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix)))
+	}
+
+	return fieldErrors
+}
+
+func validateUniqueMarkersConfig(umc config.UniqueMarkersConfig, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	identifierSet := sets.New[string]()
+
+	for i, marker := range umc.CustomMarkers {
+		if identifierSet.Has(marker.Identifier) {
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("customMarkers").Index(i).Child("identifier"), marker.Identifier, "repeated value, values must be unique"))
+			continue
+		}
+
+		fieldErrors = append(fieldErrors, validateUniqueMarker(marker, fldPath.Child("customMarkers").Index(i))...)
+
+		identifierSet.Insert(marker.Identifier)
+	}
+
+	return fieldErrors
+}
+
+func validateUniqueMarker(um config.UniqueMarker, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+	attrSet := sets.New[string]()
+
+	for i, attr := range um.Attributes {
+		if attrSet.Has(attr) {
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("attributes").Index(i), attr, "repeated value, values must be unique"))
+		}
 	}
 
 	return fieldErrors
