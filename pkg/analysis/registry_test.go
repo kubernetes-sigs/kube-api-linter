@@ -43,6 +43,7 @@ var _ = Describe("Registry", func() {
 				"optionalorrequired",
 				"requiredfields",
 				"statusoptional",
+				"uniquemarkers",
 			))
 		})
 	})
@@ -66,6 +67,7 @@ var _ = Describe("Registry", func() {
 				"requiredfields",
 				"statusoptional",
 				"statussubresource",
+				"uniquemarkers",
 			))
 		})
 	})

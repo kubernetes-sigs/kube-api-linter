@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/statusoptional"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/statussubresource"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/uniquemarkers"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -90,6 +91,7 @@ func NewRegistry() Registry {
 			requiredfields.Initializer(),
 			statusoptional.Initializer(),
 			statussubresource.Initializer(),
+			uniquemarkers.Initializer(),
 		},
 	}
 }
