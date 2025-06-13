@@ -69,6 +69,58 @@ func TestExtractMarkerIdAndExpressions(t *testing.T) {
 				"": "\"foo\"",
 			},
 		},
+		{
+			name:       "registered marker with expression with a comma in its value",
+			marker:     `kubebuilder:validation:XValidation:rule='self.map(a, a == "someValue")',message='must have field!'`,
+			expectedID: "kubebuilder:validation:XValidation",
+			expectedExpressions: map[string]string{
+				"rule":    `'self.map(a, a == "someValue")'`,
+				"message": "'must have field!'",
+			},
+		},
+		{
+			name:       "registered marker with expression with a comma in its value with double quotes",
+			marker:     `kubebuilder:validation:XValidation:rule="self.map(a, a == \"someValue\")",message="must have field!"`,
+			expectedID: "kubebuilder:validation:XValidation",
+			expectedExpressions: map[string]string{
+				"rule":    `"self.map(a, a == \"someValue\")"`,
+				"message": `"must have field!"`,
+			},
+		},
+		{
+			name:       "registered marker with expression ending in a valid double quote",
+			marker:     `kubebuilder:validation:Enum:=foo;bar;baz;""`,
+			expectedID: "kubebuilder:validation:Enum",
+			expectedExpressions: map[string]string{
+				"": `foo;bar;baz;""`,
+			},
+		},
+		{
+			name:       "registered marker with chained expressions without quotes",
+			marker:     `custom:marker:fruit=apple,color=blue,country=UK`,
+			expectedID: "custom:marker",
+			expectedExpressions: map[string]string{
+				"fruit":   "apple",
+				"color":   "blue",
+				"country": "UK",
+			},
+		},
+		{
+			name:       "registered marker with numeric value",
+			marker:     `kubebuilder:validation:Minimum=10`,
+			expectedID: "kubebuilder:validation:Minimum",
+			expectedExpressions: map[string]string{
+				"": "10",
+			},
+		},
+		{
+			name:       "registered marker with negative numeric value",
+			marker:     `kubebuilder:validation:Minimum=-10`,
+			expectedID: "kubebuilder:validation:Minimum",
+			expectedExpressions: map[string]string{
+				"": "-10",
+			},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -76,7 +128,7 @@ func TestExtractMarkerIdAndExpressions(t *testing.T) {
 			g := NewWithT(t)
 
 			reg := NewRegistry()
-			reg.Register("kubebuilder:object:root", "required", "kubebuilder:validation:XValidation")
+			reg.Register(tc.expectedID)
 
 			id, expressions := extractMarkerIDAndExpressions(reg, tc.marker)
 

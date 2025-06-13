@@ -19,6 +19,7 @@ import (
 	"go/ast"
 	"go/token"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -229,24 +230,24 @@ func extractKnownMarkerIDAndExpressions(id string, marker string) (string, map[s
 	return id, extractExpressions(strings.TrimPrefix(marker, id))
 }
 
-func extractExpressions(expressions string) map[string]string {
+var expressionRegex = regexp.MustCompile(`\w*=(?:'[^']*'|"(\\"|[^"])*"|[\w;\-"]+)`)
+
+func extractExpressions(expressionStr string) map[string]string {
 	expressionsMap := map[string]string{}
 
 	// Do some normalization work to ensure we can parse expressions in
 	// a standard way. Trim any lingering colons (:) and replace all ':='s with '='
-	expressions = strings.TrimPrefix(expressions, ":")
-	expressions = strings.ReplaceAll(expressions, ":=", "=")
+	expressionStr = strings.TrimPrefix(expressionStr, ":")
+	expressionStr = strings.ReplaceAll(expressionStr, ":=", "=")
 
-	// split expression string on commas (,) to handle multiple expressions
-	// in a single marker
-	chainedExpressions := strings.SplitSeq(expressions, ",")
-	for chainedExpression := range chainedExpressions {
-		exps := strings.SplitN(chainedExpression, "=", 2)
-		if len(exps) < 2 {
+	expressions := expressionRegex.FindAllString(expressionStr, -1)
+	for _, expression := range expressions {
+		key, value, ok := strings.Cut(expression, "=")
+		if !ok {
 			continue
 		}
 
-		expressionsMap[exps[0]] = exps[1]
+		expressionsMap[key] = value
 	}
 
 	return expressionsMap
