@@ -68,8 +68,6 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field) {
-	stringToStringMapType := types.NewMap(types.Typ[types.String], types.Typ[types.String])
-
 	underlyingType := pass.TypesInfo.TypeOf(field.Type).Underlying()
 
 	if ptr, ok := underlyingType.(*types.Pointer); ok {
@@ -87,7 +85,8 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field) {
 	}
 
 	if a.policy == config.NoMapsAllowStringToStringMaps {
-		if types.Identical(m, stringToStringMapType) {
+		if types.AssignableTo(m.Elem().Underlying(), types.Typ[types.String]) &&
+			types.AssignableTo(m.Key().Underlying(), types.Typ[types.String]) {
 			return
 		}
 

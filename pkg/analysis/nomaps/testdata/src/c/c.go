@@ -64,3 +64,11 @@ type Component struct {
 	Key   string `json:"key"`
 	Value int32  `json:"value"`
 }
+
+type StringBasedType string
+
+type MapWithStringBasedTypes struct {
+	MapWithStringBasedElement    map[string]StringBasedType          `json:"stringBasedMapElem,omitempty"`
+	MapWithStringBasedKey        map[StringBasedType]string          `json:"stringBasedMapKey,omitempty"`
+	MapWithStringBasedKeyAndElem map[StringBasedType]StringBasedType `json:"stringBasedMapKey,omitempty"`
+}
