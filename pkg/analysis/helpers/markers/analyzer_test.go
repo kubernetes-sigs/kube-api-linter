@@ -69,6 +69,25 @@ func TestExtractMarkerIdAndExpressions(t *testing.T) {
 				"": "\"foo\"",
 			},
 		},
+		{
+			name:       "registered marker with expression with a comma in its value",
+			marker:     `kubebuilder:validation:XValidation:rule='self.map(a, a == \"someValue\")',message='must have field!'`,
+			expectedID: "kubebuilder:validation:XValidation",
+			expectedExpressions: map[string]string{
+				"rule":    `'self.map(a, a == "someValue")'`,
+				"message": "'must have field!'",
+			},
+		},
+		{
+			name:       "registered marker with expression with a comma in its value with double quotes",
+			marker:     `kubebuilder:validation:XValidation:rule="self.map(a, a == \"someValue\")",message="must have field!"`,
+			expectedID: "kubebuilder:validation:XValidation",
+			// double quotes are normalized to single quotes
+			expectedExpressions: map[string]string{
+				"rule":    `'self.map(a, a == "someValue")'`,
+				"message": "'must have field!'",
+			},
+		},
 	}
 
 	for _, tc := range testcases {

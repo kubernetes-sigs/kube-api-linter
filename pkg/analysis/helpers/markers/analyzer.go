@@ -232,14 +232,32 @@ func extractKnownMarkerIDAndExpressions(id string, marker string) (string, map[s
 func extractExpressions(expressions string) map[string]string {
 	expressionsMap := map[string]string{}
 
+	if len(expressions) == 0 {
+		return expressionsMap
+	}
+
 	// Do some normalization work to ensure we can parse expressions in
 	// a standard way. Trim any lingering colons (:) and replace all ':='s with '='
 	expressions = strings.TrimPrefix(expressions, ":")
 	expressions = strings.ReplaceAll(expressions, ":=", "=")
 
+	// normalize so that expressions always use single-quotes instead of double quotes
+	expressions = strings.ReplaceAll(expressions, `="`, `='`)
+	expressions = strings.ReplaceAll(expressions, `",`, `',`)
+	expressions = strings.ReplaceAll(expressions, `\"`, `"`)
+	// if the last character of the expression is a double quote, set it to a single quote.
+	// this handles the scenario of something like:
+	// +kubebuilder:validation:XValidation:rule="self.map(a, a == \"foo\")",message="no foo found!"
+	// normalizing it to:
+	// +kubebuilder:validation:XValidation:rule='self.map(a, a == "foo")',message='no foo found!'
+	if expressions[len(expressions)-1] == '"' {
+		expressions = expressions[:len(expressions)-1] + "'"
+	}
+	expressions = strings.ReplaceAll(expressions, `',`, `'<SEP>`)
+
 	// split expression string on commas (,) to handle multiple expressions
 	// in a single marker
-	chainedExpressions := strings.SplitSeq(expressions, ",")
+	chainedExpressions := strings.SplitSeq(expressions, "<SEP>")
 	for chainedExpression := range chainedExpressions {
 		exps := strings.SplitN(chainedExpression, "=", 2)
 		if len(exps) < 2 {
