@@ -10,6 +10,7 @@
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
 - [Nomaps](#nomaps) - Restricts usage of map types
 - [Nophase](#nophase) - Prevents usage of 'Phase' fields
+- [Notimestamp](#Notimestamp) - Prevents usage of `TimeStamp` fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
 - [RequiredFields](#requiredfields) - Validates required field conventions
@@ -150,6 +151,10 @@ They should never be used in spec.
 The `nomaps` linter checks the usage of map types.
 
 Maps are discouraged apart from `map[string]string` which is used for labels and annotations in Kubernetes APIs since it's hard to distinguish between structs and maps in spec. Instead of plain map, lists of named subobjects are preferred.
+
+## Notimestamp
+
+The `notimestamp` linter checks that the fields in the API types don't contain a 'Timestamp', or any field which contains 'Timestamp' as a substring, e.g CreateTimestamp.
 
 ### Configuration
 
