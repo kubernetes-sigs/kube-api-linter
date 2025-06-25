@@ -302,7 +302,12 @@ lintersConfig:
 
 The `nophase` linter checks that the fields in the API types don't contain a 'Phase', or any field which contains 'Phase' as a substring, e.g MachinePhase.
 
-## OptionalFields
+## Notimestamp
+
+The `notimestamp` linter checks that the fields in the API types don't contain a 'Timestamp', or any field which contains 'Timestamp' as a substring, e.g CreateTimestamp.
+
+
+## OptionalFields
 
 The `optionalfields` linter checks that all fields marked as optional adhere to being pointers and having the `omitempty` value in their `json` tag where appropriate.
 
