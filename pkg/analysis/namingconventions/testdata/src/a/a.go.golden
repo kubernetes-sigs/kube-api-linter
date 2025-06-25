@@ -1,0 +1,36 @@
+package a
+
+// Shouldn't care about Go types
+type BasketOfFruit struct {
+	Red    []string `json:"red,omitempty"`    // want `naming convention "nofruit": no fields should contain any variations of the word 'fruit' in their name`
+	Orange []string `json:"orange,omitempty"` // want `naming convention "nofruit": no fields should contain any variations of the word 'fruit' in their name`
+	Green  []string `json:"green,omitempty"`  // want `naming convention "nofruit": no fields should contain any variations of the word 'fruit' in their name`
+	Blue   []string `json:"blue,omitempty"`   // want `naming convention "nofruit": no fields should contain any variations of the word 'fruit' in their name`
+	Fruit  []string `json:"fruit,omitempty"`  // want `naming convention "nofruit": no fields should contain any variations of the word 'fruit' in their name`
+	A      string   `json:"a,omitempty"`      // want `naming convention "nofruit": no fields should contain any variations of the word 'fruit' in their name`
+}
+
+// Shouldn't care about methods
+func (b BasketOfFruit) GrabFruit() string {
+	return "nothing"
+}
+
+// shouldn't care about functions
+func IsFruit(in string) {
+	return
+}
+
+type SpecialBehaviors struct {
+	SomethingBehaviour string `json:"somethingBehaviour,omitempty"` // want `naming convention "preferbehaviour": prefer the use of the word 'behaviour' instead of 'behavior'.`
+	BehaviourCrazy     bool   `json:"behaviourCrazy,omitempty"`     // want `naming convention "preferbehaviour": prefer the use of the word 'behaviour' instead of 'behavior'.`
+}
+
+type Configurations struct {
+	SomeSupportedThingy string `json:"someSupportedThingy,omitempty"`
+	// want `naming convention "nounsupported": no fields allowing for unsupported behaviors allowed`
+}
+
+type TestSet struct {
+    TestName string `json:"testName,omitempty"` // want `naming convention "notest": no temporary test fields`
+	Other    string `json:"otherTest,omitempty"` // want `naming convention "notest": no temporary test fields`
+}
