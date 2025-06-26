@@ -34,6 +34,8 @@ type analyzer struct {
 	forbiddenMarkers []string
 }
 
+// NewAnalyzer creates a new analysis.Analyzer for the forbiddenmarkers
+// linter based on the provided config.ForbiddenMarkersConfig.
 func NewAnalyzer(cfg config.ForbiddenMarkersConfig) *analysis.Analyzer {
 	a := &analyzer{
 		forbiddenMarkers: cfg.Markers,
