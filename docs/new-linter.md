@@ -209,30 +209,33 @@ what it checks for, and how it can be configured, if appropriate.
 
 The package level documentation is helpful when running `godoc` or accessing `pkg.go.dev`.
 
-### ReadMe
+### Linters Documentation
 
-The root `README.md` file should be updated to include the new linter and any relevant information about the linter.
+The new linter should be added to the `docs/linters.md` file. This file contains the complete list of available linters and their detailed documentation.
 
-The format for which should look something like:
+Add the new linter in the correct alphabetical position in the table of contents at the top of the file, and then add a detailed section for the linter following the existing format:
 
 ````markdown
 ## LinterNameInPascalCase
 
-Include a description of what the linter is checking for.
-
-### Fixes (via standalone binary)
-
-Include a description of what the linter fixes, if applicable.
+The `linterNameInCamelCase` linter checks that [description of what the linter checks for].
 
 ### Configuration
 
 Include an example of the configuration that can be used to configure the linter, if applicable.
-
 ```yaml
 lintersConfig:
   linterNameInCamelCase:
     option: value
 ```
+
+### Fixes
+
+Include a description of what the linter fixes, if applicable.
 ````
 
-Please add the new linter in the correct position alphabetically.
+The documentation should include:
+- A clear description of what the linter checks for
+- Configuration options with examples and descriptions
+- Information about automatic fixes if the linter provides them
+- Any relevant examples or edge cases
