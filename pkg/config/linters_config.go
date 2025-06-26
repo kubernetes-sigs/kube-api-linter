@@ -40,6 +40,9 @@ type LintersConfig struct {
 
 	// uniqueMarkers contains configuration for the uniquemarkers linter.
 	UniqueMarkers UniqueMarkersConfig `json:"uniqueMarkers"`
+
+	// forbiddenMarkers contains configuration for the forbiddenmarkers linter.
+	ForbiddenMarkers ForbiddenMarkersConfig `json:"forbiddenMarkers"`
 }
 
 // ConditionsFirstField is the policy for the conditions linter.
@@ -292,4 +295,10 @@ type UniqueMarker struct {
 	//
 	// Entries must be unique.
 	Attributes []string `json:"attributes"`
+}
+
+// ForbiddenMarkersConfig contains the configuration for the forbiddenmarkers linter.
+type ForbiddenMarkersConfig struct {
+	// markers configures the marker identifiers that are forbidden.
+	Markers []string `json:"markers"`
 }

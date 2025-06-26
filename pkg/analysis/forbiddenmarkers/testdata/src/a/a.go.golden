@@ -1,0 +1,17 @@
+package a
+
+type ForbiddenMarkerType string // want `type ForbiddenMarkerType has forbidden marker "forbidden"`
+
+// +allowed
+type AllowedMarkerType string
+
+type Test struct {
+	ForbiddenMarkerField string `json:"forbiddenMarkerField"`// want `field ForbiddenMarkerField has forbidden marker "forbidden"`
+
+	ForbiddenMarkerFieldTypeAlias ForbiddenMarkerType `json:"forbiddenMarkerFieldTypeAlias"` // want `field ForbiddenMarkerFieldTypeAlias has forbidden marker "forbidden"`
+
+	// +allowed
+	AllowedMarkerField string `json:"allowedMarkerField"`
+
+	AllowedMarkerFieldTypeAlias AllowedMarkerType `json:"AllowedMarkerFieldTypeAlias"`
+}
