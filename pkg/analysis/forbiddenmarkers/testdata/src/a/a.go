@@ -1,14 +1,20 @@
 package a
 
-// +forbidden
-type ForbiddenMarkerType string // want `type ForbiddenMarkerType has forbidden marker "forbidden"`
+// +custom:forbidden
+type ForbiddenMarkerType string // want `type ForbiddenMarkerType has forbidden marker "custom:forbidden"`
+
+// +custom:AttrNoValues:fruit=apple
+type ForbiddenMarkerWithAttrType string // want `type ForbiddenMarkerWithAttrType has forbidden marker "forbidden:AttrNoValues"`
 
 // +allowed
 type AllowedMarkerType string
 
+// +custom:AttrNoValues:color=blue
+type AllowedMarkerWithAttrType string
+
 type Test struct {
-	// +forbidden
-	ForbiddenMarkerField string `json:"forbiddenMarkerField"`// want `field ForbiddenMarkerField has forbidden marker "forbidden"`
+	// +custom:forbidden
+	ForbiddenMarkerField string `json:"forbiddenMarkerField"`// want `field ForbiddenMarkerField has forbidden marker "custom:forbidden"`
 
 	ForbiddenMarkerFieldTypeAlias ForbiddenMarkerType `json:"forbiddenMarkerFieldTypeAlias"` // want `field ForbiddenMarkerFieldTypeAlias has forbidden marker "forbidden"`
 
@@ -17,4 +23,3 @@ type Test struct {
 
 	AllowedMarkerFieldTypeAlias AllowedMarkerType `json:"AllowedMarkerFieldTypeAlias"`
 }
-
