@@ -26,8 +26,63 @@ import (
 func TestWithConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.RunWithSuggestedFixes(t, testdata, forbiddenmarkers.NewAnalyzer(config.ForbiddenMarkersConfig{
-		Markers: []string{
-			"forbidden",
+		Markers: []config.ForbiddenMarker{
+			{
+				Identifier: "custom:forbidden",
+			},
+			{
+				Identifier: "custom:AttrNoValues",
+				Attributes: []config.ForbiddenMarkerAttribute{
+					{
+						Attribute: "fruit",
+					},
+				},
+			},
+			{
+				Identifier: "custom:AttrValues",
+				Attributes: []config.ForbiddenMarkerAttribute{
+					{
+						Attribute: "fruit",
+						Values: []string{
+							"apple",
+							"orange",
+							"banana",
+						},
+					},
+				},
+			},
+			{
+				Identifier: "custom:AttrsNoValues",
+				Attributes: []config.ForbiddenMarkerAttribute{
+					{
+						Attribute: "fruit",
+					},
+					{
+						Attribute: "color",
+					},
+				},
+			},
+			{
+				Identifier: "custom:AttrsValues",
+				Attributes: []config.ForbiddenMarkerAttribute{
+					{
+						Attribute: "fruit",
+						Values: []string{
+							"apple",
+							"orange",
+							"banana",
+						},
+					},
+					{
+						Attribute: "color",
+						Values: []string{
+							"red",
+							"blue",
+							"green",
+						},
+					},
+				},
+			},
 		},
 	}), "a/...")
 }

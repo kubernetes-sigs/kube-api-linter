@@ -31,22 +31,46 @@ import (
 const name = "forbiddenmarkers"
 
 type analyzer struct {
-	forbiddenMarkers []string
+	forbiddenMarkers []config.ForbiddenMarker
+}
+
+// ForbiddenMarkersOptions is a function that configures the
+// forbiddenmarkers analysis.Analyzer
+type ForbiddenMarkersOption func(a *analysis.Analyzer)
+
+// WithName sets the name of the forbiddenmarkers analysis.Analyzer
+func WithName(name string) ForbiddenMarkersOption {
+	return func(a *analysis.Analyzer) {
+		a.Name = name
+	}
+}
+
+// WithDoc sets the doc string of the forbiddenmarkers analysis.Analyzer
+func WithDoc(doc string) ForbiddenMarkersOption {
+	return func(a *analysis.Analyzer) {
+		a.Doc = doc
+	}
 }
 
 // NewAnalyzer creates a new analysis.Analyzer for the forbiddenmarkers
 // linter based on the provided config.ForbiddenMarkersConfig.
-func NewAnalyzer(cfg config.ForbiddenMarkersConfig) *analysis.Analyzer {
+func NewAnalyzer(cfg config.ForbiddenMarkersConfig, opts ...ForbiddenMarkersOption) *analysis.Analyzer {
 	a := &analyzer{
 		forbiddenMarkers: cfg.Markers,
 	}
 
-	return &analysis.Analyzer{
+	analyzer := &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Check that no forbidden markers are present on types and fields.",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
+
+	for _, opt := range opts {
+		opt(analyzer)
+	}
+
+	return analyzer
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
@@ -66,7 +90,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, forbiddenMarkers []string) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, forbiddenMarkers []config.ForbiddenMarker) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
@@ -75,7 +99,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 	check(markers, forbiddenMarkers, reportField(pass, field))
 }
 
-func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, forbiddenMarkers []string) {
+func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, forbiddenMarkers []config.ForbiddenMarker) {
 	if typeSpec == nil {
 		return
 	}
@@ -84,13 +108,50 @@ func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess marker
 	check(markers, forbiddenMarkers, reportType(pass, typeSpec))
 }
 
-func check(markerSet markers.MarkerSet, forbiddenMarkers []string, reportFunc func(marker markers.Marker)) {
+func check(markerSet markers.MarkerSet, forbiddenMarkers []config.ForbiddenMarker, reportFunc func(marker markers.Marker)) {
 	for _, marker := range forbiddenMarkers {
-		marks := markerSet.Get(marker)
+		marks := markerSet.Get(marker.Identifier)
 		for _, mark := range marks {
-			reportFunc(mark)
+			if markerMatchesAttributeRules(mark, marker.Attributes...) {
+				reportFunc(mark)
+			}
 		}
 	}
+}
+
+// TODO: this should probably return some representation of the marker that is failing the
+// attribute rules so that it can be returned to users helpfully.
+func markerMatchesAttributeRules(marker markers.Marker, attrRules ...config.ForbiddenMarkerAttribute) bool {
+	matchesAll := true
+	for _, attrRule := range attrRules {
+		if val, ok := marker.Expressions[attrRule.Attribute]; ok {
+			// if no values are specified, that means the existence match is enough
+			// and we can continue to the next rule
+			if len(attrRule.Values) == 0 {
+				continue
+			}
+
+			// if the value doesn't match one of the forbidden ones, this marker is not forbidden
+			matchesOneValue := false
+			for _, value := range attrRule.Values {
+				if val == value {
+					matchesOneValue = true
+					break
+				}
+			}
+
+			if !matchesOneValue {
+				matchesAll = false
+				break
+			}
+		}
+		// if the marker doesn't contain the attribute for a specified rule it fails the AND
+		// operation.
+		matchesAll = false
+		break
+	}
+
+	return matchesAll
 }
 
 func reportField(pass *analysis.Pass, field *ast.Field) func(marker markers.Marker) {

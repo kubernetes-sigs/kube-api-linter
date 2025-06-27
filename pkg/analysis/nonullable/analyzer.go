@@ -22,16 +22,16 @@ import (
 )
 
 const name = "nonullable"
+const doc = "Check that nullable marker is not present on any types or fields."
 
 func newAnalyzer() *analysis.Analyzer {
 	analyzer := forbiddenmarkers.NewAnalyzer(config.ForbiddenMarkersConfig{
-		Markers: []string{
-			"nullable",
+		Markers: []config.ForbiddenMarker{
+			{
+				Identifier: "nullable",
+			},
 		},
-	})
-
-	analyzer.Name = name
-	analyzer.Doc = "Check that nullable marker is not present on any types or fields."
+	}, forbiddenmarkers.WithName(name), forbiddenmarkers.WithDoc(doc))
 
 	return analyzer
 }
