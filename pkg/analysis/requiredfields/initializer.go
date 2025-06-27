@@ -16,7 +16,10 @@ limitations under the License.
 package requiredfields
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
@@ -37,6 +40,29 @@ func (initializer) Name() string {
 // Init returns the intialized Analyzer.
 func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(cfg.RequiredFields), nil
+}
+
+// IsConfigurable determines whether or not the Analyzer provides configuration options.
+func (initializer) IsConfigurable() bool {
+	return true
+}
+
+// ValidateConfig is used to validate the configuration in the config.RequiredFieldsConfig struct.
+func (initializer) ValidateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	rfc, ok := cfg.(config.RequiredFieldsConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, fmt.Errorf("incorrect type for passed configuration: %T", cfg))}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	switch rfc.PointerPolicy {
+	case "", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix)))
+	}
+
+	return fieldErrors
 }
 
 // Default determines whether this Analyzer is on by default, or not.

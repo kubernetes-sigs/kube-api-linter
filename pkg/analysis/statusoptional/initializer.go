@@ -16,9 +16,13 @@ limitations under the License.
 package statusoptional
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 // Initializer returns the AnalyzerInitializer for this
@@ -38,6 +42,29 @@ func (initializer) Name() string {
 // Init returns the initialized Analyzer.
 func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(cfg.StatusOptional.PreferredOptionalMarker), nil
+}
+
+// IsConfigurable determines whether or not the Analyzer provides configuration options.
+func (initializer) IsConfigurable() bool {
+	return true
+}
+
+// ValidateConfig is used to validate the configuration in the config.StatusOptionalConfig struct.
+func (initializer) ValidateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	soc, ok := cfg.(config.StatusOptionalConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, fmt.Errorf("incorrect type for passed configuration: %T", cfg))}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	switch soc.PreferredOptionalMarker {
+	case "", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), soc.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker)))
+	}
+
+	return fieldErrors
 }
 
 // Default determines whether this Analyzer is on by default, or not.

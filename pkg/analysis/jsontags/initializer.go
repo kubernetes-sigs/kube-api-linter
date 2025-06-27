@@ -16,7 +16,11 @@ limitations under the License.
 package jsontags
 
 import (
+	"fmt"
+	"regexp"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
@@ -37,6 +41,29 @@ func (initializer) Name() string {
 // Init returns the intialized Analyzer.
 func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(cfg.JSONTags)
+}
+
+// IsConfigurable determines whether or not the Analyzer provides configuration options.
+func (initializer) IsConfigurable() bool {
+	return true
+}
+
+// validateJSONTagsConfig is used to validate the configuration in the config.JSONTagsConfig struct.
+func (initializer) ValidateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	jtc, ok := cfg.(config.JSONTagsConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, fmt.Errorf("incorrect type for passed configuration: %T", cfg))}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	if jtc.JSONTagRegex != "" {
+		if _, err := regexp.Compile(jtc.JSONTagRegex); err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("jsonTagRegex"), jtc.JSONTagRegex, fmt.Sprintf("invalid regex: %v", err)))
+		}
+	}
+
+	return fieldErrors
 }
 
 // Default determines whether this Analyzer is on by default, or not.

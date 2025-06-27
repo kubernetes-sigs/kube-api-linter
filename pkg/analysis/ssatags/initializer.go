@@ -16,7 +16,10 @@ limitations under the License.
 package ssatags
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
@@ -42,4 +45,27 @@ func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 // Default determines whether this Analyzer is on by default, or not.
 func (initializer) Default() bool {
 	return true
+}
+
+// IsConfigurable determines whether or not the Analyzer provides configuration options.
+func (initializer) IsConfigurable() bool {
+	return true
+}
+
+// ValidateConfig implements validation of the ssa tags linter config.
+func (initializer) ValidateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	stc, ok := cfg.(config.SSATagsConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, fmt.Errorf("incorrect type for passed configuration: %T", cfg))}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	switch stc.ListTypeSetUsage {
+	case "", config.SSATagsListTypeSetUsageWarn, config.SSATagsListTypeSetUsageIgnore:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("listTypeSetUsage"), stc.ListTypeSetUsage, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.SSATagsListTypeSetUsageWarn, config.SSATagsListTypeSetUsageIgnore)))
+	}
+
+	return fieldErrors
 }

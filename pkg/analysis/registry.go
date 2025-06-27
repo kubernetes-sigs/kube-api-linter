@@ -40,6 +40,7 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // AnalyzerInitializer is used to intializer analyzers.
@@ -51,9 +52,23 @@ type AnalyzerInitializer interface {
 	// It will be passed the complete LintersConfig and is expected to rely only on its own configuration.
 	Init(config.LintersConfig) (*analysis.Analyzer, error)
 
+	// IsConfigurable determines whether or not the initializer expects to be provided a config.
+	// When true, the initializer should also match the ConfigurableAnalyzerInitializer interface.
+	IsConfigurable() bool
+
 	// Default determines whether the inializer intializes an analyzer that should be
 	// on by default, or not.
 	Default() bool
+}
+
+// ConfigurableAnalyzerInitializer is an analyzer initializer that also has a configuration.
+// This means it can validate its config.
+type ConfigurableAnalyzerInitializer interface {
+	AnalyzerInitializer
+
+	// ValidateConfig will be called during the config validation phase and is used to validate
+	// the provided config for the linter.
+	ValidateConfig(any, *field.Path) field.ErrorList
 }
 
 // Registry is used to fetch and initialize analyzers.
@@ -136,6 +151,13 @@ func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.Linte
 	allDisabled := disabled.Len() == 1 && disabled.Has(config.Wildcard)
 
 	for _, initializer := range r.initializers {
+		if initializer.IsConfigurable() {
+			_, ok := initializer.(ConfigurableAnalyzerInitializer)
+			if !ok {
+				panic(fmt.Sprintf("Analyzer %s claims to be configurable but does not implement the ConfigurableAnalyzerInitializer interface", initializer.Name()))
+			}
+		}
+
 		if !disabled.Has(initializer.Name()) && (allEnabled || enabled.Has(initializer.Name()) || !allDisabled && initializer.Default()) {
 			a, err := initializer.Init(lintersCfg)
 			if err != nil {
