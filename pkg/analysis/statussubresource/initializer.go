@@ -39,6 +39,11 @@ func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(), nil
 }
 
+// IsConfigurable determines whether or not the Analyzer provides configuration options.
+func (initializer) IsConfigurable() bool {
+	return false
+}
+
 // Default determines whether this Analyzer is on by default, or not.
 func (initializer) Default() bool {
 	// This check only applies to CRDs so should not be on by default.

@@ -39,6 +39,11 @@ func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return Analyzer, nil
 }
 
+// IsConfigurable determines whether or not the Analyzer provides configuration options.
+func (initializer) IsConfigurable() bool {
+	return false
+}
+
 // Default determines whether this Analyzer is on by default, or not.
 func (initializer) Default() bool {
 	// Duplicated markers are a sign of bad code, and should be avoided.
