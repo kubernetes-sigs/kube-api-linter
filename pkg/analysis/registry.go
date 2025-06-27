@@ -22,12 +22,14 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nofloats"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/nonullable"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
@@ -79,12 +81,14 @@ func NewRegistry() Registry {
 			conditions.Initializer(),
 			commentstart.Initializer(),
 			duplicatemarkers.Initializer(),
+			forbiddenmarkers.Initializer(),
 			integers.Initializer(),
 			jsontags.Initializer(),
 			maxlength.Initializer(),
 			nobools.Initializer(),
 			nofloats.Initializer(),
 			nomaps.Initializer(),
+			nonullable.Initializer(),
 			nophase.Initializer(),
 			optionalfields.Initializer(),
 			optionalorrequired.Initializer(),
