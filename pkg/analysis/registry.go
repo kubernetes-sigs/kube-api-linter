@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nofloats"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/notimestamp"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
@@ -86,6 +87,7 @@ func NewRegistry() Registry {
 			nofloats.Initializer(),
 			nomaps.Initializer(),
 			nophase.Initializer(),
+			notimestamp.Initializer(),
 			optionalfields.Initializer(),
 			optionalorrequired.Initializer(),
 			requiredfields.Initializer(),
