@@ -17,10 +17,10 @@ limitations under the License.
 package notimestamp_test
 
 import (
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/notimestamp"
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/notimestamp"
 )
 
 func Test(t *testing.T) {

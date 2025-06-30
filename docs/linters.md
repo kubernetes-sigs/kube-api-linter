@@ -10,7 +10,7 @@
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
 - [Nomaps](#nomaps) - Restricts usage of map types
 - [Nophase](#nophase) - Prevents usage of 'Phase' fields
-- [Notimestamp](#Notimestamp) - Prevents usage of `TimeStamp` fields
+- [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
 - [RequiredFields](#requiredfields) - Validates required field conventions
@@ -154,7 +154,16 @@ Maps are discouraged apart from `map[string]string` which is used for labels and
 
 ## Notimestamp
 
-The `notimestamp` linter checks that the fields in the API types don't contain a 'Timestamp', or any field which contains 'Timestamp' as a substring, e.g CreateTimestamp.
+The `notimestamp` linter checks that the fields in the API are not named with the word 'Timestamp'.
+
+The name of a field that specifies the time at which something occurs should be called `somethingTime`.Its recommended not use stamp (e.g., creationTimestamp).
+
+### Fixes
+
+The `notimestamp` linter will automatically fix fields and json tags that are named with the word 'TimeStamp'.
+
+It will automatically replace 'TimeStamp' with 'Time' and update both the field and tag name.
+Example: 'FooTimeStamp' will be updated to 'FooTime'.
 
 ### Configuration
 
