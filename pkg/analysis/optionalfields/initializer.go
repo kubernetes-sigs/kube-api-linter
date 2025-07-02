@@ -20,33 +20,31 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
-}
-
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
-
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewConfigurableInitializer(
+		name,
+		initAnalyzer,
+		true,
+		validateConfig,
+	)
 }
 
 // Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
+func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(cfg.OptionalFields), nil
 }
 
-// ValidateConfig validates the configuration in the config.OptionalFieldsConfig struct.
-func (initializer) ValidateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+// validateConfig validates the configuration in the config.OptionalFieldsConfig struct.
+func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
 	ofc, ok := cfg.(config.OptionalFieldsConfig)
 	if !ok {
-		return field.ErrorList{field.InternalError(fldPath, fmt.Errorf("incorrect type for passed configuration: %T", cfg))}
+		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}
 
 	fieldErrors := field.ErrorList{}
@@ -87,14 +85,4 @@ func validateOptionFieldsOmitEmpty(oec config.OptionalFieldsOmitEmpty, fldPath *
 	}
 
 	return fieldErrors
-}
-
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	return true
-}
-
-// IsConfigurable determines whether or not the Analyzer provides configuration options.
-func (initializer) IsConfigurable() bool {
-	return true
 }

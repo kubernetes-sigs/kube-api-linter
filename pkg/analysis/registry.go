@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
@@ -40,36 +41,7 @@ import (
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 )
-
-// AnalyzerInitializer is used to intializer analyzers.
-type AnalyzerInitializer interface {
-	// Name returns the name of the analyzer initialized by this intializer.
-	Name() string
-
-	// Init returns the newly initialized analyzer.
-	// It will be passed the complete LintersConfig and is expected to rely only on its own configuration.
-	Init(config.LintersConfig) (*analysis.Analyzer, error)
-
-	// IsConfigurable determines whether or not the initializer expects to be provided a config.
-	// When true, the initializer should also match the ConfigurableAnalyzerInitializer interface.
-	IsConfigurable() bool
-
-	// Default determines whether the inializer intializes an analyzer that should be
-	// on by default, or not.
-	Default() bool
-}
-
-// ConfigurableAnalyzerInitializer is an analyzer initializer that also has a configuration.
-// This means it can validate its config.
-type ConfigurableAnalyzerInitializer interface {
-	AnalyzerInitializer
-
-	// ValidateConfig will be called during the config validation phase and is used to validate
-	// the provided config for the linter.
-	ValidateConfig(any, *field.Path) field.ErrorList
-}
 
 // Registry is used to fetch and initialize analyzers.
 type Registry interface {
@@ -85,13 +57,13 @@ type Registry interface {
 }
 
 type registry struct {
-	initializers []AnalyzerInitializer
+	initializers []initializer.AnalyzerInitializer
 }
 
 // NewRegistry returns a new registry, from which analyzers can be fetched.
 func NewRegistry() Registry {
 	return &registry{
-		initializers: []AnalyzerInitializer{
+		initializers: []initializer.AnalyzerInitializer{
 			conditions.Initializer(),
 			commentstart.Initializer(),
 			duplicatemarkers.Initializer(),
@@ -140,6 +112,8 @@ func (r *registry) AllLinters() sets.Set[string] {
 }
 
 // InitializeLinters returns a list of initialized linters based on the provided config.
+//
+//nolint:cyclop // Temporary while we refactor linter validation and registration into the registry.
 func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.LintersConfig) ([]*analysis.Analyzer, error) {
 	analyzers := []*analysis.Analyzer{}
 	errs := []error{}
@@ -150,18 +124,18 @@ func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.Linte
 	allEnabled := enabled.Len() == 1 && enabled.Has(config.Wildcard)
 	allDisabled := disabled.Len() == 1 && disabled.Has(config.Wildcard)
 
-	for _, initializer := range r.initializers {
-		if initializer.IsConfigurable() {
-			_, ok := initializer.(ConfigurableAnalyzerInitializer)
+	for _, init := range r.initializers {
+		if init.IsConfigurable() {
+			_, ok := init.(initializer.ConfigurableAnalyzerInitializer)
 			if !ok {
-				panic(fmt.Sprintf("Analyzer %s claims to be configurable but does not implement the ConfigurableAnalyzerInitializer interface", initializer.Name()))
+				panic(fmt.Sprintf("Analyzer %s claims to be configurable but does not implement the ConfigurableAnalyzerInitializer interface", init.Name()))
 			}
 		}
 
-		if !disabled.Has(initializer.Name()) && (allEnabled || enabled.Has(initializer.Name()) || !allDisabled && initializer.Default()) {
-			a, err := initializer.Init(lintersCfg)
+		if !disabled.Has(init.Name()) && (allEnabled || enabled.Has(init.Name()) || !allDisabled && init.Default()) {
+			a, err := init.Init(lintersCfg)
 			if err != nil {
-				errs = append(errs, fmt.Errorf("failed to initialize linter %s: %w", initializer.Name(), err))
+				errs = append(errs, fmt.Errorf("failed to initialize linter %s: %w", init.Name(), err))
 				continue
 			}
 
