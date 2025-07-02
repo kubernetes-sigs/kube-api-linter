@@ -13,25 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package statussubresource
+package initializer
 
 import (
-	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"errors"
+	"fmt"
 )
 
-// Initializer returns the AnalyzerInitializer for this
-// Analyzer so that it can be added to the registry.
-func Initializer() initializer.AnalyzerInitializer {
-	return initializer.NewInitializer(
-		name,
-		initAnalyzer,
-		// This check only applies to CRDs so should not be on by default.
-		false,
-	)
-}
+var (
+	errIncorrectType = errors.New("incorrect type for passed configuration")
+)
 
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(), nil
+// NewIncorrectTypeError returns a new error indicating that the provided configuration
+// is of the incorrect type.
+func NewIncorrectTypeError(cfg any) error {
+	return fmt.Errorf("%w: %T", errIncorrectType, cfg)
 }

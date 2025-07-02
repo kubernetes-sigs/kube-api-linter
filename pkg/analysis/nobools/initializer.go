@@ -17,36 +17,22 @@ package nobools
 
 import (
 	"golang.org/x/tools/go/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewInitializer(
+		name,
+		initAnalyzer,
+		// Bools avoidance in the Kube conventions is not a must.
+		// Make this opt in depending on the projects own preference.
+		false,
+	)
 }
 
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
-
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
-}
-
-// Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
+func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
 	return Analyzer, nil
-}
-
-// IsConfigurable determines whether or not the Analyzer provides configuration options.
-func (initializer) IsConfigurable() bool {
-	return false
-}
-
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	// Bools avoidance in the Kube conventions is not a must.
-	// Make this opt in depending on the projects own preference.
-	return false
 }
