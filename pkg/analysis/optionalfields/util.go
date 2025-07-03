@@ -223,7 +223,7 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 	for _, field := range structType.Fields.List {
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
 
-		if fieldTagInfo.OmitEmpty {
+		if fieldTagInfo.OmitEmpty || fieldTagInfo.OmitZero {
 			// If the field is omitted, we can use a zero value.
 			// For structs, if they aren't a pointer another error will be raised.
 			continue
