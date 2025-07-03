@@ -29,6 +29,11 @@ import (
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 )
 
+const (
+	omitEmpty = "omitempty"
+	omitZero  = "omitzero"
+)
+
 // StructFieldTags is used to find information about
 // json tags on fields within struct.
 type StructFieldTags interface {
@@ -140,10 +145,12 @@ func extractTagInfo(tag *ast.BasicLit) FieldTagInfo {
 
 	return FieldTagInfo{
 		Name:      tagName,
-		OmitEmpty: len(tagValues) == 2 && tagValues[1] == "omitempty",
-		RawValue:  tagValue,
-		Pos:       pos,
-		End:       end,
+		OmitEmpty: (len(tagValues) == 2 && tagValues[1] == omitEmpty) || (len(tagValues) == 3 && (tagValues[1] == omitEmpty || tagValues[2] == omitEmpty)),
+		// Considering, omitzero will always coexist with omitemtpy and it can be either second or third tag.
+		OmitZero: len(tagValues) == 3 && (tagValues[1] == omitZero || tagValues[2] == omitZero),
+		RawValue: tagValue,
+		Pos:      pos,
+		End:      end,
 	}
 }
 
@@ -158,6 +165,9 @@ type FieldTagInfo struct {
 
 	// OmitEmpty is true if the field has the omitempty option in the json tag.
 	OmitEmpty bool
+
+	// OmitZero is true if the field has the omitzero option in the json tag.
+	OmitZero bool
 
 	// Inline is true if the field has the inline option in the json tag.
 	Inline bool

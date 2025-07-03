@@ -171,6 +171,11 @@ type A struct {
 	// +optional
 	StructWithMinProperties *B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties is optional and should be a pointer"
 
+	// StructWithMinPropertiesAndOmitEmptyTag is a struct field with a minimum number of properties.
+	// +kubebuilder:validation:MinProperties=1
+	// +optional
+	StructWithMinPropertiesAndOmitEmptyTag B `json:"structWithMinPropertiesAndOmitEmptyTag,omitempty,omitzero"`
+
 	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
 	// +optional
 	StructWithMinPropertiesOnStruct *D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct is optional and should be a pointer"
