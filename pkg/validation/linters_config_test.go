@@ -20,6 +20,13 @@ import (
 	. "github.com/onsi/gomega"
 	"gopkg.in/yaml.v3"
 
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/statusoptional"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/validation"
@@ -51,7 +58,7 @@ var _ = Describe("LintersConfig", func() {
 		// ConditionsConfig validation
 		Entry("With a valid ConditionsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
+				"conditions": toYaml(conditions.ConditionsConfig{
 					IsFirstField: "",
 					UseProtobuf:  "",
 				}),
@@ -60,23 +67,23 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid ConditionsConfig IsFirstField: Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					IsFirstField: config.ConditionsFirstFieldWarn,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					IsFirstField: conditions.ConditionsFirstFieldWarn,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig IsFirstField: Ignore", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					IsFirstField: config.ConditionsFirstFieldIgnore,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					IsFirstField: conditions.ConditionsFirstFieldIgnore,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With an invalid ConditionsConfig IsFirstField", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
+				"conditions": toYaml(conditions.ConditionsConfig{
 					IsFirstField: "invalid",
 				}),
 			},
@@ -84,39 +91,39 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid ConditionsConfig UseProtobuf: SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UseProtobuf: config.ConditionsUseProtobufSuggestFix,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UseProtobuf: conditions.ConditionsUseProtobufSuggestFix,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig UseProtobuf: Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UseProtobuf: config.ConditionsUseProtobufWarn,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UseProtobuf: conditions.ConditionsUseProtobufWarn,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig UseProtobuf: Ignore", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UseProtobuf: config.ConditionsUseProtobufIgnore,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UseProtobuf: conditions.ConditionsUseProtobufIgnore,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig UseProtobuf: Forbid", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UseProtobuf: config.ConditionsUseProtobufForbid,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UseProtobuf: conditions.ConditionsUseProtobufForbid,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With an invalid ConditionsConfig UseProtobuf", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
+				"conditions": toYaml(conditions.ConditionsConfig{
 					UseProtobuf: "invalid",
 				}),
 			},
@@ -124,39 +131,39 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid ConditionsConfig UsePatchStrategy: SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UsePatchStrategy: config.ConditionsUsePatchStrategySuggestFix,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UsePatchStrategy: conditions.ConditionsUsePatchStrategySuggestFix,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig UsePatchStrategy: Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UsePatchStrategy: config.ConditionsUsePatchStrategyWarn,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UsePatchStrategy: conditions.ConditionsUsePatchStrategyWarn,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig UsePatchStrategy: Ignore", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UsePatchStrategy: config.ConditionsUsePatchStrategyIgnore,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UsePatchStrategy: conditions.ConditionsUsePatchStrategyIgnore,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid ConditionsConfig UsePatchStrategy: Forbid", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
-					UsePatchStrategy: config.ConditionsUsePatchStrategyForbid,
+				"conditions": toYaml(conditions.ConditionsConfig{
+					UsePatchStrategy: conditions.ConditionsUsePatchStrategyForbid,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With an invalid ConditionsConfig UsePatchStrategy", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"conditions": toYaml(config.ConditionsConfig{
+				"conditions": toYaml(conditions.ConditionsConfig{
 					UsePatchStrategy: "invalid",
 				}),
 			},
@@ -166,7 +173,7 @@ var _ = Describe("LintersConfig", func() {
 		// JSONTagsConfig validation (with legacy field name)
 		Entry("With a valid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"jsonTags": toYaml(config.JSONTagsConfig{
+				"jsonTags": toYaml(jsontags.JSONTagsConfig{
 					JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$",
 				}),
 			},
@@ -174,7 +181,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"jsonTags": toYaml(config.JSONTagsConfig{
+				"jsonTags": toYaml(jsontags.JSONTagsConfig{
 					JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",
 				}),
 			},
@@ -184,7 +191,7 @@ var _ = Describe("LintersConfig", func() {
 		// JSONTagsConfig validation
 		Entry("With a valid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"jsontags": toYaml(config.JSONTagsConfig{
+				"jsontags": toYaml(jsontags.JSONTagsConfig{
 					JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$",
 				}),
 			},
@@ -192,7 +199,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"jsontags": toYaml(config.JSONTagsConfig{
+				"jsontags": toYaml(jsontags.JSONTagsConfig{
 					JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",
 				}),
 			},
@@ -202,7 +209,7 @@ var _ = Describe("LintersConfig", func() {
 		// NoMapsConfig validation
 		Entry("With a valid NoMapsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"nomaps": toYaml(config.NoMapsConfig{
+				"nomaps": toYaml(nomaps.NoMapsConfig{
 					Policy: "",
 				}),
 			},
@@ -210,31 +217,31 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid NoMapsConfig: enforce is specified", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"nomaps": toYaml(config.NoMapsConfig{
-					Policy: config.NoMapsEnforce,
+				"nomaps": toYaml(nomaps.NoMapsConfig{
+					Policy: nomaps.NoMapsEnforce,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid NoMapsConfig: allowStringToStringMaps is specified", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"nomaps": toYaml(config.NoMapsConfig{
-					Policy: config.NoMapsAllowStringToStringMaps,
+				"nomaps": toYaml(nomaps.NoMapsConfig{
+					Policy: nomaps.NoMapsAllowStringToStringMaps,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid NoMapsConfig: ignore is specified", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"nomaps": toYaml(config.NoMapsConfig{
-					Policy: config.NoMapsIgnore,
+				"nomaps": toYaml(nomaps.NoMapsConfig{
+					Policy: nomaps.NoMapsIgnore,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a invalid NoMapsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"nomaps": toYaml(config.NoMapsConfig{
+				"nomaps": toYaml(nomaps.NoMapsConfig{
 					Policy: "invalid",
 				}),
 			},
@@ -244,12 +251,12 @@ var _ = Describe("LintersConfig", func() {
 		// OptionalFieldsConfig validation (with legacy field name)
 		Entry("With a valid OptionalFieldsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
 						Preference: "",
 						Policy:     "",
 					},
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
 						Policy: "",
 					},
 				}),
@@ -258,9 +265,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Preference Always", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Preference: config.OptionalFieldsPointerPreferenceAlways,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Preference: optionalfields.OptionalFieldsPointerPreferenceAlways,
 					},
 				}),
 			},
@@ -268,9 +275,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Preference WhenRequired", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
 					},
 				}),
 			},
@@ -278,8 +285,8 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid OptionalFieldsConfig: Pointer Preference", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
 						Preference: "invalid",
 					},
 				}),
@@ -288,9 +295,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Policy SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Policy: config.OptionalFieldsPointerPolicySuggestFix,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Policy: optionalfields.OptionalFieldsPointerPolicySuggestFix,
 					},
 				}),
 			},
@@ -298,9 +305,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Policy Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Policy: config.OptionalFieldsPointerPolicyWarn,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Policy: optionalfields.OptionalFieldsPointerPolicyWarn,
 					},
 				}),
 			},
@@ -308,8 +315,8 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid OptionalFieldsConfig: Pointer Policy", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
 						Policy: "invalid",
 					},
 				}),
@@ -318,9 +325,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: OmitEmpty Policy Ignore", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
-						Policy: config.OptionalFieldsOmitEmptyPolicyIgnore,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+						Policy: optionalfields.OptionalFieldsOmitEmptyPolicyIgnore,
 					},
 				}),
 			},
@@ -328,9 +335,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: OmitEmpty Policy Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
-						Policy: config.OptionalFieldsOmitEmptyPolicyWarn,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+						Policy: optionalfields.OptionalFieldsOmitEmptyPolicyWarn,
 					},
 				}),
 			},
@@ -338,9 +345,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: OmitEmpty Policy SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
-						Policy: config.OptionalFieldsOmitEmptyPolicySuggestFix,
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+						Policy: optionalfields.OptionalFieldsOmitEmptyPolicySuggestFix,
 					},
 				}),
 			},
@@ -348,8 +355,8 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid OptionalFieldsConfig: OmitEmpty Policy", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalFields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
+				"optionalFields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
 						Policy: "invalid",
 					},
 				}),
@@ -360,12 +367,12 @@ var _ = Describe("LintersConfig", func() {
 		// OptionalFieldsConfig validation
 		Entry("With a valid OptionalFieldsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
 						Preference: "",
 						Policy:     "",
 					},
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
 						Policy: "",
 					},
 				}),
@@ -374,9 +381,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Preference Always", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Preference: config.OptionalFieldsPointerPreferenceAlways,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Preference: optionalfields.OptionalFieldsPointerPreferenceAlways,
 					},
 				}),
 			},
@@ -384,9 +391,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Preference WhenRequired", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
 					},
 				}),
 			},
@@ -394,8 +401,8 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid OptionalFieldsConfig: Pointer Preference", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
 						Preference: "invalid",
 					},
 				}),
@@ -404,9 +411,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Policy SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Policy: config.OptionalFieldsPointerPolicySuggestFix,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Policy: optionalfields.OptionalFieldsPointerPolicySuggestFix,
 					},
 				}),
 			},
@@ -414,9 +421,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: Pointer Policy Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
-						Policy: config.OptionalFieldsPointerPolicyWarn,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
+						Policy: optionalfields.OptionalFieldsPointerPolicyWarn,
 					},
 				}),
 			},
@@ -424,8 +431,8 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid OptionalFieldsConfig: Pointer Policy", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					Pointers: config.OptionalFieldsPointers{
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					Pointers: optionalfields.OptionalFieldsPointers{
 						Policy: "invalid",
 					},
 				}),
@@ -434,9 +441,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: OmitEmpty Policy Ignore", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
-						Policy: config.OptionalFieldsOmitEmptyPolicyIgnore,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+						Policy: optionalfields.OptionalFieldsOmitEmptyPolicyIgnore,
 					},
 				}),
 			},
@@ -444,9 +451,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: OmitEmpty Policy Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
-						Policy: config.OptionalFieldsOmitEmptyPolicyWarn,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+						Policy: optionalfields.OptionalFieldsOmitEmptyPolicyWarn,
 					},
 				}),
 			},
@@ -454,9 +461,9 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid OptionalFieldsConfig: OmitEmpty Policy SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
-						Policy: config.OptionalFieldsOmitEmptyPolicySuggestFix,
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+						Policy: optionalfields.OptionalFieldsOmitEmptyPolicySuggestFix,
 					},
 				}),
 			},
@@ -464,8 +471,8 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With an invalid OptionalFieldsConfig: OmitEmpty Policy", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalfields": toYaml(config.OptionalFieldsConfig{
-					OmitEmpty: config.OptionalFieldsOmitEmpty{
+				"optionalfields": toYaml(optionalfields.OptionalFieldsConfig{
+					OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
 						Policy: "invalid",
 					},
 				}),
@@ -476,7 +483,7 @@ var _ = Describe("LintersConfig", func() {
 		// OptionalOrRequiredConfig validation (with legacy field name)
 		Entry("With a valid OptionalOrRequiredConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalOrRequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredOptionalMarker: markers.OptionalMarker,
 					PreferredRequiredMarker: markers.RequiredMarker,
 				}),
@@ -485,7 +492,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With kubebuilder preferred markers", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalOrRequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
 					PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
 				}),
@@ -494,7 +501,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With invalid preferred optional marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalOrRequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredOptionalMarker: "invalid",
 				}),
 			},
@@ -502,7 +509,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With invalid preferred required marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalOrRequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredRequiredMarker: "invalid",
 				}),
 			},
@@ -512,7 +519,7 @@ var _ = Describe("LintersConfig", func() {
 		// OptionalOrRequiredConfig validation
 		Entry("With a valid OptionalOrRequiredConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalorrequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalorrequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredOptionalMarker: markers.OptionalMarker,
 					PreferredRequiredMarker: markers.RequiredMarker,
 				}),
@@ -521,7 +528,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With kubebuilder preferred markers", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalorrequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalorrequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
 					PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
 				}),
@@ -530,7 +537,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With invalid preferred optional marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalorrequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalorrequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredOptionalMarker: "invalid",
 				}),
 			},
@@ -538,7 +545,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With invalid preferred required marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"optionalorrequired": toYaml(config.OptionalOrRequiredConfig{
+				"optionalorrequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
 					PreferredRequiredMarker: "invalid",
 				}),
 			},
@@ -548,7 +555,7 @@ var _ = Describe("LintersConfig", func() {
 		// RequiredFieldsConfig validation (with legacy field name)
 		Entry("With a valid RequiredFieldsConfig: omitted", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredFields": toYaml(config.RequiredFieldsConfig{
+				"requiredFields": toYaml(requiredfields.RequiredFieldsConfig{
 					PointerPolicy: "",
 				}),
 			},
@@ -556,23 +563,23 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid RequiredFieldsConfig: SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredFields": toYaml(config.RequiredFieldsConfig{
-					PointerPolicy: config.RequiredFieldPointerSuggestFix,
+				"requiredFields": toYaml(requiredfields.RequiredFieldsConfig{
+					PointerPolicy: requiredfields.RequiredFieldPointerSuggestFix,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid RequiredFieldsConfig: Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredFields": toYaml(config.RequiredFieldsConfig{
-					PointerPolicy: config.RequiredFieldPointerWarn,
+				"requiredFields": toYaml(requiredfields.RequiredFieldsConfig{
+					PointerPolicy: requiredfields.RequiredFieldPointerWarn,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With an invalid RequiredFieldsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredFields": toYaml(config.RequiredFieldsConfig{
+				"requiredFields": toYaml(requiredfields.RequiredFieldsConfig{
 					PointerPolicy: "invalid",
 				}),
 			},
@@ -582,7 +589,7 @@ var _ = Describe("LintersConfig", func() {
 		// RequiredFieldsConfig validation
 		Entry("With a valid RequiredFieldsConfig: omitted", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredfields": toYaml(config.RequiredFieldsConfig{
+				"requiredfields": toYaml(requiredfields.RequiredFieldsConfig{
 					PointerPolicy: "",
 				}),
 			},
@@ -590,23 +597,23 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid RequiredFieldsConfig: SuggestFix", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredfields": toYaml(config.RequiredFieldsConfig{
-					PointerPolicy: config.RequiredFieldPointerSuggestFix,
+				"requiredfields": toYaml(requiredfields.RequiredFieldsConfig{
+					PointerPolicy: requiredfields.RequiredFieldPointerSuggestFix,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With a valid RequiredFieldsConfig: Warn", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredfields": toYaml(config.RequiredFieldsConfig{
-					PointerPolicy: config.RequiredFieldPointerWarn,
+				"requiredfields": toYaml(requiredfields.RequiredFieldsConfig{
+					PointerPolicy: requiredfields.RequiredFieldPointerWarn,
 				}),
 			},
 			expectedErr: "",
 		}),
 		Entry("With an invalid RequiredFieldsConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"requiredfields": toYaml(config.RequiredFieldsConfig{
+				"requiredfields": toYaml(requiredfields.RequiredFieldsConfig{
 					PointerPolicy: "invalid",
 				}),
 			},
@@ -616,7 +623,7 @@ var _ = Describe("LintersConfig", func() {
 		// StatusOptionalConfig validation (with legacy field name)
 		Entry("With a valid StatusOptionalConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusOptional": toYaml(config.StatusOptionalConfig{
+				"statusOptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: markers.OptionalMarker,
 				}),
 			},
@@ -624,7 +631,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid StatusOptionalConfig: k8s optional marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusOptional": toYaml(config.StatusOptionalConfig{
+				"statusOptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: markers.K8sOptionalMarker,
 				}),
 			},
@@ -632,14 +639,14 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid StatusOptionalConfig: kubebuilder optional marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusOptional": toYaml(config.StatusOptionalConfig{
+				"statusOptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
 				}),
 			},
 		}),
 		Entry("With an invalid StatusOptionalConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusOptional": toYaml(config.StatusOptionalConfig{
+				"statusOptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: "invalid",
 				}),
 			},
@@ -649,7 +656,7 @@ var _ = Describe("LintersConfig", func() {
 		// StatusOptionalConfig validation
 		Entry("With a valid StatusOptionalConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusoptional": toYaml(config.StatusOptionalConfig{
+				"statusoptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: markers.OptionalMarker,
 				}),
 			},
@@ -657,7 +664,7 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid StatusOptionalConfig: k8s optional marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusoptional": toYaml(config.StatusOptionalConfig{
+				"statusoptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: markers.K8sOptionalMarker,
 				}),
 			},
@@ -665,14 +672,14 @@ var _ = Describe("LintersConfig", func() {
 		}),
 		Entry("With a valid StatusOptionalConfig: kubebuilder optional marker", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusoptional": toYaml(config.StatusOptionalConfig{
+				"statusoptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
 				}),
 			},
 		}),
 		Entry("With an invalid StatusOptionalConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{
-				"statusoptional": toYaml(config.StatusOptionalConfig{
+				"statusoptional": toYaml(statusoptional.StatusOptionalConfig{
 					PreferredOptionalMarker: "invalid",
 				}),
 			},

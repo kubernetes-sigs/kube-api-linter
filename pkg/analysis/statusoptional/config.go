@@ -13,7 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package config
+package statusoptional
 
-// LintersConfig contains configuration for individual linters.
-type LintersConfig map[string][]byte
+// StatusOptionalConfig contains configuration for the statusoptional linter.
+type StatusOptionalConfig struct {
+	// preferredOptionalMarker is the preferred marker to use for optional fields.
+	// If this field is not set, the default value is "optional".
+	// Valid values are "optional", "kubebuilder:validation:Optional" and "k8s:optional".
+	PreferredOptionalMarker string `json:"preferredOptionalMarker"`
+}

@@ -20,13 +20,12 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(&config.RequiredFieldsConfig{})
+	a, err := requiredfields.Initializer().Init(&requiredfields.RequiredFieldsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,8 +36,8 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestWithPointerPolicyWarn(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(&config.RequiredFieldsConfig{
-		PointerPolicy: config.RequiredFieldPointerWarn,
+	a, err := requiredfields.Initializer().Init(&requiredfields.RequiredFieldsConfig{
+		PointerPolicy: requiredfields.RequiredFieldPointerWarn,
 	})
 	if err != nil {
 		t.Fatal(err)

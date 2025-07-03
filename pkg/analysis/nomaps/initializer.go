@@ -21,7 +21,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
@@ -31,14 +30,14 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
-		func() any { return &config.NoMapsConfig{} },
+		func() any { return &NoMapsConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
 func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
-	nmc, ok := cfg.(*config.NoMapsConfig)
+	nmc, ok := cfg.(*NoMapsConfig)
 	if !ok {
 		return nil, fmt.Errorf("failed to initialize no maps analyzer: %w", initializer.NewIncorrectTypeError(cfg))
 	}
@@ -48,7 +47,7 @@ func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
 
 // validateConfig is used to validate the configuration in the config.NoMapsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	nmc, ok := cfg.(*config.NoMapsConfig)
+	nmc, ok := cfg.(*NoMapsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}
@@ -56,10 +55,10 @@ func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
 	switch nmc.Policy {
-	case config.NoMapsEnforce, config.NoMapsAllowStringToStringMaps, config.NoMapsIgnore, "":
+	case NoMapsEnforce, NoMapsAllowStringToStringMaps, NoMapsIgnore, "":
 		// Valid values
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), nmc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", config.NoMapsEnforce, config.NoMapsAllowStringToStringMaps, config.NoMapsIgnore)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), nmc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", NoMapsEnforce, NoMapsAllowStringToStringMaps, NoMapsIgnore)))
 	}
 
 	return fieldErrors
