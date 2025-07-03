@@ -41,22 +41,22 @@ var (
 // For structs, for the zero value to be valid, all fields within the struct that would not be omitted must accept their zero values.
 // The second return value indicates whether the field validation is complete. Complete validation means that we are certain whether or not the zero value is valid.
 // Incomplete validation means that if additional validation were added (e.g. to add a min length to a string), the zero value might become invalid.
-func IsZeroValueValid(pass *analysis.Pass, field *ast.Field, typeExpr ast.Expr, markersAccess markershelper.Markers) (bool, bool) {
+func IsZeroValueValid(pass *analysis.Pass, field *ast.Field, typeExpr ast.Expr, markersAccess markershelper.Markers, considerOmitzero bool) (bool, bool) {
 	underlyingType := getUnderlyingType(typeExpr)
 
 	switch t := underlyingType.(type) {
 	case *ast.StructType:
 		// For structs, we have to check if there are any non-omitted fields, that do not accept a zero value.
-		return isStructZeroValueValid(pass, field, t, markersAccess)
+		return isStructZeroValueValid(pass, field, t, markersAccess, considerOmitzero)
 	case *ast.Ident:
-		return isIdentZeroValueValid(pass, field, t, markersAccess)
+		return isIdentZeroValueValid(pass, field, t, markersAccess, considerOmitzero)
 	case *ast.MapType:
 		return isMapZeroValueValid(pass, field, markersAccess)
 	case *ast.ArrayType:
 		// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
 		return isArrayZeroValueValid(pass, field, t, markersAccess)
 	case *ast.StarExpr:
-		return IsZeroValueValid(pass, field, t.X, markersAccess)
+		return IsZeroValueValid(pass, field, t.X, markersAccess, considerOmitzero)
 	}
 
 	// We don't know what the type is so can't assert the zero value is valid.
@@ -76,7 +76,7 @@ func getUnderlyingType(expr ast.Expr) ast.Expr {
 // isStructZeroValueValid checks if the zero value of a struct is valid.
 // It checks if all non-omitted fields within the struct accept their zero values.
 // It also checks if the struct has a minProperties marker, and if so, whether the number of non-omitted fields is greater than or equal to the minProperties value.
-func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *ast.StructType, markersAccess markershelper.Markers) (bool, bool) {
+func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *ast.StructType, markersAccess markershelper.Markers, considerOmitzero bool) (bool, bool) {
 	if structType == nil {
 		return false, false
 	}
@@ -86,7 +86,7 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 		panic("could not get struct field tags from pass result")
 	}
 
-	zeroValueValid, nonOmittedFields := areStructFieldZeroValuesValid(pass, structType, markersAccess, jsonTagInfo)
+	zeroValueValid, nonOmittedFields := areStructFieldZeroValuesValid(pass, structType, markersAccess, jsonTagInfo, considerOmitzero)
 
 	markerSet := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
@@ -112,27 +112,37 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 }
 
 // areStructFieldZeroValuesValid checks if all non-omitted fields within a struct accept their zero values.
-func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructType, markersAccess markershelper.Markers, jsonTagInfo extractjsontags.StructFieldTags) (bool, int) {
+//
+//nolint:cyclop
+func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructType, markersAccess markershelper.Markers, jsonTagInfo extractjsontags.StructFieldTags, considerOmitzero bool) (bool, int) {
 	zeroValueValid := true
 	nonOmittedFields := 0
 
 	for _, field := range structType.Fields.List {
 		fieldRequired := isFieldRequired(field, markersAccess)
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
+		isStruct := IsStructType(pass, field.Type)
 
 		// Assume the field has omitempty.
 		// Then the zero value (omitted) for a required field is not valid, and for an optional field it is valid.
 		validValue := !fieldRequired
 
-		// Count the required fields as non-omitted even if they have omitempty.
+		// non-omitted fields are required fields or fields without an omitempty tag or struct fields without omitzero tag (if valid omitzero policy is set)
 		// This allows us to count them towards the min-properties count in the parent function.
-		if !fieldTagInfo.OmitEmpty || fieldRequired {
+		switch {
+		case fieldRequired:
+			nonOmittedFields++
+		case isStruct && considerOmitzero && fieldTagInfo.OmitZero:
+			// struct with omitzero field should be omitted.
+		case !fieldTagInfo.OmitEmpty:
 			nonOmittedFields++
 		}
 
 		// When the field is not omitted, we need to check if the zero value is valid (required or not).
-		if !fieldTagInfo.OmitEmpty {
-			validValue, _ = IsZeroValueValid(pass, field, field.Type, markersAccess)
+		switch {
+		case isStruct && considerOmitzero && fieldTagInfo.OmitZero:
+		case !fieldTagInfo.OmitEmpty:
+			validValue, _ = IsZeroValueValid(pass, field, field.Type, markersAccess, considerOmitzero)
 		}
 
 		// If either value is false then the collected values will be false.
@@ -143,7 +153,7 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 }
 
 // isIdentZeroValueValid checks if the zero value of an identifier is valid.
-func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ident, markersAccess markershelper.Markers) (bool, bool) {
+func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ident, markersAccess markershelper.Markers, considerOmitzero bool) (bool, bool) {
 	if ident == nil {
 		return false, false
 	}
@@ -167,7 +177,7 @@ func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ide
 		return false, false
 	}
 
-	return IsZeroValueValid(pass, field, typeSpec.Type, markersAccess)
+	return IsZeroValueValid(pass, field, typeSpec.Type, markersAccess, considerOmitzero)
 }
 
 // isStringZeroValueValid checks if a string field can have a zero value.

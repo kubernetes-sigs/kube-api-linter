@@ -26,6 +26,11 @@ type OptionalFieldsConfig struct {
 	// This defines how the linter should handle optional fields, and whether they should have the omitempty tag or not.
 	// By default, all fields will be expected to have the `omitempty` tag.
 	OmitEmpty OptionalFieldsOmitEmpty `json:"omitempty"`
+
+	// omitzero is the policy for the `omitzero` tag within the json tag for fields.
+	// This defines how the linter should handle optional fields, and whether they should have the omitzero tag or not.
+	// By default, all the struct fields will be expected to have the `omitzero` tag when their zero value is not an acceptable user choice.
+	OmitZero OptionalFieldsOmitZero `json:"omitzero"`
 }
 
 // OptionalFieldsPointers is the configuration for pointers in optional fields.
@@ -49,12 +54,25 @@ type OptionalFieldsPointers struct {
 // OptionalFieldsOmitEmpty is the configuration for the `omitempty` tag on optional fields.
 type OptionalFieldsOmitEmpty struct {
 	// policy determines whether the linter should require omitempty for all optional fields.
-	// Valid values are "SuggestFix" and "Ignore".
+	// Valid values are "SuggestFix", "Warn" and "Ignore".
 	// When set to "SuggestFix", the linter will suggest adding the `omitempty` tag when an optional field does not have it.
 	// When set to "Warn", the linter will emit a warning if the field does not have the `omitempty` tag.
 	// When set to "Ignore", and optional field missing the `omitempty` tag will be ignored.
 	// Note, when set to "Ignore", and a field does not have the `omitempty` tag, this may affect whether the field should be a pointer or not.
 	Policy OptionalFieldsOmitEmptyPolicy `json:"policy"`
+}
+
+// OptionalFieldsOmitZero is the configuration for the `omitzero` tag on optional fields.
+type OptionalFieldsOmitZero struct {
+	// policy determines whether the linter should require omitzero for all optional `struct` fields.
+	// Valid values are "SuggestFix", "Warn" and "Forbid".
+	// When set to "SuggestFix", the linter will suggest adding the `omitzero` tag when an optional field does not have it.
+	// When set to "Warn", the linter will emit a warning if the field does not have the `omitzero` tag.
+	// When set to "Forbid", 'omitzero' tags wont be considered.
+	// Note, when set to "Forbid", and a field have the `omitzero` tag, the linter will suggest to remove the `omitzero` tag.
+	// Note, `omitzero` tag is supported in go version starting from go 1.24.
+	// Note, Configure omitzero policy to 'Forbid', if using with go version less than go 1.24.
+	Policy OptionalFieldsOmitZeroPolicy `json:"policy"`
 }
 
 // OptionalFieldsPointerPreference is the preference for pointers in optional fields.
@@ -91,4 +109,18 @@ const (
 
 	// OptionalFieldsOmitEmptyPolicyIgnore indicates that the linter will ignore any field missing the omitempty tag.
 	OptionalFieldsOmitEmptyPolicyIgnore OptionalFieldsOmitEmptyPolicy = "Ignore"
+)
+
+// OptionalFieldsOmitZeroPolicy is the policy for the omitzero tag on optional fields.
+type OptionalFieldsOmitZeroPolicy string
+
+const (
+	// OptionalFieldsOmitZeroPolicySuggestFix indicates that the linter will emit a warning if the field does not have omitzero, and suggest a fix.
+	OptionalFieldsOmitZeroPolicySuggestFix OptionalFieldsOmitZeroPolicy = "SuggestFix"
+
+	// OptionalFieldsOmitZeroPolicyWarn indicates that the linter will emit a warning if the field does not have omitzero.
+	OptionalFieldsOmitZeroPolicyWarn OptionalFieldsOmitZeroPolicy = "Warn"
+
+	// OptionalFieldsOmitZeroPolicyForbid indicates that the linter will forbid using omitzero tag.
+	OptionalFieldsOmitZeroPolicyForbid OptionalFieldsOmitZeroPolicy = "Forbid"
 )

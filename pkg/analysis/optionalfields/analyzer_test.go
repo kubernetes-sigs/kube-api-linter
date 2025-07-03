@@ -40,6 +40,9 @@ func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 		Pointers: optionalfields.OptionalFieldsPointers{
 			Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
 		},
+		OmitZero: optionalfields.OptionalFieldsOmitZero{
+			Policy: optionalfields.OptionalFieldsOmitZeroPolicyForbid,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -58,10 +61,35 @@ func TestWhenRequiredWithOmitEmptyIgnorePreferenceConfiguration(t *testing.T) {
 		OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
 			Policy: optionalfields.OptionalFieldsOmitEmptyPolicyIgnore,
 		},
+		OmitZero: optionalfields.OptionalFieldsOmitZero{
+			Policy: optionalfields.OptionalFieldsOmitZeroPolicyForbid,
+		},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "c")
+}
+
+func TestWithSuggestFixForOmitZero(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{
+		Pointers: optionalfields.OptionalFieldsPointers{
+			Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
+			Policy:     optionalfields.OptionalFieldsPointerPolicySuggestFix,
+		},
+		OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+			Policy: optionalfields.OptionalFieldsOmitEmptyPolicySuggestFix,
+		},
+		OmitZero: optionalfields.OptionalFieldsOmitZero{
+			Policy: optionalfields.OptionalFieldsOmitZeroPolicySuggestFix,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "d")
 }

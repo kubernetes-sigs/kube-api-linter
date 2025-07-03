@@ -180,10 +180,13 @@ The `nophase` linter checks that the fields in the API types don't contain a 'Ph
 
 ## OptionalFields
 
-The `optionalfields` linter checks that all fields marked as optional adhere to being pointers and having the `omitempty` value in their `json` tag where appropriate.
+The `optionalfields` linter checks that all fields marked as optional adhere to being pointers and having either the `omitempty` or `omitzero` value in their `json` tag where appropriate.
+Currently `omitzero` is handled only for fields with struct type.
 
 If you prefer to avoid pointers where possible, the linter can be configured with the `WhenRequired` preference to determine, based on the serialization and valid values for the field, whether the field should be a pointer or not.
-For example, an optional string with a non-zero minimum length does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
+For example
+- an optional string with a non-zero minimum length does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
+- an optional struct having omitzero json tag with a non-zero minimum properties does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
 
 In certain use cases, it can be desirable to not omit optional fields from the serialized form of the object.
 In this case, the `omitempty` policy can be set to `Ignore`, and the linter will ensure that the zero value of the object is an acceptable value for the field.
@@ -198,19 +201,23 @@ lintersConfig:
       policy: SuggestFix | Warn # The policy for pointers in optional fields. Defaults to `SuggestFix`.
     omitempty:
         policy: SuggestFix | Warn | Ignore # The policy for omitempty in optional fields. Defaults to `SuggestFix`.
+    omitzero:
+        policy: SuggestFix | Warn | Forbid # The policy for omitzero in optional fields. Defaults to `SuggestFix`.
 ```
 
 ### Fixes
 
-The `optionalfields` linter can automatically fix fields that are marked as optional, that are either not pointers or do not have the `omitempty` value in their `json` tag.
-It will suggest to add the pointer to the field, and update the `json` tag to include the `omitempty` value.
+The `optionalfields` linter can automatically fix fields that are marked as optional, that are either not pointers or do not have the `omitempty` or `omitzero` value in their `json` tag.
+It will suggest to add the pointer to the field, and update the `json` tag to include the `omitempty` value or, for struct fields specifically, it will suggest to remove the pointer to the field, and update the `json` tag to include the `omitzero` value.
 
 If you prefer not to suggest fixes for pointers in optional fields, you can change the `pointers.policy` to `Warn`.
 
 If you prefer not to suggest fixes for `omitempty` in optional fields, you can change the `omitempty.policy` to `Warn` or `Ignore`.
+If you prefer not to suggest fixes for `omitzero` in optional fields, you can change the `omitzero.policy` to `Warn` and also not to consider `omitzero` policy at all, it can be set to `Forbid`.
 
 When the `pointers.preference` is set to `WhenRequired`, the linter will suggest to add the pointer to the field only when the field zero value is a valid value for the field.
 When the field zero value is not a valid value for the field, the linter will suggest to remove the pointer from the field.
+When the field zero value is not a valid value for the field of type struct, the linter will suggest to add `omitzero` json tag and to remove the pointer from the field.
 
 When the `pointers.preference` is set to `Always`, the linter will always suggest to add the pointer to the field, regardless of the validity of the zero value of the field.
 
