@@ -21,7 +21,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
@@ -31,17 +30,23 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &RequiredFieldsConfig{} },
 		validateConfig,
 	)
 }
 
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.RequiredFields), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	rfc, ok := cfg.(*RequiredFieldsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize required fields analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(rfc), nil
 }
 
 // validateConfig is used to validate the configuration in the config.RequiredFieldsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	rfc, ok := cfg.(config.RequiredFieldsConfig)
+	rfc, ok := cfg.(*RequiredFieldsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}
@@ -49,9 +54,9 @@ func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
 	switch rfc.PointerPolicy {
-	case "", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix:
+	case "", RequiredFieldPointerWarn, RequiredFieldPointerSuggestFix:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.RequiredFieldPointerWarn, config.RequiredFieldPointerSuggestFix)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", RequiredFieldPointerWarn, RequiredFieldPointerSuggestFix)))
 	}
 
 	return fieldErrors

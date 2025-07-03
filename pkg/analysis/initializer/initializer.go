@@ -18,11 +18,10 @@ package initializer
 import (
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // InitializerFunc is a function that initializes an Analyzer.
-type InitializerFunc func(config.LintersConfig) (*analysis.Analyzer, error)
+type InitializerFunc func(any) (*analysis.Analyzer, error)
 
 // ValidateFunc is a function that validates the configuration for an Analyzer.
 type ValidateFunc func(any, *field.Path) field.ErrorList
@@ -34,7 +33,7 @@ type AnalyzerInitializer interface {
 
 	// Init returns the newly initialized analyzer.
 	// It will be passed the complete LintersConfig and is expected to rely only on its own configuration.
-	Init(config.LintersConfig) (*analysis.Analyzer, error)
+	Init(any) (*analysis.Analyzer, error)
 
 	// IsConfigurable determines whether or not the initializer expects to be provided a config.
 	// When true, the initializer should also match the ConfigurableAnalyzerInitializer interface.
@@ -49,6 +48,9 @@ type AnalyzerInitializer interface {
 // This means it can validate its config.
 type ConfigurableAnalyzerInitializer interface {
 	AnalyzerInitializer
+
+	// ConfigType returns the type of the config for the linter.
+	ConfigType() any
 
 	// ValidateConfig will be called during the config validation phase and is used to validate
 	// the provided config for the linter.
@@ -66,14 +68,15 @@ func NewInitializer(name string, initFunc InitializerFunc, isDefault bool) Analy
 
 // NewConfigurableInitializer constructs a new initializer for intializing a
 // configurable Analyzer.
-func NewConfigurableInitializer(name string, initFunc InitializerFunc, isDefault bool, validateFunc ValidateFunc) ConfigurableAnalyzerInitializer {
+func NewConfigurableInitializer(name string, initFunc InitializerFunc, isDefault bool, configType func() any, validateFunc ValidateFunc) ConfigurableAnalyzerInitializer {
 	return configurableInitializer{
 		initializer: initializer{
 			name:      name,
 			initFunc:  initFunc,
 			isDefault: isDefault,
 		},
-		validateFunc: validateFunc,
+		configTypeFunc: configType,
+		validateFunc:   validateFunc,
 	}
 }
 
@@ -89,8 +92,8 @@ func (i initializer) Name() string {
 }
 
 // Init returns a newly initializr analyzer.
-func (i initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return i.initFunc(cfg)
+func (i initializer) Init(_ any) (*analysis.Analyzer, error) {
+	return i.initFunc(nil)
 }
 
 // IsConfigurable determines whether or not to expect this initializer to
@@ -107,13 +110,24 @@ func (i initializer) Default() bool {
 type configurableInitializer struct {
 	initializer
 
-	validateFunc ValidateFunc
+	configTypeFunc func() any
+	validateFunc   ValidateFunc
+}
+
+// Init returns a newly initialized analyzer.
+func (i configurableInitializer) Init(cfg any) (*analysis.Analyzer, error) {
+	return i.initFunc(cfg)
 }
 
 // IsConfigurable determines whether or not to expect this initializer to
 // be able to be configured with custom configuration.
 func (i configurableInitializer) IsConfigurable() bool {
 	return true
+}
+
+// ConfigType returns the type of the config for the linter.
+func (i configurableInitializer) ConfigType() any {
+	return i.configTypeFunc()
 }
 
 // ValidateConfig validates the configuration for the initializer.

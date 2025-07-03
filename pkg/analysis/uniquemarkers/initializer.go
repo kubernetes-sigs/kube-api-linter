@@ -16,11 +16,12 @@ limitations under the License.
 package uniquemarkers
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
@@ -30,18 +31,24 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &UniqueMarkersConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.UniqueMarkers), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	umc, ok := cfg.(*UniqueMarkersConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize unique markers analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(umc), nil
 }
 
 // validateConfig validates the configuration in the config.UniqueMarkersConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	umc, ok := cfg.(config.UniqueMarkersConfig)
+	umc, ok := cfg.(*UniqueMarkersConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}
@@ -63,7 +70,7 @@ func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
 	return fieldErrors
 }
 
-func validateUniqueMarker(um config.UniqueMarker, fldPath *field.Path) field.ErrorList {
+func validateUniqueMarker(um UniqueMarker, fldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	attrSet := sets.New[string]()
 

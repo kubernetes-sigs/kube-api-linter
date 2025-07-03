@@ -13,23 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package nophase
+package statusoptional
 
-import (
-	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-)
-
-// Initializer returns the AnalyzerInitializer for this
-// Analyzer so that it can be added to the registry.
-func Initializer() initializer.AnalyzerInitializer {
-	return initializer.NewInitializer(
-		name,
-		initAnalyzer,
-		true,
-	)
-}
-
-func initAnalyzer(_ any) (*analysis.Analyzer, error) {
-	return Analyzer, nil
+// StatusOptionalConfig contains configuration for the statusoptional linter.
+type StatusOptionalConfig struct {
+	// preferredOptionalMarker is the preferred marker to use for optional fields.
+	// If this field is not set, the default value is "optional".
+	// Valid values are "optional", "kubebuilder:validation:Optional" and "k8s:optional".
+	PreferredOptionalMarker string `json:"preferredOptionalMarker"`
 }

@@ -18,7 +18,6 @@ package nofloats
 import (
 	"golang.org/x/tools/go/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
@@ -34,6 +33,6 @@ func Initializer() initializer.AnalyzerInitializer {
 	)
 }
 
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
+func initAnalyzer(_ any) (*analysis.Analyzer, error) {
 	return Analyzer, nil
 }

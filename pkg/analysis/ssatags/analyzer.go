@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	kubebuildermarkers "sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -39,14 +38,14 @@ const (
 )
 
 type analyzer struct {
-	cfg config.SSATagsConfig
+	listTypeSetUsage SSATagsListTypeSetUsage
 }
 
-func newAnalyzer(cfg config.SSATagsConfig) *analysis.Analyzer {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *SSATagsConfig) *analysis.Analyzer {
+	defaultConfig(cfg)
 
 	a := &analyzer{
-		cfg: cfg,
+		listTypeSetUsage: cfg.ListTypeSetUsage,
 	}
 
 	return &analysis.Analyzer{
@@ -148,7 +147,7 @@ func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.Ma
 }
 
 func (a *analyzer) checkListTypeSet(pass *analysis.Pass, field *ast.Field) {
-	if a.cfg.ListTypeSetUsage == config.SSATagsListTypeSetUsageIgnore {
+	if a.listTypeSetUsage == SSATagsListTypeSetUsageIgnore {
 		return
 	}
 
@@ -255,8 +254,8 @@ func validListType(listType string) bool {
 	}
 }
 
-func defaultConfig(cfg *config.SSATagsConfig) {
+func defaultConfig(cfg *SSATagsConfig) {
 	if cfg.ListTypeSetUsage == "" {
-		cfg.ListTypeSetUsage = config.SSATagsListTypeSetUsageWarn
+		cfg.ListTypeSetUsage = SSATagsListTypeSetUsageWarn
 	}
 }

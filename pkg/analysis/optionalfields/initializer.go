@@ -21,7 +21,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 // Initializer returns the AnalyzerInitializer for this
@@ -31,18 +30,24 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &OptionalFieldsConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.OptionalFields), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	ofc, ok := cfg.(*OptionalFieldsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize optional fields analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(ofc), nil
 }
 
 // validateConfig validates the configuration in the config.OptionalFieldsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	ofc, ok := cfg.(config.OptionalFieldsConfig)
+	ofc, ok := cfg.(*OptionalFieldsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}
@@ -56,32 +61,32 @@ func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
 }
 
 // validateOptionFieldsPointers is used to validate the configuration in the config.OptionalFieldsPointers struct.
-func validateOptionFieldsPointers(opc config.OptionalFieldsPointers, fldPath *field.Path) field.ErrorList {
+func validateOptionFieldsPointers(opc OptionalFieldsPointers, fldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
 	switch opc.Preference {
-	case "", config.OptionalFieldsPointerPreferenceAlways, config.OptionalFieldsPointerPreferenceWhenRequired:
+	case "", OptionalFieldsPointerPreferenceAlways, OptionalFieldsPointerPreferenceWhenRequired:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preference"), opc.Preference, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.OptionalFieldsPointerPreferenceAlways, config.OptionalFieldsPointerPreferenceWhenRequired)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preference"), opc.Preference, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", OptionalFieldsPointerPreferenceAlways, OptionalFieldsPointerPreferenceWhenRequired)))
 	}
 
 	switch opc.Policy {
-	case "", config.OptionalFieldsPointerPolicySuggestFix, config.OptionalFieldsPointerPolicyWarn:
+	case "", OptionalFieldsPointerPolicySuggestFix, OptionalFieldsPointerPolicyWarn:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), opc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", config.OptionalFieldsPointerPolicySuggestFix, config.OptionalFieldsPointerPolicyWarn)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), opc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", OptionalFieldsPointerPolicySuggestFix, OptionalFieldsPointerPolicyWarn)))
 	}
 
 	return fieldErrors
 }
 
 // validateOptionFieldsOmitEmpty is used to validate the configuration in the config.OptionalFieldsOmitEmpty struct.
-func validateOptionFieldsOmitEmpty(oec config.OptionalFieldsOmitEmpty, fldPath *field.Path) field.ErrorList {
+func validateOptionFieldsOmitEmpty(oec OptionalFieldsOmitEmpty, fldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
 	switch oec.Policy {
-	case "", config.OptionalFieldsOmitEmptyPolicyIgnore, config.OptionalFieldsOmitEmptyPolicyWarn, config.OptionalFieldsOmitEmptyPolicySuggestFix:
+	case "", OptionalFieldsOmitEmptyPolicyIgnore, OptionalFieldsOmitEmptyPolicyWarn, OptionalFieldsOmitEmptyPolicySuggestFix:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), oec.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", config.OptionalFieldsOmitEmptyPolicyIgnore, config.OptionalFieldsOmitEmptyPolicyWarn, config.OptionalFieldsOmitEmptyPolicySuggestFix)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), oec.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", OptionalFieldsOmitEmptyPolicyIgnore, OptionalFieldsOmitEmptyPolicyWarn, OptionalFieldsOmitEmptyPolicySuggestFix)))
 	}
 
 	return fieldErrors
