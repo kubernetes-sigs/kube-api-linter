@@ -16,31 +16,7 @@ limitations under the License.
 package config
 
 // LintersConfig contains configuration for individual linters.
-type LintersConfig struct {
-	// conditions contains configuration for the conditions linter.
-	Conditions ConditionsConfig `json:"conditions"`
-
-	// jsonTags contains configuration for the jsontags linter.
-	JSONTags JSONTagsConfig `json:"jsonTags"`
-
-	// nomaps contains configuration for the nomaps linter.
-	NoMaps NoMapsConfig `json:"nomaps"`
-
-	// optionalFields contains configuration for the optionalfields linter.
-	OptionalFields OptionalFieldsConfig `json:"optionalFields"`
-
-	// optionalOrRequired contains configuration for the optionalorrequired linter.
-	OptionalOrRequired OptionalOrRequiredConfig `json:"optionalOrRequired"`
-
-	// requiredFields contains configuration for the requiredfields linter.
-	RequiredFields RequiredFieldsConfig `json:"requiredFields"`
-
-	// statusOptional contains configuration for the statusoptional linter.
-	StatusOptional StatusOptionalConfig `json:"statusOptional"`
-
-	// uniqueMarkers contains configuration for the uniquemarkers linter.
-	UniqueMarkers UniqueMarkersConfig `json:"uniqueMarkers"`
-}
+type LintersConfig map[string][]byte
 
 // ConditionsFirstField is the policy for the conditions linter.
 type ConditionsFirstField string

@@ -26,7 +26,7 @@ import (
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{})
+	a, err := requiredfields.Initializer().Init(&config.OptionalFieldsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,11 +37,9 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{
-		OptionalFields: config.OptionalFieldsConfig{
-			Pointers: config.OptionalFieldsPointers{
-				Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
-			},
+	a, err := requiredfields.Initializer().Init(&config.OptionalFieldsConfig{
+		Pointers: config.OptionalFieldsPointers{
+			Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
 		},
 	})
 	if err != nil {
@@ -54,14 +52,12 @@ func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 func TestWhenRequiredWithOmitEmptyIgnorePreferenceConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{
-		OptionalFields: config.OptionalFieldsConfig{
-			Pointers: config.OptionalFieldsPointers{
-				Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
-			},
-			OmitEmpty: config.OptionalFieldsOmitEmpty{
-				Policy: config.OptionalFieldsOmitEmptyPolicyIgnore,
-			},
+	a, err := requiredfields.Initializer().Init(&config.OptionalFieldsConfig{
+		Pointers: config.OptionalFieldsPointers{
+			Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
+		},
+		OmitEmpty: config.OptionalFieldsOmitEmpty{
+			Policy: config.OptionalFieldsOmitEmptyPolicyIgnore,
 		},
 	})
 	if err != nil {

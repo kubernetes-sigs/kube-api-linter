@@ -42,8 +42,8 @@ type analyzer struct {
 }
 
 // newAnalyzer creates a new analyzer with the given json tag regex.
-func newAnalyzer(cfg config.JSONTagsConfig) (*analysis.Analyzer, error) {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *config.JSONTagsConfig) (*analysis.Analyzer, error) {
+	defaultConfig(cfg)
 
 	jsonTagRegex, err := regexp.Compile(cfg.JSONTagRegex)
 	if err != nil {

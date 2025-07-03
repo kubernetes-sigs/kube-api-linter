@@ -43,8 +43,8 @@ type analyzer struct {
 }
 
 // newAnalyzer creates a new analyzer.
-func newAnalyzer(cfg config.RequiredFieldsConfig) *analysis.Analyzer {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *config.RequiredFieldsConfig) *analysis.Analyzer {
+	defaultConfig(cfg)
 
 	a := &analyzer{
 		pointerPolicy: cfg.PointerPolicy,

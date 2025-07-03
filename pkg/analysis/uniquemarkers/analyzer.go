@@ -43,7 +43,7 @@ type analyzer struct {
 	uniqueMarkers []config.UniqueMarker
 }
 
-func newAnalyzer(cfg config.UniqueMarkersConfig) *analysis.Analyzer {
+func newAnalyzer(cfg *config.UniqueMarkersConfig) *analysis.Analyzer {
 	a := &analyzer{
 		uniqueMarkers: append(defaultUniqueMarkers(), cfg.CustomMarkers...),
 	}

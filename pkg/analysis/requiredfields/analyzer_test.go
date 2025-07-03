@@ -26,7 +26,7 @@ import (
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{})
+	a, err := requiredfields.Initializer().Init(&config.RequiredFieldsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +37,8 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestWithPointerPolicyWarn(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{
-		RequiredFields: config.RequiredFieldsConfig{
-			PointerPolicy: config.RequiredFieldPointerWarn,
-		},
+	a, err := requiredfields.Initializer().Init(&config.RequiredFieldsConfig{
+		PointerPolicy: config.RequiredFieldPointerWarn,
 	})
 	if err != nil {
 		t.Fatal(err)

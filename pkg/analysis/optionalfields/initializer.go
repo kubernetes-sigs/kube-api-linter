@@ -31,18 +31,24 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &config.OptionalFieldsConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.OptionalFields), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	ofc, ok := cfg.(*config.OptionalFieldsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize optional fields analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(ofc), nil
 }
 
 // validateConfig validates the configuration in the config.OptionalFieldsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	ofc, ok := cfg.(config.OptionalFieldsConfig)
+	ofc, ok := cfg.(*config.OptionalFieldsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}

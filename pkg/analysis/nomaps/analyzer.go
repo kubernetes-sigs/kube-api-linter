@@ -39,8 +39,8 @@ type analyzer struct {
 }
 
 // newAnalyzer creates a new analyzer.
-func newAnalyzer(cfg config.NoMapsConfig) *analysis.Analyzer {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *config.NoMapsConfig) *analysis.Analyzer {
+	defaultConfig(cfg)
 
 	a := &analyzer{
 		policy: cfg.Policy,

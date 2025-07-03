@@ -31,18 +31,24 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &config.NoMapsConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.NoMaps), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	nmc, ok := cfg.(*config.NoMapsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize no maps analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(nmc), nil
 }
 
 // validateConfig is used to validate the configuration in the config.NoMapsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	nmc, ok := cfg.(config.NoMapsConfig)
+	nmc, ok := cfg.(*config.NoMapsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}

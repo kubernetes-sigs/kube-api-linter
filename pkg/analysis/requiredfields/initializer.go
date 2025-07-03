@@ -31,17 +31,23 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &config.RequiredFieldsConfig{} },
 		validateConfig,
 	)
 }
 
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.RequiredFields), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	rfc, ok := cfg.(*config.RequiredFieldsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize required fields analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(rfc), nil
 }
 
 // validateConfig is used to validate the configuration in the config.RequiredFieldsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	rfc, ok := cfg.(config.RequiredFieldsConfig)
+	rfc, ok := cfg.(*config.RequiredFieldsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}

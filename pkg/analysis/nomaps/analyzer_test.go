@@ -26,7 +26,7 @@ import (
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{})
+	a, err := nomaps.Initializer().Init(&config.NoMapsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +37,8 @@ func Test(t *testing.T) {
 func TestWithEnforce(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{
-		NoMaps: config.NoMapsConfig{
-			Policy: config.NoMapsEnforce,
-		},
+	a, err := nomaps.Initializer().Init(&config.NoMapsConfig{
+		Policy: config.NoMapsEnforce,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -52,10 +50,8 @@ func TestWithEnforce(t *testing.T) {
 func TestWithAllowStringToStringMaps(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{
-		NoMaps: config.NoMapsConfig{
-			Policy: config.NoMapsAllowStringToStringMaps,
-		},
+	a, err := nomaps.Initializer().Init(&config.NoMapsConfig{
+		Policy: config.NoMapsAllowStringToStringMaps,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -67,10 +63,8 @@ func TestWithAllowStringToStringMaps(t *testing.T) {
 func TestWithIgnore(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{
-		NoMaps: config.NoMapsConfig{
-			Policy: config.NoMapsIgnore,
-		},
+	a, err := nomaps.Initializer().Init(&config.NoMapsConfig{
+		Policy: config.NoMapsIgnore,
 	})
 	if err != nil {
 		t.Fatal(err)

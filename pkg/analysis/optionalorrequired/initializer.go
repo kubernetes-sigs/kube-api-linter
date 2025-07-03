@@ -32,17 +32,23 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &config.OptionalOrRequiredConfig{} },
 		validateConfig,
 	)
 }
 
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.OptionalOrRequired), nil
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	oorc, ok := cfg.(*config.OptionalOrRequiredConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize optional or required analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(oorc), nil
 }
 
 // validateConfig is used to validate the configuration in the config.OptionalOrRequiredConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	oorc, ok := cfg.(config.OptionalOrRequiredConfig)
+	oorc, ok := cfg.(*config.OptionalOrRequiredConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}

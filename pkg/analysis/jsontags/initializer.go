@@ -32,17 +32,23 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
+		func() any { return &config.JSONTagsConfig{} },
 		validateConfig,
 	)
 }
 
-func initAnalyzer(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.JSONTags)
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	jtc, ok := cfg.(*config.JSONTagsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize JSON tags analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(jtc)
 }
 
 // validateConfig is used to validate the configuration in the config.JSONTagsConfig struct.
 func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	jtc, ok := cfg.(config.JSONTagsConfig)
+	jtc, ok := cfg.(*config.JSONTagsConfig)
 	if !ok {
 		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
 	}

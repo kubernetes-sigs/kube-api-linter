@@ -27,7 +27,7 @@ import (
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{})
+	a, err := optionalorrequired.Initializer().Init(&config.OptionalOrRequiredConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,11 +38,9 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestSwappedMarkerPriority(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{
-		OptionalOrRequired: config.OptionalOrRequiredConfig{
-			PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
-			PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
-		},
+	a, err := optionalorrequired.Initializer().Init(&config.OptionalOrRequiredConfig{
+		PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+		PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +52,7 @@ func TestSwappedMarkerPriority(t *testing.T) {
 func TestTypeSpec(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{})
+	a, err := optionalorrequired.Initializer().Init(&config.OptionalOrRequiredConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
