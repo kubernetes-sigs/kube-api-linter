@@ -18,12 +18,17 @@ package analysis_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"gopkg.in/yaml.v3"
 
 	goanalysis "golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 var _ = Describe("Registry", func() {
@@ -136,4 +141,105 @@ var _ = Describe("Registry", func() {
 			}),
 		)
 	})
+
+	Context("ValidateLintersConfig", func() {
+		type validateLintersConfigTableInput struct {
+			linters     config.Linters
+			config      config.LintersConfig
+			expectedErr string
+		}
+
+		DescribeTable("Validate Linters Configuration", func(in validateLintersConfigTableInput) {
+			r := analysis.NewRegistry()
+			errs := r.ValidateLintersConfig(in.linters, in.config, field.NewPath("lintersConfig"))
+			if len(in.expectedErr) > 0 {
+				Expect(errs.ToAggregate()).To(MatchError(in.expectedErr))
+			} else {
+				Expect(errs).To(HaveLen(0), "No errors were expected")
+			}
+		},
+			Entry("Empty config", validateLintersConfigTableInput{
+				linters:     config.Linters{},
+				config:      config.LintersConfig{},
+				expectedErr: "",
+			}),
+
+			Entry("With a valid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
+				linters: config.Linters{},
+				config: config.LintersConfig{
+					"jsontags": toYaml(jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$",
+					}),
+				},
+			}),
+			Entry("With an invalid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"jsontags": toYaml(jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",
+					}),
+				},
+				expectedErr: "lintersConfig.jsontags.jsonTagRegex: Invalid value: \"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*\": invalid regex: error parsing regexp: missing closing ): `^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*`",
+			}),
+			Entry("With a valid JSONTagsConfig JSONTagRegex (legacy field name)", validateLintersConfigTableInput{
+				linters: config.Linters{},
+				config: config.LintersConfig{
+					"jsonTags": toYaml(jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$",
+					}),
+				},
+			}),
+			Entry("With an invalid JSONTagsConfig JSONTagRegex (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"jsonTags": toYaml(jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",
+					}),
+				},
+				expectedErr: "lintersConfig.jsontags.jsonTagRegex: Invalid value: \"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*\": invalid regex: error parsing regexp: missing closing ): `^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*`",
+			}),
+
+			Entry("With a valid OptionalOrRequiredConfig (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: markers.OptionalMarker,
+						PreferredRequiredMarker: markers.RequiredMarker,
+					}),
+				},
+				expectedErr: "",
+			}),
+			Entry("With kubebuilder preferred markers (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+						PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
+					}),
+				},
+				expectedErr: "",
+			}),
+			Entry("With invalid preferred optional marker (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: "invalid",
+					}),
+				},
+				expectedErr: "lintersConfig.optionalorrequired.preferredOptionalMarker: Invalid value: \"invalid\": invalid value, must be one of \"optional\", \"kubebuilder:validation:Optional\" or omitted",
+			}),
+			Entry("With invalid preferred required marker (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": toYaml(optionalorrequired.OptionalOrRequiredConfig{
+						PreferredRequiredMarker: "invalid",
+					}),
+				},
+				expectedErr: "lintersConfig.optionalorrequired.preferredRequiredMarker: Invalid value: \"invalid\": invalid value, must be one of \"required\", \"kubebuilder:validation:Required\" or omitted",
+			}),
+		)
+	})
 })
+
+func toYaml(v any) []byte {
+	yaml, err := yaml.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+
+	return yaml
+}
