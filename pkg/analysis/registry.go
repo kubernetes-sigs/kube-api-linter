@@ -197,9 +197,14 @@ func getLinterTypedConfig(ci initializer.ConfigurableAnalyzerInitializer, linter
 		return ci.ConfigType(), nil
 	}
 
+	encodedConfig, err := yaml.Marshal(rawConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error encoding config for linter %q: %w", ci.Name(), err)
+	}
+
 	linterConfig := ci.ConfigType()
 
-	if err := yaml.Unmarshal(rawConfig, linterConfig); err != nil {
+	if err := yaml.Unmarshal(encodedConfig, linterConfig); err != nil {
 		return nil, fmt.Errorf("error reading config for linter %q: %w", ci.Name(), err)
 	}
 
@@ -211,7 +216,7 @@ func getLinterTypedConfig(ci initializer.ConfigurableAnalyzerInitializer, linter
 // It also supports backwards compatibility with early configuration.
 // We use to have camelCased config names, but now it is all lowercase matched on the linter name.
 // TODO(@JoelSpeed): Remove the strings.ToLower in a future release with a release note about the change.
-func getConfigByName(name string, lintersCfg config.LintersConfig) ([]byte, bool) {
+func getConfigByName(name string, lintersCfg config.LintersConfig) (any, bool) {
 	rawConfig, ok := lintersCfg[name]
 	if ok {
 		return rawConfig, true
