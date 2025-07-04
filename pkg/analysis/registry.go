@@ -57,10 +57,6 @@ type Registry interface {
 	// InitializeLinters returns a set of newly initialized linters based on the
 	// provided configuration.
 	InitializeLinters(config.Linters, config.LintersConfig) ([]*analysis.Analyzer, error)
-
-	// ValidateLintersConfig validates the provided linters config
-	// against the set or registered linters.
-	ValidateLintersConfig(config.Linters, config.LintersConfig, *field.Path) field.ErrorList
 }
 
 type registry struct {
@@ -120,6 +116,10 @@ func (r *registry) AllLinters() sets.Set[string] {
 
 // InitializeLinters returns a list of initialized linters based on the provided config.
 func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.LintersConfig) ([]*analysis.Analyzer, error) {
+	if errs := r.validateLintersConfig(cfg, lintersCfg, field.NewPath("lintersConfig")); len(errs) > 0 {
+		return nil, fmt.Errorf("error validating linters config: %w", errs.ToAggregate())
+	}
+
 	analyzers := []*analysis.Analyzer{}
 	errs := []error{}
 
@@ -147,9 +147,9 @@ func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.Linte
 	return analyzers, kerrors.NewAggregate(errs)
 }
 
-// ValidateLintersConfig validates the provided linters config
+// validateLintersConfig validates the provided linters config
 // against the set or registered linters.
-func (r *registry) ValidateLintersConfig(cfg config.Linters, lintersCfg config.LintersConfig, fieldPath *field.Path) field.ErrorList {
+func (r *registry) validateLintersConfig(cfg config.Linters, lintersCfg config.LintersConfig, fieldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	validatedLinters := sets.New[string]()
 
