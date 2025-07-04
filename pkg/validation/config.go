@@ -17,6 +17,7 @@ package validation
 
 import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
@@ -30,7 +31,7 @@ func ValidateGolangCIConfig(g config.GolangCIConfig, fldPath *field.Path) error 
 	var fieldErrors field.ErrorList
 
 	fieldErrors = append(fieldErrors, ValidateLinters(g.Linters, fldPath.Child("linters"))...)
-	fieldErrors = append(fieldErrors, ValidateLintersConfig(g.Linters, g.LintersConfig, fldPath.Child("lintersConfig"))...)
+	fieldErrors = append(fieldErrors, analysis.NewRegistry().ValidateLintersConfig(g.Linters, g.LintersConfig, fldPath.Child("lintersConfig"))...)
 
 	return fieldErrors.ToAggregate()
 }
