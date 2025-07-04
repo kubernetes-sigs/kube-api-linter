@@ -407,6 +407,40 @@ var _ = Describe("LintersConfig", func() {
 			expectedErr: "lintersConfig.requiredFields.pointerPolicy: Invalid value: \"invalid\": invalid value, must be one of \"Warn\", \"SuggestFix\" or omitted",
 		}),
 
+		// SSATagsConfig validation
+		Entry("With a valid SSATagsConfig: Warn", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				SSATags: config.SSATagsConfig{
+					ListTypeSetUsage: config.SSATagsListTypeSetUsageWarn,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With a valid SSATagsConfig: SuggestFix", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				SSATags: config.SSATagsConfig{
+					ListTypeSetUsage: config.SSATagsListTypeSetUsageSuggestFix,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With a valid SSATagsConfig: Ignore", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				SSATags: config.SSATagsConfig{
+					ListTypeSetUsage: config.SSATagsListTypeSetUsageIgnore,
+				},
+			},
+			expectedErr: "",
+		}),
+		Entry("With an invalid SSATagsConfig", validateLintersConfigTableInput{
+			config: config.LintersConfig{
+				SSATags: config.SSATagsConfig{
+					ListTypeSetUsage: "invalid",
+				},
+			},
+			expectedErr: "lintersConfig.ssaTags.listTypeSetUsage: Invalid value: \"invalid\": invalid value, must be one of \"Warn\", \"SuggestFix\", \"Ignore\" or omitted",
+		}),
+
 		// StatusOptionalConfig validation
 		Entry("With a valid StatusOptionalConfig", validateLintersConfigTableInput{
 			config: config.LintersConfig{

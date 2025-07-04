@@ -149,6 +149,12 @@ const (
 
 	// KubebuilderItemsXValidationMarker is the marker used to specify CEL validation rules for entries to a nested array type or field in kubebuilder.
 	KubebuilderItemsXValidationMarker = "kubebuilder:validation:items:XValidation"
+
+	// KubebuilderListTypeMarker is the marker used to specify the type of list for server-side apply operations.
+	KubebuilderListTypeMarker = "kubebuilder:listType"
+
+	// KubebuilderListMapKeyMarker is the marker used to specify the key field for map-type lists.
+	KubebuilderListMapKeyMarker = "kubebuilder:listMapKey"
 )
 
 const (
