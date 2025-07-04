@@ -36,12 +36,10 @@ func (initializer) Name() string {
 
 // Init returns the intialized Analyzer.
 func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return Analyzer, nil
+	return newAnalyzer(cfg.SSATags), nil
 }
 
 // Default determines whether this Analyzer is on by default, or not.
 func (initializer) Default() bool {
-	// Duplicated markers are a sign of bad code, and should be avoided.
-	// This is a good rule to have on by default.
 	return true
 }

@@ -20,9 +20,40 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/ssatags"
+	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, ssatags.Analyzer, "a")
+	a, err := ssatags.Initializer().Init(config.LintersConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "a")
+}
+
+func TestWithListTypeSetUsageWarn(t *testing.T) {
+	testdata := analysistest.TestData()
+	a, err := ssatags.Initializer().Init(config.LintersConfig{
+		SSATags: config.SSATagsConfig{
+			ListTypeSetUsage: config.SSATagsListTypeSetUsageWarn,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
+}
+
+func TestWithListTypeSetUsageSuggestFix(t *testing.T) {
+	testdata := analysistest.TestData()
+	a, err := ssatags.Initializer().Init(config.LintersConfig{
+		SSATags: config.SSATagsConfig{
+			ListTypeSetUsage: config.SSATagsListTypeSetUsageSuggestFix,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "c")
 }
