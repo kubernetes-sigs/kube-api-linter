@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
-func Test(t *testing.T) {
+func TestWithDefaultListTypeSetUsage(t *testing.T) {
 	testdata := analysistest.TestData()
 	a, err := ssatags.Initializer().Init(config.LintersConfig{})
 	if err != nil {
@@ -32,11 +32,11 @@ func Test(t *testing.T) {
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "a")
 }
 
-func TestWithListTypeSetUsageWarn(t *testing.T) {
+func TestWithListTypeSetUsageIgnore(t *testing.T) {
 	testdata := analysistest.TestData()
 	a, err := ssatags.Initializer().Init(config.LintersConfig{
 		SSATags: config.SSATagsConfig{
-			ListTypeSetUsage: config.SSATagsListTypeSetUsageWarn,
+			ListTypeSetUsage: config.SSATagsListTypeSetUsageIgnore,
 		},
 	})
 	if err != nil {

@@ -42,6 +42,8 @@ type analyzer struct {
 }
 
 func newAnalyzer(cfg config.SSATagsConfig) *analysis.Analyzer {
+	defaultConfig(&cfg)
+
 	a := &analyzer{
 		cfg: cfg.ListTypeSetUsage,
 	}

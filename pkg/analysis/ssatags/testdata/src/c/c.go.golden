@@ -1,10 +1,9 @@
-package a
+package c
 
 type SSATagsSpec struct {
 	// +kubebuilder:listType=atomic
 	AtomicList []string `json:"atomicList,omitempty"`
 
-	// +kubebuilder:listType=set
 	SetList []string `json:"setList,omitempty"` // want "listType=set is forbidden, use listType=atomic or listType=map instead"
 
 	// +kubebuilder:listType=map
