@@ -133,16 +133,17 @@ func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.Ma
 }
 
 func (a *analyzer) checkListTypeSet(pass *analysis.Pass, listTypeMarker markers.Marker, field *ast.Field) {
-	fieldName := utils.FieldName(field)
-
-	if a.cfg == "" {
+	if a.cfg == config.SSATagsListTypeSetUsageIgnore {
 		return
 	}
+
+	fieldName := utils.FieldName(field)
 
 	diagnostic := analysis.Diagnostic{
 		Pos:     field.Pos(),
 		Message: fmt.Sprintf("listType=set is forbidden, use listType=%s or listType=%s instead", listTypeAtomic, listTypeMap),
 	}
+
 	if a.cfg == config.SSATagsListTypeSetUsageWarn {
 		pass.Report(diagnostic)
 	}
