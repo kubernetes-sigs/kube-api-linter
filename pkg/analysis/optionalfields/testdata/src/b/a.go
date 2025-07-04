@@ -171,10 +171,15 @@ type A struct {
 	// +optional
 	StructWithMinProperties B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties is optional and should be a pointer"
 
-	// StructWithMinPropertiesAndOmitEmptyTag is a struct field with a minimum number of properties.
+	// structWithMinPropertiesAndOmitEmptyAndOmitZero is a struct field with a minimum number of properties and has both omitzero and omitemtpy tag.
 	// +kubebuilder:validation:MinProperties=1
 	// +optional
-	StructWithMinPropertiesAndOmitEmptyTag B `json:"structWithMinPropertiesAndOmitEmptyTag,omitempty,omitzero"`
+	StructWithMinPropertiesAndOmitEmptyAndOmitZero B `json:"structWithMinPropertiesAndOmitEmptyAndOmitZero,omitempty,omitzero"`
+
+	// structWithOnlyOmitZeroTag is a struct field with a minimum number of properties and has only omitzero tag.
+	// +kubebuilder:validation:MinProperties=1
+	// +optional
+	StructWithOnlyOmitZeroTag B `json:"structWithOnlyOmitZeroTag,omitzero"` // want "field StructWithOnlyOmitZeroTag is optional and should have the omitempty tag"
 
 	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
 	// +optional

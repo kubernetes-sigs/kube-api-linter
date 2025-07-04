@@ -25,7 +25,7 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
-
+	"k8s.io/utils/set"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 )
 
@@ -142,15 +142,15 @@ func extractTagInfo(tag *ast.BasicLit) FieldTagInfo {
 	}
 
 	tagName := tagValues[0]
+	tagSet := set.New[string](tagValues...)
 
 	return FieldTagInfo{
 		Name:      tagName,
-		OmitEmpty: (len(tagValues) == 2 && tagValues[1] == omitEmpty) || (len(tagValues) == 3 && (tagValues[1] == omitEmpty || tagValues[2] == omitEmpty)),
-		// Considering, omitzero will always coexist with omitemtpy and it can be either second or third tag.
-		OmitZero: len(tagValues) == 3 && (tagValues[1] == omitZero || tagValues[2] == omitZero),
-		RawValue: tagValue,
-		Pos:      pos,
-		End:      end,
+		OmitEmpty: tagSet.Has(omitEmpty),
+		OmitZero:  tagSet.Has(omitZero),
+		RawValue:  tagValue,
+		Pos:       pos,
+		End:       end,
 	}
 }
 
