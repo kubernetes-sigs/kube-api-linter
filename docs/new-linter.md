@@ -24,70 +24,82 @@ Once you are within the `inspect.Preorder`, you can then implement the business 
 The registry in the analysis package co-ordinates the initialization of all linters.
 Where linters have configuration, or are enabled/disabled by higher level configuration, the registry takes on making sure the linters are initialized correctly.
 
-To enable the registry, each linter package must create an `Initializer` function that returns an `analysis.AnalyzerInitializer` interface (from `pkg/analysis`).
+To enable the registry, each linter package must create an `Initializer` function that returns an `initializer.AnalyzerInitializer` interface (from `pkg/analysis/initializer`).
 
 It is expected that each linter package contain a file `initializer.go`, the content of this file should be as follows:
 
 ```go
+func init() {
+    // Register the linter with the registry when the package is imported.
+    kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
+
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewInitializer(
+		name, // A constant containing the name of the linter. This should be lowercase.
+		initAnalyzer, // A function that returns the initialized Analyzer.
+		true, // Whether the linter is enabled by default.
+	)
 }
 
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
-
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
-}
-
-// Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.MyLinterConfig)
-}
-
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	return true // or false
+// initAnalyzer returns the intialized Analyzer.
+func initAnalyzer(_ any) (*analysis.Analyzer, error) {
+	return Analyzer, nil
 }
 ```
 
-This pattern allows the linter to be registered with the KAL registry, and allows the linter to be initialized with configuration.
+This pattern allows the linter to be registered with the KAL registry, and allows the linter to be initialized.
 
-Once you have created the `initializer.go` file, you will need to add the linter to the `pkg/analysis/registry.go` file.
+Once you have created the `initializer.go` file, you will need to import the linter package in the `pkg/analysis/registration/registration.go` file.
 
-Add the initializer to the `NewRegistry` function, and it will then be included in the linter builds.
-
-```go
-func NewRegistry() []*analysis.Analyzer {
-    return []*analysis.Analyzer{
-        // Add the new linter here
-        mynewlinter.Initializer(),
-    }
-}
-```
+Once imported, the analyzer will be included in the linter builds.
 
 ## Configuration
 
-If the linter requires configuration, the configuration should be added to the `config` package.
-
-Add a new structure (or structures) to the `linters_config.go` file.
-Include a new field for the top level configuration to the `LintersConfig` struct, using the name of the linter, in camel case for the `json` tag.
-
-Any options for the linter, should also be validated.
-Validation lives in the `validation` package.
-
-Within the `ValidateLintersConfig` function, in the `linters_config.go` file, you will need to add
-a line as below, to include any configuration validation for the new linter.
-There are already examples of this in the file.
+Where the linter requires configuration, a slightly different pattern is used in `initializer.go`.
+This time, use `NewConfigurableInitializer` instead of `NewInitializer` and pass in a function to validate the linter configuration.
+You will also need to pass a function to initialize a new pointer to the configuration struct for the linter.
 
 ```go
-fieldErrors = append(fieldErrors, validateMyNewLint(lc.MyNewLinter, fldPath.Child("myNewLinter"))...)
+
+func init() {
+	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
+
+// Initializer returns the AnalyzerInitializer for this
+// Analyzer so that it can be added to the registry.
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewConfigurableInitializer(
+		name, // A constant containing the name of the linter. This should be lowercase.
+		initAnalyzer, // A function that returns the initialized Analyzer.
+		true, // Whether the linter is enabled by default.
+		func() any { return &Config{} }, // A function that returns a new pointer to the configuration struct for the linter.
+		validateLintersConfig, // A function that validates the linter configuration.
+	)
+}
+
+// initAnalyzer returns the intialized Analyzer.
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+    cc, ok := cfg.(*ConditionsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize conditions analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
+
+	return newAnalyzer(), nil
+}
+
+// validateLintersConfig validates the linter configuration.
+func validateLintersConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	... // Validate the linter configuration.
+}
 ```
 
-The validations should use the `field.Error` pattern to provide consistent error messages.
+The configuration struct should be defined within the analyzer package alongside the code.
+
+Validation should be implemented in the `validateLintersConfig` function to ensure that the configuration is valid.
+This validation function will be called before the `initAnalyzer` function is called.
 
 ## Helpers
 
