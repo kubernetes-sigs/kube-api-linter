@@ -137,7 +137,7 @@ func (a *analyzer) checkFieldProperties(pass *analysis.Pass, field *ast.Field, f
 	if a.pointerPreference == OptionalFieldsPointerPreferenceAlways {
 		// The field must always be a pointer, pointers require omitempty, so enforce that too.
 		a.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying)
-		a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
+		a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, hasOmitZero, hasValidZeroValue, isStruct, jsonTags)
 
 		return
 	}
@@ -149,17 +149,17 @@ func (a *analyzer) checkFieldProperties(pass *analysis.Pass, field *ast.Field, f
 		a.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, hasOmitEmpty, hasOmitZero, hasValidZeroValue, completeValidation, isPointer, isStruct)
 	} else {
 		// The field does not have omitempty, and does not require it.
-		a.checkFieldPropertiesWithoutOmitEmpty(pass, field, fieldName, jsonTags, underlying, hasValidZeroValue, completeValidation, isPointer, isStruct)
+		a.checkFieldPropertiesWithoutOmitEmpty(pass, field, fieldName, jsonTags, underlying, hasValidZeroValue, completeValidation, isPointer, isStruct, hasOmitZero)
 	}
 }
 
 func (a *analyzer) checkFieldPropertiesWithOmitEmptyRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasOmitEmpty, hasOmitZero, hasValidZeroValue, completeValidation, isPointer, isStruct bool) {
 	// In this case, we should always add the omitempty if it isn't present.
-	a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
+	a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, hasOmitZero, hasValidZeroValue, isStruct, jsonTags)
 
 	switch {
 	case !hasValidZeroValue && isStruct && hasOmitZero:
-		// The struct field need not be pointer if it does not have valid zero value and has omitzero tag.
+		// The struct field need not be pointer if it does not have a valid zero value and has omitzero tag.
 		return
 	case hasValidZeroValue && !completeValidation:
 		a.handleIncompleteFieldValidation(pass, field, fieldName, isPointer, underlying)
@@ -174,7 +174,7 @@ func (a *analyzer) checkFieldPropertiesWithOmitEmptyRequired(pass *analysis.Pass
 	}
 }
 
-func (a *analyzer) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasValidZeroValue, completeValidation, isPointer, isStruct bool) {
+func (a *analyzer) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasValidZeroValue, completeValidation, isPointer, isStruct, hasOmitZero bool) {
 	switch {
 	case hasValidZeroValue:
 		// The field is not omitempty, and the zero value is valid, the field does not need to be a pointer.
@@ -225,8 +225,13 @@ func (a *analyzer) handleFieldShouldNotBePointer(pass *analysis.Pass, field *ast
 	reportShouldRemovePointer(pass, field, a.pointerPolicy, fieldName, message)
 }
 
-func (a *analyzer) handleFieldShouldHaveOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, hasOmitEmpty bool, jsonTags extractjsontags.FieldTagInfo) {
+func (a *analyzer) handleFieldShouldHaveOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, hasOmitEmpty, hasOmitZero, hasValidZeroValue, isStruct bool, jsonTags extractjsontags.FieldTagInfo) {
 	if hasOmitEmpty {
+		return
+	}
+
+	if !hasValidZeroValue && isStruct && hasOmitZero {
+		// The struct field need not have omitempty tag if it does not have a valid zero value and has omitzero tag.
 		return
 	}
 
