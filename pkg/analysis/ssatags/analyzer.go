@@ -21,6 +21,8 @@ import (
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
+
+	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
@@ -59,7 +61,7 @@ func newAnalyzer(cfg config.SSATagsConfig) *analysis.Analyzer {
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
-		return nil, nil
+		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
 	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
@@ -80,63 +82,85 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	}
 
 	fieldName := utils.FieldName(field)
-
 	listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListTypeMarker)
+
 	if len(listTypeMarkers) == 0 {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf("%s should have a listType marker (atomic, set, or map)", fieldName),
 		})
+
 		return
 	}
 
-	listTypeMarker := listTypeMarkers[0]
+	for _, marker := range listTypeMarkers {
+		listType := strings.TrimSpace(marker.Expressions[""])
+		a.checkListTypeMarker(pass, listType, field)
 
-	listType := strings.TrimSpace(listTypeMarker.Expressions[""])
+		if listType == listTypeMap {
+			a.checkListTypeMap(pass, fieldMarkers, field)
+		}
+
+		if listType == listTypeSet {
+			a.checkListTypeSet(pass, marker, field)
+		}
+	}
+}
+
+func (a *analyzer) checkListTypeMarker(pass *analysis.Pass, listType string, field *ast.Field) {
+	fieldName := utils.FieldName(field)
+
 	if !validListType(listType) {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf("%s has invalid listType %q, must be one of: atomic, set, map", fieldName, listType),
 		})
+
+		return
+	}
+}
+
+func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.MarkerSet, field *ast.Field) {
+	listMapKeyMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListMapKeyMarker)
+	fieldName := utils.FieldName(field)
+
+	if len(listMapKeyMarkers) == 0 {
+		pass.Report(analysis.Diagnostic{
+			Pos:     field.Pos(),
+			Message: fmt.Sprintf("%s with listType=map must have at least one listMapKey marker", fieldName),
+		})
+	}
+}
+
+func (a *analyzer) checkListTypeSet(pass *analysis.Pass, listTypeMarker markers.Marker, field *ast.Field) {
+	fieldName := utils.FieldName(field)
+
+	if a.cfg == "" {
 		return
 	}
 
-	if listType == listTypeMap {
-		listMapKeyMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListMapKeyMarker)
-		if len(listMapKeyMarkers) == 0 {
-			pass.Report(analysis.Diagnostic{
-				Pos:     field.Pos(),
-				Message: fmt.Sprintf("%s with listType=map must have at least one listMapKey marker", fieldName),
-			})
-		}
+	diagnostic := analysis.Diagnostic{
+		Pos:     field.Pos(),
+		Message: fmt.Sprintf("listType=set is forbidden, use listType=%s or listType=%s instead", listTypeAtomic, listTypeMap),
+	}
+	if a.cfg == config.SSATagsListTypeSetUsageWarn {
+		pass.Report(diagnostic)
 	}
 
-	if listType == listTypeSet {
-		if a.cfg == "" {
-			return
-		}
-		diagnostic := analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf("listType=set is forbidden, use listType=%s or listType=%s instead", listTypeAtomic, listTypeMap),
-		}
-		if a.cfg == config.SSATagsListTypeSetUsageWarn {
-			pass.Report(diagnostic)
-		}
-		if a.cfg == config.SSATagsListTypeSetUsageSuggestFix {
-			diagnostic.SuggestedFixes = []analysis.SuggestedFix{
-				{
-					Message: fmt.Sprintf("Remove listType=set from %s", fieldName),
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     listTypeMarker.Pos,
-							End:     listTypeMarker.End,
-							NewText: []byte{},
-						},
+	if a.cfg == config.SSATagsListTypeSetUsageSuggestFix {
+		diagnostic.SuggestedFixes = []analysis.SuggestedFix{
+			{
+				Message: fmt.Sprintf("Remove listType=set from %s", fieldName),
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos:     listTypeMarker.Pos,
+						End:     listTypeMarker.End,
+						NewText: []byte{},
 					},
 				},
-			}
-			pass.Report(diagnostic)
+			},
 		}
+		pass.Report(diagnostic)
 	}
 }
 

@@ -25,15 +25,18 @@ import (
 
 func TestWithDefaultListTypeSetUsage(t *testing.T) {
 	testdata := analysistest.TestData()
+
 	a, err := ssatags.Initializer().Init(config.LintersConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "a")
 }
 
 func TestWithListTypeSetUsageIgnore(t *testing.T) {
 	testdata := analysistest.TestData()
+
 	a, err := ssatags.Initializer().Init(config.LintersConfig{
 		SSATags: config.SSATagsConfig{
 			ListTypeSetUsage: config.SSATagsListTypeSetUsageIgnore,
@@ -42,11 +45,13 @@ func TestWithListTypeSetUsageIgnore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
 }
 
 func TestWithListTypeSetUsageSuggestFix(t *testing.T) {
 	testdata := analysistest.TestData()
+
 	a, err := ssatags.Initializer().Init(config.LintersConfig{
 		SSATags: config.SSATagsConfig{
 			ListTypeSetUsage: config.SSATagsListTypeSetUsageSuggestFix,
@@ -55,5 +60,6 @@ func TestWithListTypeSetUsageSuggestFix(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "c")
 }

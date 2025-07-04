@@ -272,6 +272,7 @@ type SSATagsConfig struct {
 	ListTypeSetUsage SSATagsListTypeSetUsage `json:"listTypeSetUsage"`
 }
 
+// SSATagsListTypeSetUsage is the policy for the listType=set usage in the ssatags linter.
 type SSATagsListTypeSetUsage string
 
 const (
