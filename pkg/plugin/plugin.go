@@ -22,12 +22,16 @@ import (
 	"fmt"
 
 	"golang.org/x/tools/go/analysis"
-	kubeapilinter "sigs.k8s.io/kube-api-linter"
+	pluginbase "sigs.k8s.io/kube-api-linter/pkg/plugin/base"
+
+	// Import the default linters.
+	// DO NOT ADD DIRECTLY TO THIS FILE.
+	_ "sigs.k8s.io/kube-api-linter/pkg/registration"
 )
 
 // New API, see https://github.com/golangci/golangci-lint/pull/3887.
 func New(pluginSettings any) ([]*analysis.Analyzer, error) {
-	plugin, err := kubeapilinter.New(pluginSettings)
+	plugin, err := pluginbase.New(pluginSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error creating plugin: %w", err)
 	}
