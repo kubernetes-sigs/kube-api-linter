@@ -18,27 +18,11 @@ package analysis
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"golang.org/x/tools/go/analysis"
 	"gopkg.in/yaml.v3"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/nofloats"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/ssatags"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/statusoptional"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/statussubresource"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/uniquemarkers"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -46,8 +30,22 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
+// defaultRegistry is the default registry instance.
+//
+//nolint:gochecknoglobals
+var defaultRegistry = NewRegistry()
+
+// DefaultRegistry is the default registry instance.
+// It is global and allows blank import style registration of linters.
+func DefaultRegistry() Registry {
+	return defaultRegistry
+}
+
 // Registry is used to fetch and initialize analyzers.
 type Registry interface {
+	// RegisterLinter adds the given linter to the registry.
+	RegisterLinter(initializer.AnalyzerInitializer)
+
 	// DefaultLinters returns the names of linters that are enabled by default.
 	DefaultLinters() sets.Set[string]
 
@@ -60,37 +58,31 @@ type Registry interface {
 }
 
 type registry struct {
+	lock         sync.RWMutex
 	initializers []initializer.AnalyzerInitializer
 }
 
 // NewRegistry returns a new registry, from which analyzers can be fetched.
 func NewRegistry() Registry {
 	return &registry{
-		initializers: []initializer.AnalyzerInitializer{
-			conditions.Initializer(),
-			commentstart.Initializer(),
-			duplicatemarkers.Initializer(),
-			integers.Initializer(),
-			jsontags.Initializer(),
-			maxlength.Initializer(),
-			nobools.Initializer(),
-			nofloats.Initializer(),
-			nomaps.Initializer(),
-			nophase.Initializer(),
-			optionalfields.Initializer(),
-			optionalorrequired.Initializer(),
-			requiredfields.Initializer(),
-			ssatags.Initializer(),
-			statusoptional.Initializer(),
-			statussubresource.Initializer(),
-			uniquemarkers.Initializer(),
-		},
+		initializers: []initializer.AnalyzerInitializer{},
 	}
+}
+
+// RegisterLinter registers the linter with the registry.
+func (r *registry) RegisterLinter(initializer initializer.AnalyzerInitializer) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
+	r.initializers = append(r.initializers, initializer)
 }
 
 // DefaultLinters returns the list of linters that are registered
 // as being enabled by default.
 func (r *registry) DefaultLinters() sets.Set[string] {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
 	defaultLinters := sets.New[string]()
 
 	for _, initializer := range r.initializers {
@@ -105,6 +97,9 @@ func (r *registry) DefaultLinters() sets.Set[string] {
 // AllLinters returns the list of all known linters that are known
 // to the registry.
 func (r *registry) AllLinters() sets.Set[string] {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
 	linters := sets.New[string]()
 
 	for _, initializer := range r.initializers {
@@ -116,6 +111,9 @@ func (r *registry) AllLinters() sets.Set[string] {
 
 // InitializeLinters returns a list of initialized linters based on the provided config.
 func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.LintersConfig) ([]*analysis.Analyzer, error) {
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
 	if errs := r.validateLintersConfig(cfg, lintersCfg, field.NewPath("lintersConfig")); len(errs) > 0 {
 		return nil, fmt.Errorf("error validating linters config: %w", errs.ToAggregate())
 	}

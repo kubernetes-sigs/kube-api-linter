@@ -13,28 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package integers
+// This file is intended to allow folks forking KAL to customise what is/isn't
+// enabled in their own fork.
+// This should be the only file to modify, by commenting out the registration import
+// and importing the linters they want to enable.
+package kubeapilinter
 
 import (
-	"golang.org/x/tools/go/analysis"
-	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
+	// Importing the registration package enables all of the default linters for KAL.
+	// DO NOT ADD DIRECTLY TO THIS FILE.
+	_ "sigs.k8s.io/kube-api-linter/pkg/registration"
 )
-
-func init() {
-	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
-}
-
-// Initializer returns the AnalyzerInitializer for this
-// Analyzer so that it can be added to the registry.
-func Initializer() initializer.AnalyzerInitializer {
-	return initializer.NewInitializer(
-		name,
-		initAnalyzer,
-		true,
-	)
-}
-
-func initAnalyzer(_ any) (*analysis.Analyzer, error) {
-	return Analyzer, nil
-}

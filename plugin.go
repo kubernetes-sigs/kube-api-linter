@@ -58,9 +58,7 @@ func (f *GolangCIPlugin) BuildAnalyzers() ([]*analysis.Analyzer, error) {
 		return nil, fmt.Errorf("error in KAL configuration: %w", err)
 	}
 
-	registry := kalanalysis.NewRegistry()
-
-	analyzers, err := registry.InitializeLinters(f.config.Linters, f.config.LintersConfig)
+	analyzers, err := kalanalysis.DefaultRegistry().InitializeLinters(f.config.Linters, f.config.LintersConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing analyzers: %w", err)
 	}

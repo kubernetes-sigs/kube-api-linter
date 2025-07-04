@@ -21,59 +21,46 @@ import (
 	"gopkg.in/yaml.v3"
 
 	goanalysis "golang.org/x/tools/go/analysis"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	"sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 var _ = Describe("Registry", func() {
+	var r analysis.Registry
+
+	BeforeEach(func() {
+		r = analysis.NewRegistry()
+
+		// Register a selection of linters to test the registry functionality.
+		r.RegisterLinter(conditions.Initializer())
+		r.RegisterLinter(jsontags.Initializer())
+		r.RegisterLinter(optionalorrequired.Initializer())
+		r.RegisterLinter(nobools.Initializer())
+	})
+
 	Context("DefaultLinters", func() {
 		It("should return the default linters", func() {
-			r := analysis.NewRegistry()
 			Expect(r.DefaultLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
-				"commentstart",
-				"duplicatemarkers",
-				"integers",
 				"jsontags",
-				"nofloats",
-				"nomaps",
-				"nophase",
-				"optionalfields",
 				"optionalorrequired",
-				"requiredfields",
-				"ssatags",
-				"statusoptional",
-				"uniquemarkers",
 			))
 		})
 	})
 
 	Context("AllLinters", func() {
 		It("should return the all known linters", func() {
-			r := analysis.NewRegistry()
 			Expect(r.AllLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
-				"commentstart",
-				"duplicatemarkers",
-				"integers",
 				"jsontags",
-				"maxlength",
-				"nobools",
-				"nofloats",
-				"nomaps",
-				"nophase",
-				"optionalfields",
 				"optionalorrequired",
-				"requiredfields",
-				"ssatags",
-				"statusoptional",
-				"statussubresource",
-				"uniquemarkers",
+				"nobools",
 			))
 		})
 	})
@@ -87,7 +74,6 @@ var _ = Describe("Registry", func() {
 		}
 
 		DescribeTable("Initialize Linters", func(in initLintersTableInput) {
-			r := analysis.NewRegistry()
 			linters, err := r.InitializeLinters(in.config, in.lintersConfig)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -106,14 +92,14 @@ var _ = Describe("Registry", func() {
 			Entry("Empty config", initLintersTableInput{
 				config:          config.Linters{},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: analysis.NewRegistry().DefaultLinters().UnsortedList(),
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired"},
 			}),
 			Entry("With wildcard enabled linters", initLintersTableInput{
 				config: config.Linters{
 					Enable: []string{config.Wildcard},
 				},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: analysis.NewRegistry().AllLinters().UnsortedList(),
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired", "nobools"},
 			}),
 			Entry("With wildcard enabled linters and a disabled linter", initLintersTableInput{
 				config: config.Linters{
@@ -121,7 +107,7 @@ var _ = Describe("Registry", func() {
 					Disable: []string{"jsontags"},
 				},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: analysis.NewRegistry().AllLinters().Difference(sets.New("jsontags")).UnsortedList(),
+				expectedLinters: []string{"conditions", "optionalorrequired", "nobools"},
 			}),
 			Entry("With wildcard disabled linters", initLintersTableInput{
 				config: config.Linters{
@@ -149,7 +135,6 @@ var _ = Describe("Registry", func() {
 		}
 
 		DescribeTable("Validate Linters Configuration through Initialization", func(in validateLintersConfigTableInput) {
-			r := analysis.NewRegistry()
 			_, err := r.InitializeLinters(in.linters, in.config)
 			if len(in.expectedErr) > 0 {
 				Expect(err).To(MatchError(in.expectedErr))
