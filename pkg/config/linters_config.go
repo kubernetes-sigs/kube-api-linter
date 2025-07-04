@@ -16,4 +16,4 @@ limitations under the License.
 package config
 
 // LintersConfig contains configuration for individual linters.
-type LintersConfig map[string][]byte
+type LintersConfig map[string]any
