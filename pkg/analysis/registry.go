@@ -126,10 +126,10 @@ func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.Linte
 	for _, init := range r.getEnabledInitializers(cfg) {
 		var linterConfig any
 
-		if init.IsConfigurable() {
+		if ci, ok := isConfigurable(init); ok {
 			var err error
 
-			linterConfig, err = getLinterTypedConfig(init, lintersCfg)
+			linterConfig, err = getLinterTypedConfig(ci, lintersCfg)
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed to get linter config: %w", err))
 			}
@@ -154,16 +154,11 @@ func (r *registry) validateLintersConfig(cfg config.Linters, lintersCfg config.L
 	validatedLinters := sets.New[string]()
 
 	for _, init := range r.getEnabledInitializers(cfg) {
-		if init.IsConfigurable() {
-			linterConfig, err := getLinterTypedConfig(init, lintersCfg)
+		if ci, ok := isConfigurable(init); ok {
+			linterConfig, err := getLinterTypedConfig(ci, lintersCfg)
 			if err != nil {
 				fieldErrors = append(fieldErrors, field.Invalid(fieldPath.Child(init.Name()), linterConfig, err.Error()))
 				continue
-			}
-
-			ci, ok := init.(initializer.ConfigurableAnalyzerInitializer)
-			if !ok {
-				panic(fmt.Sprintf("Analyzer %s claims to be configurable but does not implement the ConfigurableAnalyzerInitializer interface", init.Name()))
 			}
 
 			fieldErrors = append(fieldErrors, ci.ValidateConfig(linterConfig, fieldPath.Child(init.Name()))...)
@@ -198,13 +193,8 @@ func (r *registry) getEnabledInitializers(cfg config.Linters) []initializer.Anal
 }
 
 // getLinterTypedConfig returns the typed config for a linter.
-func getLinterTypedConfig(init initializer.AnalyzerInitializer, lintersCfg config.LintersConfig) (any, error) {
-	ci, ok := init.(initializer.ConfigurableAnalyzerInitializer)
-	if !ok {
-		panic(fmt.Sprintf("Analyzer %s claims to be configurable but does not implement the ConfigurableAnalyzerInitializer interface", init.Name()))
-	}
-
-	rawConfig, ok := getConfigByName(init.Name(), lintersCfg)
+func getLinterTypedConfig(ci initializer.ConfigurableAnalyzerInitializer, lintersCfg config.LintersConfig) (any, error) {
+	rawConfig, ok := getConfigByName(ci.Name(), lintersCfg)
 	if !ok {
 		return ci.ConfigType(), nil
 	}
@@ -256,4 +246,11 @@ func validateUnusedLinters(lintersCfg config.LintersConfig, validatedLinters set
 	}
 
 	return fieldErrors
+}
+
+// isConfigurable determines whether or not the initializer expects to be provided a config.
+// When true, the initializer should also match the ConfigurableAnalyzerInitializer interface.
+func isConfigurable(init initializer.AnalyzerInitializer) (initializer.ConfigurableAnalyzerInitializer, bool) {
+	ci, ok := init.(initializer.ConfigurableAnalyzerInitializer)
+	return ci, ok
 }

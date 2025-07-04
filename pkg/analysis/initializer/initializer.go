@@ -35,10 +35,6 @@ type AnalyzerInitializer interface {
 	// It will be passed the complete LintersConfig and is expected to rely only on its own configuration.
 	Init(any) (*analysis.Analyzer, error)
 
-	// IsConfigurable determines whether or not the initializer expects to be provided a config.
-	// When true, the initializer should also match the ConfigurableAnalyzerInitializer interface.
-	IsConfigurable() bool
-
 	// Default determines whether the inializer intializes an analyzer that should be
 	// on by default, or not.
 	Default() bool
@@ -96,12 +92,6 @@ func (i initializer) Init(_ any) (*analysis.Analyzer, error) {
 	return i.initFunc(nil)
 }
 
-// IsConfigurable determines whether or not to expect this initializer to
-// be able to be configured with custom configuration.
-func (i initializer) IsConfigurable() bool {
-	return false
-}
-
 // Default determines whether this initializer should be enabled by default or not.
 func (i initializer) Default() bool {
 	return i.isDefault
@@ -117,12 +107,6 @@ type configurableInitializer struct {
 // Init returns a newly initialized analyzer.
 func (i configurableInitializer) Init(cfg any) (*analysis.Analyzer, error) {
 	return i.initFunc(cfg)
-}
-
-// IsConfigurable determines whether or not to expect this initializer to
-// be able to be configured with custom configuration.
-func (i configurableInitializer) IsConfigurable() bool {
-	return true
 }
 
 // ConfigType returns the type of the config for the linter.
