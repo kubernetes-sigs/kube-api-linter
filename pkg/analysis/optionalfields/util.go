@@ -29,7 +29,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -70,9 +69,9 @@ func isFieldOptional(fieldMarkers markershelper.MarkerSet) bool {
 
 // reportShouldAddPointer adds an analysis diagnostic that explains that a pointer should be added.
 // Where the pointer policy is suggest fix, it also adds a suggested fix to add the pointer.
-func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy config.OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
+func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
 	switch pointerPolicy {
-	case config.OptionalFieldsPointerPolicySuggestFix:
+	case OptionalFieldsPointerPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf(messageFmt, fieldName),
@@ -88,7 +87,7 @@ func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy
 				},
 			},
 		})
-	case config.OptionalFieldsPointerPolicyWarn:
+	case OptionalFieldsPointerPolicyWarn:
 		pass.Reportf(field.Pos(), messageFmt, fieldName)
 	default:
 		panic(fmt.Sprintf("unknown pointer policy: %s", pointerPolicy))
@@ -97,9 +96,9 @@ func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy
 
 // reportShouldRemovePointer adds an analysis diagnostic that explains that a pointer should be removed.
 // Where the pointer policy is suggest fix, it also adds a suggested fix to remove the pointer.
-func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPolicy config.OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
+func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPolicy OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
 	switch pointerPolicy {
-	case config.OptionalFieldsPointerPolicySuggestFix:
+	case OptionalFieldsPointerPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf(messageFmt, fieldName),
@@ -115,7 +114,7 @@ func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPol
 				},
 			},
 		})
-	case config.OptionalFieldsPointerPolicyWarn:
+	case OptionalFieldsPointerPolicyWarn:
 		pass.Reportf(field.Pos(), messageFmt, fieldName)
 	default:
 		panic(fmt.Sprintf("unknown pointer policy: %s", pointerPolicy))
@@ -123,9 +122,9 @@ func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPol
 }
 
 // reportShouldAddOmitEmpty adds an analysis diagnostic that explains that an omitempty tag should be added.
-func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPolicy config.OptionalFieldsOmitEmptyPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
+func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPolicy OptionalFieldsOmitEmptyPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
 	switch omitEmptyPolicy {
-	case config.OptionalFieldsOmitEmptyPolicySuggestFix:
+	case OptionalFieldsOmitEmptyPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf(messageFmt, fieldName),
@@ -141,9 +140,9 @@ func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPo
 				},
 			},
 		})
-	case config.OptionalFieldsOmitEmptyPolicyWarn:
+	case OptionalFieldsOmitEmptyPolicyWarn:
 		pass.Reportf(field.Pos(), messageFmt, fieldName)
-	case config.OptionalFieldsOmitEmptyPolicyIgnore:
+	case OptionalFieldsOmitEmptyPolicyIgnore:
 		// Do nothing, as the policy is to ignore the missing omitempty tag.
 	default:
 		panic(fmt.Sprintf("unknown omit empty policy: %s", omitEmptyPolicy))

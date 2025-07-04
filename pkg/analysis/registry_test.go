@@ -20,54 +20,46 @@ import (
 	. "github.com/onsi/gomega"
 
 	goanalysis "golang.org/x/tools/go/analysis"
-	"k8s.io/apimachinery/pkg/util/sets"
 
 	"sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 var _ = Describe("Registry", func() {
+	var r analysis.Registry
+
+	BeforeEach(func() {
+		r = analysis.NewRegistry()
+
+		// Register a selection of linters to test the registry functionality.
+		r.RegisterLinter(conditions.Initializer())
+		r.RegisterLinter(jsontags.Initializer())
+		r.RegisterLinter(optionalorrequired.Initializer())
+		r.RegisterLinter(nobools.Initializer())
+	})
+
 	Context("DefaultLinters", func() {
 		It("should return the default linters", func() {
-			r := analysis.NewRegistry()
 			Expect(r.DefaultLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
-				"commentstart",
-				"duplicatemarkers",
-				"integers",
 				"jsontags",
-				"nofloats",
-				"nomaps",
-				"nophase",
-				"optionalfields",
 				"optionalorrequired",
-				"requiredfields",
-				"statusoptional",
-				"uniquemarkers",
 			))
 		})
 	})
 
 	Context("AllLinters", func() {
 		It("should return the all known linters", func() {
-			r := analysis.NewRegistry()
 			Expect(r.AllLinters().UnsortedList()).To(ConsistOf(
 				"conditions",
-				"commentstart",
-				"duplicatemarkers",
-				"integers",
 				"jsontags",
-				"maxlength",
-				"nobools",
-				"nofloats",
-				"nomaps",
-				"nophase",
-				"optionalfields",
 				"optionalorrequired",
-				"requiredfields",
-				"statusoptional",
-				"statussubresource",
-				"uniquemarkers",
+				"nobools",
 			))
 		})
 	})
@@ -81,7 +73,6 @@ var _ = Describe("Registry", func() {
 		}
 
 		DescribeTable("Initialize Linters", func(in initLintersTableInput) {
-			r := analysis.NewRegistry()
 			linters, err := r.InitializeLinters(in.config, in.lintersConfig)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -100,14 +91,14 @@ var _ = Describe("Registry", func() {
 			Entry("Empty config", initLintersTableInput{
 				config:          config.Linters{},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: analysis.NewRegistry().DefaultLinters().UnsortedList(),
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired"},
 			}),
 			Entry("With wildcard enabled linters", initLintersTableInput{
 				config: config.Linters{
 					Enable: []string{config.Wildcard},
 				},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: analysis.NewRegistry().AllLinters().UnsortedList(),
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired", "nobools"},
 			}),
 			Entry("With wildcard enabled linters and a disabled linter", initLintersTableInput{
 				config: config.Linters{
@@ -115,7 +106,7 @@ var _ = Describe("Registry", func() {
 					Disable: []string{"jsontags"},
 				},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: analysis.NewRegistry().AllLinters().Difference(sets.New("jsontags")).UnsortedList(),
+				expectedLinters: []string{"conditions", "optionalorrequired", "nobools"},
 			}),
 			Entry("With wildcard disabled linters", initLintersTableInput{
 				config: config.Linters{
@@ -131,6 +122,131 @@ var _ = Describe("Registry", func() {
 				},
 				lintersConfig:   config.LintersConfig{},
 				expectedLinters: []string{"jsontags"},
+			}),
+		)
+	})
+
+	Context("Config validation", func() {
+		type validateLintersConfigTableInput struct {
+			linters     config.Linters
+			config      config.LintersConfig
+			expectedErr string
+		}
+
+		DescribeTable("Validate Linters Configuration through Initialization", func(in validateLintersConfigTableInput) {
+			_, err := r.InitializeLinters(in.linters, in.config)
+			if len(in.expectedErr) > 0 {
+				Expect(err).To(MatchError(in.expectedErr))
+			} else {
+				Expect(err).To(Not(HaveOccurred()), "No errors were expected")
+			}
+		},
+			Entry("Empty config", validateLintersConfigTableInput{
+				linters:     config.Linters{},
+				config:      config.LintersConfig{},
+				expectedErr: "",
+			}),
+
+			Entry("With a valid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
+				linters: config.Linters{},
+				config: config.LintersConfig{
+					"jsontags": jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$",
+					},
+				},
+			}),
+			Entry("With an invalid JSONTagsConfig JSONTagRegex", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"jsontags": jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.jsontags.jsonTagRegex: Invalid value: \"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*\": invalid regex: error parsing regexp: missing closing ): `^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*`",
+			}),
+			Entry("With a valid JSONTagsConfig JSONTagRegex (legacy field name)", validateLintersConfigTableInput{
+				linters: config.Linters{},
+				config: config.LintersConfig{
+					"jsonTags": jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$",
+					},
+				},
+			}),
+			Entry("With an invalid JSONTagsConfig JSONTagRegex (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"jsonTags": jsontags.JSONTagsConfig{
+						JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.jsontags.jsonTagRegex: Invalid value: \"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*\": invalid regex: error parsing regexp: missing closing ): `^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*`",
+			}),
+
+			Entry("With a valid OptionalOrRequiredConfig (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalorrequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: markers.OptionalMarker,
+						PreferredRequiredMarker: markers.RequiredMarker,
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("With kubebuilder preferred markers (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalorrequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+						PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("With invalid preferred optional marker (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalorrequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: "invalid",
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.optionalorrequired.preferredOptionalMarker: Invalid value: \"invalid\": invalid value, must be one of \"optional\", \"kubebuilder:validation:Optional\" or omitted",
+			}),
+			Entry("With invalid preferred required marker (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalorrequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredRequiredMarker: "invalid",
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.optionalorrequired.preferredRequiredMarker: Invalid value: \"invalid\": invalid value, must be one of \"required\", \"kubebuilder:validation:Required\" or omitted",
+			}),
+			Entry("With a valid OptionalOrRequiredConfig (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: markers.OptionalMarker,
+						PreferredRequiredMarker: markers.RequiredMarker,
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("With kubebuilder preferred markers (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+						PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("With invalid preferred optional marker (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredOptionalMarker: "invalid",
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.optionalorrequired.preferredOptionalMarker: Invalid value: \"invalid\": invalid value, must be one of \"optional\", \"kubebuilder:validation:Optional\" or omitted",
+			}),
+			Entry("With invalid preferred required marker (legacy field name)", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"optionalOrRequired": optionalorrequired.OptionalOrRequiredConfig{
+						PreferredRequiredMarker: "invalid",
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.optionalorrequired.preferredRequiredMarker: Invalid value: \"invalid\": invalid value, must be one of \"required\", \"kubebuilder:validation:Required\" or omitted",
 			}),
 		)
 	})

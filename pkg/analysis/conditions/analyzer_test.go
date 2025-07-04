@@ -20,13 +20,12 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := conditions.Initializer().Init(config.LintersConfig{})
+	a, err := conditions.Initializer().Init(&conditions.ConditionsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +36,8 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestNotFieldFirst(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := conditions.Initializer().Init(config.LintersConfig{
-		Conditions: config.ConditionsConfig{
-			IsFirstField: config.ConditionsFirstFieldIgnore,
-		},
+	a, err := conditions.Initializer().Init(&conditions.ConditionsConfig{
+		IsFirstField: conditions.ConditionsFirstFieldIgnore,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -52,10 +49,8 @@ func TestNotFieldFirst(t *testing.T) {
 func TestIgnoreProtobuf(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := conditions.Initializer().Init(config.LintersConfig{
-		Conditions: config.ConditionsConfig{
-			UseProtobuf: config.ConditionsUseProtobufIgnore,
-		},
+	a, err := conditions.Initializer().Init(&conditions.ConditionsConfig{
+		UseProtobuf: conditions.ConditionsUseProtobufIgnore,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -67,10 +62,8 @@ func TestIgnoreProtobuf(t *testing.T) {
 func TestForbidProtobuf(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := conditions.Initializer().Init(config.LintersConfig{
-		Conditions: config.ConditionsConfig{
-			UseProtobuf: config.ConditionsUseProtobufForbid,
-		},
+	a, err := conditions.Initializer().Init(&conditions.ConditionsConfig{
+		UseProtobuf: conditions.ConditionsUseProtobufForbid,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -82,10 +75,8 @@ func TestForbidProtobuf(t *testing.T) {
 func TestIgnorePatchStrategy(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := conditions.Initializer().Init(config.LintersConfig{
-		Conditions: config.ConditionsConfig{
-			UsePatchStrategy: config.ConditionsUsePatchStrategyIgnore,
-		},
+	a, err := conditions.Initializer().Init(&conditions.ConditionsConfig{
+		UsePatchStrategy: conditions.ConditionsUsePatchStrategyIgnore,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -97,10 +88,8 @@ func TestIgnorePatchStrategy(t *testing.T) {
 func TestForbidPatchStrategy(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := conditions.Initializer().Init(config.LintersConfig{
-		Conditions: config.ConditionsConfig{
-			UsePatchStrategy: config.ConditionsUsePatchStrategyForbid,
-		},
+	a, err := conditions.Initializer().Init(&conditions.ConditionsConfig{
+		UsePatchStrategy: conditions.ConditionsUsePatchStrategyForbid,
 	})
 	if err != nil {
 		t.Fatal(err)

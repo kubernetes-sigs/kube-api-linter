@@ -20,14 +20,13 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{})
+	a, err := optionalorrequired.Initializer().Init(&optionalorrequired.OptionalOrRequiredConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,11 +37,9 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestSwappedMarkerPriority(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{
-		OptionalOrRequired: config.OptionalOrRequiredConfig{
-			PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
-			PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
-		},
+	a, err := optionalorrequired.Initializer().Init(&optionalorrequired.OptionalOrRequiredConfig{
+		PreferredOptionalMarker: markers.KubebuilderOptionalMarker,
+		PreferredRequiredMarker: markers.KubebuilderRequiredMarker,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +51,7 @@ func TestSwappedMarkerPriority(t *testing.T) {
 func TestTypeSpec(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalorrequired.Initializer().Init(config.LintersConfig{})
+	a, err := optionalorrequired.Initializer().Init(&optionalorrequired.OptionalOrRequiredConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,31 +17,25 @@ package duplicatemarkers
 
 import (
 	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
+
+func init() {
+	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewInitializer(
+		name,
+		initAnalyzer,
+		true,
+	)
 }
 
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
-
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
-}
-
-// Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
+// initAnalyzer returns the intialized Analyzer.
+func initAnalyzer(_ any) (*analysis.Analyzer, error) {
 	return Analyzer, nil
-}
-
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	// Duplicated markers are a sign of bad code, and should be avoided.
-	// This is a good rule to have on by default.
-	return true
 }

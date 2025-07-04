@@ -17,32 +17,27 @@ package nofloats
 
 import (
 	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
+
+func init() {
+	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewInitializer(
+		name,
+		initAnalyzer,
+		// Floats avoidance in the Kube conventions is a must for spec fields.
+		// Doesn't hurt to enforce it widely, uses outside of spec fields should be
+		// evaluated on an individual basis to determine if it is reasonable to override.
+		true,
+	)
 }
 
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
-
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
-}
-
-// Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
+func initAnalyzer(_ any) (*analysis.Analyzer, error) {
 	return Analyzer, nil
-}
-
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	// Floats avoidance in the Kube conventions is a must for spec fields.
-	// Doesn't hurt to enforce it widely, uses outside of spec fields should be
-	// evaluated on an individual basis to determine if it is reasonable to override.
-	return true
 }

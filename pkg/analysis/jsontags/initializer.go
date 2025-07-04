@@ -16,30 +16,54 @@ limitations under the License.
 package jsontags
 
 import (
+	"fmt"
+	"regexp"
+
 	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
+
+func init() {
+	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewConfigurableInitializer(
+		name,
+		initAnalyzer,
+		true,
+		func() any { return &JSONTagsConfig{} },
+		validateConfig,
+	)
 }
 
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	jtc, ok := cfg.(*JSONTagsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize JSON tags analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
 
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
+	return newAnalyzer(jtc)
 }
 
-// Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.JSONTags)
-}
+// validateConfig is used to validate the configuration in the config.JSONTagsConfig struct.
+func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	jtc, ok := cfg.(*JSONTagsConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
+	}
 
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	return true
+	fieldErrors := field.ErrorList{}
+
+	if jtc.JSONTagRegex != "" {
+		if _, err := regexp.Compile(jtc.JSONTagRegex); err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("jsonTagRegex"), jtc.JSONTagRegex, fmt.Sprintf("invalid regex: %v", err)))
+		}
+	}
+
+	return fieldErrors
 }

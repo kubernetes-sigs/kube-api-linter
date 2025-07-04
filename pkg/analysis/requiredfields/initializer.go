@@ -16,30 +16,53 @@ limitations under the License.
 package requiredfields
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
+
+func init() {
+	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewConfigurableInitializer(
+		name,
+		initAnalyzer,
+		true,
+		func() any { return &RequiredFieldsConfig{} },
+		validateConfig,
+	)
 }
 
-// intializer implements the AnalyzerInitializer interface.
-type initializer struct{}
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	rfc, ok := cfg.(*RequiredFieldsConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize required fields analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
 
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
+	return newAnalyzer(rfc), nil
 }
 
-// Init returns the intialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.RequiredFields), nil
-}
+// validateConfig is used to validate the configuration in the config.RequiredFieldsConfig struct.
+func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	rfc, ok := cfg.(*RequiredFieldsConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
+	}
 
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	return true
+	fieldErrors := field.ErrorList{}
+
+	switch rfc.PointerPolicy {
+	case "", RequiredFieldPointerWarn, RequiredFieldPointerSuggestFix:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", RequiredFieldPointerWarn, RequiredFieldPointerSuggestFix)))
+	}
+
+	return fieldErrors
 }

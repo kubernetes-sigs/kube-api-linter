@@ -19,14 +19,13 @@ import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
-	requiredfields "sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
 )
 
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{})
+	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,11 +36,9 @@ func TestDefaultConfiguration(t *testing.T) {
 func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{
-		OptionalFields: config.OptionalFieldsConfig{
-			Pointers: config.OptionalFieldsPointers{
-				Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
-			},
+	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{
+		Pointers: optionalfields.OptionalFieldsPointers{
+			Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
 		},
 	})
 	if err != nil {
@@ -54,14 +51,12 @@ func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 func TestWhenRequiredWithOmitEmptyIgnorePreferenceConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := requiredfields.Initializer().Init(config.LintersConfig{
-		OptionalFields: config.OptionalFieldsConfig{
-			Pointers: config.OptionalFieldsPointers{
-				Preference: config.OptionalFieldsPointerPreferenceWhenRequired,
-			},
-			OmitEmpty: config.OptionalFieldsOmitEmpty{
-				Policy: config.OptionalFieldsOmitEmptyPolicyIgnore,
-			},
+	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{
+		Pointers: optionalfields.OptionalFieldsPointers{
+			Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
+		},
+		OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
+			Policy: optionalfields.OptionalFieldsOmitEmptyPolicyIgnore,
 		},
 	})
 	if err != nil {

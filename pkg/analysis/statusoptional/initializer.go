@@ -16,31 +16,54 @@ limitations under the License.
 package statusoptional
 
 import (
-	"golang.org/x/tools/go/analysis"
+	"fmt"
 
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
+
+func init() {
+	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+}
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewConfigurableInitializer(
+		name,
+		initAnalyzer,
+		true,
+		func() any { return &StatusOptionalConfig{} },
+		validateConfig,
+	)
 }
 
-// initializer implements the AnalyzerInitializer interface.
-type initializer struct{}
+func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
+	soc, ok := cfg.(*StatusOptionalConfig)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize status optional analyzer: %w", initializer.NewIncorrectTypeError(cfg))
+	}
 
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
+	return newAnalyzer(soc.PreferredOptionalMarker), nil
 }
 
-// Init returns the initialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.StatusOptional.PreferredOptionalMarker), nil
-}
+// validateConfig is used to validate the configuration in the config.StatusOptionalConfig struct.
+func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
+	soc, ok := cfg.(*StatusOptionalConfig)
+	if !ok {
+		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
+	}
 
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	return true
+	fieldErrors := field.ErrorList{}
+
+	switch soc.PreferredOptionalMarker {
+	case "", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), soc.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker)))
+	}
+
+	return fieldErrors
 }

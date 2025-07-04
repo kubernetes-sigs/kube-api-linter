@@ -20,13 +20,12 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{})
+	a, err := nomaps.Initializer().Init(&nomaps.NoMapsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +36,8 @@ func Test(t *testing.T) {
 func TestWithEnforce(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{
-		NoMaps: config.NoMapsConfig{
-			Policy: config.NoMapsEnforce,
-		},
+	a, err := nomaps.Initializer().Init(&nomaps.NoMapsConfig{
+		Policy: nomaps.NoMapsEnforce,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -52,10 +49,8 @@ func TestWithEnforce(t *testing.T) {
 func TestWithAllowStringToStringMaps(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{
-		NoMaps: config.NoMapsConfig{
-			Policy: config.NoMapsAllowStringToStringMaps,
-		},
+	a, err := nomaps.Initializer().Init(&nomaps.NoMapsConfig{
+		Policy: nomaps.NoMapsAllowStringToStringMaps,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -67,10 +62,8 @@ func TestWithAllowStringToStringMaps(t *testing.T) {
 func TestWithIgnore(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := nomaps.Initializer().Init(config.LintersConfig{
-		NoMaps: config.NoMapsConfig{
-			Policy: config.NoMapsIgnore,
-		},
+	a, err := nomaps.Initializer().Init(&nomaps.NoMapsConfig{
+		Policy: nomaps.NoMapsIgnore,
 	})
 	if err != nil {
 		t.Fatal(err)

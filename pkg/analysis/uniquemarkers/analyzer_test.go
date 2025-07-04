@@ -13,24 +13,31 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package uniquemarkers
+package uniquemarkers_test
 
 import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/uniquemarkers"
 )
 
 func TestWithDefaults(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, newAnalyzer(config.UniqueMarkersConfig{}), "a/...")
+
+	a, err := uniquemarkers.Initializer().Init(&uniquemarkers.UniqueMarkersConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, a, "a/...")
 }
 
 func TestWithConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, newAnalyzer(config.UniqueMarkersConfig{
-		CustomMarkers: []config.UniqueMarker{
+
+	a, err := uniquemarkers.Initializer().Init(&uniquemarkers.UniqueMarkersConfig{
+		CustomMarkers: []uniquemarkers.UniqueMarker{
 			{
 				Identifier: "custom:SomeCustomMarker",
 			},
@@ -49,5 +56,10 @@ func TestWithConfiguration(t *testing.T) {
 				},
 			},
 		},
-	}), "b/...")
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, a, "b/...")
 }
