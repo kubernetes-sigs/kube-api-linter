@@ -13,6 +13,7 @@
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
 - [RequiredFields](#requiredfields) - Validates required field conventions
+- [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
 - [StatusSubresource](#statussubresource) - Validates status subresource configuration
 - [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
@@ -247,6 +248,39 @@ It will suggest to remove the pointer from the field, and update the `json` tag 
 
 If you prefer not to suggest fixes for pointers in required fields, you can change the `pointerPolicy` to `Warn`.
 The linter will then only suggest to remove the `omitempty` value from the `json` tag.
+
+## SSATags
+
+The `ssatags` linter ensures that all array fields in Kubernetes API objects have the appropriate
+listType markers (atomic, set, or map) for proper Server-Side Apply behavior.
+
+This linter helps enforce proper Server-Side Apply (SSA) semantics by ensuring array fields
+are correctly configured with the right listType markers. Proper SSA configuration prevents
+data corruption and ensures predictable merge behavior when applying configuration changes.
+
+The linter checks for:
+
+1. Missing listType markers on array fields
+2. Invalid listType values (must be atomic, set, or map)
+3. Missing listMapKey markers for listType=map arrays
+
+### Configuration
+
+```yaml
+lintersConfig:
+  ssaTags:
+    listTypeSetUsage: Warn | SuggestFix | Ignore # The policy for listType=set usage. Defaults to `Warn`.
+```
+
+### Fixes
+
+The `ssatags` linter can automatically suggest fixes for missing or invalid listType markers.
+
+When a listType=set is detected, the linter can suggest changing it.
+
+- `Warn`: Emit a warning when listType=set is used
+- `SuggestFix`: Emit a warning and remove listType=set marker
+- `Ignore`: Do not warn about listType=set usage
 
 ## StatusOptional
 
