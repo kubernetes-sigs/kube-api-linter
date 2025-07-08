@@ -37,26 +37,19 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
-		func() any { return &SSATagsConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
-func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
-	stc, ok := cfg.(*SSATagsConfig)
-	if !ok {
-		return nil, fmt.Errorf("failed to initialize ssa tags analyzer: %w", initializer.NewIncorrectTypeError(cfg))
-	}
-
+func initAnalyzer(stc *SSATagsConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(stc), nil
 }
 
 // validateConfig implements validation of the ssa tags linter config.
-func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	stc, ok := cfg.(*SSATagsConfig)
-	if !ok {
-		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
+func validateConfig(stc *SSATagsConfig, fldPath *field.Path) field.ErrorList {
+	if stc == nil {
+		return field.ErrorList{}
 	}
 
 	fieldErrors := field.ErrorList{}

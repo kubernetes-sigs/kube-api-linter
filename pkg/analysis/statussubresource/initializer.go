@@ -16,7 +16,6 @@ limitations under the License.
 package statussubresource
 
 import (
-	"golang.org/x/tools/go/analysis"
 	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
@@ -30,12 +29,8 @@ func init() {
 func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewInitializer(
 		name,
-		initAnalyzer,
+		Analyzer,
 		// This check only applies to CRDs so should not be on by default.
 		false,
 	)
-}
-
-func initAnalyzer(_ any) (*analysis.Analyzer, error) {
-	return newAnalyzer(), nil
 }

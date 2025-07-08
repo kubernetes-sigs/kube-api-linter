@@ -16,15 +16,18 @@ limitations under the License.
 package initializer
 
 import (
+	"fmt"
+	"reflect"
+
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // InitializerFunc is a function that initializes an Analyzer.
-type InitializerFunc func(any) (*analysis.Analyzer, error)
+type InitializerFunc[T any] func(T) (*analysis.Analyzer, error)
 
 // ValidateFunc is a function that validates the configuration for an Analyzer.
-type ValidateFunc func(any, *field.Path) field.ErrorList
+type ValidateFunc[T any] func(T, *field.Path) field.ErrorList
 
 // AnalyzerInitializer is used to initialize analyzers.
 type AnalyzerInitializer interface {
@@ -54,67 +57,77 @@ type ConfigurableAnalyzerInitializer interface {
 }
 
 // NewInitializer construct a new initializer for initializing an Analyzer.
-func NewInitializer(name string, initFunc InitializerFunc, isDefault bool) AnalyzerInitializer {
-	return initializer{
+func NewInitializer(name string, analyzer *analysis.Analyzer, isDefault bool) AnalyzerInitializer {
+	return initializer[any]{
 		name:      name,
-		initFunc:  initFunc,
+		initFunc:  func(any) (*analysis.Analyzer, error) { return analyzer, nil },
 		isDefault: isDefault,
 	}
 }
 
 // NewConfigurableInitializer constructs a new initializer for intializing a
 // configurable Analyzer.
-func NewConfigurableInitializer(name string, initFunc InitializerFunc, isDefault bool, configType func() any, validateFunc ValidateFunc) ConfigurableAnalyzerInitializer {
-	return configurableInitializer{
-		initializer: initializer{
+func NewConfigurableInitializer[T any](name string, initFunc InitializerFunc[T], isDefault bool, validateFunc ValidateFunc[T]) ConfigurableAnalyzerInitializer {
+	return configurableInitializer[T]{
+		initializer: initializer[T]{
 			name:      name,
 			initFunc:  initFunc,
 			isDefault: isDefault,
 		},
-		configTypeFunc: configType,
-		validateFunc:   validateFunc,
+		validateFunc: validateFunc,
 	}
 }
 
-type initializer struct {
+type initializer[T any] struct {
 	name      string
-	initFunc  InitializerFunc
+	initFunc  InitializerFunc[T]
 	isDefault bool
 }
 
 // Name returns the name of the initializer.
-func (i initializer) Name() string {
+func (i initializer[T]) Name() string {
 	return i.name
 }
 
 // Init returns a newly initializr analyzer.
-func (i initializer) Init(_ any) (*analysis.Analyzer, error) {
-	return i.initFunc(nil)
-}
+func (i initializer[T]) Init(_ any) (*analysis.Analyzer, error) {
+	var cfg T
 
-// Default determines whether this initializer should be enabled by default or not.
-func (i initializer) Default() bool {
-	return i.isDefault
-}
-
-type configurableInitializer struct {
-	initializer
-
-	configTypeFunc func() any
-	validateFunc   ValidateFunc
-}
-
-// Init returns a newly initialized analyzer.
-func (i configurableInitializer) Init(cfg any) (*analysis.Analyzer, error) {
 	return i.initFunc(cfg)
 }
 
+// Default determines whether this initializer should be enabled by default or not.
+func (i initializer[T]) Default() bool {
+	return i.isDefault
+}
+
+type configurableInitializer[T any] struct {
+	initializer[T]
+
+	validateFunc ValidateFunc[T]
+}
+
+// Init returns a newly initialized analyzer.
+func (i configurableInitializer[T]) Init(cfg any) (*analysis.Analyzer, error) {
+	cfgT, ok := cfg.(T)
+	if !ok {
+		return nil, fmt.Errorf("failed to initialize analyzer: %w", NewIncorrectTypeError(cfg))
+	}
+
+	return i.initFunc(cfgT)
+}
+
 // ConfigType returns the type of the config for the linter.
-func (i configurableInitializer) ConfigType() any {
-	return i.configTypeFunc()
+func (i configurableInitializer[T]) ConfigType() any {
+	return reflect.New(reflect.TypeOf(*new(T)).Elem()).Interface()
 }
 
 // ValidateConfig validates the configuration for the initializer.
-func (i configurableInitializer) ValidateConfig(cfg any, fld *field.Path) field.ErrorList {
-	return i.validateFunc(cfg, fld)
+func (i configurableInitializer[T]) ValidateConfig(cfg any, fld *field.Path) field.ErrorList {
+	cfgT, ok := cfg.(T)
+	if !ok {
+		return field.ErrorList{field.InternalError(fld, NewIncorrectTypeError(cfg))}
+	}
+
+	return i.validateFunc(cfgT, fld)
 }

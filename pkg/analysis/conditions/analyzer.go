@@ -69,6 +69,10 @@ type analyzer struct {
 
 // newAnalyzer creates a new analyzer.
 func newAnalyzer(cfg *ConditionsConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &ConditionsConfig{}
+	}
+
 	defaultConfig(cfg)
 
 	a := &analyzer{

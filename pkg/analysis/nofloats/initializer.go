@@ -16,7 +16,6 @@ limitations under the License.
 package nofloats
 
 import (
-	"golang.org/x/tools/go/analysis"
 	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
@@ -30,14 +29,10 @@ func init() {
 func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewInitializer(
 		name,
-		initAnalyzer,
+		Analyzer,
 		// Floats avoidance in the Kube conventions is a must for spec fields.
 		// Doesn't hurt to enforce it widely, uses outside of spec fields should be
 		// evaluated on an individual basis to determine if it is reasonable to override.
 		true,
 	)
-}
-
-func initAnalyzer(_ any) (*analysis.Analyzer, error) {
-	return Analyzer, nil
 }

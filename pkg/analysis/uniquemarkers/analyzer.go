@@ -43,6 +43,10 @@ type analyzer struct {
 }
 
 func newAnalyzer(cfg *UniqueMarkersConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &UniqueMarkersConfig{}
+	}
+
 	a := &analyzer{
 		uniqueMarkers: append(defaultUniqueMarkers(), cfg.CustomMarkers...),
 	}

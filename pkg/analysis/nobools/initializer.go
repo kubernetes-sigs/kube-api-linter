@@ -16,7 +16,6 @@ limitations under the License.
 package nobools
 
 import (
-	"golang.org/x/tools/go/analysis"
 	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
@@ -30,13 +29,9 @@ func init() {
 func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewInitializer(
 		name,
-		initAnalyzer,
+		Analyzer,
 		// Bools avoidance in the Kube conventions is not a must.
 		// Make this opt in depending on the projects own preference.
 		false,
 	)
-}
-
-func initAnalyzer(_ any) (*analysis.Analyzer, error) {
-	return Analyzer, nil
 }

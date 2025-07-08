@@ -39,14 +39,9 @@ func init() {
 func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewInitializer(
 		name, // A constant containing the name of the linter. This should be lowercase.
-		initAnalyzer, // A function that returns the initialized Analyzer.
+		Analyzer, // An *analysis.Analyzer variable that is the linter.
 		true, // Whether the linter is enabled by default.
 	)
-}
-
-// initAnalyzer returns the intialized Analyzer.
-func initAnalyzer(_ any) (*analysis.Analyzer, error) {
-	return Analyzer, nil
 }
 ```
 
@@ -60,7 +55,6 @@ Once imported, the analyzer will be included in the linter builds.
 
 Where the linter requires configuration, a slightly different pattern is used in `initializer.go`.
 This time, use `NewConfigurableInitializer` instead of `NewInitializer` and pass in a function to validate the linter configuration.
-You will also need to pass a function to initialize a new pointer to the configuration struct for the linter.
 
 ```go
 
@@ -75,23 +69,17 @@ func Initializer() initializer.AnalyzerInitializer {
 		name, // A constant containing the name of the linter. This should be lowercase.
 		initAnalyzer, // A function that returns the initialized Analyzer.
 		true, // Whether the linter is enabled by default.
-		func() any { return &Config{} }, // A function that returns a new pointer to the configuration struct for the linter.
 		validateLintersConfig, // A function that validates the linter configuration.
 	)
 }
 
 // initAnalyzer returns the intialized Analyzer.
-func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
-    cc, ok := cfg.(*ConditionsConfig)
-	if !ok {
-		return nil, fmt.Errorf("failed to initialize conditions analyzer: %w", initializer.NewIncorrectTypeError(cfg))
-	}
-
-	return newAnalyzer(), nil
+func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
+	return newAnalyzer(cfg), nil
 }
 
 // validateLintersConfig validates the linter configuration.
-func validateLintersConfig(cfg any, fldPath *field.Path) field.ErrorList {
+func validateLintersConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 	... // Validate the linter configuration.
 }
 ```

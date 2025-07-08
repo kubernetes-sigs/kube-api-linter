@@ -35,25 +35,18 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
-		func() any { return &ConditionsConfig{} },
 		validateConfig,
 	)
 }
 
-func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
-	cc, ok := cfg.(*ConditionsConfig)
-	if !ok {
-		return nil, fmt.Errorf("failed to initialize conditions analyzer: %w", initializer.NewIncorrectTypeError(cfg))
-	}
-
+func initAnalyzer(cc *ConditionsConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(cc), nil
 }
 
 // validateConfig implements validation of the conditions linter config.
-func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	cc, ok := cfg.(*ConditionsConfig)
-	if !ok {
-		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
+func validateConfig(cc *ConditionsConfig, fldPath *field.Path) field.ErrorList {
+	if cc == nil {
+		return field.ErrorList{}
 	}
 
 	fieldErrors := field.ErrorList{}

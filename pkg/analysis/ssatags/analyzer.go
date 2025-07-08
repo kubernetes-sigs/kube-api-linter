@@ -42,6 +42,10 @@ type analyzer struct {
 }
 
 func newAnalyzer(cfg *SSATagsConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &SSATagsConfig{}
+	}
+
 	defaultConfig(cfg)
 
 	a := &analyzer{

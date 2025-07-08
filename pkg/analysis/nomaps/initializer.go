@@ -35,26 +35,19 @@ func Initializer() initializer.AnalyzerInitializer {
 		name,
 		initAnalyzer,
 		true,
-		func() any { return &NoMapsConfig{} },
 		validateConfig,
 	)
 }
 
 // Init returns the intialized Analyzer.
-func initAnalyzer(cfg any) (*analysis.Analyzer, error) {
-	nmc, ok := cfg.(*NoMapsConfig)
-	if !ok {
-		return nil, fmt.Errorf("failed to initialize no maps analyzer: %w", initializer.NewIncorrectTypeError(cfg))
-	}
-
+func initAnalyzer(nmc *NoMapsConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(nmc), nil
 }
 
 // validateConfig is used to validate the configuration in the config.NoMapsConfig struct.
-func validateConfig(cfg any, fldPath *field.Path) field.ErrorList {
-	nmc, ok := cfg.(*NoMapsConfig)
-	if !ok {
-		return field.ErrorList{field.InternalError(fldPath, initializer.NewIncorrectTypeError(cfg))}
+func validateConfig(nmc *NoMapsConfig, fldPath *field.Path) field.ErrorList {
+	if nmc == nil {
+		return field.ErrorList{}
 	}
 
 	fieldErrors := field.ErrorList{}
