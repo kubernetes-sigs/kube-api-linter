@@ -17,17 +17,16 @@ package initializer
 
 import (
 	"fmt"
-	"reflect"
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // InitializerFunc is a function that initializes an Analyzer.
-type InitializerFunc[T any] func(T) (*analysis.Analyzer, error)
+type InitializerFunc[T any] func(*T) (*analysis.Analyzer, error)
 
 // ValidateFunc is a function that validates the configuration for an Analyzer.
-type ValidateFunc[T any] func(T, *field.Path) field.ErrorList
+type ValidateFunc[T any] func(*T, *field.Path) field.ErrorList
 
 // AnalyzerInitializer is used to initialize analyzers.
 type AnalyzerInitializer interface {
@@ -60,7 +59,7 @@ type ConfigurableAnalyzerInitializer interface {
 func NewInitializer(name string, analyzer *analysis.Analyzer, isDefault bool) AnalyzerInitializer {
 	return initializer[any]{
 		name:      name,
-		initFunc:  func(any) (*analysis.Analyzer, error) { return analyzer, nil },
+		initFunc:  func(*any) (*analysis.Analyzer, error) { return analyzer, nil },
 		isDefault: isDefault,
 	}
 }
@@ -91,7 +90,7 @@ func (i initializer[T]) Name() string {
 
 // Init returns a newly initializr analyzer.
 func (i initializer[T]) Init(_ any) (*analysis.Analyzer, error) {
-	var cfg T
+	var cfg *T
 
 	return i.initFunc(cfg)
 }
@@ -109,7 +108,7 @@ type configurableInitializer[T any] struct {
 
 // Init returns a newly initialized analyzer.
 func (i configurableInitializer[T]) Init(cfg any) (*analysis.Analyzer, error) {
-	cfgT, ok := cfg.(T)
+	cfgT, ok := cfg.(*T)
 	if !ok {
 		return nil, fmt.Errorf("failed to initialize analyzer: %w", NewIncorrectTypeError(cfg))
 	}
@@ -119,12 +118,12 @@ func (i configurableInitializer[T]) Init(cfg any) (*analysis.Analyzer, error) {
 
 // ConfigType returns the type of the config for the linter.
 func (i configurableInitializer[T]) ConfigType() any {
-	return reflect.New(reflect.TypeOf(*new(T)).Elem()).Interface()
+	return new(T)
 }
 
 // ValidateConfig validates the configuration for the initializer.
 func (i configurableInitializer[T]) ValidateConfig(cfg any, fld *field.Path) field.ErrorList {
-	cfgT, ok := cfg.(T)
+	cfgT, ok := cfg.(*T)
 	if !ok {
 		return field.ErrorList{field.InternalError(fld, NewIncorrectTypeError(cfg))}
 	}
