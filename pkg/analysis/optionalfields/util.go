@@ -165,10 +165,10 @@ func isZeroValueValid(pass *analysis.Pass, field *ast.Field, typeExpr ast.Expr, 
 	case *ast.Ident:
 		return isIdentZeroValueValid(pass, field, t, markersAccess)
 	case *ast.MapType:
-		return isMapZeroValueValid(field, markersAccess)
+		return isMapZeroValueValid(pass, field, markersAccess)
 	case *ast.ArrayType:
 		// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
-		return isArrayZeroValueValid(field, t, markersAccess)
+		return isArrayZeroValueValid(pass, field, t, markersAccess)
 	case *ast.StarExpr:
 		return isZeroValueValid(pass, field, t.X, markersAccess)
 	}
@@ -249,7 +249,7 @@ func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ide
 	// Check if the identifier is a known type that can have a zero value.
 	switch {
 	case isStringIdent(ident):
-		return isStringZeroValueValid(field, markersAccess)
+		return isStringZeroValueValid(pass, field, markersAccess)
 	case isIntegerIdent(ident):
 		return isNumericZeroValueValid[int](pass, field, markersAccess)
 	case isFloatIdent(ident):
@@ -270,8 +270,8 @@ func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ide
 
 // isStringZeroValueValid checks if a string field can have a zero value.
 // This would be true when either there is no minimum length marker, or when the minimmum length marker is set to 0.
-func isStringZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
+func isStringZeroValueValid(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
+	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	if stringFieldIsEnum(fieldMarkers) {
 		return enumFieldAllowsEmpty(fieldMarkers), true
@@ -285,8 +285,8 @@ func isStringZeroValueValid(field *ast.Field, markersAccess markershelper.Marker
 
 // isMapZeroValueValid checks if a map field can have a zero value.
 // For maps, this means there is no minProperties marker, or the minProperties marker is set to 0.
-func isMapZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
+func isMapZeroValueValid(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
+	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	hasMinPropertiesMarker := fieldMarkers.Has(markers.KubebuilderMinPropertiesMarker)
 	minPropertiesMarkerIsZero := fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinPropertiesMarker))
@@ -295,13 +295,13 @@ func isMapZeroValueValid(field *ast.Field, markersAccess markershelper.Markers) 
 }
 
 // isArrayZeroValueValid checks if an array field can have a zero value.
-func isArrayZeroValueValid(field *ast.Field, arrayType *ast.ArrayType, markersAccess markershelper.Markers) (bool, bool) {
+func isArrayZeroValueValid(pass *analysis.Pass, field *ast.Field, arrayType *ast.ArrayType, markersAccess markershelper.Markers) (bool, bool) {
 	// Arrays of bytes are special cased and treated as strings.
 	if ident, ok := arrayType.Elt.(*ast.Ident); ok && ident.Name == "byte" {
-		return isStringZeroValueValid(field, markersAccess)
+		return isStringZeroValueValid(pass, field, markersAccess)
 	}
 
-	fieldMarkers := markersAccess.FieldMarkers(field)
+	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
 	minItems, err := getMarkerNumericValueByName[int](fieldMarkers, markers.KubebuilderMinItemsMarker)
@@ -341,7 +341,7 @@ type number interface {
 //
 //nolint:cyclop
 func isNumericZeroValueValid[N number](pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
+	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	minimum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMinimumMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
