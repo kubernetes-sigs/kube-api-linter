@@ -16,31 +16,51 @@ limitations under the License.
 package statusoptional
 
 import (
-	"golang.org/x/tools/go/analysis"
+	"fmt"
 
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
+
+func init() {
+	registry.DefaultRegistry().RegisterLinter(Initializer())
+}
 
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
-func Initializer() initializer {
-	return initializer{}
+func Initializer() initializer.AnalyzerInitializer {
+	return initializer.NewConfigurableInitializer(
+		name,
+		initAnalyzer,
+		true,
+		validateConfig,
+	)
 }
 
-// initializer implements the AnalyzerInitializer interface.
-type initializer struct{}
+func initAnalyzer(soc *StatusOptionalConfig) (*analysis.Analyzer, error) {
+	if soc == nil {
+		soc = &StatusOptionalConfig{}
+	}
 
-// Name returns the name of the Analyzer.
-func (initializer) Name() string {
-	return name
+	return newAnalyzer(soc.PreferredOptionalMarker), nil
 }
 
-// Init returns the initialized Analyzer.
-func (initializer) Init(cfg config.LintersConfig) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg.StatusOptional.PreferredOptionalMarker), nil
-}
+// validateConfig is used to validate the configuration in the config.StatusOptionalConfig struct.
+func validateConfig(soc *StatusOptionalConfig, fldPath *field.Path) field.ErrorList {
+	if soc == nil {
+		return field.ErrorList{}
+	}
 
-// Default determines whether this Analyzer is on by default, or not.
-func (initializer) Default() bool {
-	return true
+	fieldErrors := field.ErrorList{}
+
+	switch soc.PreferredOptionalMarker {
+	case "", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), soc.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker)))
+	}
+
+	return fieldErrors
 }

@@ -23,6 +23,8 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/validation"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	_ "sigs.k8s.io/kube-api-linter/pkg/registration"
 )
 
 var _ = Describe("Linters", func() {

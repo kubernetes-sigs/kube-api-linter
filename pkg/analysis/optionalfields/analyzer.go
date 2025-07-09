@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -54,14 +53,18 @@ var (
 )
 
 type analyzer struct {
-	pointerPolicy     config.OptionalFieldsPointerPolicy
-	pointerPreference config.OptionalFieldsPointerPreference
-	omitEmptyPolicy   config.OptionalFieldsOmitEmptyPolicy
+	pointerPolicy     OptionalFieldsPointerPolicy
+	pointerPreference OptionalFieldsPointerPreference
+	omitEmptyPolicy   OptionalFieldsOmitEmptyPolicy
 }
 
 // newAnalyzer creates a new analyzer.
-func newAnalyzer(cfg config.OptionalFieldsConfig) *analysis.Analyzer {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *OptionalFieldsConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &OptionalFieldsConfig{}
+	}
+
+	defaultConfig(cfg)
 
 	a := &analyzer{
 		pointerPolicy:     cfg.Pointers.Policy,
@@ -117,17 +120,17 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	a.checkFieldProperties(pass, field, fieldName, markersAccess, jsonTags)
 }
 
-func defaultConfig(cfg *config.OptionalFieldsConfig) {
+func defaultConfig(cfg *OptionalFieldsConfig) {
 	if cfg.Pointers.Policy == "" {
-		cfg.Pointers.Policy = config.OptionalFieldsPointerPolicySuggestFix
+		cfg.Pointers.Policy = OptionalFieldsPointerPolicySuggestFix
 	}
 
 	if cfg.Pointers.Preference == "" {
-		cfg.Pointers.Preference = config.OptionalFieldsPointerPreferenceAlways
+		cfg.Pointers.Preference = OptionalFieldsPointerPreferenceAlways
 	}
 
 	if cfg.OmitEmpty.Policy == "" {
-		cfg.OmitEmpty.Policy = config.OptionalFieldsOmitEmptyPolicySuggestFix
+		cfg.OmitEmpty.Policy = OptionalFieldsOmitEmptyPolicySuggestFix
 	}
 }
 
@@ -137,7 +140,7 @@ func (a *analyzer) checkFieldProperties(pass *analysis.Pass, field *ast.Field, f
 	isPointer, underlying := isStarExpr(field.Type)
 	isStruct := isStructType(pass, field.Type)
 
-	if a.pointerPreference == config.OptionalFieldsPointerPreferenceAlways {
+	if a.pointerPreference == OptionalFieldsPointerPreferenceAlways {
 		// The field must always be a pointer, pointers require omitempty, so enforce that too.
 		a.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying)
 		a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
@@ -147,7 +150,7 @@ func (a *analyzer) checkFieldProperties(pass *analysis.Pass, field *ast.Field, f
 
 	// The pointer preference is now when required.
 
-	if a.omitEmptyPolicy != config.OptionalFieldsOmitEmptyPolicyIgnore || hasOmitEmpty {
+	if a.omitEmptyPolicy != OptionalFieldsOmitEmptyPolicyIgnore || hasOmitEmpty {
 		// If we require omitempty, or the field has omitempty, we can check the field properties based on it being an omitempty field.
 		a.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, hasOmitEmpty, hasValidZeroValue, completeValidation, isPointer, isStruct)
 	} else {
@@ -183,7 +186,7 @@ func (a *analyzer) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, fie
 		// The zero value would not be accepted, so the field needs to have omitempty.
 		// Force the omitempty policy to suggest a fix. We can only get to this function when the policy is configured to Ignore.
 		// Since we absolutely have to add the omitempty tag, we can report it as a suggestion.
-		reportShouldAddOmitEmpty(pass, field, config.OptionalFieldsOmitEmptyPolicySuggestFix, fieldName, "field %s is optional and does not allow the zero value. It must have the omitempty tag.", jsonTags)
+		reportShouldAddOmitEmpty(pass, field, OptionalFieldsOmitEmptyPolicySuggestFix, fieldName, "field %s is optional and does not allow the zero value. It must have the omitempty tag.", jsonTags)
 		// Once it has the omitempty tag, it will also need to be a pointer in some cases.
 		// Now handle it as if it had the omitempty already.
 		// We already handle the omitempty tag above, so force the `hasOmitEmpty` to true.
@@ -195,9 +198,9 @@ func (a *analyzer) handleFieldShouldBePointer(pass *analysis.Pass, field *ast.Fi
 	if isPointerType(pass, underlying) {
 		if isPointer {
 			switch a.pointerPolicy {
-			case config.OptionalFieldsPointerPolicySuggestFix:
-				reportShouldRemovePointer(pass, field, config.OptionalFieldsPointerPolicySuggestFix, fieldName, "field %s is optional but the underlying type does not need to be a pointer. The pointer should be removed.")
-			case config.OptionalFieldsPointerPolicyWarn:
+			case OptionalFieldsPointerPolicySuggestFix:
+				reportShouldRemovePointer(pass, field, OptionalFieldsPointerPolicySuggestFix, fieldName, "field %s is optional but the underlying type does not need to be a pointer. The pointer should be removed.")
+			case OptionalFieldsPointerPolicyWarn:
 				pass.Reportf(field.Pos(), "field %s is optional but the underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
 			}
 		}
@@ -210,9 +213,9 @@ func (a *analyzer) handleFieldShouldBePointer(pass *analysis.Pass, field *ast.Fi
 	}
 
 	switch a.pointerPolicy {
-	case config.OptionalFieldsPointerPolicySuggestFix:
-		reportShouldAddPointer(pass, field, config.OptionalFieldsPointerPolicySuggestFix, fieldName, "field %s is optional and should be a pointer")
-	case config.OptionalFieldsPointerPolicyWarn:
+	case OptionalFieldsPointerPolicySuggestFix:
+		reportShouldAddPointer(pass, field, OptionalFieldsPointerPolicySuggestFix, fieldName, "field %s is optional and should be a pointer")
+	case OptionalFieldsPointerPolicyWarn:
 		pass.Reportf(field.Pos(), "field %s is optional and should be a pointer", fieldName)
 	}
 }

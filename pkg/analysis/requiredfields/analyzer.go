@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -39,12 +38,16 @@ func init() {
 }
 
 type analyzer struct {
-	pointerPolicy config.RequiredFieldPointerPolicy
+	pointerPolicy RequiredFieldPointerPolicy
 }
 
 // newAnalyzer creates a new analyzer.
-func newAnalyzer(cfg config.RequiredFieldsConfig) *analysis.Analyzer {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *RequiredFieldsConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &RequiredFieldsConfig{}
+	}
+
+	defaultConfig(cfg)
 
 	a := &analyzer{
 		pointerPolicy: cfg.PointerPolicy,
@@ -110,9 +113,9 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 		var suggestedFixes []analysis.SuggestedFix
 
 		switch a.pointerPolicy {
-		case config.RequiredFieldPointerWarn:
+		case RequiredFieldPointerWarn:
 			// Do not suggest a fix.
-		case config.RequiredFieldPointerSuggestFix:
+		case RequiredFieldPointerSuggestFix:
 			suggestedFixes = append(suggestedFixes, analysis.SuggestedFix{
 				Message: "should remove the pointer",
 				TextEdits: []analysis.TextEdit{
@@ -133,8 +136,8 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 	}
 }
 
-func defaultConfig(cfg *config.RequiredFieldsConfig) {
+func defaultConfig(cfg *RequiredFieldsConfig) {
 	if cfg.PointerPolicy == "" {
-		cfg.PointerPolicy = config.RequiredFieldPointerSuggestFix
+		cfg.PointerPolicy = RequiredFieldPointerSuggestFix
 	}
 }

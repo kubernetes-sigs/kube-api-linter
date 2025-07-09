@@ -13,7 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package analysis_test
+
+package ssatags
 
 import (
 	"testing"
@@ -22,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestValidation(t *testing.T) {
+func TestSSATags(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Validation")
+	RunSpecs(t, "SSATags Suite")
 }

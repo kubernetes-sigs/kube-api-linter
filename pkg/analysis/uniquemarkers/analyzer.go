@@ -27,7 +27,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	markersconsts "sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -40,10 +39,14 @@ func init() {
 }
 
 type analyzer struct {
-	uniqueMarkers []config.UniqueMarker
+	uniqueMarkers []UniqueMarker
 }
 
-func newAnalyzer(cfg config.UniqueMarkersConfig) *analysis.Analyzer {
+func newAnalyzer(cfg *UniqueMarkersConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &UniqueMarkersConfig{}
+	}
+
 	a := &analyzer{
 		uniqueMarkers: append(defaultUniqueMarkers(), cfg.CustomMarkers...),
 	}
@@ -73,7 +76,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, uniqueMarkers []config.UniqueMarker) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, uniqueMarkers []UniqueMarker) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
@@ -82,7 +85,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 	check(markers, uniqueMarkers, reportField(pass, field))
 }
 
-func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, uniqueMarkers []config.UniqueMarker) {
+func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, uniqueMarkers []UniqueMarker) {
 	if typeSpec == nil {
 		return
 	}
@@ -91,7 +94,7 @@ func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess marker
 	check(markers, uniqueMarkers, reportType(pass, typeSpec))
 }
 
-func check(markerSet markers.MarkerSet, uniqueMarkers []config.UniqueMarker, reportFunc func(id string)) {
+func check(markerSet markers.MarkerSet, uniqueMarkers []UniqueMarker, reportFunc func(id string)) {
 	for _, marker := range uniqueMarkers {
 		marks := markerSet.Get(marker.Identifier)
 		markSet := sets.New[string]()
@@ -150,8 +153,8 @@ func reportType(pass *analysis.Pass, typeSpec *ast.TypeSpec) func(id string) {
 }
 
 //nolint:funlen
-func defaultUniqueMarkers() []config.UniqueMarker {
-	return []config.UniqueMarker{
+func defaultUniqueMarkers() []UniqueMarker {
+	return []UniqueMarker{
 		// Basic unique markers
 		// ------
 		{

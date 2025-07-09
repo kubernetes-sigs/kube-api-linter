@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 
 	"golang.org/x/tools/go/analysis"
 )
@@ -42,8 +41,12 @@ type analyzer struct {
 }
 
 // newAnalyzer creates a new analyzer with the given json tag regex.
-func newAnalyzer(cfg config.JSONTagsConfig) (*analysis.Analyzer, error) {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *JSONTagsConfig) (*analysis.Analyzer, error) {
+	if cfg == nil {
+		cfg = &JSONTagsConfig{}
+	}
+
+	defaultConfig(cfg)
 
 	jsonTagRegex, err := regexp.Compile(cfg.JSONTagRegex)
 	if err != nil {
@@ -103,7 +106,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo ext
 	}
 }
 
-func defaultConfig(cfg *config.JSONTagsConfig) {
+func defaultConfig(cfg *JSONTagsConfig) {
 	if cfg.JSONTagRegex == "" {
 		cfg.JSONTagRegex = camelCaseRegex
 	}

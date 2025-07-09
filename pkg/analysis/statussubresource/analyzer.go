@@ -35,21 +35,15 @@ const (
 	statusJSONTag = "status"
 )
 
-type analyzer struct{}
-
-// newAnalyzer creates a new analyzer with the given configuration.
-func newAnalyzer() *analysis.Analyzer {
-	a := &analyzer{}
-
-	return &analysis.Analyzer{
-		Name:     name,
-		Doc:      "Checks that a type marked with kubebuilder:object:root:=true and containing a status field is marked with kubebuilder:subresource:status",
-		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspect.Analyzer, markershelper.Analyzer, extractjsontags.Analyzer},
-	}
+// Analyzer is a analyzer for the statussubresource package.
+var Analyzer = &analysis.Analyzer{
+	Name:     name,
+	Doc:      "Checks that a type marked with kubebuilder:object:root:=true and containing a status field is marked with kubebuilder:subresource:status",
+	Run:      run,
+	Requires: []*analysis.Analyzer{inspect.Analyzer, markershelper.Analyzer, extractjsontags.Analyzer},
 }
 
-func (a *analyzer) run(pass *analysis.Pass) (any, error) {
+func run(pass *analysis.Pass) (any, error) {
 	inspect, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 	if !ok {
 		return nil, kalerrors.ErrCouldNotGetInspector
@@ -88,13 +82,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		}
 
 		structMarkers := markersAccess.StructMarkers(sTyp)
-		a.checkStruct(pass, sTyp, typeSpec.Name.Name, structMarkers, jsonTags)
+		checkStruct(pass, sTyp, typeSpec.Name.Name, structMarkers, jsonTags)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkStruct(pass *analysis.Pass, sTyp *ast.StructType, name string, structMarkers markershelper.MarkerSet, jsonTags extractjsontags.StructFieldTags) {
+func checkStruct(pass *analysis.Pass, sTyp *ast.StructType, name string, structMarkers markershelper.MarkerSet, jsonTags extractjsontags.StructFieldTags) {
 	if sTyp == nil {
 		return
 	}

@@ -113,7 +113,7 @@ The `jsontags` linter checks the tag name against the regex `"^[a-z][a-z0-9]*(?:
 
 ```yaml
 lintersConfig:
-  jsonTags:
+  jsontags:
     jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
 ```
 
@@ -178,7 +178,7 @@ In this case, the `omitempty` policy can be set to `Ignore`, and the linter will
 
 ```yaml
 lintersConfig:
-  optionalFields:
+  optionalfields:
     pointers:
       preference: Always | WhenRequired # Whether to always require pointers, or only when required. Defaults to `Always`.
       policy: SuggestFix | Warn # The policy for pointers in optional fields. Defaults to `SuggestFix`.
@@ -216,7 +216,7 @@ The `optionalorrequired` linter also checks for the presence of optional or requ
 
 ```yaml
 lintersConfig:
-  optionalOrRequired:
+  optionalorrequired:
     preferredOptionalMarker: optional | kubebuilder:validation:Optional # The preferred optional marker to use, fixes will suggest to use this marker. Defaults to `optional`.
     preferredRequiredMarker: required | kubebuilder:validation:Required # The preferred required marker to use, fixes will suggest to use this marker. Defaults to `required`.
 ```
@@ -236,7 +236,7 @@ and not having an `omitempty` value in their `json` tag.
 
 ```yaml
 lintersConfig:
-  requiredFields:
+  requiredfields:
     pointerPolicy: Warn | SuggestFix # The policy for pointers in required fields. Defaults to `SuggestFix`.
 ```
 
@@ -326,7 +326,7 @@ Because this linter has no way of determining which marker definition was intend
 It can configured to include a set of custom markers in the analysis by setting:
 ```yaml
 lintersConfig:
-  uniqueMarkers:
+  uniquemarkers:
     customMarkers:
       - identifier: custom:SomeCustomMarker
         attributes:

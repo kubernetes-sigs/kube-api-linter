@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -53,8 +52,12 @@ type analyzer struct {
 }
 
 // newAnalyzer creates a new analyzer with the given configuration.
-func newAnalyzer(cfg config.OptionalOrRequiredConfig) *analysis.Analyzer {
-	defaultConfig(&cfg)
+func newAnalyzer(cfg *OptionalOrRequiredConfig) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &OptionalOrRequiredConfig{}
+	}
+
+	defaultConfig(cfg)
 
 	a := &analyzer{}
 
@@ -253,7 +256,7 @@ func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, ma
 	}
 }
 
-func defaultConfig(cfg *config.OptionalOrRequiredConfig) {
+func defaultConfig(cfg *OptionalOrRequiredConfig) {
 	if cfg.PreferredOptionalMarker == "" {
 		cfg.PreferredOptionalMarker = markers.OptionalMarker
 	}

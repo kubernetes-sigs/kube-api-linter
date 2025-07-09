@@ -20,13 +20,12 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/ssatags"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestWithDefaultConfig(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := ssatags.Initializer().Init(config.LintersConfig{})
+	a, err := ssatags.Initializer().Init(&ssatags.SSATagsConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +36,8 @@ func TestWithDefaultConfig(t *testing.T) {
 func TestWithListTypeSetUsageIgnore(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := ssatags.Initializer().Init(config.LintersConfig{
-		SSATags: config.SSATagsConfig{
-			ListTypeSetUsage: config.SSATagsListTypeSetUsageIgnore,
-		},
+	a, err := ssatags.Initializer().Init(&ssatags.SSATagsConfig{
+		ListTypeSetUsage: ssatags.SSATagsListTypeSetUsageIgnore,
 	})
 	if err != nil {
 		t.Fatal(err)
