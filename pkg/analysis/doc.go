@@ -24,10 +24,10 @@ the linters within, by passing the required configuration.
 
 Example:
 
-	registry := analysis.NewRegistry()
+	r := registry.NewRegistry()
 
 	// Initialize the linters
-	linters, err := registry.InitLinters(
+	linters, err := r.InitLinters(
 		config.Linters{
 			Enabled: []string{
 				"commentstart"

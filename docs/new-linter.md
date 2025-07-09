@@ -31,7 +31,7 @@ It is expected that each linter package contain a file `initializer.go`, the con
 ```go
 func init() {
     // Register the linter with the registry when the package is imported.
-    kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+    registry.DefaultRegistry().RegisterLinter(Initializer())
 }
 
 // Initializer returns the AnalyzerInitializer for this

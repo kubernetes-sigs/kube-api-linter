@@ -16,12 +16,12 @@ limitations under the License.
 package nophase
 
 import (
-	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 )
 
 func init() {
-	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+	registry.DefaultRegistry().RegisterLinter(Initializer())
 }
 
 // Initializer returns the AnalyzerInitializer for this

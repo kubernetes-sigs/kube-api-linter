@@ -13,28 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package analysis_test
+package registry_test
 
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	goanalysis "golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis"
 
-	"sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 var _ = Describe("Registry", func() {
-	var r analysis.Registry
+	var r registry.Registry
 
 	BeforeEach(func() {
-		r = analysis.NewRegistry()
+		r = registry.NewRegistry()
 
 		// Register a selection of linters to test the registry functionality.
 		r.RegisterLinter(conditions.Initializer())
@@ -76,7 +76,7 @@ var _ = Describe("Registry", func() {
 			linters, err := r.InitializeLinters(in.config, in.lintersConfig)
 			Expect(err).NotTo(HaveOccurred())
 
-			toLinterNames := func(a []*goanalysis.Analyzer) []string {
+			toLinterNames := func(a []*analysis.Analyzer) []string {
 				names := []string{}
 
 				for _, linter := range a {

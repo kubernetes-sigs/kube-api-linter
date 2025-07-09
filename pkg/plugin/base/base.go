@@ -21,7 +21,7 @@ import (
 	"github.com/golangci/plugin-module-register/register"
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 	"sigs.k8s.io/kube-api-linter/pkg/validation"
 )
@@ -54,7 +54,7 @@ func (f *GolangCIPlugin) BuildAnalyzers() ([]*analysis.Analyzer, error) {
 		return nil, fmt.Errorf("error in KAL configuration: %w", err)
 	}
 
-	analyzers, err := kalanalysis.DefaultRegistry().InitializeLinters(f.config.Linters, f.config.LintersConfig)
+	analyzers, err := registry.DefaultRegistry().InitializeLinters(f.config.Linters, f.config.LintersConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing analyzers: %w", err)
 	}

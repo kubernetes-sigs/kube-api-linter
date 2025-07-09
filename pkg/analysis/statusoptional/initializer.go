@@ -20,13 +20,13 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	kalanalysis "sigs.k8s.io/kube-api-linter/pkg/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 func init() {
-	kalanalysis.DefaultRegistry().RegisterLinter(Initializer())
+	registry.DefaultRegistry().RegisterLinter(Initializer())
 }
 
 // Initializer returns the AnalyzerInitializer for this
