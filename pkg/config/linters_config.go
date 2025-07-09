@@ -43,6 +43,9 @@ type LintersConfig struct {
 
 	// uniqueMarkers contains configuration for the uniquemarkers linter.
 	UniqueMarkers UniqueMarkersConfig `json:"uniqueMarkers"`
+
+	// forbiddenMarkers contains configuration for the forbiddenmarkers linter.
+	ForbiddenMarkers ForbiddenMarkersConfig `json:"forbiddenMarkers"`
 }
 
 // ConditionsFirstField is the policy for the conditions linter.
@@ -318,4 +321,44 @@ type UniqueMarker struct {
 	//
 	// Entries must be unique.
 	Attributes []string `json:"attributes"`
+}
+
+// ForbiddenMarkersConfig contains the configuration for the forbiddenmarkers linter.
+type ForbiddenMarkersConfig struct {
+	// markers configures the markers that are forbidden.
+	// Entries must have unique identifiers.
+	Markers []ForbiddenMarker `json:"markers"`
+}
+
+type ForbiddenMarker struct {
+	// identifier configures the marker identifier that is forbidden
+	Identifier string `json:"identifier"`
+
+	// attributes configures the attributes that are forbidden for this marker.
+	// when set, only marker declarations that match the identifier + attributes
+	// are considered forbidden.
+	//
+	// When multiple attributes are specified, it is evaluated as an AND operation.
+	// For example, assuming:
+	// - identifier is some:Marker
+	// - attributes has entries for "fruit" and "color" attributes
+	// - marker declaration of `some:Marker:fruit=apple` would be allowed because it does not
+	// specify the color attribute.
+	//
+	// Entries must have unique attribute values.
+	Attributes []ForbiddenMarkerAttribute `json:"attributes"`
+}
+
+type ForbiddenMarkerAttribute struct {
+	// attribute configures an attribute that is forbidden for the
+	// associated marker identifier.
+	Attribute string `json:"attribute"`
+
+	// values configures the particular values for this attribute that
+	// is forbidden.
+	// If values is specified, only marker declarations with this attribute
+	// set to one of the values specified will be considered forbidden.
+	//
+	// Entries must be unique.
+	Values []string `json:"values"`
 }

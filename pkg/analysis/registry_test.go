@@ -45,6 +45,7 @@ var _ = Describe("Registry", func() {
 				"ssatags",
 				"statusoptional",
 				"uniquemarkers",
+				"nonullable",
 			))
 		})
 	})
@@ -70,6 +71,8 @@ var _ = Describe("Registry", func() {
 				"statusoptional",
 				"statussubresource",
 				"uniquemarkers",
+				"nonullable",
+				"forbiddenmarkers",
 			))
 		})
 	})
