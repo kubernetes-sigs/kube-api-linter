@@ -35,6 +35,9 @@ type LintersConfig struct {
 	// requiredFields contains configuration for the requiredfields linter.
 	RequiredFields RequiredFieldsConfig `json:"requiredFields"`
 
+	// ssatags contains configuration for the ssatags linter.
+	SSATags SSATagsConfig `json:"ssatags"`
+
 	// statusOptional contains configuration for the statusoptional linter.
 	StatusOptional StatusOptionalConfig `json:"statusOptional"`
 
@@ -259,6 +262,29 @@ type RequiredFieldsConfig struct {
 	// When otherwise not specified, the default value is "SuggestFix".
 	PointerPolicy RequiredFieldPointerPolicy `json:"pointerPolicy"`
 }
+
+// SSATagsConfig contains configuration for the ssatags linter.
+type SSATagsConfig struct {
+	// listTypeSetUsage is the policy for the listType=set usage.
+	// Valid values are "Warn" and "Ignore".
+	// When set to "Warn", the linter will emit a warning if a listType=set is used on object arrays.
+	// When set to "Ignore", the linter will not emit a warning if a listType=set is used on object arrays.
+	// Note: listType=set is only flagged on object arrays, not primitive arrays, due to
+	// Server-Side Apply compatibility issues specific to object arrays.
+	// When otherwise not specified, the default value is "Warn".
+	ListTypeSetUsage SSATagsListTypeSetUsage `json:"listTypeSetUsage"`
+}
+
+// SSATagsListTypeSetUsage is the policy for the listType=set usage in the ssatags linter.
+type SSATagsListTypeSetUsage string
+
+const (
+	// SSATagsListTypeSetUsageWarn indicates that the linter will emit a warning if a listType=set is used on object arrays.
+	SSATagsListTypeSetUsageWarn SSATagsListTypeSetUsage = "Warn"
+
+	// SSATagsListTypeSetUsageIgnore indicates that the linter will not emit a warning if a listType=set is used on object arrays.
+	SSATagsListTypeSetUsageIgnore SSATagsListTypeSetUsage = "Ignore"
+)
 
 // StatusOptionalConfig contains configuration for the statusoptional linter.
 type StatusOptionalConfig struct {

@@ -42,6 +42,7 @@ var _ = Describe("Registry", func() {
 				"optionalfields",
 				"optionalorrequired",
 				"requiredfields",
+				"ssatags",
 				"statusoptional",
 				"uniquemarkers",
 			))
@@ -65,6 +66,7 @@ var _ = Describe("Registry", func() {
 				"optionalfields",
 				"optionalorrequired",
 				"requiredfields",
+				"ssatags",
 				"statusoptional",
 				"statussubresource",
 				"uniquemarkers",
