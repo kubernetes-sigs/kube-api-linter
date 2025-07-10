@@ -1,5 +1,9 @@
 package b
 
+import (
+	"b/bb"
+)
+
 type TestObject struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
@@ -22,10 +26,22 @@ type StringArrayAlias = []string
 type ByteArray []byte
 type ByteArrayAlias = []byte
 
+// +listType=atomic
+type StringArrayAtomic StringArray
+
 type SSATagsTestSpec struct {
 	// Valid atomic list - should pass
 	// +listType=atomic
 	AtomicStringList []string `json:"atomicStringList,omitempty"`
+
+	// Valid atomic object list - should pass
+	StringArrayAtomic StringArrayAtomic `json:"stringArrayAtomic,omitempty"`
+
+	// Valid atomic object list from another file - should pass
+	OtherFileStringArrayAtomic OtherFileStringArrayAtomic `json:"otherFileStringArrayAtomic,omitempty"`
+
+	// Valid atomic object list from another package - should pass
+	OtherPackageStringArrayAtomic bb.OtherPackageStringArrayAtomic `json:"otherPackageStringArrayAtomic,omitempty"`
 
 	// Valid atomic object list - should pass
 	// +listType=atomic
