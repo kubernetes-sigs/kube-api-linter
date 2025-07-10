@@ -83,6 +83,31 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		return
 	}
 
+	// If the field is a byte array, we cannot use listType markers with it.
+	if utils.IsByteArray(pass, field) {
+		listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListTypeMarker)
+		for _, marker := range listTypeMarkers {
+			pass.Report(analysis.Diagnostic{
+				Pos:     field.Pos(),
+				Message: fmt.Sprintf("%s is a byte array, which does not support the listType marker. Remove the listType marker", utils.FieldName(field)),
+				SuggestedFixes: []analysis.SuggestedFix{
+					{
+						Message: fmt.Sprintf("Remove listType marker from %s", utils.FieldName(field)),
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos:     marker.Pos,
+								End:     marker.End + 1,
+								NewText: []byte(""),
+							},
+						},
+					},
+				},
+			})
+		}
+
+		return
+	}
+
 	fieldName := utils.FieldName(field)
 	listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListTypeMarker)
 

@@ -151,10 +151,10 @@ const (
 	KubebuilderItemsXValidationMarker = "kubebuilder:validation:items:XValidation"
 
 	// KubebuilderListTypeMarker is the marker used to specify the type of list for server-side apply operations.
-	KubebuilderListTypeMarker = "kubebuilder:listType"
+	KubebuilderListTypeMarker = "listType"
 
 	// KubebuilderListMapKeyMarker is the marker used to specify the key field for map-type lists.
-	KubebuilderListMapKeyMarker = "kubebuilder:listMapKey"
+	KubebuilderListMapKeyMarker = "listMapKey"
 )
 
 const (

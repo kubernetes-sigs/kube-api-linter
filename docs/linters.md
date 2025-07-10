@@ -281,7 +281,7 @@ The linter checks for:
 
 ```yaml
 lintersConfig:
-  ssaTags:
+  ssatags:
     listTypeSetUsage: Warn | Ignore # The policy for listType=set usage on object arrays. Defaults to `Warn`.
 ```
 
