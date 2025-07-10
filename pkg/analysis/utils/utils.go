@@ -182,6 +182,35 @@ func IsObjectList(pass *analysis.Pass, field *ast.Field) bool {
 	return false
 }
 
+// IsByteArray checks if the field type is a byte array or an alias to a byte array.
+func IsByteArray(pass *analysis.Pass, field *ast.Field) bool {
+	if arrayType, ok := field.Type.(*ast.ArrayType); ok {
+		if ident, ok := arrayType.Elt.(*ast.Ident); ok && types.Identical(pass.TypesInfo.TypeOf(ident), types.Typ[types.Byte]) {
+			return true
+		}
+	}
+
+	if ident, ok := field.Type.(*ast.Ident); ok {
+		typeOf := pass.TypesInfo.TypeOf(ident)
+		if typeOf == nil {
+			return false
+		}
+
+		switch typeOf := typeOf.(type) {
+		case *types.Alias:
+			if sliceType, ok := typeOf.Underlying().(*types.Slice); ok {
+				return types.Identical(sliceType.Elem(), types.Typ[types.Byte])
+			}
+		case *types.Named:
+			if sliceType, ok := typeOf.Underlying().(*types.Slice); ok {
+				return types.Identical(sliceType.Elem(), types.Typ[types.Byte])
+			}
+		}
+	}
+
+	return false
+}
+
 func isArrayType(t types.Type) bool {
 	if aliasType, ok := t.(*types.Alias); ok {
 		return isArrayType(aliasType.Underlying())

@@ -167,6 +167,6 @@ type SSATagsTestSpec struct {
 	ByteArrayAliased ByteArrayAlias `json:"byteArrayAliased,omitempty"`
 
 	// Byte array with markers - should be ignored even if markers are present
-	// +listType=atomic
 	ByteArrayWithMarker []byte `json:"byteArrayWithMarker,omitempty"` // want "ByteArrayWithMarker is a byte array, which does not support the listType marker. Remove the listType marker"
 }
+
