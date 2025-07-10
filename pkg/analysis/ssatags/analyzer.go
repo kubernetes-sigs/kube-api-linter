@@ -78,7 +78,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		return
 	}
 
-	fieldMarkers := markersAccess.FieldMarkers(field)
+	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 	if fieldMarkers == nil {
 		return
 	}
