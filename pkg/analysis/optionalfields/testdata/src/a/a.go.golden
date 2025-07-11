@@ -98,6 +98,20 @@ type A struct {
 	// PointerMapAlias is a pointer map alias field.
 	// +optional
 	PointerMapAlias MapAlias `json:"pointerMapAlias,omitempty"` // want "field PointerMapAlias is optional but the underlying type does not need to be a pointer. The pointer should be removed."
+
+	// StringAliasWithEnum is a string alias field with enum validation.
+	// With the "Always" pointer preference, optional fields should be pointers regardless of zero value validity.
+	// +optional
+	StringAliasWithEnum *StringAliasWithEnum `json:"stringAliasWithEnum,omitempty"` // want "field StringAliasWithEnum is optional and should be a pointer"
+
+	// StringAliasWithEnumPointer is a pointer string alias field with enum validation.
+	// This is correctly a pointer since the zero value is not valid.
+	// +optional
+	StringAliasWithEnumPointer *StringAliasWithEnum `json:"stringAliasWithEnumPointer,omitempty"`
+	
+	// StringAliasWithEnumNoOmitEmpty is a string alias field with enum validation and no omitempty.
+	// +optional
+	StringAliasWithEnumNoOmitEmpty *StringAliasWithEnum `json:"stringAliasWithEnumNoOmitEmpty,omitempty"` // want "field StringAliasWithEnumNoOmitEmpty is optional and should have the omitempty tag"
 }
 
 type B struct {
@@ -129,3 +143,8 @@ type BoolAlias bool
 type SliceAlias []string
 
 type MapAlias map[string]string
+
+// StringAliasWithEnum is a string alias with enum validation.
+// The zero value ("") is not in the enum, making it invalid.
+// +kubebuilder:validation:Enum=value1;value2
+type StringAliasWithEnum string
