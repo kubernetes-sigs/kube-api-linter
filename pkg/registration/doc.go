@@ -25,6 +25,7 @@ package registration
 import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/conflictingmarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
