@@ -2,6 +2,7 @@
 
 - [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
+- [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
@@ -72,6 +73,42 @@ This helps to ensure that generated documentation reflects the most common usage
 The `commentstart` linter can automatically fix comments that do not start with the serialized form of the type.
 
 When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
+
+## ConflictingMarkers
+
+The `conflictingmarkers` linter detects and reports when mutually exclusive markers are used on the same field.
+This prevents common configuration errors and unexpected behavior in Kubernetes API types.
+
+The linter includes built-in checks for the following conflicts:
+
+1. **Optional vs Required**:
+   - Set A: `+optional`, `+kubebuilder:validation:Optional`, `+k8s:optional`
+   - Set B: `+required`, `+kubebuilder:validation:Required`, `+k8s:required`
+   - A field cannot be both optional and required
+
+2. **Default vs Required**:
+   - Set A: `+default`, `+kubebuilder:default`
+   - Set B: `+required`, `+kubebuilder:validation:Required`
+   - A field with a default value cannot be required
+
+### Configuration
+
+The linter is configurable and allows users to define their own custom sets of conflicting markers.
+Each custom conflict set must specify a name, two sets of markers, and a description of why they conflict.
+
+```yaml
+lintersConfig:
+  conflictingmarkers:
+    customConflicts:
+      - name: "my_custom_conflict"
+        setA: 
+          - "custom:marker1"
+          - "custom:marker2"
+        setB:
+          - "custom:marker3"
+          - "custom:marker4"
+        description: "These markers conflict because..."
+```
 
 ## DuplicateMarkers
 
