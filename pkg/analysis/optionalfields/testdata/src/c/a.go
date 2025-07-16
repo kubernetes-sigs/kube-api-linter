@@ -421,6 +421,24 @@ type A struct {
 	// PointerPointerString is a double pointer string field.
 	// +optional
 	DoublePointerString **string `json:"doublePointerString,omitempty"` // want "field DoublePointerString is optional but the underlying type does not need to be a pointer. The pointer should be removed."
+
+	// StringAliasWithEnum is a string alias field with enum validation.
+	// The zero value ("") is not in the enum, so this should NOT be a pointer.
+	// +optional
+	StringAliasWithEnum StringAliasWithEnum `json:"stringAliasWithEnum,omitempty"`
+
+	// StringAliasWithEnumPointer is a pointer string alias field with enum validation.
+	// This should NOT be a pointer since the zero value is not valid.
+	// +optional
+	StringAliasWithEnumPointer *StringAliasWithEnum `json:"stringAliasWithEnumPointer,omitempty"` // want "field StringAliasWithEnumPointer is optional and does not allow the zero value. The field does not need to be a pointer."
+
+	// StringAliasWithEnumNoOmitEmpty is a string alias field with enum validation and no omitempty.
+	// +optional
+	StringAliasWithEnumNoOmitEmpty StringAliasWithEnum `json:"stringAliasWithEnumNoOmitEmpty"` // want "field StringAliasWithEnumNoOmitEmpty is optional and does not allow the zero value. It must have the omitempty tag."
+
+	// StringAliasWithEnumEmptyValue is a string alias field with enum validation and empty value.
+	// +optional
+	StringAliasWithEnumEmptyValue *StringAliasWithEnumEmptyValue `json:"stringAliasWithEnumEmptyValue,omitempty"`
 }
 
 type B struct {
@@ -526,3 +544,12 @@ type G struct {
 	// +kubebuilder:validation:Enum=foo;bar
 	EnumWithoutOmitEmpty string `json:"enumWithoutOmitEmpty"` // want "field EnumWithoutOmitEmpty is optional and does not allow the zero value. It must have the omitempty tag."
 }
+
+// StringAliasWithEnum is a string alias with enum validation.
+// The zero value ("") is not in the enum, making it invalid.
+// +kubebuilder:validation:Enum=value1;value2
+type StringAliasWithEnum string
+
+// StringAliasWithEnumEmptyValue is a string alias with enum validation and empty value.
+// +kubebuilder:validation:Enum=value1;value2;""
+type StringAliasWithEnumEmptyValue string

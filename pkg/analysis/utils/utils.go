@@ -122,11 +122,23 @@ func isInPassPackage(pass *analysis.Pass, namedType *types.Named) bool {
 // TypeAwareMarkerCollectionForField collects the markers for a given field into a single markers.MarkerSet.
 // If the field has a type that is not a basic type (i.e a custom type) then it will also gather any markers from
 // the type and include them in the markers.MarkerSet that is returned.
+// It will look through *ast.StarExpr to the underlying type.
 // Markers on the type will always come before markers on the field in the list of markers for an identifier.
 func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess markers.Markers, field *ast.Field) markers.MarkerSet {
 	markers := markersAccess.FieldMarkers(field)
 
-	ident, ok := field.Type.(*ast.Ident)
+	var underlyingType ast.Expr
+
+	switch t := field.Type.(type) {
+	case *ast.Ident:
+		underlyingType = t
+	case *ast.StarExpr:
+		underlyingType = t.X
+	default:
+		return markers
+	}
+
+	ident, ok := underlyingType.(*ast.Ident)
 	if !ok {
 		return markers
 	}
