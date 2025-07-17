@@ -1,0 +1,35 @@
+package a
+
+type TestStruct struct {
+	// Valid field with only optional marker
+	// +optional
+	ValidOptionalField string `json:"validOptionalField,omitempty"`
+
+	// Valid field with only required marker
+	// +required
+	ValidRequiredField string `json:"validRequiredField"`
+
+	// Conflict: optional vs required
+	// +optional
+	// +required
+	OptionalVsRequiredField string `json:"optionalVsRequiredField"` // want "field OptionalVsRequiredField has conflicting markers: optional_vs_required: \\[optional\\] and \\[required\\]. A field cannot be both optional and required"
+
+	// Conflict: default vs required
+	// +default
+	// +required
+	DefaultVsRequiredField string `json:"defaultVsRequiredField"` // want "field DefaultVsRequiredField has conflicting markers: default_vs_required: \\[default\\] and \\[required\\]. A field with a default value cannot be required"
+
+	// Multiple conflicts with multiple markers in each set:
+	// - optional set: +optional, +kubebuilder:validation:Optional, +k8s:optional
+	// - required set: +required, +kubebuilder:validation:Required, +k8s:required
+	// - default set: +default, +kubebuilder:default
+	// +optional
+	// +kubebuilder:validation:Optional
+	// +k8s:optional
+	// +default
+	// +kubebuilder:default
+	// +required
+	// +kubebuilder:validation:Required
+	// +k8s:required
+	MultipleConflictsMultipleMarkersField string `json:"multipleConflictsMultipleMarkersField"` // want "field MultipleConflictsMultipleMarkersField has conflicting markers: optional_vs_required: \\[k8s:optional kubebuilder:validation:Optional optional\\] and \\[k8s:required kubebuilder:validation:Required required\\]. A field cannot be both optional and required" "field MultipleConflictsMultipleMarkersField has conflicting markers: default_vs_required: \\[default kubebuilder:default\\] and \\[k8s:required kubebuilder:validation:Required required\\]. A field with a default value cannot be required"
+}
