@@ -63,8 +63,18 @@ func newAnalyzer(cfg *ConflictingMarkersConfig) *analysis.Analyzer {
 		}
 	}
 
+	var conflictSets []ConflictSet
+
+	// Add built-in conflicts unless disabled
+	if !cfg.DisableBuiltInConflicts {
+		conflictSets = append(conflictSets, defaultConflictSets()...)
+	}
+
+	// Add custom conflicts
+	conflictSets = append(conflictSets, cfg.CustomConflicts...)
+
 	a := &analyzer{
-		conflictSets: append(defaultConflictSets(), cfg.CustomConflicts...),
+		conflictSets: conflictSets,
 	}
 
 	return &analysis.Analyzer{

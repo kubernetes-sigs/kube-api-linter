@@ -58,3 +58,28 @@ func TestCustomConfiguration(t *testing.T) {
 
 	analysistest.Run(t, testdata, analyzer, "b")
 }
+
+func TestDisableBuiltInConflicts(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	config := &conflictingmarkers.ConflictingMarkersConfig{
+		DisableBuiltInConflicts: true,
+		CustomConflicts: []conflictingmarkers.ConflictSet{
+			{
+				Name:        "custom_conflict",
+				SetA:        []string{"custom:marker1", "custom:marker2"},
+				SetB:        []string{"custom:marker3", "custom:marker4"},
+				Description: "Custom markers conflict with each other",
+			},
+		},
+	}
+
+	initializer := conflictingmarkers.Initializer()
+
+	analyzer, err := initializer.Init(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, analyzer, "c")
+}
