@@ -16,10 +16,7 @@ limitations under the License.
 package optionalfields
 
 import (
-	"errors"
-	"fmt"
 	"go/ast"
-	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
@@ -47,10 +44,6 @@ func init() {
 		markers.KubebuilderEnumMarker,
 	)
 }
-
-var (
-	errMarkerMissingValue = errors.New("marker does not have a value")
-)
 
 type analyzer struct {
 	pointerPolicy     OptionalFieldsPointerPolicy
@@ -135,10 +128,10 @@ func defaultConfig(cfg *OptionalFieldsConfig) {
 }
 
 func (a *analyzer) checkFieldProperties(pass *analysis.Pass, field *ast.Field, fieldName string, markersAccess markershelper.Markers, jsonTags extractjsontags.FieldTagInfo) {
-	hasValidZeroValue, completeValidation := isZeroValueValid(pass, field, field.Type, markersAccess)
+	hasValidZeroValue, completeValidation := utils.IsZeroValueValid(pass, field, field.Type, markersAccess)
 	hasOmitEmpty := jsonTags.OmitEmpty
 	isPointer, underlying := isStarExpr(field.Type)
-	isStruct := isStructType(pass, field.Type)
+	isStruct := utils.IsStructType(pass, field.Type)
 
 	if a.pointerPreference == OptionalFieldsPointerPreferenceAlways {
 		// The field must always be a pointer, pointers require omitempty, so enforce that too.
@@ -244,135 +237,8 @@ func (a *analyzer) handleIncompleteFieldValidation(pass *analysis.Pass, field *a
 		return
 	}
 
-	zeroValue := getTypedZeroValue(pass, underlying)
-	validationHint := getTypedValidationHint(pass, underlying)
+	zeroValue := utils.GetTypedZeroValue(pass, underlying)
+	validationHint := utils.GetTypedValidationHint(pass, underlying)
 
 	pass.Reportf(field.Pos(), "field %s is optional and has a valid zero value (%s), but the validation is not complete (e.g. %s). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer.", fieldName, zeroValue, validationHint)
-}
-
-// getTypedZeroValue returns the zero value for a given type as a string representation.
-func getTypedZeroValue(pass *analysis.Pass, expr ast.Expr) string {
-	switch t := expr.(type) {
-	case *ast.Ident:
-		return getIdentZeroValue(pass, t)
-	case *ast.StructType:
-		return getStructZeroValue(pass, t)
-	case *ast.ArrayType:
-		return "[]"
-	case *ast.MapType:
-		return "{}"
-	default:
-		return ""
-	}
-}
-
-// getIdentZeroValue returns the zero value for a given identifier as a string representation.
-// Where the ident is an alias for a type, it will look up the type spec to get the underlying type
-// and return the zero value for that type.
-func getIdentZeroValue(pass *analysis.Pass, ident *ast.Ident) string {
-	switch {
-	case isIntegerIdent(ident):
-		return "0"
-	case isStringIdent(ident):
-		return `""`
-	case isBoolIdent(ident):
-		return "false"
-	case isFloatIdent(ident):
-		return "0.0"
-	}
-
-	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-	if !ok {
-		return ""
-	}
-
-	return getTypedZeroValue(pass, typeSpec.Type)
-}
-
-// getStructZeroValue returns the zero value for a struct type as a string representation.
-// It constructs a json-like representation of the struct's zero value,
-// including only the fields that are not omitted (i.e., do not have the omitempty tag).
-func getStructZeroValue(pass *analysis.Pass, structType *ast.StructType) string {
-	value := "{"
-
-	jsonTagInfo, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
-	if !ok {
-		panic("could not get struct field tags from pass result")
-	}
-
-	for _, field := range structType.Fields.List {
-		fieldTagInfo := jsonTagInfo.FieldTags(field)
-
-		if fieldTagInfo.OmitEmpty {
-			// If the field is omitted, we can use a zero value.
-			// For structs, if they aren't a pointer another error will be raised.
-			continue
-		}
-
-		value += fmt.Sprintf("%q: %s, ", fieldTagInfo.Name, getTypedZeroValue(pass, field.Type))
-	}
-
-	value = strings.TrimSuffix(value, ", ")
-	value += "}"
-
-	return value
-}
-
-// getTypedValidationHint returns a string hint for the validation that should be applied to a given type.
-// This is used to suggest which markers should be applied to the field to complete the validation.
-func getTypedValidationHint(pass *analysis.Pass, expr ast.Expr) string {
-	switch t := expr.(type) {
-	case *ast.Ident:
-		return getIdentValidationHint(pass, t)
-	case *ast.StructType:
-		return "min properties/adding required fields"
-	case *ast.ArrayType:
-		return "min items"
-	case *ast.MapType:
-		return "min properties"
-	default:
-		return ""
-	}
-}
-
-// getIdentValidationHint returns a string hint for the validation that should be applied to a given identifier.
-func getIdentValidationHint(pass *analysis.Pass, ident *ast.Ident) string {
-	switch {
-	case isIntegerIdent(ident):
-		return "minimum/maximum"
-	case isStringIdent(ident):
-		return "minimum length"
-	case isBoolIdent(ident):
-		return ""
-	case isFloatIdent(ident):
-		return "minimum/maximum"
-	}
-
-	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-	if !ok {
-		return ""
-	}
-
-	return getTypedValidationHint(pass, typeSpec.Type)
-}
-
-// isStructType checks if the given expression is a struct type.
-func isStructType(pass *analysis.Pass, expr ast.Expr) bool {
-	_, underlying := isStarExpr(expr)
-
-	if _, ok := underlying.(*ast.StructType); ok {
-		return true
-	}
-
-	// Where there's an ident, recurse to find the underlying type.
-	if ident, ok := underlying.(*ast.Ident); ok {
-		typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-		if !ok {
-			return false
-		}
-
-		return isStructType(pass, typeSpec.Type)
-	}
-
-	return false
 }
