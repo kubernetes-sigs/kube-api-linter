@@ -179,7 +179,7 @@ type A struct {
 	// structWithOnlyOmitZeroTag is a struct field with a minimum number of properties and has only omitzero tag.
 	// +kubebuilder:validation:MinProperties=1
 	// +optional
-	StructWithOnlyOmitZeroTag B `json:"structWithOnlyOmitZeroTag,omitzero"`
+    StructWithOnlyOmitZeroTag B `json:"structWithOnlyOmitZeroTag,omitempty,omitzero"`  // want "field StructWithOnlyOmitZeroTag is optional and should have the omitempty tag"
 
 	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
 	// +optional
