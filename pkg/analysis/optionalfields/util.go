@@ -149,6 +149,34 @@ func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPo
 	}
 }
 
+// reportShouldAddOmitZero adds an analysis diagnostic that explains that an omitzero tag should be added.
+func reportShouldAddOmitZero(pass *analysis.Pass, field *ast.Field, omitZeroPolicy OptionalFieldsOmitZeroPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
+	switch omitZeroPolicy {
+	case OptionalFieldsOmitZeroPolicySuggestFix:
+		pass.Report(analysis.Diagnostic{
+			Pos:     field.Pos(),
+			Message: fmt.Sprintf(messageFmt, fieldName),
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: fmt.Sprintf("should add 'omitzero' to the field tag for field %s", fieldName),
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     fieldTagInfo.Pos + token.Pos(len(fieldTagInfo.Name)),
+							NewText: []byte(",omitzero"),
+						},
+					},
+				},
+			},
+		})
+	case OptionalFieldsOmitZeroPolicyWarn:
+		pass.Reportf(field.Pos(), messageFmt, fieldName)
+	case OptionalFieldsOmitZeroPolicyIgnore:
+		// Do nothing, as the policy is to ignore the missing omitzero tag.
+	default:
+		panic(fmt.Sprintf("unknown omit zero policy: %s", omitZeroPolicy))
+	}
+}
+
 // isZeroValueValid determines whether the zero value of the field is valid per the validation markers.
 // For example, if the string has a minimum length greater than 0, the zero value is not valid.
 // Or if the minimum value of an integer field is greater than 0, the zero value is not valid.
@@ -223,7 +251,13 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 	for _, field := range structType.Fields.List {
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
 
-		if fieldTagInfo.OmitEmpty || fieldTagInfo.OmitZero {
+		isPointer, _ := isStarExpr(field.Type)
+		if !isPointer && fieldTagInfo.OmitZero {
+			// for non-pointer field if it has omitzero, we can use a zero value.
+			continue
+		}
+
+		if fieldTagInfo.OmitEmpty {
 			// If the field is omitted, we can use a zero value.
 			// For structs, if they aren't a pointer another error will be raised.
 			continue
