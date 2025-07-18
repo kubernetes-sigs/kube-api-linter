@@ -216,9 +216,6 @@ func stringFieldIsEnum(fieldMarkers markershelper.MarkerSet) bool {
 func enumFieldAllowsEmpty(fieldMarkers markershelper.MarkerSet) bool {
 	// Check if the field has a kubebuilder enum marker with an empty value.
 	enumMarker := fieldMarkers.Get(markers.KubebuilderEnumMarker)
-	if len(enumMarker) == 0 {
-		return false
-	}
 
 	for _, marker := range enumMarker {
 		return slices.Contains(strings.Split(marker.Expressions[""], ";"), "\"\"")
