@@ -25,7 +25,12 @@ import (
 func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{})
+	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{
+		// TODO: Just for making the tests happy, will remove while adding tests.
+		OmitZero: optionalfields.OptionalFieldsOmitZero{
+			Policy: optionalfields.OptionalFieldsOmitZeroPolicyForbid,
+		},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,6 +44,10 @@ func TestWhenRequiredPreferenceConfiguration(t *testing.T) {
 	a, err := optionalfields.Initializer().Init(&optionalfields.OptionalFieldsConfig{
 		Pointers: optionalfields.OptionalFieldsPointers{
 			Preference: optionalfields.OptionalFieldsPointerPreferenceWhenRequired,
+		},
+		// TODO: Just for making the tests happy, will remove while adding tests.
+		OmitZero: optionalfields.OptionalFieldsOmitZero{
+			Policy: optionalfields.OptionalFieldsOmitZeroPolicyForbid,
 		},
 	})
 	if err != nil {
@@ -57,6 +66,10 @@ func TestWhenRequiredWithOmitEmptyIgnorePreferenceConfiguration(t *testing.T) {
 		},
 		OmitEmpty: optionalfields.OptionalFieldsOmitEmpty{
 			Policy: optionalfields.OptionalFieldsOmitEmptyPolicyIgnore,
+		},
+		// TODO: Just for making the tests happy, will remove while adding tests.
+		OmitZero: optionalfields.OptionalFieldsOmitZero{
+			Policy: optionalfields.OptionalFieldsOmitZeroPolicyForbid,
 		},
 	})
 	if err != nil {

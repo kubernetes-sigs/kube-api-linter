@@ -150,12 +150,14 @@ func (a *analyzer) checkFieldProperties(pass *analysis.Pass, field *ast.Field, f
 
 	// The pointer preference is now when required.
 	// Validate for omitzero policy.
-	if a.omitZeroPolicy != OptionalFieldsOmitZeroPolicyIgnore || hasOmitZero {
-		// If we require omitzero, or the field has omitzero, we can check the field properties based on it being an omitzero field.
-		a.checkFieldPropertiesWithOmitZeroRequired(pass, field, fieldName, jsonTags, hasOmitZero, isPointer, isStruct)
-	} else {
-		// The field does not have omitzero, and does not require it.
-		a.checkFieldPropertiesWithoutOmitZero(pass, field, fieldName, underlying, jsonTags, hasValidZeroValue, isPointer, isStruct, hasOmitEmpty, completeValidation)
+	if a.omitZeroPolicy != OptionalFieldsOmitZeroPolicyForbid {
+		if a.omitZeroPolicy != OptionalFieldsOmitZeroPolicyIgnore || hasOmitZero {
+			// If we require omitzero, or the field has omitzero, we can check the field properties based on it being an omitzero field.
+			a.checkFieldPropertiesWithOmitZeroRequired(pass, field, fieldName, jsonTags, hasOmitZero, isPointer, isStruct, hasValidZeroValue)
+		} else {
+			// The field does not have omitzero, and does not require it.
+			a.checkFieldPropertiesWithoutOmitZero(pass, field, fieldName, underlying, jsonTags, hasValidZeroValue, isPointer, isStruct, hasOmitEmpty, completeValidation)
+		}
 	}
 
 	// The pointer preference is now when required.
@@ -174,7 +176,7 @@ func (a *analyzer) checkFieldPropertiesWithOmitEmptyRequired(pass *analysis.Pass
 	a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
 
 	switch {
-	case isStruct && hasOmitZero:
+	case isStruct && hasOmitZero && a.omitZeroPolicy != OptionalFieldsOmitZeroPolicyForbid:
 		// The struct field need not be pointer if it has omitzero tag.
 		return
 	case hasValidZeroValue && !completeValidation:
@@ -207,7 +209,7 @@ func (a *analyzer) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, fie
 	}
 }
 
-func (a *analyzer) checkFieldPropertiesWithOmitZeroRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, hasOmitZero, isPointer, isStruct bool) {
+func (a *analyzer) checkFieldPropertiesWithOmitZeroRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, hasOmitZero, isPointer, isStruct, hasValidZeroValue bool) {
 	if !isStruct {
 		// ignore non-struct fields.
 		return
@@ -218,8 +220,12 @@ func (a *analyzer) checkFieldPropertiesWithOmitZeroRequired(pass *analysis.Pass,
 		a.handleFieldShouldHaveOmitZero(pass, field, fieldName, hasOmitZero, jsonTags)
 	}
 
-	// The struct with omitzero tag need not be pointer.
-	a.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s is optional and should have omitzero tag/has omitzero tag. The field does not need to be a pointer.")
+	switch {
+	case hasValidZeroValue:
+		a.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s is optional and have a valid zero value. The field does not need to be a pointer.")
+	case !hasValidZeroValue:
+		a.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s is optional and does not have a valid zero value. The field does not need to be a pointer.")
+	}
 }
 
 func (a *analyzer) checkFieldPropertiesWithoutOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, underlying ast.Expr, jsonTags extractjsontags.FieldTagInfo, hasValidZeroValue, isPointer, isStruct, hasOmitEmpty, completeValidation bool) {
@@ -246,7 +252,7 @@ func (a *analyzer) checkFieldPropertiesWithoutOmitZero(pass *analysis.Pass, fiel
 		// Once it has the omitzero tag, it will also need to be a pointer in some cases.
 		// Now handle it as if it had the omitzero already.
 		// We already handle the omitzero tag above, so force the `hasOmitZero` to true.
-		a.checkFieldPropertiesWithOmitZeroRequired(pass, field, fieldName, jsonTags, true, isPointer, isStruct)
+		a.checkFieldPropertiesWithOmitZeroRequired(pass, field, fieldName, jsonTags, true, isPointer, isStruct, hasValidZeroValue)
 	}
 }
 

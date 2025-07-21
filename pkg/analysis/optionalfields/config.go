@@ -65,11 +65,14 @@ type OptionalFieldsOmitEmpty struct {
 // OptionalFieldsOmitZero is the configuration for the `omitzero` tag on optional fields.
 type OptionalFieldsOmitZero struct {
 	// policy determines whether the linter should require omitzero for all optional `struct` fields.
-	// Valid values are "SuggestFix", "Warn" and "Ignore".
+	// Valid values are "SuggestFix", "Warn", "Ignore" and "Forbid".
 	// When set to "SuggestFix", the linter will suggest adding the `omitzero` tag when an optional field does not have it.
 	// When set to "Warn", the linter will emit a warning if the field does not have the `omitzero` tag.
 	// When set to "Ignore", and optional field missing the `omitzero` tag will be ignored.
+	// When set to "Forbid", 'omitzero' tags wont be considered.
 	// Note, when set to "Ignore", and a field does not have the `omitzero` tag, this may affect whether the field should be a pointer or not.
+	// Note, `omitzero` tag is supported in go version starting from go 1.24.
+	// Note, Configure omitzero policy to 'Forbid', if using with go version less than go 1.24.
 	Policy OptionalFieldsOmitZeroPolicy `json:"policy"`
 }
 
@@ -121,4 +124,7 @@ const (
 
 	// OptionalFieldsOmitZeroPolicyIgnore indicates that the linter will ignore any field missing the omitzero tag.
 	OptionalFieldsOmitZeroPolicyIgnore OptionalFieldsOmitZeroPolicy = "Ignore"
+
+	// OptionalFieldsOmitZeroPolicyForbid indicates that the linter will forbid using omitzero tag.
+	OptionalFieldsOmitZeroPolicyForbid OptionalFieldsOmitZeroPolicy = "Forbid"
 )

@@ -143,3 +143,31 @@ func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPo
 		panic(fmt.Sprintf("unknown omit empty policy: %s", omitEmptyPolicy))
 	}
 }
+
+// reportShouldAddOmitZero adds an analysis diagnostic that explains that an omitzero tag should be added.
+func reportShouldAddOmitZero(pass *analysis.Pass, field *ast.Field, omitZeroPolicy OptionalFieldsOmitZeroPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
+	switch omitZeroPolicy {
+	case OptionalFieldsOmitZeroPolicySuggestFix:
+		pass.Report(analysis.Diagnostic{
+			Pos:     field.Pos(),
+			Message: fmt.Sprintf(messageFmt, fieldName),
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: fmt.Sprintf("should add 'omitzero' to the field tag for field %s", fieldName),
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     fieldTagInfo.Pos + token.Pos(len(fieldTagInfo.Name)),
+							NewText: []byte(",omitzero"),
+						},
+					},
+				},
+			},
+		})
+	case OptionalFieldsOmitZeroPolicyWarn:
+		pass.Reportf(field.Pos(), messageFmt, fieldName)
+	case OptionalFieldsOmitZeroPolicyIgnore, OptionalFieldsOmitZeroPolicyForbid:
+		// Do nothing, as the policy is to ignore the missing omitzero tag.
+	default:
+		panic(fmt.Sprintf("unknown omit zero policy: %s", omitZeroPolicy))
+	}
+}
