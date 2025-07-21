@@ -215,12 +215,11 @@ func (a *analyzer) checkFieldPropertiesWithOmitZeroRequired(pass *analysis.Pass,
 
 	// In this case, we should always add the omitzero for non-pointer struct fields if it isn't present.
 	if !isPointer {
-		a.handleFieldShouldHaveOmitZero(pass, field, fieldName, hasOmitZero, isStruct, jsonTags)
+		a.handleFieldShouldHaveOmitZero(pass, field, fieldName, hasOmitZero, jsonTags)
 	}
 
 	// The struct with omitzero tag need not be pointer.
-	a.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s is optional and has omitzero tag. The field does not need to be a pointer.")
-
+	a.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s is optional and should have omitzero tag/has omitzero tag. The field does not need to be a pointer.")
 }
 
 func (a *analyzer) checkFieldPropertiesWithoutOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, underlying ast.Expr, jsonTags extractjsontags.FieldTagInfo, hasValidZeroValue, isPointer, isStruct, hasOmitEmpty, completeValidation bool) {
@@ -235,7 +234,7 @@ func (a *analyzer) checkFieldPropertiesWithoutOmitZero(pass *analysis.Pass, fiel
 		a.handleIncompleteFieldValidation(pass, field, fieldName, isPointer, underlying)
 		fallthrough // Since it's a valid zero value, we should still enforce the pointer.
 	case hasValidZeroValue:
-		// Optional structs without omitzero should always be pointers and has omitzero, else they won't actually be omitted.
+		// Optional structs without omitzero should always be pointers and have omitempty, else they won't actually be omitted.
 		a.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying)
 		a.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
 	case !hasValidZeroValue:
@@ -293,7 +292,7 @@ func (a *analyzer) handleFieldShouldHaveOmitEmpty(pass *analysis.Pass, field *as
 	reportShouldAddOmitEmpty(pass, field, a.omitEmptyPolicy, fieldName, "field %s is optional and should have the omitempty tag", jsonTags)
 }
 
-func (a *analyzer) handleFieldShouldHaveOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, hasOmitZero, isStruct bool, jsonTags extractjsontags.FieldTagInfo) {
+func (a *analyzer) handleFieldShouldHaveOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, hasOmitZero bool, jsonTags extractjsontags.FieldTagInfo) {
 	if hasOmitZero {
 		return
 	}
