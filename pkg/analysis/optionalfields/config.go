@@ -29,7 +29,7 @@ type OptionalFieldsConfig struct {
 
 	// omitzero is the policy for the `omitzero` tag within the json tag for fields.
 	// This defines how the linter should handle optional fields, and whether they should have the omitzero tag or not.
-	// By default, all the struct fields will be expected to have the `omitzero` tag.
+	// By default, all the struct fields will be expected to have the `omitzero` tag when their zero value is not an acceptable user choice.
 	OmitZero OptionalFieldsOmitZero `json:"omitzero"`
 }
 
@@ -54,7 +54,7 @@ type OptionalFieldsPointers struct {
 // OptionalFieldsOmitEmpty is the configuration for the `omitempty` tag on optional fields.
 type OptionalFieldsOmitEmpty struct {
 	// policy determines whether the linter should require omitempty for all optional fields.
-	// Valid values are "SuggestFix" and "Ignore".
+	// Valid values are "SuggestFix", "Warn" and "Ignore".
 	// When set to "SuggestFix", the linter will suggest adding the `omitempty` tag when an optional field does not have it.
 	// When set to "Warn", the linter will emit a warning if the field does not have the `omitempty` tag.
 	// When set to "Ignore", and optional field missing the `omitempty` tag will be ignored.
@@ -65,7 +65,7 @@ type OptionalFieldsOmitEmpty struct {
 // OptionalFieldsOmitZero is the configuration for the `omitzero` tag on optional fields.
 type OptionalFieldsOmitZero struct {
 	// policy determines whether the linter should require omitzero for all optional `struct` fields.
-	// Valid values are "SuggestFix" and "Ignore".
+	// Valid values are "SuggestFix", "Warn" and "Ignore".
 	// When set to "SuggestFix", the linter will suggest adding the `omitzero` tag when an optional field does not have it.
 	// When set to "Warn", the linter will emit a warning if the field does not have the `omitzero` tag.
 	// When set to "Ignore", and optional field missing the `omitzero` tag will be ignored.
