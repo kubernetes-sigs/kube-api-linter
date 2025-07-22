@@ -31,6 +31,27 @@ func IsBasicType(pass *analysis.Pass, ident *ast.Ident) bool {
 	return ok
 }
 
+// IsStructType checks if the given expression is a struct type.
+func IsStructType(pass *analysis.Pass, expr ast.Expr) bool {
+	underlying := getUnderlyingType(expr)
+
+	if _, ok := underlying.(*ast.StructType); ok {
+		return true
+	}
+
+	// Where there's an ident, recurse to find the underlying type.
+	if ident, ok := underlying.(*ast.Ident); ok {
+		typeSpec, ok := LookupTypeSpec(pass, ident)
+		if !ok {
+			return false
+		}
+
+		return IsStructType(pass, typeSpec.Type)
+	}
+
+	return false
+}
+
 // LookupTypeSpec is used to search for the type spec of a given identifier.
 // It will first check to see if the ident has an Obj, and if so, it will return the type spec
 // from the Obj. If the Obj is nil, it will search through the files in the package to find the
