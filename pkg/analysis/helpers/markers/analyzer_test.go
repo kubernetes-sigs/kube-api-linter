@@ -121,6 +121,15 @@ func TestExtractMarkerIdAndExpressions(t *testing.T) {
 				"": "-10",
 			},
 		},
+		{
+			name:       "registered marker with named expression using backtick ('`') for strings",
+			marker:     "kubebuilder:validation:XValidation:rule=`has(self.field)`,message=`must have field!`",
+			expectedID: "kubebuilder:validation:XValidation",
+			expectedExpressions: map[string]string{
+				"rule":    "`has(self.field)`",
+				"message": "`must have field!`",
+			},
+		},
 	}
 
 	for _, tc := range testcases {

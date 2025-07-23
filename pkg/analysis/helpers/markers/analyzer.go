@@ -230,7 +230,7 @@ func extractKnownMarkerIDAndExpressions(id string, marker string) (string, map[s
 	return id, extractExpressions(strings.TrimPrefix(marker, id))
 }
 
-var expressionRegex = regexp.MustCompile(`\w*=(?:'[^']*'|"(\\"|[^"])*"|[\w;\-"]+)`)
+var expressionRegex = regexp.MustCompile("\\w*=(?:'[^']*'|\"(\\\\\"|[^\"])*\"|[\\w;\\-\"]+|`[^`]*`)")
 
 func extractExpressions(expressionStr string) map[string]string {
 	expressionsMap := map[string]string{}
