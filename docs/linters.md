@@ -2,6 +2,7 @@
 
 - [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
+- [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
@@ -18,6 +19,7 @@
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
 - [StatusSubresource](#statussubresource) - Validates status subresource configuration
 - [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
+- [ConflictingMarkers](#conflictingmarkers) - Detects and reports when mutually exclusive markers are used on the same field
 
 ## Conditions
 
@@ -73,6 +75,49 @@ This helps to ensure that generated documentation reflects the most common usage
 The `commentstart` linter can automatically fix comments that do not start with the serialized form of the type.
 
 When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
+
+## ConflictingMarkers
+
+The `conflictingmarkers` linter detects and reports when mutually exclusive markers are used on the same field.
+This prevents common configuration errors and unexpected behavior in Kubernetes API types.
+
+The linter reports issues when markers from two or more sets of a conflict definition are present on the same field.
+It does NOT report issues when multiple markers from the same set are present - only when markers from
+different sets within the same conflict definition are found together.
+
+The linter is configurable and allows users to define sets of conflicting markers.
+Each conflict set must specify:
+- A unique name for the conflict
+- Multiple sets of markers that are mutually exclusive with each other (at least 2 sets)
+- A description explaining why the markers conflict
+
+### Configuration
+
+```yaml
+lintersConfig:
+  conflictingmarkers:
+    conflicts:
+      - name: "optional_vs_required"
+        sets:
+          - ["optional", "+kubebuilder:validation:Optional", "+k8s:validation:optional"]
+          - ["required", "+kubebuilder:validation:Required", "+k8s:validation:required"]
+        description: "A field cannot be both optional and required"
+      - name: "default_vs_required"
+        sets:
+          - ["default", "+kubebuilder:default"]
+          - ["required", "+kubebuilder:validation:Required", "+k8s:validation:required"]
+        description: "A field with a default value cannot be required"
+      - name: "three_way_conflict"
+        sets:
+          - ["marker5", "marker6"]
+          - ["marker7", "marker8"]
+          - ["marker9", "marker10"]
+        description: "Three-way conflict between marker sets"
+```
+
+**Note**: This linter is not enabled by default and must be explicitly enabled in the configuration.
+
+The linter does not provide automatic fixes as it cannot determine which conflicting marker should be removed.
 
 ## DuplicateMarkers
 
@@ -359,3 +404,57 @@ Taking the example configuration from above:
 - Marker definitions of `custom:SomeCustomMarker:fruit=apple,color=red` and `custom:SomeCustomMarker:fruit=orange,color=red` would _not_ violate the uniqueness requirement.
 
 Each entry in `customMarkers` must have a unique `identifier`.
+
+## ConflictingMarkers
+
+The `conflictingmarkers` linter detects and reports when mutually exclusive markers are used on the same field.
+This prevents common configuration errors and unexpected behavior in Kubernetes API types.
+
+The linter reports issues when markers from two or more sets of a conflict definition are present on the same field.
+It does NOT report issues when multiple markers from the same set are present - only when markers from
+different sets within the same conflict definition are found together.
+
+The linter is configurable and allows users to define sets of conflicting markers.
+Each conflict set must specify:
+- A unique name for the conflict
+- Multiple sets of markers that are mutually exclusive with each other (at least 2 sets)
+- A description explaining why the markers conflict
+
+### Configuration
+
+```yaml
+lintersConfig:
+  conflictingmarkers:
+    conflicts:
+      - name: "optional_vs_required"
+        sets:
+          - ["optional", "+kubebuilder:validation:Optional", "+k8s:validation:optional"]
+          - ["required", "+kubebuilder:validation:Required", "+k8s:validation:required"]
+        description: "A field cannot be both optional and required"
+      - name: "default_vs_required"
+        sets:
+          - ["default", "+kubebuilder:default"]
+          - ["required", "+kubebuilder:validation:Required", "+k8s:validation:required"]
+        description: "A field with a default value cannot be required"
+      - name: "three_way_conflict"
+        sets:
+          - ["marker5", "marker6"]
+          - ["marker7", "marker8"]
+          - ["marker9", "marker10"]
+        description: "Three-way conflict between marker sets"
+      - name: "mutually_exclusive_validation"
+        sets:
+          - ["optional", "+kubebuilder:validation:Optional"]
+          - ["required", "+kubebuilder:validation:Required"]
+          - ["default", "+kubebuilder:default"]
+        description: "A field cannot be optional, required, and have a default value"
+      - name: "my_custom_conflict"
+        sets:
+          - ["custom:marker1", "custom:marker2"]
+          - ["custom:marker3", "custom:marker4"]
+        description: "These markers conflict because..."
+```
+
+**Note**: This linter is not enabled by default and must be explicitly enabled in the configuration.
+
+The linter does not provide automatic fixes as it cannot determine which conflicting marker should be removed.
