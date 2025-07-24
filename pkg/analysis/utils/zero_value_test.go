@@ -65,7 +65,7 @@ func testZeroValueAnalyzer() *analysis.Analyzer {
 					return
 				}
 
-				zeroValueValid, complete := utils.IsZeroValueValid(pass, field, field.Type, markers)
+				zeroValueValid, complete := utils.IsZeroValueValid(pass, field, field.Type, markers, false)
 				if !zeroValueValid {
 					pass.Reportf(field.Pos(), "zero value is not valid")
 				} else {
