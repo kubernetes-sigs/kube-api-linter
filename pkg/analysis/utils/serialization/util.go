@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package optionalfields
+package serialization
 
 import (
 	"fmt"
@@ -22,54 +22,16 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
-	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
-
-// isStarExpr checks if the expression is a pointer type.
-// If it is, it returns the expression inside the pointer.
-func isStarExpr(expr ast.Expr) (bool, ast.Expr) {
-	if ptrType, ok := expr.(*ast.StarExpr); ok {
-		return true, ptrType.X
-	}
-
-	return false, expr
-}
-
-// isPointerType checks if the expression is a pointer type.
-// This is for types that are always implemented as pointers and therefore should
-// not be the underlying type of a star expr.
-func isPointerType(pass *analysis.Pass, expr ast.Expr) bool {
-	switch t := expr.(type) {
-	case *ast.StarExpr, *ast.MapType, *ast.ArrayType:
-		return true
-	case *ast.Ident:
-		// If the ident is a type alias, keep checking until we find the underlying type.
-		typeSpec, ok := utils.LookupTypeSpec(pass, t)
-		if !ok {
-			return false
-		}
-
-		return isPointerType(pass, typeSpec.Type)
-	default:
-		return false
-	}
-}
-
-// isFieldOptional checks if a field has an optional marker.
-func isFieldOptional(fieldMarkers markershelper.MarkerSet) bool {
-	return fieldMarkers.Has(markers.OptionalMarker) || fieldMarkers.Has(markers.KubebuilderOptionalMarker)
-}
 
 // reportShouldAddPointer adds an analysis diagnostic that explains that a pointer should be added.
 // Where the pointer policy is suggest fix, it also adds a suggested fix to add the pointer.
-func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
+func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy PointersPolicy, fieldName, messageFmt string, args ...any) {
 	switch pointerPolicy {
-	case OptionalFieldsPointerPolicySuggestFix:
+	case PointersPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf(messageFmt, fieldName),
+			Message: fmt.Sprintf(messageFmt, args...),
 			SuggestedFixes: []analysis.SuggestedFix{
 				{
 					Message: "should make the field a pointer",
@@ -82,8 +44,8 @@ func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy
 				},
 			},
 		})
-	case OptionalFieldsPointerPolicyWarn:
-		pass.Reportf(field.Pos(), messageFmt, fieldName)
+	case PointersPolicyWarn:
+		pass.Reportf(field.Pos(), messageFmt, args...)
 	default:
 		panic(fmt.Sprintf("unknown pointer policy: %s", pointerPolicy))
 	}
@@ -91,12 +53,12 @@ func reportShouldAddPointer(pass *analysis.Pass, field *ast.Field, pointerPolicy
 
 // reportShouldRemovePointer adds an analysis diagnostic that explains that a pointer should be removed.
 // Where the pointer policy is suggest fix, it also adds a suggested fix to remove the pointer.
-func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPolicy OptionalFieldsPointerPolicy, fieldName, messageFmt string) {
+func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPolicy PointersPolicy, fieldName, messageFmt string, args ...any) {
 	switch pointerPolicy {
-	case OptionalFieldsPointerPolicySuggestFix:
+	case PointersPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf(messageFmt, fieldName),
+			Message: fmt.Sprintf(messageFmt, args...),
 			SuggestedFixes: []analysis.SuggestedFix{
 				{
 					Message: "should remove the pointer",
@@ -109,17 +71,17 @@ func reportShouldRemovePointer(pass *analysis.Pass, field *ast.Field, pointerPol
 				},
 			},
 		})
-	case OptionalFieldsPointerPolicyWarn:
-		pass.Reportf(field.Pos(), messageFmt, fieldName)
+	case PointersPolicyWarn:
+		pass.Reportf(field.Pos(), messageFmt, args...)
 	default:
 		panic(fmt.Sprintf("unknown pointer policy: %s", pointerPolicy))
 	}
 }
 
 // reportShouldAddOmitEmpty adds an analysis diagnostic that explains that an omitempty tag should be added.
-func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPolicy OptionalFieldsOmitEmptyPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
+func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPolicy OmitEmptyPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
 	switch omitEmptyPolicy {
-	case OptionalFieldsOmitEmptyPolicySuggestFix:
+	case OmitEmptyPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf(messageFmt, fieldName),
@@ -135,9 +97,9 @@ func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPo
 				},
 			},
 		})
-	case OptionalFieldsOmitEmptyPolicyWarn:
+	case OmitEmptyPolicyWarn:
 		pass.Reportf(field.Pos(), messageFmt, fieldName)
-	case OptionalFieldsOmitEmptyPolicyIgnore:
+	case OmitEmptyPolicyIgnore:
 		// Do nothing, as the policy is to ignore the missing omitempty tag.
 	default:
 		panic(fmt.Sprintf("unknown omit empty policy: %s", omitEmptyPolicy))

@@ -117,17 +117,23 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 	nonOmittedFields := 0
 
 	for _, field := range structType.Fields.List {
+		fieldRequired := isFieldRequired(field, markersAccess)
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
 
-		if fieldTagInfo.OmitEmpty {
-			// If the field is omitted, we can use a zero value.
-			// For structs, if they aren't a pointer another error will be raised.
-			continue
+		// Assume the field has omitempty.
+		// Then the zero value (omitted) for a required field is not valid, and for an optional field it is valid.
+		validValue := !fieldRequired
+
+		// Count the required fields as non-omitted even if they have omitempty.
+		// This allows us to count them towards the min-properties count in the parent function.
+		if !fieldTagInfo.OmitEmpty || fieldRequired {
+			nonOmittedFields++
 		}
 
-		nonOmittedFields++
-
-		validValue, _ := IsZeroValueValid(pass, field, field.Type, markersAccess)
+		// When the field is not omitted, we need to check if the zero value is valid (required or not).
+		if !fieldTagInfo.OmitEmpty {
+			validValue, _ = IsZeroValueValid(pass, field, field.Type, markersAccess)
+		}
 
 		// If either value is false then the collected values will be false.
 		zeroValueValid = zeroValueValid && validValue
@@ -416,4 +422,14 @@ func isBoolIdent(ident *ast.Ident) bool {
 // isFloatIdent checks if the identifier is one of the float types.
 func isFloatIdent(ident *ast.Ident) bool {
 	return ident.Name == "float32" || ident.Name == "float64"
+}
+
+// isFieldRequired checks if the field is required.
+// It checks for the presence of the required marker, the kubebuilder required marker, or the k8s required marker.
+func isFieldRequired(field *ast.Field, markersAccess markershelper.Markers) bool {
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	return fieldMarkers.Has(markers.RequiredMarker) ||
+		fieldMarkers.Has(markers.KubebuilderRequiredMarker) ||
+		fieldMarkers.Has(markers.K8sRequiredMarker)
 }
