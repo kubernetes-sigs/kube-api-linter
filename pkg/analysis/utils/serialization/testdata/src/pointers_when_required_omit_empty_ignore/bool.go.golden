@@ -1,0 +1,11 @@
+package a
+
+type TestBools struct {
+	Bool bool `json:"bool"`
+
+	BoolWithOmitEmpty *bool `json:"boolWithOmitEmpty,omitempty"` // want "field BoolWithOmitEmpty has a valid zero value \\(false\\) and should be a pointer."
+
+	BoolPtr bool `json:"boolPtr"` // want "field BoolPtr does not have omitempty and allows the zero value. The field does not need to be a pointer."
+
+	BoolPtrWithOmitEmpty *bool `json:"boolPtrWithOmitEmpty,omitempty"`
+}

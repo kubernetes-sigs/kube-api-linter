@@ -1,0 +1,219 @@
+package a
+
+type TestNumbers struct {
+	Int int `json:"int"` // want "field Int should have the omitempty tag." "field Int has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	IntWithOmitEmpty int `json:"intWithOmitEmpty,omitempty"` // want "field IntWithOmitEmpty has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=1
+	IntWithPositiveMinimum int `json:"intWithPositiveMinimum"` // want "field IntWithPositiveMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=1
+	IntWithPositiveMinimumWithOmitEmpty int `json:"intWithPositiveMinimumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Minimum=0
+	IntWithZeroMinimum int `json:"intWithZeroMinimum"` // want "field IntWithZeroMinimum should have the omitempty tag." "field IntWithZeroMinimum has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=0
+	IntWithZeroMinimumWithOmitEmpty int `json:"intWithZeroMinimumWithOmitEmpty,omitempty"` // want "field IntWithZeroMinimumWithOmitEmpty has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	IntWithNegativeMinimum int `json:"intWithNegativeMinimum"` // want "field IntWithNegativeMinimum should have the omitempty tag." "field IntWithNegativeMinimum has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	IntWithNegativeMinimumWithOmitEmpty int `json:"intWithNegativeMinimumWithOmitEmpty,omitempty"` // want "field IntWithNegativeMinimumWithOmitEmpty has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	IntWithPositiveMaximum int `json:"intWithPositiveMaximum"` // want "field IntWithPositiveMaximum should have the omitempty tag." "field IntWithPositiveMaximum has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	IntWithPositiveMaximumWithOmitEmpty int `json:"intWithPositiveMaximumWithOmitEmpty,omitempty"` // want "field IntWithPositiveMaximumWithOmitEmpty has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	IntWithZeroMaximum int `json:"intWithZeroMaximum"` // want "field IntWithZeroMaximum should have the omitempty tag." "field IntWithZeroMaximum has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	IntWithZeroMaximumWithOmitEmpty int `json:"intWithZeroMaximumWithOmitEmpty,omitempty"` // want "field IntWithZeroMaximumWithOmitEmpty has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=-1
+	IntWithNegativeMaximum int `json:"intWithNegativeMaximum"` // want "field IntWithNegativeMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Maximum=-1
+	IntWithNegativeMaximumWithOmitEmpty int `json:"intWithNegativeMaximumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	IntWithRangeIncludingZero int `json:"intWithRangeIncludingZero"` // want "field IntWithRangeIncludingZero should have the omitempty tag." "field IntWithRangeIncludingZero has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	IntWithRangeIncludingZeroWithOmitEmpty int `json:"intWithRangeIncludingZeroWithOmitEmpty,omitempty"` // want "field IntWithRangeIncludingZeroWithOmitEmpty has a valid zero value \\(0\\) and should be a pointer."
+
+	IntPtr *int `json:"intPtr"` // want "field IntPtr should have the omitempty tag."
+
+	IntPtrWithOmitEmpty *int `json:"intPtrWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Minimum=1
+	IntPtrWithPositiveMinimum *int `json:"intPtrWithPositiveMinimum"` // want "field IntPtrWithPositiveMinimum should have the omitempty tag." "field IntPtrWithPositiveMinimum does not allow the zero value. The field does not need to be a pointer."
+
+	// +kubebuilder:validation:Minimum=1
+	IntPtrWithPositiveMinimumWithOmitEmpty *int `json:"intPtrWithPositiveMinimumWithOmitEmpty,omitempty"` // want "field IntPtrWithPositiveMinimumWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+
+	// +kubebuilder:validation:Minimum=0
+	IntPtrWithZeroMinimum *int `json:"intPtrWithZeroMinimum"` // want "field IntPtrWithZeroMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=0
+	IntPtrWithZeroMinimumWithOmitEmpty *int `json:"intPtrWithZeroMinimumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Minimum=-1
+	IntPtrWithNegativeMinimum *int `json:"intPtrWithNegativeMinimum"` // want "field IntPtrWithNegativeMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=-1
+	IntPtrWithNegativeMinimumWithOmitEmpty *int `json:"intPtrWithNegativeMinimumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Maximum=1
+	IntPtrWithPositiveMaximum *int `json:"intPtrWithPositiveMaximum"` // want "field IntPtrWithPositiveMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Maximum=1
+	IntPtrWithPositiveMaximumWithOmitEmpty *int `json:"intPtrWithPositiveMaximumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Maximum=0
+	IntPtrWithZeroMaximum *int `json:"intPtrWithZeroMaximum"` // want "field IntPtrWithZeroMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Maximum=0
+	IntPtrWithZeroMaximumWithOmitEmpty *int `json:"intPtrWithZeroMaximumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Maximum=-1
+	IntPtrWithNegativeMaximum *int `json:"intPtrWithNegativeMaximum"` // want "field IntPtrWithNegativeMaximum should have the omitempty tag." "field IntPtrWithNegativeMaximum does not allow the zero value. The field does not need to be a pointer."
+
+	// +kubebuilder:validation:Maximum=-1
+	IntPtrWithNegativeMaximumWithOmitEmpty *int `json:"intPtrWithNegativeMaximumWithOmitEmpty,omitempty"` // want "field IntPtrWithNegativeMaximumWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	IntPtrWithRangeIncludingZero *int `json:"intPtrWithRangeIncludingZero"` // want "field IntPtrWithRangeIncludingZero should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	IntPtrWithRangeIncludingZeroWithOmitEmpty *int `json:"intPtrWithRangeIncludingZeroWithOmitEmpty,omitempty"`
+
+	Int32 int32 `json:"int32"` // want "field Int32 should have the omitempty tag." "field Int32 has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=1
+	Int32WithPositiveMinimum int32 `json:"int32WithPositiveMinimum"` // want "field Int32WithPositiveMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=0
+	Int32WithZeroMinimum int32 `json:"int32WithZeroMinimum"` // want "field Int32WithZeroMinimum should have the omitempty tag." "field Int32WithZeroMinimum has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	Int32WithNegativeMinimum int32 `json:"int32WithNegativeMinimum"` // want "field Int32WithNegativeMinimum should have the omitempty tag." "field Int32WithNegativeMinimum has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	Int32WithPositiveMaximum int32 `json:"int32WithPositiveMaximum"` // want "field Int32WithPositiveMaximum should have the omitempty tag." "field Int32WithPositiveMaximum has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	Int32WithZeroMaximum int32 `json:"int32WithZeroMaximum"` // want "field Int32WithZeroMaximum should have the omitempty tag." "field Int32WithZeroMaximum has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=-1
+	Int32WithNegativeMaximum int32 `json:"int32WithNegativeMaximum"` // want "field Int32WithNegativeMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	Int32WithRangeIncludingZero int32 `json:"int32WithRangeIncludingZero"` // want "field Int32WithRangeIncludingZero should have the omitempty tag." "field Int32WithRangeIncludingZero has a valid zero value \\(0\\) and should be a pointer."
+
+	Int64 int64 `json:"int64"` // want "field Int64 should have the omitempty tag." "field Int64 has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=1
+	Int64WithPositiveMinimum int64 `json:"int64WithPositiveMinimum"` // want "field Int64WithPositiveMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=0
+	Int64WithZeroMinimum int64 `json:"int64WithZeroMinimum"` // want "field Int64WithZeroMinimum should have the omitempty tag." "field Int64WithZeroMinimum has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	Int64WithNegativeMinimum int64 `json:"int64WithNegativeMinimum"` // want "field Int64WithNegativeMinimum should have the omitempty tag." "field Int64WithNegativeMinimum has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	Int64WithPositiveMaximum int64 `json:"int64WithPositiveMaximum"` // want "field Int64WithPositiveMaximum should have the omitempty tag." "field Int64WithPositiveMaximum has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	Int64WithZeroMaximum int64 `json:"int64WithZeroMaximum"` // want "field Int64WithZeroMaximum should have the omitempty tag." "field Int64WithZeroMaximum has a valid zero value \\(0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=-1
+	Int64WithNegativeMaximum int64 `json:"int64WithNegativeMaximum"` // want "field Int64WithNegativeMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	Int64WithRangeIncludingZero int64 `json:"int64WithRangeIncludingZero"` // want "field Int64WithRangeIncludingZero should have the omitempty tag." "field Int64WithRangeIncludingZero has a valid zero value \\(0\\) and should be a pointer."
+
+	Float32 float32 `json:"float32"` // want "field Float32 should have the omitempty tag." "field Float32 has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	Float32WithOmitEmpty float32 `json:"float32WithOmitEmpty,omitempty"` // want "field Float32WithOmitEmpty has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=1
+	Float32WithPositiveMinimum float32 `json:"float32WithPositiveMinimum"` // want "field Float32WithPositiveMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=1
+	Float32WithPositiveMinimumWithOmitEmpty float32 `json:"float32WithPositiveMinimumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Minimum=0
+	Float32WithZeroMinimum float32 `json:"float32WithZeroMinimum"` // want "field Float32WithZeroMinimum should have the omitempty tag." "field Float32WithZeroMinimum has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=0
+	Float32WithZeroMinimumWithOmitEmpty float32 `json:"float32WithZeroMinimumWithOmitEmpty,omitempty"` // want "field Float32WithZeroMinimumWithOmitEmpty has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	Float32WithNegativeMinimum float32 `json:"float32WithNegativeMinimum"` // want "field Float32WithNegativeMinimum should have the omitempty tag." "field Float32WithNegativeMinimum has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	Float32WithNegativeMinimumWithOmitEmpty float32 `json:"float32WithNegativeMinimumWithOmitEmpty,omitempty"` // want "field Float32WithNegativeMinimumWithOmitEmpty has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	Float32WithPositiveMaximum float32 `json:"float32WithPositiveMaximum"` // want "field Float32WithPositiveMaximum should have the omitempty tag." "field Float32WithPositiveMaximum has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	Float32WithPositiveMaximumWithOmitEmpty float32 `json:"float32WithPositiveMaximumWithOmitEmpty,omitempty"` // want "field Float32WithPositiveMaximumWithOmitEmpty has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	Float32WithZeroMaximum float32 `json:"float32WithZeroMaximum"` // want "field Float32WithZeroMaximum should have the omitempty tag." "field Float32WithZeroMaximum has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	Float32WithZeroMaximumWithOmitEmpty float32 `json:"float32WithZeroMaximumWithOmitEmpty,omitempty"` // want "field Float32WithZeroMaximumWithOmitEmpty has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=-1
+	Float32WithNegativeMaximum float32 `json:"float32WithNegativeMaximum"` // want "field Float32WithNegativeMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Maximum=-1
+	Float32WithNegativeMaximumWithOmitEmpty float32 `json:"float32WithNegativeMaximumWithOmitEmpty,omitempty"`
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	Float32WithRangeIncludingZero float32 `json:"float32WithRangeIncludingZero"` // want "field Float32WithRangeIncludingZero should have the omitempty tag." "field Float32WithRangeIncludingZero has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	Float32WithRangeIncludingZeroWithOmitEmpty float32 `json:"float32WithRangeIncludingZeroWithOmitEmpty,omitempty"` // want "field Float32WithRangeIncludingZeroWithOmitEmpty has a valid zero value \\(0.0\\) and should be a pointer."
+
+	Float64 float64 `json:"float64"` // want "field Float64 should have the omitempty tag." "field Float64 has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Minimum=1
+	Float64WithPositiveMinimum float64 `json:"float64WithPositiveMinimum"` // want "field Float64WithPositiveMinimum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=0
+	Float64WithZeroMinimum float64 `json:"float64WithZeroMinimum"` // want "field Float64WithZeroMinimum should have the omitempty tag." "field Float64WithZeroMinimum has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Minimum=-1
+	Float64WithNegativeMinimum float64 `json:"float64WithNegativeMinimum"` // want "field Float64WithNegativeMinimum should have the omitempty tag." "field Float64WithNegativeMinimum has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=1
+	Float64WithPositiveMaximum float64 `json:"float64WithPositiveMaximum"` // want "field Float64WithPositiveMaximum should have the omitempty tag." "field Float64WithPositiveMaximum has a valid zero value \\(0.0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	// +kubebuilder:validation:Maximum=0
+	Float64WithZeroMaximum float64 `json:"float64WithZeroMaximum"` // want "field Float64WithZeroMaximum should have the omitempty tag." "field Float64WithZeroMaximum has a valid zero value \\(0.0\\) and should be a pointer."
+
+	// +kubebuilder:validation:Maximum=-1
+	Float64WithNegativeMaximum float64 `json:"float64WithNegativeMaximum"` // want "field Float64WithNegativeMaximum should have the omitempty tag."
+
+	// +kubebuilder:validation:Minimum=-1
+	// +kubebuilder:validation:Maximum=1
+	Float64WithRangeIncludingZero float64 `json:"float64WithRangeIncludingZero"` // want "field Float64WithRangeIncludingZero should have the omitempty tag." "field Float64WithRangeIncludingZero has a valid zero value \\(0.0\\) and should be a pointer."
+}
