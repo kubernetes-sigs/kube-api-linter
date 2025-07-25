@@ -16,22 +16,42 @@ limitations under the License.
 package nonullable
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 )
 
-const name = "nonullable"
-const doc = "Check that nullable marker is not present on any types or fields."
+const (
+	name = "nonullable"
+	doc  = "Check that nullable marker is not present on any types or fields."
+)
 
 func newAnalyzer() *analysis.Analyzer {
-	analyzer := forbiddenmarkers.NewAnalyzer(config.ForbiddenMarkersConfig{
-		Markers: []config.ForbiddenMarker{
+	cfg := &forbiddenmarkers.Config{
+		Markers: []forbiddenmarkers.Marker{
 			{
 				Identifier: "nullable",
 			},
 		},
-	}, forbiddenmarkers.WithName(name), forbiddenmarkers.WithDoc(doc))
+	}
+
+	configInit := forbiddenmarkers.Initializer().(initializer.ConfigurableAnalyzerInitializer)
+
+	errs := configInit.ValidateConfig(cfg, field.NewPath("nullable"))
+	if err := errs.ToAggregate(); err != nil {
+		panic(fmt.Errorf("nonullable linter has an invalid forbiddenmarkers configuration: %w", err))
+	}
+
+	analyzer, err := configInit.Init(cfg)
+	if err != nil {
+		panic(fmt.Errorf("nonullable linter encountered an error initializing wrapped forbiddenmarkers analyzer: %w", err))
+	}
+
+	analyzer.Name = name
+	analyzer.Doc = doc
 
 	return analyzer
 }

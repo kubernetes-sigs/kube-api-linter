@@ -13,36 +13,34 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package forbiddenmarkers_test
+package forbiddenmarkers
 
 import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"
-	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
 
 func TestWithConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, forbiddenmarkers.NewAnalyzer(config.ForbiddenMarkersConfig{
-		Markers: []config.ForbiddenMarker{
+	analysistest.RunWithSuggestedFixes(t, testdata, newAnalyzer(&Config{
+		Markers: []Marker{
 			{
 				Identifier: "custom:forbidden",
 			},
 			{
 				Identifier: "custom:AttrNoValues",
-				Attributes: []config.ForbiddenMarkerAttribute{
+				Attributes: []MarkerAttribute{
 					{
-						Attribute: "fruit",
+						Name: "fruit",
 					},
 				},
 			},
 			{
 				Identifier: "custom:AttrValues",
-				Attributes: []config.ForbiddenMarkerAttribute{
+				Attributes: []MarkerAttribute{
 					{
-						Attribute: "fruit",
+						Name: "fruit",
 						Values: []string{
 							"apple",
 							"orange",
@@ -53,20 +51,20 @@ func TestWithConfiguration(t *testing.T) {
 			},
 			{
 				Identifier: "custom:AttrsNoValues",
-				Attributes: []config.ForbiddenMarkerAttribute{
+				Attributes: []MarkerAttribute{
 					{
-						Attribute: "fruit",
+						Name: "fruit",
 					},
 					{
-						Attribute: "color",
+						Name: "color",
 					},
 				},
 			},
 			{
 				Identifier: "custom:AttrsValues",
-				Attributes: []config.ForbiddenMarkerAttribute{
+				Attributes: []MarkerAttribute{
 					{
-						Attribute: "fruit",
+						Name: "fruit",
 						Values: []string{
 							"apple",
 							"orange",
@@ -74,7 +72,7 @@ func TestWithConfiguration(t *testing.T) {
 						},
 					},
 					{
-						Attribute: "color",
+						Name: "color",
 						Values: []string{
 							"red",
 							"blue",

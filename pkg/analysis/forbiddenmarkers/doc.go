@@ -20,14 +20,46 @@ limitations under the License.
 *
 * By default, `forbiddenmarkers` is not enabled.
 *
-* It can be configured with a list of marker identifiers that are forbidden
+* It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden
 * ```yaml
 * lintersConfig:
 *   forbiddenMarkers:
 *     markers:
-*       - some:forbidden:marker
-*       - anotherforbidden
+*       - identifier: forbidden:marker
+*       - identifier: forbidden:withAttribute
+*         attributes:
+*           - name: fruit
+*       - identifier: forbidden:withMultipleAttributes
+*         attributes:
+*           - name: fruit
+*           - name: color
+*       - identifier: forbidden:withAttributeValues
+*         attributes:
+*           - name: fruit
+*             values:
+*               - apple
+*               - banana
+*               - orange
+*       - identifier: forbidden:withMultipleAttributesValues
+*         attributes:
+*           - name: fruit
+*             values:
+*               - apple
+*               - banana
+*               - orange
+*           - name: color
+*             values:
+*               - red
+*               - green
+*               - blue
 * ```
+*
+* Using the config above, the following examples would be forbidden:
+* - `+forbidden:marker` (all instances, including if they have attributes and values)
+* - `+forbidden:withAttribute:fruit=*,*` (all instances of this marker containing the attribute 'fruit')
+* - `+forbidden:withMultipleAttributes:fruit=*,color=*,*` (all instances of this marker containing both the 'fruit' AND 'color' attributes)
+* - `+forbidden:withAttributeValues:fruit={apple || banana || orange},*` (all instances of this marker containing the 'fruit' attribute where the value is set to one of 'apple', 'banana', or 'orange')
+* - `+forbidden:withMultipleAttributesValues:fruit={apple || banana || orange},color={red || green || blue},*` (all instances of this marker containing the 'fruit' attribute where the value is set to one of 'apple', 'banana', or 'orange' AND the 'color' attribute where the value is set to one of 'red', 'green', or 'blue')
 *
 * Fixes are suggested to remove all markers that are forbidden.
 *

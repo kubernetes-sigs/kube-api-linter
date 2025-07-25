@@ -3,12 +3,14 @@
 - [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NoBools](#nobools) - Prevents usage of boolean types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
 - [Nomaps](#nomaps) - Restricts usage of map types
+- [NoNullable](#nonullable) - Prevents usage of the nullable marker
 - [Nophase](#nophase) - Prevents usage of 'Phase' fields
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
@@ -98,6 +100,62 @@ will not.
 The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
 If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
 
+## ForbiddenMarkers
+
+The `forbiddenmarkers` linter ensures that types and fields do not contain any markers that are forbidden.
+
+By default, `forbiddenmarkers` is not enabled.
+
+### Configuation
+
+It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden
+
+```yaml
+lintersConfig:
+  forbiddenMarkers:
+    markers:
+      - identifier: forbidden:marker
+      - identifier: forbidden:withAttribute
+        attributes:
+          - name: fruit
+      - identifier: forbidden:withMultipleAttributes
+        attributes:
+          - name: fruit
+          - name: color
+      - identifier: forbidden:withAttributeValues
+        attributes:
+          - name: fruit
+            values:
+              - apple
+              - banana
+              - orange
+      - identifier: forbidden:withMultipleAttributesValues
+        attributes:
+          - name: fruit
+            values:
+              - apple
+              - banana
+              - orange
+          - name: color
+            values:
+              - red
+              - green
+              - blue
+```
+
+Using the config above, the following examples would be forbidden:
+
+- `+forbidden:marker` (all instances, including if they have attributes and values)
+- `+forbidden:withAttribute:fruit=*,*` (all instances of this marker containing the attribute 'fruit')
+- `+forbidden:withMultipleAttributes:fruit=*,color=*,*` (all instances of this marker containing both the 'fruit' AND 'color' attributes)
+- `+forbidden:withAttributeValues:fruit={apple || banana || orange},*` (all instances of this marker containing the 'fruit' attribute where the value is set to one of 'apple', 'banana', or 'orange')
+
+- `+forbidden:withMultipleAttributesValues:fruit={apple || banana || orange},color={red || green || blue},*` (all instances of this marker containing the 'fruit' attribute where the value is set to one of 'apple', 'banana', or 'orange' AND the 'color' attribute where the value is set to one of 'red', 'green', or 'blue')
+
+### Fixes
+
+Fixes are suggested to remove all markers that are forbidden.
+
 ## Integers
 
 The `integers` linter checks for usage of unsupported integer types.
@@ -160,6 +218,14 @@ lintersConfig:
   nomaps:
     policy: Enforce | AllowStringToStringMaps | Ignore # Determines how the linter should handle maps of simple types. Defaults to AllowStringToStringMaps.
 ```
+
+## NoNullable
+
+The `nonullable` linter ensures that types and fields do not have the `nullable` marker.
+
+### Fixes
+
+Fixes are suggested to remove the `nullable` marker.
 
 ## Notimestamp
 
@@ -334,10 +400,12 @@ linter will suggest adding the comment `// +kubebuilder:subresource:status` abov
 
 The `uniquemarkers` linter ensures that types and fields do not contain more than a single definition of a marker that should only be present once.
 
-Because this linter has no way of determining which marker definition was intended it does not suggest any fixes 
+Because this linter has no way of determining which marker definition was intended it does not suggest any fixes
 
 ### Configuration
+
 It can configured to include a set of custom markers in the analysis by setting:
+
 ```yaml
 lintersConfig:
   uniquemarkers:
