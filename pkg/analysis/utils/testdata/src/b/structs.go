@@ -8,6 +8,8 @@ type ZeroValueTestStructs struct {
 	StructWithNonOmittedFieldsAndMinProperties StructWithNonOmittedFieldsAndMinProperties `json:"structWithOneNonOmittedFieldAndMinProperties,omitempty"` // want "zero value is valid" "validation is complete"
 
 	StructWithOneNonOmittedFieldAndMinProperties StructWithOneNonOmittedFieldAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty,omitempty"` // want "zero value is not valid" "validation is complete"
+
+	StructWithOmittedRequiredField StructWithOmittedRequiredField `json:"structWithOmittedRequiredField,omitempty"` // want "zero value is not valid" "validation is complete"
 }
 
 type StructWithAllOptionalFields struct {
@@ -60,4 +62,11 @@ type StructWithOneNonOmittedFieldAndMinProperties struct {
 
 	// +optional
 	Int int32 `json:"int,omitempty"` // want "zero value is valid" "validation is not complete"
+}
+
+// Struct with an omitted required field.
+// The zero value of the struct is `{}` which is not valid because it does not satisfy the required marker on the string field.
+type StructWithOmittedRequiredField struct {
+	// +required
+	String string `json:"string,omitempty"` // want "zero value is valid" "validation is not complete"
 }
