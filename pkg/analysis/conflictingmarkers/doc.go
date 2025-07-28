@@ -35,8 +35,6 @@ Example configuration:
 lintersConfig:
 
 	conflictingmarkers:
-	  # Optional: Custom documentation for the analyzer
-	  doc: "Custom analyzer description for conflicting markers"
 	  conflicts:
 	    - name: "optional_vs_required"
 	      sets:
@@ -53,7 +51,6 @@ lintersConfig:
 ```
 
 Configuration options:
-- `doc`: Optional custom documentation string for the analyzer. If not provided, a default description will be used.
 - `conflicts`: Required list of conflict set definitions.
 
 Note: This linter is not enabled by default and must be explicitly enabled in the configuration.

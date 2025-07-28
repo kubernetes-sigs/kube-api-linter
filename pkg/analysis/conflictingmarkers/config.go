@@ -17,9 +17,6 @@ package conflictingmarkers
 
 // ConflictingMarkersConfig contains the configuration for the conflictingmarkers linter.
 type ConflictingMarkersConfig struct {
-	// Doc is the documentation string for the analyzer.
-	// If not provided, a default description will be used.
-	Doc string `json:"doc"`
 	// Conflicts allows users to define sets of conflicting markers.
 	// Each entry defines a conflict between multiple sets of markers.
 	Conflicts []ConflictSet `json:"conflicts"`

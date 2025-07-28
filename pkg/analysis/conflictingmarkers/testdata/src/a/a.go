@@ -57,4 +57,8 @@ type TestStruct struct {
 	// +marker10
 	ThreeWayMultipleMarkersField string `json:"threeWayMultipleMarkersField"` // want "field ThreeWayMultipleMarkersField has conflicting markers: three_way_conflict: \\{\\[marker5 marker6\\], \\[marker7 marker8\\], \\[marker10 marker9\\]\\}. Three-way conflict between marker sets"
 
+	// Three-way conflict with only subset of sets triggered (sets 1 and 2 only)
+	// +marker5
+	// +marker7
+	SubsetThreeWayConflictField string `json:"subsetThreeWayConflictField"` // want "field SubsetThreeWayConflictField has conflicting markers: three_way_conflict: \\{\\[marker5\\], \\[marker7\\]\\}. Three-way conflict between marker sets"
 }

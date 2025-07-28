@@ -53,15 +53,9 @@ func newAnalyzer(cfg *ConflictingMarkersConfig) *analysis.Analyzer {
 		conflictSets: cfg.Conflicts,
 	}
 
-	// Use configured documentation or fall back to default
-	doc := cfg.Doc
-	if doc == "" {
-		doc = "Check that fields do not have conflicting markers from mutually exclusive sets"
-	}
-
 	return &analysis.Analyzer{
 		Name:     name,
-		Doc:      doc,
+		Doc:      "Check that fields do not have conflicting markers from mutually exclusive sets",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
