@@ -52,6 +52,36 @@ func IsStructType(pass *analysis.Pass, expr ast.Expr) bool {
 	return false
 }
 
+// IsStarExpr checks if the expression is a pointer type.
+// If it is, it returns the expression inside the pointer.
+func IsStarExpr(expr ast.Expr) (bool, ast.Expr) {
+	if ptrType, ok := expr.(*ast.StarExpr); ok {
+		return true, ptrType.X
+	}
+
+	return false, expr
+}
+
+// IsPointerType checks if the expression is a pointer type.
+// This is for types that are always implemented as pointers and therefore should
+// not be the underlying type of a star expr.
+func IsPointerType(pass *analysis.Pass, expr ast.Expr) bool {
+	switch t := expr.(type) {
+	case *ast.StarExpr, *ast.MapType, *ast.ArrayType:
+		return true
+	case *ast.Ident:
+		// If the ident is a type alias, keep checking until we find the underlying type.
+		typeSpec, ok := LookupTypeSpec(pass, t)
+		if !ok {
+			return false
+		}
+
+		return IsPointerType(pass, typeSpec.Type)
+	default:
+		return false
+	}
+}
+
 // LookupTypeSpec is used to search for the type spec of a given identifier.
 // It will first check to see if the ident has an Obj, and if so, it will return the type spec
 // from the Obj. If the Obj is nil, it will search through the files in the package to find the
