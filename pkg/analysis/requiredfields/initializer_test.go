@@ -44,28 +44,90 @@ var _ = Describe("requiredfields initializer", func() {
 			}
 		},
 			Entry("With a valid RequiredFieldsConfig: omitted", testCase{
+				config:      requiredfields.RequiredFieldsConfig{},
+				expectedErr: "",
+			}),
+			Entry("With a valid RequiredFieldsConfig: Pointers: Policy: SuggestFix", testCase{
 				config: requiredfields.RequiredFieldsConfig{
-					PointerPolicy: "",
+					Pointers: requiredfields.RequiredFieldsPointers{
+						Policy: requiredfields.RequiredFieldsPointerPolicySuggestFix,
+					},
 				},
 				expectedErr: "",
 			}),
-			Entry("With a valid RequiredFieldsConfig: SuggestFix", testCase{
+			Entry("With a valid RequiredFieldsConfig: Pointers: Policy: Warn", testCase{
 				config: requiredfields.RequiredFieldsConfig{
-					PointerPolicy: requiredfields.RequiredFieldPointerSuggestFix,
+					Pointers: requiredfields.RequiredFieldsPointers{
+						Policy: requiredfields.RequiredFieldsPointerPolicyWarn,
+					},
 				},
 				expectedErr: "",
 			}),
-			Entry("With a valid RequiredFieldsConfig: Warn", testCase{
+			Entry("With an invalid RequiredFieldsConfig: Pointers: Policy: invalid", testCase{
 				config: requiredfields.RequiredFieldsConfig{
-					PointerPolicy: requiredfields.RequiredFieldPointerWarn,
+					Pointers: requiredfields.RequiredFieldsPointers{
+						Policy: "invalid",
+					},
 				},
-				expectedErr: "",
+				expectedErr: "requiredfields.pointers.policy: Invalid value: \"invalid\": invalid value, must be one of \"SuggestFix\", \"Warn\" or omitted",
 			}),
-			Entry("With an invalid RequiredFieldsConfig", testCase{
+			Entry("With a valid RequiredFieldsConfig: OmitEmpty: Policy: Ignore", testCase{
 				config: requiredfields.RequiredFieldsConfig{
-					PointerPolicy: "invalid",
+					OmitEmpty: requiredfields.RequiredFieldsOmitEmpty{
+						Policy: requiredfields.RequiredFieldsOmitEmptyPolicyIgnore,
+					},
 				},
-				expectedErr: "requiredfields.pointerPolicy: Invalid value: \"invalid\": invalid value, must be one of \"Warn\", \"SuggestFix\" or omitted",
+			}),
+			Entry("With a valid RequiredFieldsConfig: OmitEmpty: Policy: SuggestFix", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitEmpty: requiredfields.RequiredFieldsOmitEmpty{
+						Policy: requiredfields.RequiredFieldsOmitEmptyPolicySuggestFix,
+					},
+				},
+			}),
+			Entry("With a valid RequiredFieldsConfig: OmitEmpty: Policy: Warn", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitEmpty: requiredfields.RequiredFieldsOmitEmpty{
+						Policy: requiredfields.RequiredFieldsOmitEmptyPolicyWarn,
+					},
+				},
+			}),
+			Entry("With an invalid RequiredFieldsConfig: OmitEmpty: Policy: invalid", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitEmpty: requiredfields.RequiredFieldsOmitEmpty{
+						Policy: "invalid",
+					},
+				},
+				expectedErr: "requiredfields.omitempty.policy: Invalid value: \"invalid\": invalid value, must be one of \"Ignore\", \"Warn\", \"SuggestFix\" or omitted",
+			}),
+			Entry("With a valid RequiredFieldsConfig: OmitZero: Policy: SuggestFix", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitZero: requiredfields.RequiredFieldsOmitZero{
+						Policy: requiredfields.RequiredFieldsOmitZeroPolicySuggestFix,
+					},
+				},
+			}),
+			Entry("With a valid RequiredFieldsConfig: OmitZero: Policy: Warn", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitZero: requiredfields.RequiredFieldsOmitZero{
+						Policy: requiredfields.RequiredFieldsOmitZeroPolicyWarn,
+					},
+				},
+			}),
+			Entry("With a valid RequiredFieldsConfig: OmitZero: Policy: Forbid", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitZero: requiredfields.RequiredFieldsOmitZero{
+						Policy: requiredfields.RequiredFieldsOmitZeroPolicyForbid,
+					},
+				},
+			}),
+			Entry("With an invalid RequiredFieldsConfig: OmitZero: Policy: invalid", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					OmitZero: requiredfields.RequiredFieldsOmitZero{
+						Policy: "invalid",
+					},
+				},
+				expectedErr: "requiredfields.omitzero.policy: Invalid value: \"invalid\": invalid value, must be one of \"SuggestFix\", \"Warn\", \"Forbid\" or omitted",
 			}),
 		)
 	})
