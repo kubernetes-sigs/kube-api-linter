@@ -10,6 +10,11 @@ type ZeroValueTestStructs struct {
 	StructWithOneNonOmittedFieldAndMinProperties StructWithOneNonOmittedFieldAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty,omitempty"` // want "zero value is not valid" "validation is complete"
 
 	StructWithOmittedRequiredField StructWithOmittedRequiredField `json:"structWithOmittedRequiredField,omitempty"` // want "zero value is not valid" "validation is complete"
+
+	StructWithoutOmitZeroFieldsAndMinProperties StructWithoutOmitZeroFieldsAndMinProperties `json:"structWithoutOmitZeroFieldsAndMinProperties,omitempty"` // want "zero value is valid" "validation is complete"
+
+	//structWithOmitZeroFieldsAndMinProperties has a struct field with omitzero tag but its ignored hence the minproperties marker is satisfied to have valid zero value.
+	StructWithOmitZeroFieldsAndMinProperties StructWithOmitZeroFieldsAndMinProperties `json:"structWithOmitZeroFieldsAndMinProperties,omitempty"` // want "zero value is valid" "validation is complete"
 }
 
 type StructWithAllOptionalFields struct {
@@ -64,9 +69,26 @@ type StructWithOneNonOmittedFieldAndMinProperties struct {
 	Int int32 `json:"int,omitempty"` // want "zero value is valid" "validation is not complete"
 }
 
-// Struct with an omitted required field.
+// StructWithOmittedRequiredField
 // The zero value of the struct is `{}` which is not valid because it does not satisfy the required marker on the string field.
 type StructWithOmittedRequiredField struct {
 	// +required
 	String string `json:"string,omitempty"` // want "zero value is valid" "validation is not complete"
+}
+
+// StructWithoutOmitZeroFieldsAndMinProperties is a Struct having a struct field without omitzero or omitempty tag and minProperties marker.
+// Because there is no omitempty or omitzero, and the zero value is valid, the zero value here is `{"structWithAllOptionalFields":{}}`.
+// This means the MinProperties marker is satisfied even when the object is the zero value.
+// +kubebuilder:validation:MinProperties=1
+type StructWithoutOmitZeroFieldsAndMinProperties struct {
+	// +optional
+	StructWithAllOptionalFields StructWithAllOptionalFields `json:"structWithAllOptionalFields"` // want "zero value is valid" "validation is not complete"
+}
+
+// StructWithOmitZeroFieldsAndMinProperties is a Struct having a struct field with omitzero and minProperties marker.
+// If the omitzero tag is considered and the zero value is {}, which is not valid because it does not satisfy the MinProperties marker.
+// +kubebuilder:validation:MinProperties=1
+type StructWithOmitZeroFieldsAndMinProperties struct {
+	// +optional
+	StructWithAllOptionalFields StructWithAllOptionalFields `json:"structWithAllOptionalFields,omitzero"` // want "zero value is valid" "validation is not complete"
 }

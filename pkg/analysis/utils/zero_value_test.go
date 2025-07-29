@@ -33,12 +33,17 @@ var (
 	errCouldNotGetMarkers = errors.New("could not get markers")
 )
 
-func TestZeroValue(t *testing.T) {
+func TestZeroValueWithoutOmitZero(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.Run(t, testdata, testZeroValueAnalyzer(), "b")
+	analysistest.Run(t, testdata, testZeroValueAnalyzer(false), "b")
 }
 
-func testZeroValueAnalyzer() *analysis.Analyzer {
+func TestZeroValueWithOmitZero(t *testing.T) {
+	testdata := analysistest.TestData()
+	analysistest.Run(t, testdata, testZeroValueAnalyzer(true), "c")
+}
+
+func testZeroValueAnalyzer(considerOmitZero bool) *analysis.Analyzer {
 	return &analysis.Analyzer{
 		Name:     "test",
 		Doc:      "test",
@@ -65,7 +70,7 @@ func testZeroValueAnalyzer() *analysis.Analyzer {
 					return
 				}
 
-				zeroValueValid, complete := utils.IsZeroValueValid(pass, field, field.Type, markers)
+				zeroValueValid, complete := utils.IsZeroValueValid(pass, field, field.Type, markers, considerOmitZero)
 				if !zeroValueValid {
 					pass.Reportf(field.Pos(), "zero value is not valid")
 				} else {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
@@ -142,4 +143,53 @@ func reportShouldAddOmitEmpty(pass *analysis.Pass, field *ast.Field, omitEmptyPo
 	default:
 		panic(fmt.Sprintf("unknown omit empty policy: %s", omitEmptyPolicy))
 	}
+}
+
+// reportShouldAddOmitZero adds an analysis diagnostic that explains that an omitzero tag should be added.
+func reportShouldAddOmitZero(pass *analysis.Pass, field *ast.Field, omitZeroPolicy OptionalFieldsOmitZeroPolicy, fieldName, messageFmt string, fieldTagInfo extractjsontags.FieldTagInfo) {
+	switch omitZeroPolicy {
+	case OptionalFieldsOmitZeroPolicySuggestFix:
+		pass.Report(analysis.Diagnostic{
+			Pos:     field.Pos(),
+			Message: fmt.Sprintf(messageFmt, fieldName),
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: fmt.Sprintf("should add 'omitzero' to the field tag for field %s", fieldName),
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     fieldTagInfo.Pos + token.Pos(len(fieldTagInfo.Name)),
+							NewText: []byte(",omitzero"),
+						},
+					},
+				},
+			},
+		})
+	case OptionalFieldsOmitZeroPolicyWarn:
+		pass.Reportf(field.Pos(), messageFmt, fieldName)
+	case OptionalFieldsOmitZeroPolicyForbid:
+		// Do nothing, as the policy is to ignore the missing omitzero tag.
+	default:
+		panic(fmt.Sprintf("unknown omit zero policy: %s", omitZeroPolicy))
+	}
+}
+
+// reportShouldRemoveOmitZero adds an analysis diagnostic that explains that an omitzero tag should be removed.
+func reportShouldRemoveOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo) {
+	omitZeroPos := jsonTags.Pos + token.Pos(strings.Index(jsonTags.RawValue, ",omitzero"))
+	pass.Report(analysis.Diagnostic{
+		Pos:     field.Pos(),
+		Message: fmt.Sprintf("field %s has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed.", fieldName),
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message: "should remove the omitzero tag",
+				TextEdits: []analysis.TextEdit{
+					{
+						Pos:     omitZeroPos,
+						End:     omitZeroPos + token.Pos(len(",omitzero")),
+						NewText: nil, // Clear the omitzero tag.
+					},
+				},
+			},
+		},
+	})
 }

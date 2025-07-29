@@ -288,6 +288,22 @@ type A struct {
 	// StringAliasWithEnumEmptyValue is a string alias field with enum validation and empty value.
 	// +optional
 	StringAliasWithEnumEmptyValue *StringAliasWithEnumEmptyValue `json:"stringAliasWithEnumEmptyValue,omitempty"`
+
+	// structWithValidOmitZero is a struct field with a minimum number of properties on the struct so not a valid zero value.
+	// +optional
+	StructWithValidOmitZero *D `json:"structWithValidOmitZero,omitempty,omitzero"` // want "field StructWithValidOmitZero has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed."
+
+	// structWithOnlyOmitZero is a struct field with a minimum number of properties on the struct so not a valid zero value.
+	// +optional
+	StructWithOnlyOmitZero *D `json:"structWithOnlyOmitZero,omitzero"` // want "field StructWithOnlyOmitZero has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed." "field StructWithOnlyOmitZero is optional and should have the omitempty tag"
+
+	// structWithValidOmitZeroWithoutPointer is a struct field with a minimum number of properties on the struct so not a valid zero value.
+	// +optional
+	StructWithValidOmitZeroWithoutPointer D `json:"structWithValidOmitZeroWithoutPointer,omitempty,omitzero"` // want "field StructWithValidOmitZeroWithoutPointer has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed." "field StructWithValidOmitZeroWithoutPointer is optional and should be a pointer"
+
+	// structWithOnlyOmitZeroWithoutPointer is a struct field with a minimum number of properties on the struct so not a valid zero value.
+	// +optional
+	StructWithOnlyOmitZeroWithoutPointer D `json:"structWithOnlyOmitZeroWithoutPointer,omitzero"` // want "field StructWithOnlyOmitZeroWithoutPointer has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed." "field StructWithOnlyOmitZeroWithoutPointer is optional and should have the omitempty tag" "field StructWithOnlyOmitZeroWithoutPointer is optional and should be a pointer"
 }
 
 type B struct {

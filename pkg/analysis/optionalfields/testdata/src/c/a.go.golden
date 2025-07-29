@@ -439,6 +439,14 @@ type A struct {
 	// StringAliasWithEnumEmptyValue is a string alias field with enum validation and empty value.
 	// +optional
 	StringAliasWithEnumEmptyValue *StringAliasWithEnumEmptyValue `json:"stringAliasWithEnumEmptyValue,omitempty"`
+
+	// structWithValidOmitZero is a struct field with a minimum number of properties on the struct so not a valid zero value.
+	// +optional
+	StructWithValidOmitZero *D `json:"structWithValidOmitZero,omitempty"` // want "field StructWithValidOmitZero has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed."
+
+	// structWithOnlyOmitZero is a struct field with a minimum number of properties on the struct so not a valid zero value.
+	// +optional
+	StructWithOnlyOmitZero *D `json:"structWithOnlyOmitZero,omitempty"` // want "field StructWithOnlyOmitZero has the omitzero tag, but by policy is not allowed. The omitzero tag should be removed." "field StructWithOnlyOmitZero is optional and does not allow the zero value. It must have the omitempty tag."
 }
 
 type B struct {
