@@ -32,21 +32,21 @@ Each conflict set must specify:
 
 Example configuration:
 ```yaml
-lintersConfig:
 
-	conflictingmarkers:
-	  conflicts:
-	    - name: "optional_vs_required"
-	      sets:
-	        - ["optional", "+kubebuilder:validation:Optional", "+k8s:validation:optional"]
-	        - ["required", "+kubebuilder:validation:Required", "+k8s:validation:required"]
-	      description: "A field cannot be both optional and required"
-	    - name: "my_custom_conflict"
-	      sets:
-	        - ["custom:marker1", "custom:marker2"]
-	        - ["custom:marker3", "custom:marker4"]
-	        - ["custom:marker5", "custom:marker6"]
-	      description: "These markers define different storage backends that cannot be used simultaneously"
+		lintersConfig:
+	      conflictingmarkers:
+	        conflicts:
+	          - name: "default_vs_required"
+	            sets:
+	              - ["default", "kubebuilder:default"]
+	              - ["required", "kubebuilder:validation:Required", "k8s:required"]
+	            description: "A field with a default value cannot be required"
+	          - name: "three_way_conflict"
+	            sets:
+	              - ["custom:marker1", "custom:marker2"]
+	              - ["custom:marker3", "custom:marker4"]
+	              - ["custom:marker5", "custom:marker6"]
+	            description: "Three-way conflict between marker sets"
 
 ```
 
