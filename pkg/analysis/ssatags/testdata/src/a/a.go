@@ -190,4 +190,12 @@ type SSATagsTestSpec struct {
 	// Byte array with markers - should be ignored even if markers are present
 	// +listType=atomic
 	ByteArrayWithMarker []byte `json:"byteArrayWithMarker,omitempty"` // want "ByteArrayWithMarker is a byte array, which does not support the listType marker. Remove the listType marker"
+
+	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
+	AllOf []JSONSchemaProps `json:"allOf,omitempty"`
 }
+
+// JSONSchemaProps is a placeholder for the JSON schema properties.
+type JSONSchemaProps struct{}
