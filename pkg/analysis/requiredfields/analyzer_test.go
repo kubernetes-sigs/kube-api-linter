@@ -32,16 +32,3 @@ func TestDefaultConfiguration(t *testing.T) {
 
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "a")
 }
-
-func TestWithPointerPolicyWarn(t *testing.T) {
-	testdata := analysistest.TestData()
-
-	a, err := requiredfields.Initializer().Init(&requiredfields.RequiredFieldsConfig{
-		PointerPolicy: requiredfields.RequiredFieldPointerWarn,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
-}

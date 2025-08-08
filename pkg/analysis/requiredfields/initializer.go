@@ -43,7 +43,7 @@ func initAnalyzer(rfc *RequiredFieldsConfig) (*analysis.Analyzer, error) {
 	return newAnalyzer(rfc), nil
 }
 
-// validateConfig is used to validate the configuration in the config.RequiredFieldsConfig struct.
+// validateConfig validates the configuration in the config.RequiredFieldsConfig struct.
 func validateConfig(rfc *RequiredFieldsConfig, fldPath *field.Path) field.ErrorList {
 	if rfc == nil {
 		return field.ErrorList{}
@@ -51,10 +51,47 @@ func validateConfig(rfc *RequiredFieldsConfig, fldPath *field.Path) field.ErrorL
 
 	fieldErrors := field.ErrorList{}
 
-	switch rfc.PointerPolicy {
-	case "", RequiredFieldPointerWarn, RequiredFieldPointerSuggestFix:
+	fieldErrors = append(fieldErrors, validateRequiredFieldsPointers(rfc.Pointers, fldPath.Child("pointers"))...)
+	fieldErrors = append(fieldErrors, validateRequiredFieldsOmitEmpty(rfc.OmitEmpty, fldPath.Child("omitempty"))...)
+	fieldErrors = append(fieldErrors, validateRequiredFieldsOmitZero(rfc.OmitZero, fldPath.Child("omitzero"))...)
+
+	return fieldErrors
+}
+
+// validateRequiredFieldsPointers is used to validate the configuration in the config.RequiredFieldsPointers struct.
+func validateRequiredFieldsPointers(rfc RequiredFieldsPointers, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	switch rfc.Policy {
+	case "", RequiredFieldsPointerPolicySuggestFix, RequiredFieldsPointerPolicyWarn:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("pointerPolicy"), rfc.PointerPolicy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", RequiredFieldPointerWarn, RequiredFieldPointerSuggestFix)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), rfc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", RequiredFieldsPointerPolicySuggestFix, RequiredFieldsPointerPolicyWarn)))
+	}
+
+	return fieldErrors
+}
+
+// validateOptionFieldsOmitEmpty is used to validate the configuration in the config.OptionalFieldsOmitEmpty struct.
+func validateRequiredFieldsOmitEmpty(rfc RequiredFieldsOmitEmpty, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	switch rfc.Policy {
+	case "", RequiredFieldsOmitEmptyPolicyIgnore, RequiredFieldsOmitEmptyPolicyWarn, RequiredFieldsOmitEmptyPolicySuggestFix:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), rfc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", RequiredFieldsOmitEmptyPolicyIgnore, RequiredFieldsOmitEmptyPolicyWarn, RequiredFieldsOmitEmptyPolicySuggestFix)))
+	}
+
+	return fieldErrors
+}
+
+// validateRequiredFieldsOmitZero is used to validate the configuration in the config.RequiredFieldsOmitZero struct.
+func validateRequiredFieldsOmitZero(rfc RequiredFieldsOmitZero, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	switch rfc.Policy {
+	case "", RequiredFieldsOmitZeroPolicySuggestFix, RequiredFieldsOmitZeroPolicyWarn, RequiredFieldsOmitZeroPolicyForbid:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), rfc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", RequiredFieldsOmitZeroPolicySuggestFix, RequiredFieldsOmitZeroPolicyWarn, RequiredFieldsOmitZeroPolicyForbid)))
 	}
 
 	return fieldErrors
