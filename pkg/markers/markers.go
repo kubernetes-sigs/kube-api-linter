@@ -164,3 +164,8 @@ const (
 	// K8sRequiredMarker is the marker that indicates that a field is required in k8s declarative validation.
 	K8sRequiredMarker = "k8s:required"
 )
+
+const (
+	// SchemaLessMarker is the marker that indicates that a struct is schemaless.
+	SchemaLessMarker = "kubebuilder:validation:Schemaless"
+)

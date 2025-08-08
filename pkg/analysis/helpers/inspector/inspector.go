@@ -24,6 +24,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	markersconsts "sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 // Inspector is an interface that allows for the inspection of fields in structs.
@@ -102,6 +103,14 @@ func (i *inspector) InspectFields(inspectField func(field *ast.Field, stack []as
 		tagInfo := i.jsonTags.FieldTags(field)
 		if tagInfo.Ignored {
 			// Returning false here means we won't inspect the children of an ignored field.
+			return false
+		}
+
+		markerSet := i.markers.FieldMarkers(field)
+
+		schemalessMarker := markerSet.Get(markersconsts.SchemaLessMarker)
+		if len(schemalessMarker) > 0 {
+			// If the field is marked as schemaless, we don't need to inspect it.
 			return false
 		}
 

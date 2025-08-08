@@ -86,6 +86,11 @@ type MaxLength struct {
 
 		StringWithoutMaxLength string // want "field StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength marker"
 	} `json:"struct"`
+
+	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
+	AllOf []JSONSchemaProps `json:"allOf,omitempty"`
 }
 
 // StringAlias is a string without a MaxLength.
@@ -105,3 +110,6 @@ type ByteSliceAlias []byte
 // ByteSliceAliasWithMaxLength is a byte slice with a MaxLength.
 // +kubebuilder:validation:MaxLength:=512
 type ByteSliceAliasWithMaxLength []byte
+
+// JSONSchemaProps is a placeholder for the JSON schema properties.
+type JSONSchemaProps struct{}
