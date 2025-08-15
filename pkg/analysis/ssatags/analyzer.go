@@ -200,7 +200,7 @@ func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, li
 		return
 	}
 
-	structFields := a.getStructFieldsFromField(pass, field)
+	structFields := a.getStructFieldsFromField(pass, jsonTags, field)
 	if structFields == nil {
 		return
 	}
@@ -222,7 +222,7 @@ func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, li
 	}
 }
 
-func (a *analyzer) getStructFieldsFromField(pass *analysis.Pass, field *ast.Field) *ast.FieldList {
+func (a *analyzer) getStructFieldsFromField(pass *analysis.Pass, jsonTags extractjsontags.StructFieldTags, field *ast.Field) *ast.FieldList {
 	var elementType ast.Expr
 
 	// Get the element type from array or field type
@@ -232,10 +232,10 @@ func (a *analyzer) getStructFieldsFromField(pass *analysis.Pass, field *ast.Fiel
 		elementType = field.Type
 	}
 
-	return a.getStructFieldsFromExpr(pass, elementType)
+	return a.getStructFieldsFromExpr(pass, jsonTags, elementType)
 }
 
-func (a *analyzer) getStructFieldsFromExpr(pass *analysis.Pass, expr ast.Expr) *ast.FieldList {
+func (a *analyzer) getStructFieldsFromExpr(pass *analysis.Pass, jsonTags extractjsontags.StructFieldTags, expr ast.Expr) *ast.FieldList {
 	switch elementType := expr.(type) {
 	case *ast.Ident:
 		typeSpec, ok := utils.LookupTypeSpec(pass, elementType)
@@ -248,9 +248,9 @@ func (a *analyzer) getStructFieldsFromExpr(pass *analysis.Pass, expr ast.Expr) *
 			return nil
 		}
 
-		return structType.Fields
+		return flattenStructFields(pass, jsonTags, structType.Fields)
 	case *ast.StarExpr:
-		return a.getStructFieldsFromExpr(pass, elementType.X)
+		return a.getStructFieldsFromExpr(pass, jsonTags, elementType.X)
 	case *ast.SelectorExpr:
 		return nil
 	}
@@ -287,4 +287,45 @@ func defaultConfig(cfg *SSATagsConfig) {
 	if cfg.ListTypeSetUsage == "" {
 		cfg.ListTypeSetUsage = SSATagsListTypeSetUsageWarn
 	}
+}
+
+// flattenStructFields flattens a struct's fields by looking for embedded structs and promoting their fields to the top level.
+// This allows us to correctly check listMapKey markers where the map key is a member of the embedded struct.
+func flattenStructFields(pass *analysis.Pass, jsonTags extractjsontags.StructFieldTags, fields *ast.FieldList) *ast.FieldList {
+	if fields == nil {
+		return nil
+	}
+
+	flattenedFields := &ast.FieldList{}
+
+	for _, field := range fields.List {
+		tagInfo := jsonTags.FieldTags(field)
+		if len(field.Names) > 0 || tagInfo.Name != "" {
+			// Field is not embedded, it has an explicit name.
+			flattenedFields.List = append(flattenedFields.List, field)
+			continue
+		}
+
+		ident, ok := field.Type.(*ast.Ident)
+		if !ok {
+			flattenedFields.List = append(flattenedFields.List, field)
+			continue
+		}
+
+		typeSpec, ok := utils.LookupTypeSpec(pass, ident)
+		if !ok {
+			flattenedFields.List = append(flattenedFields.List, field)
+			continue
+		}
+
+		embeddedStruct, ok := typeSpec.Type.(*ast.StructType)
+		if !ok {
+			flattenedFields.List = append(flattenedFields.List, field)
+			continue
+		}
+
+		flattenedFields.List = append(flattenedFields.List, flattenStructFields(pass, jsonTags, embeddedStruct.Fields).List...)
+	}
+
+	return flattenedFields
 }
