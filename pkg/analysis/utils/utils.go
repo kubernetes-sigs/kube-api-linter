@@ -16,13 +16,16 @@ limitations under the License.
 package utils
 
 import (
+	"errors"
+	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
 	"slices"
 
 	"golang.org/x/tools/go/analysis"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 // IsBasicType checks if the type of the given identifier is a basic type.
@@ -176,7 +179,7 @@ func isInPassPackage(pass *analysis.Pass, namedType *types.Named) bool {
 // the type and include them in the markers.MarkerSet that is returned.
 // It will look through *ast.StarExpr to the underlying type.
 // Markers on the type will always come before markers on the field in the list of markers for an identifier.
-func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess markers.Markers, field *ast.Field) markers.MarkerSet {
+func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess markershelper.Markers, field *ast.Field) markershelper.MarkerSet {
 	markers := markersAccess.FieldMarkers(field)
 
 	var underlyingType ast.Expr
@@ -394,4 +397,16 @@ func GetStructNameForField(pass *analysis.Pass, field *ast.Field) string {
 	}
 
 	return ""
+}
+
+// GetMinProperties returns the value of the minimum properties marker.
+// It returns a nil value when the marker is not present, and an error
+// when the marker is present, but malformed.
+func GetMinProperties(markerSet markershelper.MarkerSet) (*int, error) {
+	minProperties, err := getMarkerNumericValueByName[int](markerSet, markers.KubebuilderMinPropertiesMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		return nil, fmt.Errorf("invalid format for minimum properties marker: %w", err)
+	}
+
+	return minProperties, nil
 }

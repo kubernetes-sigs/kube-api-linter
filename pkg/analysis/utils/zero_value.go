@@ -90,8 +90,8 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 
 	markerSet := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
-	minProperties, err := getMarkerNumericValueByName[int](markerSet, markers.KubebuilderMinPropertiesMarker)
-	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+	minProperties, err := GetMinProperties(markerSet)
+	if err != nil {
 		pass.Reportf(field.Pos(), "struct %s has an invalid minProperties marker: %v", FieldName(field), err)
 		return false, false
 	}
@@ -119,7 +119,7 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 	nonOmittedFields := 0
 
 	for _, field := range structType.Fields.List {
-		fieldRequired := isFieldRequired(field, markersAccess)
+		fieldRequired := IsFieldRequired(field, markersAccess)
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
 		isStruct := IsStructType(pass, field.Type)
 
@@ -434,9 +434,9 @@ func isFloatIdent(ident *ast.Ident) bool {
 	return ident.Name == "float32" || ident.Name == "float64"
 }
 
-// isFieldRequired checks if the field is required.
+// IsFieldRequired checks if the field is required.
 // It checks for the presence of the required marker, the kubebuilder required marker, or the k8s required marker.
-func isFieldRequired(field *ast.Field, markersAccess markershelper.Markers) bool {
+func IsFieldRequired(field *ast.Field, markersAccess markershelper.Markers) bool {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
 	return fieldMarkers.Has(markers.RequiredMarker) ||
