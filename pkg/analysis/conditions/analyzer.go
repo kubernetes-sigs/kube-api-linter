@@ -100,14 +100,17 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetMarkers
 	}
 
-	// Filter to structs so that we can iterate over fields in a struct.
-	// We need a struct here so that we can tell where in the struct the field is.
 	nodeFilter := []ast.Node{
-		(*ast.StructType)(nil),
+		(*ast.TypeSpec)(nil),
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		sTyp, ok := n.(*ast.StructType)
+		tSpec, ok := n.(*ast.TypeSpec)
+		if !ok {
+			return
+		}
+
+		sTyp, ok := tSpec.Type.(*ast.StructType)
 		if !ok {
 			return
 		}
@@ -116,35 +119,37 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 			return
 		}
 
+		structName := tSpec.Name.Name
+
 		for i, field := range sTyp.Fields.List {
 			fieldMarkers := markersAccess.FieldMarkers(field)
 
-			a.checkField(pass, i, field, fieldMarkers)
+			a.checkField(pass, i, field, fieldMarkers, structName)
 		}
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, index int, field *ast.Field, fieldMarkers markers.MarkerSet) {
+func (a *analyzer) checkField(pass *analysis.Pass, index int, field *ast.Field, fieldMarkers markers.MarkerSet, structName string) {
 	if !fieldIsCalledConditions(field) {
 		return
 	}
 
 	if !isSliceMetaV1Condition(field) {
-		pass.Reportf(field.Pos(), "Conditions field must be a slice of metav1.Condition")
+		pass.Reportf(field.Pos(), "Conditions field in %s must be a slice of metav1.Condition", structName)
 		return
 	}
 
-	checkFieldMarkers(pass, field, fieldMarkers, a.usePatchStrategy)
-	a.checkFieldTags(pass, index, field)
+	checkFieldMarkers(pass, field, fieldMarkers, a.usePatchStrategy, structName)
+	a.checkFieldTags(pass, index, field, structName)
 
 	if a.isFirstField == ConditionsFirstFieldWarn && index != 0 {
-		pass.Reportf(field.Pos(), "Conditions field must be the first field in the struct")
+		pass.Reportf(field.Pos(), "Conditions field in %s must be the first field in the struct", structName)
 	}
 }
 
-func checkFieldMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet, usePatchStrategy ConditionsUsePatchStrategy) {
+func checkFieldMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet, usePatchStrategy ConditionsUsePatchStrategy, structName string) {
 	missingMarkers := []string{}
 	additionalMarkers := []markers.Marker{}
 
@@ -165,11 +170,11 @@ func checkFieldMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers marke
 	}
 
 	if len(missingMarkers) != 0 {
-		reportMissingMarkers(pass, field, missingMarkers, usePatchStrategy)
+		reportMissingMarkers(pass, field, missingMarkers, usePatchStrategy, structName)
 	}
 
 	if len(additionalMarkers) != 0 {
-		reportAdditionalMarkers(pass, field, additionalMarkers)
+		reportAdditionalMarkers(pass, field, additionalMarkers, structName)
 	}
 }
 
@@ -203,11 +208,11 @@ func checkPatchStrategyMarkers(fieldMarkers markers.MarkerSet, usePatchStrategy 
 	return missingMarkers, additionalMarkers
 }
 
-func reportMissingMarkers(pass *analysis.Pass, field *ast.Field, missingMarkers []string, usePatchStrategy ConditionsUsePatchStrategy) {
+func reportMissingMarkers(pass *analysis.Pass, field *ast.Field, missingMarkers []string, usePatchStrategy ConditionsUsePatchStrategy, structName string) {
 	suggestedFixes := []analysis.SuggestedFix{}
 
 	// If patch strategy is warn, and the only markers in the list are patchStrategy and patchMergeKeyType, we don't need to suggest a fix.
-	if usePatchStrategy != ConditionsUsePatchStrategyWarn || slices.ContainsFunc[[]string, string](missingMarkers, func(marker string) bool {
+	if usePatchStrategy != ConditionsUsePatchStrategyWarn || slices.ContainsFunc(missingMarkers, func(marker string) bool {
 		switch marker {
 		case patchStrategyMerge, patchMergeKeyType:
 			return false
@@ -232,12 +237,12 @@ func reportMissingMarkers(pass *analysis.Pass, field *ast.Field, missingMarkers 
 	pass.Report(analysis.Diagnostic{
 		Pos:            field.Pos(),
 		End:            field.End(),
-		Message:        "Conditions field is missing the following markers: " + strings.Join(missingMarkers, ", "),
+		Message:        "Conditions field in " + structName + " is missing the following markers: " + strings.Join(missingMarkers, ", "),
 		SuggestedFixes: suggestedFixes,
 	})
 }
 
-func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMarkers []markers.Marker) {
+func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMarkers []markers.Marker, structName string) {
 	suggestedFixes := []analysis.SuggestedFix{}
 	additionalMarkerValues := []string{}
 
@@ -259,7 +264,7 @@ func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMa
 	pass.Report(analysis.Diagnostic{
 		Pos:            field.Pos(),
 		End:            field.End(),
-		Message:        fmt.Sprintf("Conditions field has the following additional markers: %s", strings.Join(additionalMarkerValues, ", ")),
+		Message:        fmt.Sprintf("Conditions field in %s has the following additional markers: %s", structName, strings.Join(additionalMarkerValues, ", ")),
 		SuggestedFixes: suggestedFixes,
 	})
 }
@@ -274,14 +279,14 @@ func getNewMarkers(missingMarkers []string) []byte {
 	return []byte(out)
 }
 
-func (a *analyzer) checkFieldTags(pass *analysis.Pass, index int, field *ast.Field) {
+func (a *analyzer) checkFieldTags(pass *analysis.Pass, index int, field *ast.Field, structName string) {
 	if field.Tag == nil {
 		expectedTag := getExpectedTag(a.usePatchStrategy, a.useProtobuf, a.isFirstField, index)
 
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			End:     field.End(),
-			Message: fmt.Sprintf("Conditions field is missing tags, should be: %s", expectedTag),
+			Message: fmt.Sprintf("Conditions field in %s is missing tags, should be: %s", structName, expectedTag),
 			SuggestedFixes: []analysis.SuggestedFix{
 				{
 					Message: fmt.Sprintf("Add missing tags: %s", expectedTag),
@@ -304,12 +309,12 @@ func (a *analyzer) checkFieldTags(pass *analysis.Pass, index int, field *ast.Fie
 		expectedTag := getExpectedTag(a.usePatchStrategy, a.useProtobuf, a.isFirstField, index)
 
 		if !shouldFix {
-			pass.Reportf(field.Tag.ValuePos, "Conditions field has incorrect tags, should be: %s", expectedTag)
+			pass.Reportf(field.Tag.ValuePos, "Conditions field in %s has incorrect tags, should be: %s", structName, expectedTag)
 		} else {
 			pass.Report(analysis.Diagnostic{
 				Pos:     field.Tag.ValuePos,
 				End:     field.Tag.End(),
-				Message: fmt.Sprintf("Conditions field has incorrect tags, should be: %s", expectedTag),
+				Message: fmt.Sprintf("Conditions field in %s has incorrect tags, should be: %s", structName, expectedTag),
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
 						Message: fmt.Sprintf("Update tags to: %s", expectedTag),
