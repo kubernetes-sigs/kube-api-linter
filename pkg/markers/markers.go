@@ -155,6 +155,9 @@ const (
 
 	// KubebuilderListMapKeyMarker is the marker used to specify the key field for map-type lists.
 	KubebuilderListMapKeyMarker = "listMapKey"
+
+	// KubebuilderSchemaLessMarker is the marker that indicates that a struct is schemaless.
+	KubebuilderSchemaLessMarker = "kubebuilder:validation:Schemaless"
 )
 
 const (
@@ -163,9 +166,4 @@ const (
 
 	// K8sRequiredMarker is the marker that indicates that a field is required in k8s declarative validation.
 	K8sRequiredMarker = "k8s:required"
-)
-
-const (
-	// SchemaLessMarker is the marker that indicates that a struct is schemaless.
-	SchemaLessMarker = "kubebuilder:validation:Schemaless"
 )

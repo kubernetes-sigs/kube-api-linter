@@ -108,8 +108,7 @@ func (i *inspector) InspectFields(inspectField func(field *ast.Field, stack []as
 
 		markerSet := i.markers.FieldMarkers(field)
 
-		schemalessMarker := markerSet.Get(markersconsts.SchemaLessMarker)
-		if len(schemalessMarker) > 0 {
+		if isSchemalessType(markerSet) {
 			// If the field is marked as schemaless, we don't need to inspect it.
 			return false
 		}
@@ -170,6 +169,12 @@ func isItemsType(structType *ast.StructType) bool {
 	}
 
 	return true
+}
+
+func isSchemalessType(markerSet markers.MarkerSet) bool {
+	// Check if the field is marked as schemaless.
+	schemalessMarker := markerSet.Get(markersconsts.KubebuilderSchemaLessMarker)
+	return len(schemalessMarker) > 0
 }
 
 // printDebugInfo prints debug information about the field that caused a panic during inspection.
