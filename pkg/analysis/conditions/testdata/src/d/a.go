@@ -13,7 +13,7 @@ type ValidConditions struct {
 	// +patchStrategy=merge
 	// +patchMergeKey=type
 	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"` // want "Conditions field has incorrect tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"` // want "Conditions field in ValidConditions has incorrect tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
 
 	// other fields
 	OtherField string `json:"otherField,omitempty"`
@@ -34,22 +34,22 @@ type ValidConditionsMissingProtobuf struct {
 
 type ConditionsIncorrectType struct {
 	// conditions has an incorrect type.
-	Conditions map[string]metav1.Condition // want "Conditions field must be a slice of metav1.Condition"
+	Conditions map[string]metav1.Condition // want "Conditions field in ConditionsIncorrectType must be a slice of metav1.Condition"
 }
 
 type ConditionsIncorrectSliceElement struct {
 	// conditions has an incorrect type.
-	Conditions []string // want "Conditions field must be a slice of metav1.Condition"
+	Conditions []string // want "Conditions field in ConditionsIncorrectSliceElement must be a slice of metav1.Condition"
 }
 
 type ConditionsIncorrectImportedSliceElement struct {
 	// conditions has an incorrect type.
-	Conditions []metav1.Time // want "Conditions field must be a slice of metav1.Condition"
+	Conditions []metav1.Time // want "Conditions field in ConditionsIncorrectImportedSliceElement must be a slice of metav1.Condition"
 }
 
 type ConditionsIncorrectImportedPackage struct {
 	// conditions has an incorrect type.
-	Conditions []ast.Node // want "Conditions field must be a slice of metav1.Condition"
+	Conditions []ast.Node // want "Conditions field in ConditionsIncorrectImportedPackage must be a slice of metav1.Condition"
 }
 
 type MissingFieldTag struct {
@@ -59,7 +59,7 @@ type MissingFieldTag struct {
 	// +patchStrategy=merge
 	// +patchMergeKey=type
 	// +optional
-	Conditions []metav1.Condition // want "Conditions field is missing tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
+	Conditions []metav1.Condition // want "Conditions field in MissingFieldTag is missing tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
 }
 
 type IncorrectFieldTag struct {
@@ -69,5 +69,5 @@ type IncorrectFieldTag struct {
 	// +patchStrategy=merge
 	// +patchMergeKey=type
 	// +optional
-	Conditions []metav1.Condition `json:"conditions"  patchMergeKey:"type" protobuf:"bytes,3,rep,name=conditions"` // want "Conditions field has incorrect tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
+	Conditions []metav1.Condition `json:"conditions"  patchMergeKey:"type" protobuf:"bytes,3,rep,name=conditions"` // want "Conditions field in IncorrectFieldTag has incorrect tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\"`"
 }
