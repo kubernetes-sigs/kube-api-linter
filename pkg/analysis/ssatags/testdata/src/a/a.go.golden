@@ -13,6 +13,23 @@ type SimpleObject struct {
 	Name string `json:"name"`
 }
 
+// ObjectWithEmbedded is an object with an embedded struct.
+// As there's no json tag, the embedded struct is inlined.
+type ObjectWithEmbedded struct {
+	TestObject
+	Embedded string `json:"embedded"`
+}
+
+type ObjectWithInlineEmbedded struct {
+	TestObject `json:",inline"`
+	Embedded string `json:"embedded"`
+}
+
+type ObjectWithNamedEmbedded struct {
+	TestObject `json:"testObject"`
+	Embedded   string `json:"embedded"`
+}
+
 type String string
 type Int int
 type Object TestObject
@@ -194,6 +211,24 @@ type SSATagsTestSpec struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:validation:Schemaless
 	AllOf []JSONSchemaProps `json:"allOf,omitempty"`
+
+	// Object with embedded struct - list map key from embedded struct should be allowed
+	// Without a json tag, the default is to inline the embedded struct.
+	// +listType=map
+	// +listMapKey=name
+	ObjectWithEmbeddedStruct []ObjectWithEmbedded `json:"objectWithEmbeddedStruct,omitempty"`
+
+	// Object with inline embedded struct - list map key from embedded struct should be allowed
+	// With a json tag, the embedded struct is not inlined.
+	// +listType=map
+	// +listMapKey=name
+	ObjectWithInlineEmbeddedStruct []ObjectWithInlineEmbedded `json:"objectWithInlineEmbeddedStruct,omitempty"`
+
+	// Object with named embedded struct - list map key from embedded struct should be allowed
+	// With a json tag, the embedded struct is not inlined.
+	// +listType=map
+	// +listMapKey=name
+	ObjectWithNamedEmbeddedStruct []ObjectWithNamedEmbedded `json:"objectWithNamedEmbeddedStruct,omitempty"` // want "ObjectWithNamedEmbeddedStruct listMapKey \"name\" does not exist as a field in the struct"
 }
 
 // JSONSchemaProps is a placeholder for the JSON schema properties.
