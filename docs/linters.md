@@ -288,17 +288,15 @@ The `optionalorrequired` linter can automatically fix fields that are using the 
 It will also remove the secondary marker where both the preferred and secondary marker are present on a field.
 
 ## RequiredFields
-
-The `requiredfields` linter checks that all fields marked as required adhere to having `omitempty` tags and being pointers where the zero value is an acceptable value.
+The `requiredfields` linter checks that all fields marked as required adhere to having `omitempty` or `omitzero` values in their `json` tags.
 Currently `omitzero` is handled only for fields with struct type.
 
-If you prefer to avoid pointers where possible, the linter can be configured to determine, based on the validation constraints for the field, whether the field should be a pointer or not.
-For example:
-- a required string with a non-zero minimum length does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
-- a required struct having omitzero json tag with validation constraints that make the zero value invalid does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
+Required fields should have omitempty tags to prevent "mess" in the encoded object. Fields are not pointers in general.
 
-In certain use cases, it can be desirable to not omit required fields from the serialized form of the object.
-In this case, the `omitempty` policy can be set to `Ignore`, and the linter will ensure that the zero value of the object is an acceptable value for the field.
+Where the zero value for a field is not a valid value, the field does not need to be a pointer as the zero value could never be admitted.
+Where the zero value for a field is a valid value, the field should be a pointer to distinguish between unset and zero value states.
+
+If you prefer to avoid pointers where possible, the linter can be configured to determine, based on the validation constraints for the field, whether the field should be a pointer or not.
 
 ### Configuration
 
@@ -320,7 +318,7 @@ It will suggest to add the pointer to the field, and update the `json` tag to in
 
 If you prefer not to suggest fixes for pointers in required fields, you can change the `pointers.policy` to `Warn`.
 
-If you prefer not to suggest fixes for `omitempty` in required fields, you can change the `omitempty.policy` to `Warn` or `Ignore`.
+If you prefer not to suggest fixes for `omitempty` in required fields, you can change the `omitempty.policy` to `Warn`.
 If you prefer not to suggest fixes for `omitzero` in required fields, you can change the `omitzero.policy` to `Warn` and also not to consider `omitzero` policy at all, it can be set to `Forbid`.
 
 ## SSATags
