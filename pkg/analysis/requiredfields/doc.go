@@ -15,12 +15,14 @@ limitations under the License.
 */
 
 /*
-requiredfields is a linter to check that fields that are marked as required are marshalled properly depending on the configured policies.
+requiredfields is a linter to check that fields that are marked as required are marshalled properly.
+The linter will check for fields that are marked as required using the +required marker, or the +kubebuilder:validation:Required marker.
 
-By default, all required fields should have omitempty tags and be pointers where the zero value is an acceptable value. The exception to this would be where the zero value for a field is not a valid value, in which case the field does not need to be a pointer.
+Required fields should have omitempty or omitzero tags to prevent "mess" in the encoded object.
+omitzero is handled only for fields with struct type.
 
-However, where the zero value for a field is a valid value (e.g. the empty string, or 0), the field should be a pointer to distinguish between unset and zero value states.
-
-Required fields should always have omitempty tags to prevent "mess" in the encoded object, regardless of whether they are pointers.
+Fields are not typically pointers.
+A field doesn't need to be a pointer if its zero value is not a valid value, as this zero value could never be accepted.
+However, if the zero value is valid, the field should be a pointer to differentiate between an unset state and a valid zero value.
 */
 package requiredfields

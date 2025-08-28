@@ -288,14 +288,13 @@ The `optionalorrequired` linter can automatically fix fields that are using the 
 It will also remove the secondary marker where both the preferred and secondary marker are present on a field.
 
 ## RequiredFields
-
-The `requiredfields` linter checks that all fields marked as required adhere to having `omitempty` tags and being pointers where the zero value is an acceptable value.
+The `requiredfields` linter checks that all fields marked as required adhere to having `omitempty` or `omitzero` values in their `json` tags.
 Currently `omitzero` is handled only for fields with struct type.
 
-If you prefer to avoid pointers where possible, the linter can be configured to determine, based on the validation constraints for the field, whether the field should be a pointer or not.
-For example:
-- a required string with a non-zero minimum length does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
-- a required struct having omitzero json tag with validation constraints that make the zero value invalid does not need to be a pointer, as the zero value is not valid, and it is safe for the Go marshaller to omit the empty value.
+Required fields should have omitempty tags to prevent "mess" in the encoded object. 
+Fields are not typically pointers. 
+A field doesn't need to be a pointer if its zero value is not a valid value, as this zero value could never be accepted. 
+However, if the zero value is valid, the field should be a pointer to differentiate between an unset state and a valid zero value.
 
 In certain use cases, it can be desirable to not omit required fields from the serialized form of the object.
 In this case, the `omitempty` policy can be set to `Ignore`, and the linter will ensure that the zero value of the object is an acceptable value for the field.
@@ -315,8 +314,12 @@ lintersConfig:
 
 ### Fixes
 
-The `requiredfields` linter can automatically fix fields that are marked as required, that are either not pointers when they should be or do not have the `omitempty` or `omitzero` value in their `json` tag.
-It will suggest to add the pointer to the field, and update the `json` tag to include the `omitempty` value or, for struct fields specifically, it will suggest to remove the pointer to the field, and update the `json` tag to include the `omitzero` value.
+The `requiredfields` linter can automatically fix fields marked as required. It does this by checking if the field should be a pointer and if its `json` tag is set correctly with `omitempty` or `omitzero`.
+
+If a field's zero value is valid, the linter will suggest to fix it to be a pointer type and add `omitempty` to its JSON tag.
+
+If a field's zero value is not valid, the field doesn't need to be a pointer. However, to prevent unnecessary data from being encoded in the JSON, the linter will suggest to add `omitempty` to its JSON tag.
+For a struct field with an invalid zero value, the linter will suggest to add `omitzero` to the JSON tag.
 
 If you prefer not to suggest fixes for pointers in required fields, you can change the `pointers.policy` to `Warn`.
 
