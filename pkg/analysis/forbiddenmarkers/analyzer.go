@@ -93,8 +93,15 @@ func check(markerSet markers.MarkerSet, forbiddenMarkers []Marker, reportFunc fu
 	for _, marker := range forbiddenMarkers {
 		marks := markerSet.Get(marker.Identifier)
 		for _, mark := range marks {
-			if markerMatchesAttributeRules(mark, marker.Attributes...) {
+			if len(marker.RuleSets) == 0 {
 				reportFunc(mark)
+				continue
+			}
+
+			for _, ruleSet := range marker.RuleSets {
+				if markerMatchesAttributeRules(mark, ruleSet.Attributes...) {
+					reportFunc(mark)
+				}
 			}
 		}
 	}

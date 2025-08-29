@@ -16,14 +16,28 @@ type Config struct {
 type Marker struct {
 	// identifier is the identifier for the forbidden marker.
 	Identifier string `json:"identifier"`
-	// attributes is an optional unique set of
+
+	// ruleSets is an optional set of rules that are used to determine
+	// if a marker definition is forbidden.
+	// When specified, if an instance of a marker with the identifier
+	// specified in 'identifier' satisfies at least one of the rule sets
+	// defined, it will be considered a forbidden marker definition.
+	// When not specified, any instances of a marker with the identifier
+	// specified in 'identifier' will be considered a forbidden marker
+	// definition.
+	RuleSets []RuleSet `json:"ruleSets,omitempty"`
+}
+
+// RuleSet is a representation of a
+// set of rules that applies to a marker
+// when determining if it should be forbidden.
+type RuleSet struct {
+	// attributes is a unique set of
 	// attributes that is forbidden for this marker.
 	// Uniqueness is keyed on the `name` field of entries.
 	// When specified, only instances of this marker
 	// that contains all the attributes will be considered
 	// forbidden.
-	// When not specified, any instance of the marker will be
-	// considered forbidden.
 	Attributes []MarkerAttribute `json:"attributes,omitempty"`
 }
 

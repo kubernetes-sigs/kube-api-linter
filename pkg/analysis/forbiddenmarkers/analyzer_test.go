@@ -30,53 +30,122 @@ func TestWithConfiguration(t *testing.T) {
 			},
 			{
 				Identifier: "custom:AttrNoValues",
-				Attributes: []MarkerAttribute{
+				RuleSets: []RuleSet{
 					{
-						Name: "fruit",
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+							},
+						},
 					},
 				},
 			},
 			{
 				Identifier: "custom:AttrValues",
-				Attributes: []MarkerAttribute{
+				RuleSets: []RuleSet{
 					{
-						Name: "fruit",
-						Values: []string{
-							"apple",
-							"orange",
-							"banana",
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+								Values: []string{
+									"apple",
+									"orange",
+									"banana",
+								},
+							},
 						},
 					},
 				},
 			},
 			{
 				Identifier: "custom:AttrsNoValues",
-				Attributes: []MarkerAttribute{
+				RuleSets: []RuleSet{
 					{
-						Name: "fruit",
-					},
-					{
-						Name: "color",
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+							},
+							{
+								Name: "color",
+							},
+						},
 					},
 				},
 			},
 			{
 				Identifier: "custom:AttrsValues",
-				Attributes: []MarkerAttribute{
+				RuleSets: []RuleSet{
 					{
-						Name: "fruit",
-						Values: []string{
-							"apple",
-							"orange",
-							"banana",
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+								Values: []string{
+									"apple",
+									"orange",
+									"banana",
+								},
+							},
+							{
+								Name: "color",
+								Values: []string{
+									"red",
+									"blue",
+									"green",
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				// No blue or green apples, but any othe apples allowed
+				// No red, blue, or green oranges, but any other oranges allowed
+				// No bananas allowed
+				Identifier: "custom:MultiRuleSet",
+				RuleSets: []RuleSet{
+					{
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+								Values: []string{
+									"banana",
+								},
+							},
 						},
 					},
 					{
-						Name: "color",
-						Values: []string{
-							"red",
-							"blue",
-							"green",
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+								Values: []string{
+									"apple",
+								},
+							},
+							{
+								Name: "color",
+								Values: []string{
+									"blue",
+									"green",
+								},
+							},
+						},
+					},
+					{
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+								Values: []string{
+									"orange",
+								},
+							},
+							{
+								Name: "color",
+								Values: []string{
+									"blue",
+									"green",
+									"red",
+								},
+							},
 						},
 					},
 				},

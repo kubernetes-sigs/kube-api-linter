@@ -50,13 +50,14 @@ func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 
 	fieldErrors := field.ErrorList{}
 
+	fieldErrors = append(fieldErrors, validateMarkers(fldPath.Child("markers"), cfg.Markers...)...)
+
 	return fieldErrors
 }
 
 func validateMarkers(fldPath *field.Path, markers ...Marker) field.ErrorList {
-	childPath := fldPath.Child("markers")
 	if len(markers) == 0 {
-		return field.ErrorList{field.Required(childPath, "must contain at least one forbidden marker")}
+		return field.ErrorList{field.Required(fldPath, "must contain at least one forbidden marker")}
 	}
 
 	fieldErrors := field.ErrorList{}
@@ -64,15 +65,29 @@ func validateMarkers(fldPath *field.Path, markers ...Marker) field.ErrorList {
 	knownMarkers := sets.New[string]()
 
 	for i, marker := range markers {
-		indexPath := childPath.Index(i)
+		indexPath := fldPath.Index(i)
 		if knownMarkers.Has(marker.Identifier) {
-			fieldErrors = append(fieldErrors, field.Duplicate(indexPath, marker.Identifier))
+			fieldErrors = append(fieldErrors, field.Duplicate(indexPath.Child("identifier"), marker.Identifier))
 			continue
 		}
 
 		knownMarkers.Insert(marker.Identifier)
 
-		fieldErrors = append(fieldErrors, validateAttributes(indexPath, marker.Attributes...)...)
+		fieldErrors = append(fieldErrors, validateRuleSets(indexPath.Child("ruleSets"), marker.RuleSets...)...)
+	}
+
+	return fieldErrors
+}
+
+func validateRuleSets(fldPath *field.Path, ruleSets ...RuleSet) field.ErrorList {
+	if len(ruleSets) == 0 {
+		return field.ErrorList{}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	for i, ruleSet := range ruleSets {
+		fieldErrors = append(fieldErrors, validateAttributes(fldPath.Index(i).Child("attributes"), ruleSet.Attributes...)...)
 	}
 
 	return fieldErrors
@@ -80,25 +95,23 @@ func validateMarkers(fldPath *field.Path, markers ...Marker) field.ErrorList {
 
 func validateAttributes(fldPath *field.Path, attributes ...MarkerAttribute) field.ErrorList {
 	if len(attributes) == 0 {
-		return field.ErrorList{}
+		return field.ErrorList{field.Required(fldPath, "must contain at least one attribute")}
 	}
-
-	childPath := fldPath.Child("attributes")
 
 	fieldErrors := field.ErrorList{}
 
 	knownAttributes := sets.New[string]()
 
 	for i, attribute := range attributes {
-		indexPath := childPath.Index(i)
+		indexPath := fldPath.Index(i)
 		if knownAttributes.Has(attribute.Name) {
-			fieldErrors = append(fieldErrors, field.Duplicate(indexPath, attribute.Name))
+			fieldErrors = append(fieldErrors, field.Duplicate(indexPath.Child("name"), attribute.Name))
 			continue
 		}
 
 		knownAttributes.Insert(attribute.Name)
 
-		fieldErrors = append(fieldErrors, validateValues(indexPath, attribute.Values...)...)
+		fieldErrors = append(fieldErrors, validateValues(indexPath.Child("values"), attribute.Values...)...)
 	}
 
 	return fieldErrors
@@ -109,14 +122,12 @@ func validateValues(fldPath *field.Path, values ...string) field.ErrorList {
 		return field.ErrorList{}
 	}
 
-	childPath := fldPath.Child("values")
-
 	fieldErrors := field.ErrorList{}
 
 	knownAttributes := sets.New[string]()
 
 	for i, value := range values {
-		indexPath := childPath.Index(i)
+		indexPath := fldPath.Index(i)
 		if knownAttributes.Has(value) {
 			fieldErrors = append(fieldErrors, field.Duplicate(indexPath, value))
 			continue

@@ -66,50 +66,17 @@ var _ = Describe("forbiddenmarkers initializer", func() {
 				},
 				expectedErr: "invalid",
 			}),
-			Entry("With a valid forbiddenmarkers configuration with attributes", testCase{
+			Entry("With a valid forbiddenmarkers configuration with ruleSets", testCase{
 				config: &forbiddenmarkers.Config{
 					Markers: []forbiddenmarkers.Marker{
 						{
 							Identifier: "custom:forbidden",
-							Attributes: []forbiddenmarkers.MarkerAttribute{
+							RuleSets: []forbiddenmarkers.RuleSet{
 								{
-									Name: "fruit",
-								},
-							},
-						},
-					},
-				},
-				expectedErr: "",
-			}),
-			Entry("With a valid forbiddenmarkers configuration with duplicate attributes", testCase{
-				config: &forbiddenmarkers.Config{
-					Markers: []forbiddenmarkers.Marker{
-						{
-							Identifier: "custom:forbidden",
-							Attributes: []forbiddenmarkers.MarkerAttribute{
-								{
-									Name: "fruit",
-								},
-								{
-									Name: "fruit",
-								},
-							},
-						},
-					},
-				},
-				expectedErr: "duplicate",
-			}),
-			Entry("With a valid forbiddenmarkers configuration with attributes with values", testCase{
-				config: &forbiddenmarkers.Config{
-					Markers: []forbiddenmarkers.Marker{
-						{
-							Identifier: "custom:forbidden",
-							Attributes: []forbiddenmarkers.MarkerAttribute{
-								{
-									Name: "fruit",
-									Values: []string{
-										"apple",
-										"banana",
+									Attributes: []forbiddenmarkers.MarkerAttribute{
+										{
+											Name: "fruit",
+										},
 									},
 								},
 							},
@@ -118,17 +85,66 @@ var _ = Describe("forbiddenmarkers initializer", func() {
 				},
 				expectedErr: "",
 			}),
-			Entry("With an invalid forbiddenmarkers configuration with attributes with duplicate values", testCase{
+			Entry("With an invalid forbiddenmarkers configuration with duplicate attributes in a single ruleSet", testCase{
 				config: &forbiddenmarkers.Config{
 					Markers: []forbiddenmarkers.Marker{
 						{
 							Identifier: "custom:forbidden",
-							Attributes: []forbiddenmarkers.MarkerAttribute{
+							RuleSets: []forbiddenmarkers.RuleSet{
 								{
-									Name: "fruit",
-									Values: []string{
-										"apple",
-										"apple",
+									Attributes: []forbiddenmarkers.MarkerAttribute{
+										{
+											Name: "fruit",
+										},
+										{
+											Name: "fruit",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				expectedErr: "duplicate",
+			}),
+			Entry("With a valid forbiddenmarkers configuration with a ruleSet with attributes with values", testCase{
+				config: &forbiddenmarkers.Config{
+					Markers: []forbiddenmarkers.Marker{
+						{
+							Identifier: "custom:forbidden",
+							RuleSets: []forbiddenmarkers.RuleSet{
+								{
+									Attributes: []forbiddenmarkers.MarkerAttribute{
+										{
+											Name: "fruit",
+											Values: []string{
+												"apple",
+												"banana",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("With an invalid forbiddenmarkers configuration with a ruleSet with attributes with duplicate values", testCase{
+				config: &forbiddenmarkers.Config{
+					Markers: []forbiddenmarkers.Marker{
+						{
+							Identifier: "custom:forbidden",
+							RuleSets: []forbiddenmarkers.RuleSet{
+								{
+									Attributes: []forbiddenmarkers.MarkerAttribute{
+										{
+											Name: "fruit",
+											Values: []string{
+												"apple",
+												"apple",
+											},
+										},
 									},
 								},
 							},
@@ -139,6 +155,19 @@ var _ = Describe("forbiddenmarkers initializer", func() {
 			}),
 			Entry("With a nil config", testCase{
 				config:      nil,
+				expectedErr: "required",
+			}),
+			Entry("With an invalid forbiddenmarkers configuration with empty ruleSet specified", testCase{
+				config: &forbiddenmarkers.Config{
+					Markers: []forbiddenmarkers.Marker{
+						{
+							Identifier: "custom:forbidden",
+							RuleSets: []forbiddenmarkers.RuleSet{
+								{},
+							},
+						},
+					},
+				},
 				expectedErr: "required",
 			}),
 		)

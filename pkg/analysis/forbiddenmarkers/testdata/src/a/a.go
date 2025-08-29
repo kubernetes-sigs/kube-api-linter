@@ -15,6 +15,14 @@ type ForbiddenMarkerWithAttrWithValueType string // want `type ForbiddenMarkerWi
 // +custom:AttrsValues:fruit=orange,color=blue
 type ForbiddenMarkerWithAttrsWithValueType string // want `type ForbiddenMarkerWithAttrsWithValueType has forbidden marker "custom:AttrsValues:fruit=orange,color=blue"`
 
+// +custom:MultiRuleSet:fruit=apple,color=blue
+// +custom:MultiRuleSet:fruit=apple,color=green
+// +custom:MultiRuleSet:fruit=orange,color=green
+// +custom:MultiRuleSet:fruit=orange,color=blue
+// +custom:MultiRuleSet:fruit=orange,color=red
+// +custom:MultiRuleSet:fruit=banana,color=yellow
+type ForbiddenMarkerWithMultipleRuleSetsType string // want `type ForbiddenMarkerWithMultipleRuleSetsType has forbidden marker "custom:MultiRuleSet:fruit=apple,color=blue"` `type ForbiddenMarkerWithMultipleRuleSetsType has forbidden marker "custom:MultiRuleSet:fruit=apple,color=green"` `type ForbiddenMarkerWithMultipleRuleSetsType has forbidden marker "custom:MultiRuleSet:fruit=orange,color=green"` `type ForbiddenMarkerWithMultipleRuleSetsType has forbidden marker "custom:MultiRuleSet:fruit=orange,color=blue"` `type ForbiddenMarkerWithMultipleRuleSetsType has forbidden marker "custom:MultiRuleSet:fruit=orange,color=red"` `type ForbiddenMarkerWithMultipleRuleSetsType has forbidden marker "custom:MultiRuleSet:fruit=banana,color=yellow"`
+
 // +allowed
 type AllowedMarkerType string
 
@@ -34,6 +42,13 @@ type AllowedMarkerWithAttrWithValueType string
 // and the color attribute is one of blue, red, or green
 // +custom:AttrsValues:fruit=cherry,color=blue
 type AllowedMarkerWithAttrsWithValueType string
+
+// +custom:MultiRuleSet:fruit=cherry,color=blue
+// +custom:MultiRuleSet:fruit=apple,color=red
+// +custom:MultiRuleSet:fruit=apple,color=cyan
+// +custom:MultiRuleSet:fruit=orange,color=orange
+// +custom:MultiRuleSet:fruit=orange,color=purple
+type AllowedMarkerWithMultipleRuleSetsType string
 
 type Test struct {
 	// +custom:forbidden
