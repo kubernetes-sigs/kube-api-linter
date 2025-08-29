@@ -16,6 +16,7 @@ limitations under the License.
 package nonullable
 
 import (
+	"errors"
 	"fmt"
 
 	"golang.org/x/tools/go/analysis"
@@ -29,6 +30,8 @@ const (
 	doc  = "Check that nullable marker is not present on any types or fields."
 )
 
+var errUnexpectedInitializerType = errors.New("expected forbiddenmarkers.Initializer() to be of type initializer.ConfigurableAnalyzerInitializer, but was not")
+
 func newAnalyzer() *analysis.Analyzer {
 	cfg := &forbiddenmarkers.Config{
 		Markers: []forbiddenmarkers.Marker{
@@ -38,7 +41,10 @@ func newAnalyzer() *analysis.Analyzer {
 		},
 	}
 
-	configInit := forbiddenmarkers.Initializer().(initializer.ConfigurableAnalyzerInitializer)
+	configInit, ok := forbiddenmarkers.Initializer().(initializer.ConfigurableAnalyzerInitializer)
+	if !ok {
+		panic(fmt.Errorf("getting initializer: %w", errUnexpectedInitializerType))
+	}
 
 	errs := configInit.ValidateConfig(cfg, field.NewPath("nullable"))
 	if err := errs.ToAggregate(); err != nil {

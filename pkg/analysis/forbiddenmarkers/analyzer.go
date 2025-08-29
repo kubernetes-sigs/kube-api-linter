@@ -18,6 +18,7 @@ package forbiddenmarkers
 import (
 	"fmt"
 	"go/ast"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
@@ -109,6 +110,7 @@ func check(markerSet markers.MarkerSet, forbiddenMarkers []Marker, reportFunc fu
 
 func markerMatchesAttributeRules(marker markers.Marker, attrRules ...MarkerAttribute) bool {
 	matchesAll := true
+
 	for _, attrRule := range attrRules {
 		if val, ok := marker.Expressions[attrRule.Name]; ok {
 			// if no values are specified, that means the existence match is enough
@@ -118,23 +120,20 @@ func markerMatchesAttributeRules(marker markers.Marker, attrRules ...MarkerAttri
 			}
 
 			// if the value doesn't match one of the forbidden ones, this marker is not forbidden
-			matchesOneValue := false
-			for _, value := range attrRule.Values {
-				if val == value {
-					matchesOneValue = true
-					break
-				}
-			}
+			matchesOneValue := slices.Contains(attrRule.Values, val)
 
 			if !matchesOneValue {
 				matchesAll = false
 				break
 			}
+
 			continue
 		}
+
 		// if the marker doesn't contain the attribute for a specified rule it fails the AND
 		// operation.
 		matchesAll = false
+
 		break
 	}
 
