@@ -4,12 +4,14 @@
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NoBools](#nobools) - Prevents usage of boolean types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
 - [Nomaps](#nomaps) - Restricts usage of map types
+- [NoNullable](#nonullable) - Prevents usage of the nullable marker
 - [Nophase](#nophase) - Prevents usage of 'Phase' fields
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
@@ -137,6 +139,134 @@ will not.
 The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
 If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
 
+## ForbiddenMarkers
+
+The `forbiddenmarkers` linter ensures that types and fields do not contain any markers that are forbidden.
+
+By default, `forbiddenmarkers` is not enabled.
+
+### Configuation
+
+It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden.
+
+Some examples configurations explained:
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker`
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` containing the attribute `fruit`
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` containing the `fruit` AND `color` attributes
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+              - name: "color"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` where the `fruit` attribute is set to one of `apple`, `banana`, or `orange`
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "apple"
+                  - "banana"
+                  - "orange"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` where the `fruit` attribute is set to one of `apple`, `banana`, or `orange` AND the `color` attribute is set to one of `red`, `green`, or `blue`
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "apple"
+                  - "banana"
+                  - "orange"
+              - name: "color"
+                values:
+                  - "red"
+                  - "blue"
+                  - "green"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` where:
+
+- The `fruit` attribute is set to `apple` and the `color` attribute is set to one of `blue` or `orange` (allow any other color apple)
+
+_OR_
+
+- The `fruit` attribute is set to `orange` and the `color` attribute is set to one of `blue`, `red`, or `green` (allow any other color orange)
+
+_OR_
+
+- The `fruit` attribute is set to `banana` (no bananas allowed)
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "apple"
+              - name: "color"
+                values:
+                  - "blue"
+                  - "orange"
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "orange"
+              - name: "color"
+                values:
+                  - "blue"
+                  - "red"
+                  - "green"
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "banana"
+```
+
+### Fixes
+
+Fixes are suggested to remove all markers that are forbidden.
+
 ## Integers
 
 The `integers` linter checks for usage of unsupported integer types.
@@ -199,6 +329,14 @@ lintersConfig:
   nomaps:
     policy: Enforce | AllowStringToStringMaps | Ignore # Determines how the linter should handle maps of simple types. Defaults to AllowStringToStringMaps.
 ```
+
+## NoNullable
+
+The `nonullable` linter ensures that types and fields do not have the `nullable` marker.
+
+### Fixes
+
+Fixes are suggested to remove the `nullable` marker.
 
 ## Notimestamp
 
@@ -380,10 +518,12 @@ linter will suggest adding the comment `// +kubebuilder:subresource:status` abov
 
 The `uniquemarkers` linter ensures that types and fields do not contain more than a single definition of a marker that should only be present once.
 
-Because this linter has no way of determining which marker definition was intended it does not suggest any fixes 
+Because this linter has no way of determining which marker definition was intended it does not suggest any fixes
 
 ### Configuration
+
 It can configured to include a set of custom markers in the analysis by setting:
+
 ```yaml
 lintersConfig:
   uniquemarkers:
