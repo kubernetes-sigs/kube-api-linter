@@ -108,49 +108,121 @@ By default, `forbiddenmarkers` is not enabled.
 
 ### Configuation
 
-It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden
+It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden.
+
+Some examples configurations explained:
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker`
 
 ```yaml
-lintersConfig:
-  forbiddenMarkers:
+linterConfig:
+  forbiddenmarkers:
     markers:
-      - identifier: forbidden:marker
-      - identifier: forbidden:withAttribute
-        attributes:
-          - name: fruit
-      - identifier: forbidden:withMultipleAttributes
-        attributes:
-          - name: fruit
-          - name: color
-      - identifier: forbidden:withAttributeValues
-        attributes:
-          - name: fruit
-            values:
-              - apple
-              - banana
-              - orange
-      - identifier: forbidden:withMultipleAttributesValues
-        attributes:
-          - name: fruit
-            values:
-              - apple
-              - banana
-              - orange
-          - name: color
-            values:
-              - red
-              - green
-              - blue
+      - identifier: "forbidden:marker"
 ```
 
-Using the config above, the following examples would be forbidden:
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` containing the attribute `fruit`
 
-- `+forbidden:marker` (all instances, including if they have attributes and values)
-- `+forbidden:withAttribute:fruit=*,*` (all instances of this marker containing the attribute 'fruit')
-- `+forbidden:withMultipleAttributes:fruit=*,color=*,*` (all instances of this marker containing both the 'fruit' AND 'color' attributes)
-- `+forbidden:withAttributeValues:fruit={apple || banana || orange},*` (all instances of this marker containing the 'fruit' attribute where the value is set to one of 'apple', 'banana', or 'orange')
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+```
 
-- `+forbidden:withMultipleAttributesValues:fruit={apple || banana || orange},color={red || green || blue},*` (all instances of this marker containing the 'fruit' attribute where the value is set to one of 'apple', 'banana', or 'orange' AND the 'color' attribute where the value is set to one of 'red', 'green', or 'blue')
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` containing the `fruit` AND `color` attributes
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+              - name: "color"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` where the `fruit` attribute is set to one of `apple`, `banana`, or `orange`
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "apple"
+                  - "banana"
+                  - "orange"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` where the `fruit` attribute is set to one of `apple`, `banana`, or `orange` AND the `color` attribute is set to one of `red`, `green`, or `blue`
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "apple"
+                  - "banana"
+                  - "orange"
+              - name: "color"
+                values:
+                  - "red"
+                  - "blue"
+                  - "green"
+```
+
+**Scenario:** forbid all instances of the marker with the identifier `forbidden:marker` where:
+
+- The `fruit` attribute is set to `apple` and the `color` attribute is set to one of `blue` or `orange` (allow any other color apple)
+
+_OR_
+
+- The `fruit` attribute is set to `orange` and the `color` attribute is set to one of `blue`, `red`, or `green` (allow any other color orange)
+
+_OR_
+
+- The `fruit` attribute is set to `banana` (no bananas allowed)
+
+```yaml
+linterConfig:
+  forbiddenmarkers:
+    markers:
+      - identifier: "forbidden:marker"
+        ruleSets:
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "apple"
+              - name: "color"
+                values:
+                  - "blue"
+                  - "orange"
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "orange"
+              - name: "color"
+                values:
+                  - "blue"
+                  - "red"
+                  - "green"
+          - attributes:
+              - name: "fruit"
+                values:
+                  - "banana"
+```
 
 ### Fixes
 
