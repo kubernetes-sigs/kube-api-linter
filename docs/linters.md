@@ -288,6 +288,7 @@ The `optionalorrequired` linter can automatically fix fields that are using the 
 It will also remove the secondary marker where both the preferred and secondary marker are present on a field.
 
 ## RequiredFields
+
 The `requiredfields` linter checks that all fields marked as required adhere to having `omitempty` or `omitzero` values in their `json` tags.
 Currently `omitzero` is handled only for fields with struct type.
 
