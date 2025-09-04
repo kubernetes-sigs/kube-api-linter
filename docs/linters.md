@@ -427,25 +427,43 @@ It will also remove the secondary marker where both the preferred and secondary 
 
 ## RequiredFields
 
-The `requiredfields` linter checks that fields that are marked as required, follow the convention of not being pointers,
-and not having an `omitempty` value in their `json` tag.
+The `requiredfields` linter checks that all fields marked as required adhere to having `omitempty` or `omitzero` values in their `json` tags.
+Currently `omitzero` is handled only for fields with struct type.
+
+Required fields should have omitempty tags to prevent "mess" in the encoded object. 
+Fields are not typically pointers. 
+A field doesn't need to be a pointer if its zero value is not a valid value, as this zero value could never be accepted. 
+However, if the zero value is valid, the field should be a pointer to differentiate between an unset state and a valid zero value.
+
+In certain use cases, it can be desirable to not omit required fields from the serialized form of the object.
+In this case, the `omitempty` policy can be set to `Ignore`, and the linter will ensure that the zero value of the object is an acceptable value for the field.
 
 ### Configuration
 
 ```yaml
 lintersConfig:
   requiredfields:
-    pointerPolicy: Warn | SuggestFix # The policy for pointers in required fields. Defaults to `SuggestFix`.
+    pointers:
+      policy: SuggestFix | Warn # The policy for pointers in required fields. Defaults to `SuggestFix`.
+    omitempty:
+      policy: SuggestFix | Warn | Ignore # The policy for omitempty in required fields. Defaults to `SuggestFix`.
+    omitzero:
+      policy: SuggestFix | Warn | Forbid # The policy for omitzero in required fields. Defaults to `SuggestFix`.
 ```
 
 ### Fixes
 
-The `requiredfields` linter can automatically fix fields that are marked as required, but are pointers.
+The `requiredfields` linter can automatically fix fields marked as required. It does this by checking if the field should be a pointer and if its `json` tag is set correctly with `omitempty` or `omitzero`.
 
-It will suggest to remove the pointer from the field, and update the `json` tag to remove the `omitempty` value.
+If a field's zero value is valid, the linter will suggest to fix it to be a pointer type and add `omitempty` to its JSON tag.
 
-If you prefer not to suggest fixes for pointers in required fields, you can change the `pointerPolicy` to `Warn`.
-The linter will then only suggest to remove the `omitempty` value from the `json` tag.
+If a field's zero value is not valid, the field doesn't need to be a pointer. However, to prevent unnecessary data from being encoded in the JSON, the linter will suggest to add `omitempty` to its JSON tag.
+For a struct field with an invalid zero value, the linter will suggest to add `omitzero` to the JSON tag.
+
+If you prefer not to suggest fixes for pointers in required fields, you can change the `pointers.policy` to `Warn`.
+
+If you prefer not to suggest fixes for `omitempty` in required fields, you can change the `omitempty.policy` to `Warn` or `Ignore`.
+If you prefer not to suggest fixes for `omitzero` in required fields, you can change the `omitzero.policy` to `Warn` and also not to consider `omitzero` policy at all, it can be set to `Forbid`.
 
 ## SSATags
 
