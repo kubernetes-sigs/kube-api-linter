@@ -9,6 +9,7 @@
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NoBools](#nobools) - Prevents usage of boolean types
+- [NoDurations](#nodurations) - Prevents usage of duration types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
 - [Nomaps](#nomaps) - Restricts usage of map types
 - [NoNullable](#nonullable) - Prevents usage of the nullable marker
@@ -307,6 +308,14 @@ The `nobools` linter checks that fields in the API types do not contain a `bool`
 
 Booleans are limited and do not evolve well over time.
 It is recommended instead to create a string alias with meaningful values, as an enum.
+
+## NoDurations
+
+The `nodurations` linter checks that fields in the API types do not contain a `Duration` type ether from the `time` package or the `k8s.io/apimachinery/pkg/apis/meta/v1` package.
+
+It is recommended to avoid the use of Duration types. Their use ties the API to Go's notion of duration parsing, which may be hard to implement in other languages.
+
+Instead, use an integer based field with a unit in the name, e.g. `FooSeconds`.
 
 ## NoFloats
 

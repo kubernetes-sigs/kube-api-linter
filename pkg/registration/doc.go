@@ -32,6 +32,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nodurations"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nofloats"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nomaps"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nonullable"
