@@ -13,16 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package nophase_test
+package nophase
 
 import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, nophase.Analyzer, "a")
+	analysistest.RunWithSuggestedFixes(t, testdata, newAnalyzer(), "a")
 }

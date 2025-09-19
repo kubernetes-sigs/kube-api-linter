@@ -29,7 +29,7 @@ func init() {
 func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewInitializer(
 		name,
-		Analyzer,
+		newAnalyzer(),
 		true,
 	)
 }
