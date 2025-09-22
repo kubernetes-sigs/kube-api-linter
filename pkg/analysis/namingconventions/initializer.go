@@ -76,7 +76,6 @@ func validateConventions(fldPath *field.Path, conventions ...Convention) field.E
 	return fieldErrs
 }
 
-// The cyclop linter says this has cyclomatic complexity of 15.
 func validateConvention(fldPath *field.Path, convention Convention) field.ErrorList {
 	fieldErrs := field.ErrorList{}
 
@@ -98,32 +97,32 @@ func validateConvention(fldPath *field.Path, convention Convention) field.ErrorL
 	}
 
 	fieldErrs = append(fieldErrs, validateOperation(fldPath.Child("operation"), convention.Operation)...)
-	fieldErrs = append(fieldErrs, validateReplace(fldPath.Child("replace"), convention.Operation, matcher, convention.Replace)...)
+	fieldErrs = append(fieldErrs, validateReplace(fldPath.Child("replacement"), convention.Operation, matcher, convention.Replacement)...)
 
 	return fieldErrs
 }
 
 func validateOperation(fldPath *field.Path, operation Operation) field.ErrorList {
-	allowedOperations := sets.New(OperationDrop, OperationInform, OperationReplace, OperationDropField)
+	allowedOperations := sets.New(OperationDrop, OperationInform, OperationReplacement, OperationDropField)
 
 	if len(operation) == 0 {
 		return field.ErrorList{field.Required(fldPath, "operation is required")}
 	}
 
 	if len(operation) > 0 && !allowedOperations.Has(operation) {
-		return field.ErrorList{field.Invalid(fldPath, operation, fmt.Sprintf("operation must be one of %q, %q, %q, or %q", OperationInform, OperationDrop, OperationDropField, OperationReplace))}
+		return field.ErrorList{field.Invalid(fldPath, operation, fmt.Sprintf("operation must be one of %q, %q, %q, or %q", OperationInform, OperationDrop, OperationDropField, OperationReplacement))}
 	}
 
 	return field.ErrorList{}
 }
 
 func validateReplace(fldPath *field.Path, operation Operation, matcher *regexp.Regexp, replace string) field.ErrorList {
-	if (len(replace) > 0 && operation != OperationReplace) || (len(replace) == 0 && operation == OperationReplace) {
-		return field.ErrorList{field.Invalid(fldPath, replace, "replace must be specified when operation is 'Replace' and is forbidden otherwise")}
+	if (len(replace) > 0 && operation != OperationReplacement) || (len(replace) == 0 && operation == OperationReplacement) {
+		return field.ErrorList{field.Invalid(fldPath, replace, "replacement must be specified when operation is 'Replacement' and is forbidden otherwise")}
 	}
 
-	if len(replace) > 0 && operation == OperationReplace && matcher.MatchString(replace) {
-		return field.ErrorList{field.Invalid(fldPath, replace, "replace must not match violationMatcher")}
+	if len(replace) > 0 && operation == OperationReplacement && matcher.MatchString(replace) {
+		return field.ErrorList{field.Invalid(fldPath, replace, "replacement must not be matched by violationMatcher")}
 	}
 
 	return field.ErrorList{}

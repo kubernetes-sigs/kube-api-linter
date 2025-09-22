@@ -318,6 +318,7 @@ Naming conventions must have:
 - A human-readable message to be included in violation errors.
 - A regular expression that will match text within the field name that violates the convention.
 - A defined "operation". Allowed operations are `Inform`, `Drop`, `DropField`, and `Replace`.
+
 The `Inform` operation will simply inform when a field name violates the naming convention.
 The `Drop` operation will suggest a fix that drops violating text from the field name.
 The `DropField` operation will suggest a fix that removes the field in it's entirety.
@@ -374,8 +375,8 @@ linterConfig:
 ```yaml
 linterConfig:
   namingconventions:
-    conventions: 
-      - name: englishcolour 
+    conventions:
+      - name: BritishEnglishColour 
         violationMatcher: (?i)color
         operation: Replace
         replace: colour

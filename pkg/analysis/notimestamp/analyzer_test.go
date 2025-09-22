@@ -14,15 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package notimestamp
+package notimestamp_test
 
 import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/notimestamp"
 )
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, newAnalyzer(), "a")
+
+	analyzer, err := notimestamp.Initializer().Init(nil)
+	if err != nil {
+		t.Fatalf("initializing namingconventions linter: %v", err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }

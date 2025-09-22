@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestConditions(t *testing.T) {
+func TestNamingConventions(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "namingconventions")
 }

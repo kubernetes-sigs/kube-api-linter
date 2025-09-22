@@ -151,9 +151,9 @@ var _ = Describe("namingconventions initializer", func() {
 						},
 					},
 				},
-				expectedErr: "namingconventions.conventions[0].operation: Invalid value: \"Unknown\": operation must be one of \"Inform\", \"Drop\", \"DropField\", or \"Replace\"",
+				expectedErr: "namingconventions.conventions[0].operation: Invalid value: \"Unknown\": operation must be one of \"Inform\", \"Drop\", \"DropField\", or \"Replacement\"",
 			}),
-			Entry("With an invalid namingconventions configuration with a replace when operation is not 'Replace'", testCase{
+			Entry("With an invalid namingconventions configuration with a replacement when operation is not 'replacement'", testCase{
 				config: &namingconventions.Config{
 					Conventions: []namingconventions.Convention{
 						{
@@ -161,24 +161,24 @@ var _ = Describe("namingconventions initializer", func() {
 							ViolationMatcher: "(?i)thing",
 							Operation:        namingconventions.OperationDrop,
 							Message:          "no fields should have any variations of the word 'thing' in their name",
-							Replace:          "item",
+							Replacement:      "item",
 						},
 					},
 				},
-				expectedErr: "namingconventions.conventions[0].replace: Invalid value: \"item\": replace must be specified when operation is 'Replace' and is forbidden otherwise",
+				expectedErr: "namingconventions.conventions[0].replacement: Invalid value: \"item\": replacement must be specified when operation is 'Replacement' and is forbidden otherwise",
 			}),
-			Entry("With an invalid namingconventions configuration with no replace when operation is 'Replace'", testCase{
+			Entry("With an invalid namingconventions configuration with no replacement when operation is 'replacement'", testCase{
 				config: &namingconventions.Config{
 					Conventions: []namingconventions.Convention{
 						{
 							Name:             "nothing",
 							ViolationMatcher: "(?i)thing",
-							Operation:        namingconventions.OperationReplace,
+							Operation:        namingconventions.OperationReplacement,
 							Message:          "no fields should have any variations of the word 'thing' in their name",
 						},
 					},
 				},
-				expectedErr: "namingconventions.conventions[0].replace: Invalid value: \"\": replace must be specified when operation is 'Replace' and is forbidden otherwise",
+				expectedErr: "namingconventions.conventions[0].replacement: Invalid value: \"\": replacement must be specified when operation is 'Replacement' and is forbidden otherwise",
 			}),
 			Entry("With an invalid namingconventions configuration where replacement string matches violationMatcher", testCase{
 				config: &namingconventions.Config{
@@ -186,13 +186,13 @@ var _ = Describe("namingconventions initializer", func() {
 						{
 							Name:             "nothing",
 							ViolationMatcher: "(?i)thing",
-							Operation:        namingconventions.OperationReplace,
+							Operation:        namingconventions.OperationReplacement,
 							Message:          "no fields should have any variations of the word 'thing' in their name",
-							Replace:          "anotherthing",
+							Replacement:      "anotherthing",
 						},
 					},
 				},
-				expectedErr: "namingconventions.conventions[0].replace: Invalid value: \"anotherthing\": replace must not match violationMatcher",
+				expectedErr: "namingconventions.conventions[0].replacement: Invalid value: \"anotherthing\": replacement must not be matched by violationMatcher",
 			}),
 		)
 	})

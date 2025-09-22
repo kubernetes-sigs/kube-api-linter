@@ -36,9 +36,9 @@ func Test(t *testing.T) {
 			{
 				Name:             "preferbehaviour",
 				ViolationMatcher: "(?i)behavior",
-				Operation:        namingconventions.OperationReplace,
+				Operation:        namingconventions.OperationReplacement,
 				Message:          "prefer the use of the word 'behaviour' instead of 'behavior'.",
-				Replace:          "Behaviour",
+				Replacement:      "Behaviour",
 			},
 			{
 				Name:             "nounsupported",

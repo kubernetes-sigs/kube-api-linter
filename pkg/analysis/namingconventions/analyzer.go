@@ -93,7 +93,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.F
 		case OperationDrop:
 			reportDrop(pass, field, tagInfo, convention, matcher)
 
-		case OperationReplace:
+		case OperationReplacement:
 			reportReplace(pass, field, tagInfo, convention, matcher)
 		}
 	}
@@ -102,23 +102,24 @@ func checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.F
 func reportConventionWithSuggestedFixes(pass *analysis.Pass, field *ast.Field, convention Convention, suggestedFixes ...analysis.SuggestedFix) {
 	pass.Report(analysis.Diagnostic{
 		Pos:            field.Pos(),
-		Message:        fmt.Sprintf("naming convention %q: %s", convention.Name, convention.Message),
+		Message:        fmt.Sprintf("naming convention %q: field %s: %s", convention.Name, utils.FieldName(field), convention.Message),
 		SuggestedFixes: suggestedFixes,
 	})
 }
 
 func reportDropField(pass *analysis.Pass, field *ast.Field, convention Convention) {
-	suggestedFixes := []analysis.SuggestedFix{}
-	suggestedFixes = append(suggestedFixes, analysis.SuggestedFix{
-		Message: "remove the field",
-		TextEdits: []analysis.TextEdit{
-			{
-				Pos:     field.Pos(),
-				NewText: []byte(""),
-				End:     field.End(),
+	suggestedFixes := []analysis.SuggestedFix{
+		{
+			Message: "remove the field",
+			TextEdits: []analysis.TextEdit{
+				{
+					Pos:     field.Pos(),
+					NewText: []byte(""),
+					End:     field.End(),
+				},
 			},
 		},
-	})
+	}
 
 	reportConventionWithSuggestedFixes(pass, field, convention, suggestedFixes...)
 }
@@ -129,7 +130,7 @@ func reportDrop(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.F
 }
 
 func reportReplace(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, convention Convention, matcher *regexp.Regexp) {
-	suggestedFixes := suggestedFixesForReplacement(field, tagInfo, matcher, convention.Replace)
+	suggestedFixes := suggestedFixesForReplacement(field, tagInfo, matcher, convention.Replacement)
 	reportConventionWithSuggestedFixes(pass, field, convention, suggestedFixes...)
 }
 
@@ -151,8 +152,6 @@ func suggestFixesForSerializedFieldName(tagInfo extractjsontags.FieldTagInfo, ma
 		return nil
 	}
 
-	suggestedFixes := []analysis.SuggestedFix{}
-
 	// This should prevent panics from slice access when the replacement
 	// string ends up being a length of 1 and still result in a technically
 	// correct JSON tag name value.
@@ -169,18 +168,18 @@ func suggestFixesForSerializedFieldName(tagInfo extractjsontags.FieldTagInfo, ma
 		tagReplacementMessage = "remove offending text from serialized field name"
 	}
 
-	suggestedFixes = append(suggestedFixes, analysis.SuggestedFix{
-		Message: tagReplacementMessage,
-		TextEdits: []analysis.TextEdit{
-			{
-				Pos:     tagInfo.Pos,
-				NewText: []byte(tagReplacement),
-				End:     tagInfo.End,
+	return []analysis.SuggestedFix{
+		{
+			Message: tagReplacementMessage,
+			TextEdits: []analysis.TextEdit{
+				{
+					Pos:     tagInfo.Pos,
+					NewText: []byte(tagReplacement),
+					End:     tagInfo.End,
+				},
 			},
 		},
-	})
-
-	return suggestedFixes
+	}
 }
 
 func suggestFixesForGoFieldName(field *ast.Field, matcher *regexp.Regexp, replacementStr string) []analysis.SuggestedFix {
@@ -193,24 +192,22 @@ func suggestFixesForGoFieldName(field *ast.Field, matcher *regexp.Regexp, replac
 		return nil
 	}
 
-	suggestedFixes := []analysis.SuggestedFix{}
-
 	replacementMessage := fmt.Sprintf("replace offending text in Go type with %q", replacementStr)
 
 	if len(replacementStr) == 0 {
 		replacementMessage = "remove offending text from Go type field"
 	}
 
-	suggestedFixes = append(suggestedFixes, analysis.SuggestedFix{
-		Message: replacementMessage,
-		TextEdits: []analysis.TextEdit{
-			{
-				Pos:     field.Pos(),
-				NewText: []byte(replacement),
-				End:     field.Pos() + token.Pos(len(fieldName)),
+	return []analysis.SuggestedFix{
+		{
+			Message: replacementMessage,
+			TextEdits: []analysis.TextEdit{
+				{
+					Pos:     field.Pos(),
+					NewText: []byte(replacement),
+					End:     field.Pos() + token.Pos(len(fieldName)),
+				},
 			},
 		},
-	})
-
-	return suggestedFixes
+	}
 }

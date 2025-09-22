@@ -30,9 +30,10 @@ type Config struct {
 type Convention struct {
 	// name is a required human-readable name to
 	// associate with the field naming convention.
+	// name is case-sensitive.
 	Name string `json:"name,omitempty"`
 
-	// violationMatcher is a required regular expression
+	// violationMatcher is a required RE2 compliant regular expression
 	// used to identify violating portions of a field name.
 	ViolationMatcher string `json:"violationMatcher,omitempty"`
 
@@ -55,18 +56,18 @@ type Convention struct {
 	// portion of the field name matched by the violationMatcher
 	// expression.
 	//
-	// When set to Replace, the namingconventions linter will
+	// When set to Replacement, the namingconventions linter will
 	// suggest that any fields matching this conventions should
 	// replace the matched portion of the field name with the value
 	// specified in the replace field.
 	Operation Operation `json:"operation,omitempty"`
 
-	// replace configures the string that should
+	// replacement configures the string that should
 	// replace the matched portion of a field name
 	// that violates this conventions.
-	// replace is required when operation is set to Replace
+	// replacement is required when operation is set to Replacement
 	// and forbidden otherwise.
-	Replace string `json:"replace,omitempty,omitzero"`
+	Replacement string `json:"replacement,omitempty,omitzero"`
 
 	// message is a required human-readable message
 	// to be included in the linter error if a field
@@ -88,10 +89,10 @@ const (
 	// the naming convention is violated.
 	OperationDrop Operation = "Drop"
 
-	// OperationReplace signals that the offending text
+	// OperationReplacement signals that the offending text
 	// should be replaced in the field name when
 	// the naming convention is violated.
-	OperationReplace Operation = "Replace"
+	OperationReplacement Operation = "Replacement"
 
 	// OperationInform signals that no action
 	// should be taken, beyond issuing a linter error

@@ -8,28 +8,28 @@ import (
 
 type NoTimeStampTestStruct struct {
 	// +optional
-	Time *time.Time `json:"time,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	Time *time.Time `json:"time,omitempty"` // want `naming convention "notimestamp": field TimeStamp: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	Time *time.Time `json:"time,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	Time *time.Time `json:"time,omitempty"` // want `naming convention "notimestamp": field Timestamp: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	FooTime *time.Time `json:"fooTime,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	FooTime *time.Time `json:"fooTime,omitempty"` // want `naming convention "notimestamp": field FooTimeStamp: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	FooTime *time.Time `json:"fooTime,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	FooTime *time.Time `json:"fooTime,omitempty"` // want `naming convention "notimestamp": field FootimeStamp: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	BarTime *time.Time `json:"barTime,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	BarTime *time.Time `json:"barTime,omitempty"` // want `naming convention "notimestamp": field BarTimestamp: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	FooTimeBar *time.Time `json:"fooTimeBar,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	FooTimeBar *time.Time `json:"fooTimeBar,omitempty"` // want `naming convention "notimestamp": field FootimestampBar: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	FooTimeBarTime *time.Time `json:"fooTimeBarTime,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	FooTimeBarTime *time.Time `json:"fooTimeBarTime,omitempty"` // want `naming convention "notimestamp": field FooTimestampBarTimeStamp: prefer use of the term 'time' over 'timestamp'`
 
 	// +optional
-	MetaTime *metav1.Time `json:"metaTime,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	MetaTime *metav1.Time `json:"metaTime,omitempty"` // want `naming convention "notimestamp": field MetaTimeStamp: prefer use of the term 'time' over 'timestamp'`
 }
 
 // DoNothing is used to check that the analyser doesn't report on methods.
@@ -37,7 +37,7 @@ func (NoTimeStampTestStruct) DoNothing() {}
 
 type NoSubTimeStampTestStruct struct {
 	// +optional
-	FooTime *time.Time `json:"fooTime,omitempty"` // want `naming convention "notimestamp": prefer use of the term 'time' over 'timestamp'`
+	FooTime *time.Time `json:"fooTime,omitempty"` // want `naming convention "notimestamp": field FooTimeStamp: prefer use of the term 'time' over 'timestamp'`
 }
 
 type SerializedTimeStampTestStruct struct {

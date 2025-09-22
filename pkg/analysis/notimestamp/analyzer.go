@@ -38,9 +38,9 @@ func newAnalyzer() *analysis.Analyzer {
 			{
 				Name:             "notimestamp",
 				ViolationMatcher: "(?i)timestamp",
-				Operation:        namingconventions.OperationReplace,
+				Operation:        namingconventions.OperationReplacement,
 				Message:          "prefer use of the term 'time' over 'timestamp'",
-				Replace:          "Time",
+				Replacement:      "Time",
 			},
 		},
 	}
