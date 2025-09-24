@@ -13,22 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package nophase_test
+package namingconventions_test
 
 import (
 	"testing"
 
-	"golang.org/x/tools/go/analysis/analysistest"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func Test(t *testing.T) {
-	testdata := analysistest.TestData()
-
-	analyzer, err := nophase.Initializer().Init(nil)
-	if err != nil {
-		t.Fatalf("initializing namingconventions linter: %v", err)
-	}
-
-	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
+func TestNamingConventions(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "namingconventions")
 }

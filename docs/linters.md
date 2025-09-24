@@ -8,6 +8,7 @@
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
+- [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
 - [NoBools](#nobools) - Prevents usage of boolean types
 - [NoDurations](#nodurations) - Prevents usage of duration types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
@@ -301,6 +302,86 @@ or `+kubebuilder:validation:items:MaxLenth` if the array is an element of the bu
 
 Adding maximum lengths to strings and arrays not only ensures that the API is not abused (used to store overly large data, reduces DDOS etc.),
 but also allows CEL validation cost estimations to be kept within reasonable bounds.
+
+## NamingConventions
+
+The `namingconventions` linter ensures that field names adhere to a set of defined naming conventions.
+
+By default, `namingconventions` is not enabled.
+
+When enabled, it must be configured with at least one naming convention.
+
+### Configuration
+
+Naming conventions must have:
+- A unique human-readable name.
+- A human-readable message to be included in violation errors.
+- A regular expression that will match text within the field name that violates the convention.
+- A defined "operation". Allowed operations are `Inform`, `Drop`, `DropField`, and `Replace`.
+
+The `Inform` operation will simply inform when a field name violates the naming convention.
+The `Drop` operation will suggest a fix that drops violating text from the field name.
+The `DropField` operation will suggest a fix that removes the field in it's entirety.
+The `Replace` operation will suggest a fix that replaces the violating text in the field name with a defined replacement value.
+
+High-level configuration overview:
+```yaml
+linterConfig:
+  namingconventions:
+    conventions: 
+      - name: {human readable string} # must be unique
+        violationMatcher: {regular expression}
+        operation: Inform | Drop | DropField | Replace
+        replace: { replacement string } # required when operation is 'Replace', forbidden otherwise
+        message: {human readable string}
+```
+
+Some example configurations:
+
+**Scenario:** Inform that any variations of the word 'fruit' in field names is not allowed
+```yaml
+linterConfig:
+  namingconventions:
+    conventions: 
+      - name: nofruit
+        violationMatcher: (?i)fruit
+        operation: Inform
+        message: fields should not contain any variation of the word 'fruit' in their names
+```
+
+**Scenario:** Drop any variations of the word 'fruit' in field names
+```yaml
+linterConfig:
+  namingconventions:
+    conventions: 
+      - name: nofruit
+        violationMatcher: (?i)fruit
+        operation: Drop
+        message: fields should not contain any variation of the word 'fruit' in their names
+```
+
+**Scenario:** Do not allow fields with any variations of the word 'fruit' in their name
+```yaml
+linterConfig:
+  namingconventions:
+    conventions: 
+      - name: nofruit
+        violationMatcher: (?i)fruit
+        operation: DropField
+        message: fields should not contain any variation of the word 'fruit' in their names
+```
+
+**Scenario:** Replace any variations of the word 'color' with 'colour' in field names
+```yaml
+linterConfig:
+  namingconventions:
+    conventions:
+      - name: BritishEnglishColour 
+        violationMatcher: (?i)color
+        operation: Replace
+        replace: colour
+        message: prefer 'colour' over 'color' when referring to colours in field names
+```
 
 ## NoBools
 

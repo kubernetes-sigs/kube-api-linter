@@ -25,5 +25,11 @@ import (
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, notimestamp.Analyzer, "a")
+
+	analyzer, err := notimestamp.Initializer().Init(nil)
+	if err != nil {
+		t.Fatalf("initializing namingconventions linter: %v", err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
