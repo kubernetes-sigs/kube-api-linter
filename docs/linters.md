@@ -11,6 +11,7 @@
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
+- [MarkerScope](#markerscope) - Validates that markers are applied in the correct scope
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
 - [NoBools](#nobools) - Prevents usage of boolean types
@@ -423,6 +424,44 @@ lintersConfig:
   jsontags:
     jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
 ```
+
+## MarkerScope
+
+The `markerscope` linter validates that markers are applied in the correct scope. It ensures that markers are placed on appropriate Go language constructs (types, fields) according to their intended usage.
+
+The linter defines different scope types for markers:
+
+- **Field-only markers**: Can only be applied to struct fields (e.g., `required`, `kubebuilder:validation:Required`)
+- **Type-only markers**: Can only be applied to type definitions 
+- **Type or Map/Slice fields**: Can be applied to type definitions, map fields, or slice fields (e.g., `kubebuilder:validation:MinProperties`)
+- **Field or Type markers**: Can be applied to either fields or type definitions
+
+### Default Scope Rules
+
+By default, the linter enforces these scope rules:
+
+- `required` and `kubebuilder:validation:Required`: Field-only
+- `kubebuilder:validation:MinProperties`: Type definitions, map fields, or slice fields only
+
+### Configuration
+
+```yaml
+lintersConfig:
+  markerscope:
+    policy: SuggestFix | Warn # The policy for marker scope violations. Defaults to `SuggestFix`.
+```
+
+### Fixes
+
+The `markerscope` linter can automatically fix scope violations when `policy` is set to `SuggestFix`:
+
+1. **Remove incorrect markers**: Suggests removing markers that are in the wrong scope
+2. **Move markers to correct locations**: 
+   - Move field-only markers from types to appropriate fields
+   - Move type-only markers from fields to their corresponding type definitions
+3. **Preserve marker values**: When moving markers like `kubebuilder:validation:MinProperties=1`
+
+**Note**: This linter is not enabled by default and must be explicitly enabled in the configuration. 
 
 ## MaxLength
 
