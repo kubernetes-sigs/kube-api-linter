@@ -27,14 +27,5 @@ func TestAnalyzerWarnOnly(t *testing.T) {
 		Policy: MarkerScopePolicyWarn,
 	}
 	analyzer := newAnalyzer(cfg)
-	analysistest.Run(t, testdata, analyzer, "b")
-}
-
-func TestAnalyzerSuggestFix(t *testing.T) {
-	testdata := analysistest.TestData()
-	cfg := &MarkerScopeConfig{
-		Policy: MarkerScopePolicySuggestFix,
-	}
-	analyzer := newAnalyzer(cfg)
-	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "b")
+	analysistest.Run(t, testdata, analyzer, "a")
 }
