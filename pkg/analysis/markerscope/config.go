@@ -15,9 +15,88 @@ limitations under the License.
 */
 package markerscope
 
-import "sigs.k8s.io/kube-api-linter/pkg/markers"
+import (
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
+)
 
-// MarkerScope defines where a marker is allowed to be placed.
+// ScopeConstraint defines where a marker is allowed to be placed using bit flags.
+type ScopeConstraint uint8
+
+const (
+	// FieldScope indicates the marker can be placed on fields.
+	FieldScope ScopeConstraint = 1 << iota
+	// TypeScope indicates the marker can be placed on type definitions.
+	TypeScope
+
+	// AnyScope indicates the marker can be placed on either fields or types.
+	AnyScope = FieldScope | TypeScope
+)
+
+// String returns a human-readable representation of the scope constraint.
+func (s ScopeConstraint) String() string {
+	switch s {
+	case FieldScope:
+		return "field"
+	case TypeScope:
+		return "type"
+	case AnyScope:
+		return "any"
+	default:
+		return "unknown"
+	}
+}
+
+// Allows checks if the given scope is allowed by this constraint.
+func (s ScopeConstraint) Allows(scope ScopeConstraint) bool {
+	return s&scope != 0
+}
+
+// SchemaType represents OpenAPI schema types that markers can target.
+type SchemaType string
+
+const (
+	// SchemaTypeInteger represents integer types (int, int32, int64, uint, etc.)
+	SchemaTypeInteger SchemaType = "integer"
+	// SchemaTypeNumber represents floating-point types (float32, float64)
+	SchemaTypeNumber SchemaType = "number"
+	// SchemaTypeString represents string types
+	SchemaTypeString SchemaType = "string"
+	// SchemaTypeBoolean represents boolean types
+	SchemaTypeBoolean SchemaType = "boolean"
+	// SchemaTypeArray represents array/slice types
+	SchemaTypeArray SchemaType = "array"
+	// SchemaTypeObject represents struct/map types
+	SchemaTypeObject SchemaType = "object"
+)
+
+// TypeConstraint defines what types a marker can be applied to.
+// NOTE: This constraint is only used when the marker is placed on a field (not TypeScope).
+// Type-level markers (TypeScope) do not use type constraints.
+type TypeConstraint struct {
+	// AllowedSchemaTypes specifies the allowed OpenAPI schema types.
+	// If nil or empty, any type is allowed.
+	// Maps to JSONSchemaProps.Type (integer, number, string, boolean, array, object)
+	AllowedSchemaTypes []SchemaType
+
+	// ElementConstraint specifies constraints on slice/array element types.
+	// Only applies when AllowSlice or AllowArray is true.
+	ElementConstraint *TypeConstraint
+}
+
+// MarkerScopeRule defines comprehensive scope validation rules for a marker.
+type MarkerScopeRule struct {
+	// Scope specifies where the marker can be placed (field vs type).
+	Scope ScopeConstraint
+
+	// TypeConstraint specifies what types the marker can be applied to.
+	// NOTE: This is used for both field and type scopes, but typically only enforced
+	// when Scope includes FieldScope. For TypeScope-only markers, this is usually nil.
+	// If nil, no type constraint is enforced (any type is allowed).
+	TypeConstraint *TypeConstraint
+}
+
+// MarkerScope defines where a marker is allowed to be placed (legacy).
+// Deprecated: Use MarkerScopeRule with ScopeConstraint instead.
 type MarkerScope string
 
 const (
@@ -47,91 +126,309 @@ const (
 
 // MarkerScopeConfig contains configuration for marker scope validation.
 type MarkerScopeConfig struct {
-	// Markers maps marker names to their allowed scopes.
+	// MarkerRules maps marker names to their scope rules with scope and type constraints.
 	// If a marker is not in this map, no scope validation is performed.
-	Markers map[string]MarkerScope `json:"markers,omitempty"`
+	MarkerRules map[string]MarkerScopeRule `json:"markerRules,omitempty"`
 
 	// Policy determines whether to suggest fixes or just warn.
 	Policy MarkerScopePolicy `json:"policy,omitempty"`
 }
 
-// DefaultMarkerScopes returns the default marker scope configurations.
-// ref: https://github.com/kubernetes-sigs/controller-tools/blob/main/pkg/crd/markers/validation.go
-func DefaultMarkerScopes() map[string]MarkerScope {
-	return map[string]MarkerScope{
+// DefaultMarkerRules returns the default marker scope rules with type constraints.
+// ref: https://github.com/kubernetes-sigs/controller-tools/blob/v0.19.0/pkg/crd/markers/
+func DefaultMarkerRules() map[string]MarkerScopeRule {
+	return map[string]MarkerScopeRule{
 		// Field-only markers (based on controller-tools validation.go)
-		markers.OptionalMarker:                    ScopeField,
-		markers.RequiredMarker:                    ScopeField,
-		markers.K8sOptionalMarker:                 ScopeField,
-		markers.K8sRequiredMarker:                 ScopeField,
-		markers.KubebuilderOptionalMarker:         ScopeField,
-		markers.KubebuilderRequiredMarker:         ScopeField,
-		markers.NullableMarker:                    ScopeField,
-		markers.DefaultMarker:                     ScopeField,
-		markers.KubebuilderDefaultMarker:          ScopeField,
-		markers.KubebuilderExampleMarker:          ScopeField,
-		"kubebuilder:validation:EmbeddedResource": ScopeField,
-		markers.KubebuilderSchemaLessMarker:       ScopeField,
+		markers.OptionalMarker:                    {Scope: FieldScope, TypeConstraint: nil},
+		markers.RequiredMarker:                    {Scope: FieldScope, TypeConstraint: nil},
+		markers.K8sOptionalMarker:                 {Scope: FieldScope, TypeConstraint: nil},
+		markers.K8sRequiredMarker:                 {Scope: FieldScope, TypeConstraint: nil},
+		markers.NullableMarker:                    {Scope: FieldScope, TypeConstraint: nil},
+		markers.DefaultMarker:                     {Scope: FieldScope, TypeConstraint: nil},
+		markers.KubebuilderDefaultMarker:          {Scope: FieldScope, TypeConstraint: nil},
+		markers.KubebuilderExampleMarker:          {Scope: FieldScope, TypeConstraint: nil},
+		markers.KubebuilderEmbeddedResourceMarker: {Scope: FieldScope, TypeConstraint: nil},
+		markers.KubebuilderSchemaLessMarker:       {Scope: FieldScope, TypeConstraint: nil},
 
 		// Type-only markers (object-level validation and CRD generation)
-		"kubebuilder:validation:items:ExactlyOneOf": ScopeType,
-		"kubebuilder:validation:items:AtMostOneOf":  ScopeType,
-		"kubebuilder:validation:items:AtLeastOneOf": ScopeType,
-		markers.KubebuilderRootMarker:               ScopeType,
-		markers.KubebuilderStatusSubresourceMarker:  ScopeType,
+		markers.KubebuilderValidationItemsExactlyOneOfMarker: {Scope: TypeScope, TypeConstraint: nil},
+		markers.KubebuilderValidationItemsAtMostOneOfMarker:  {Scope: TypeScope, TypeConstraint: nil},
+		markers.KubebuilderValidationItemsAtLeastOneOfMarker: {Scope: TypeScope, TypeConstraint: nil},
 
-		// field-and-type markers
-		"kubebuilder:pruning:PreserveUnknownFields": ScopeFieldOrType,
-		"kubebuilder:title":                         ScopeFieldOrType,
+		// field-or-type markers
+		markers.KubebuilderPruningPreserveUnknownFieldsMarker: {Scope: AnyScope, TypeConstraint: nil},
+		markers.KubebuilderTitleMarker:                        {Scope: AnyScope, TypeConstraint: nil},
 
-		// numeric markers
-		markers.KubebuilderMinimumMarker:          ScopeField,
-		markers.KubebuilderMaximumMarker:          ScopeField,
-		markers.KubebuilderExclusiveMaximumMarker: ScopeField,
-		markers.KubebuilderExclusiveMinimumMarker: ScopeField,
-		markers.KubebuilderMultipleOfMarker:       ScopeField,
+		// numeric markers (field or type, integer or number types)
+		markers.KubebuilderMinimumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
+			},
+		},
+		markers.KubebuilderMaximumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
+			},
+		},
+		markers.KubebuilderExclusiveMaximumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+			},
+		},
+		markers.KubebuilderExclusiveMinimumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+			},
+		},
+		markers.KubebuilderMultipleOfMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
+			},
+		},
 
-		// object markers
-		markers.KubebuilderMinPropertiesMarker: ScopeTypeOrObjectField,
-		markers.KubebuilderMaxPropertiesMarker: ScopeTypeOrObjectField,
+		// object markers (field or type, object types)
+		markers.KubebuilderMinPropertiesMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
+			},
+		},
+		markers.KubebuilderMaxPropertiesMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
+			},
+		},
 
-		// string markers
-		markers.KubebuilderPatternMarker:   ScopeField,
-		markers.KubebuilderMinLengthMarker: ScopeField,
-		markers.KubebuilderMaxLengthMarker: ScopeField,
+		// string markers (field or type, string types)
+		markers.KubebuilderPatternMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+			},
+		},
+		markers.KubebuilderMinLengthMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+			},
+		},
+		markers.KubebuilderMaxLengthMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+			},
+		},
 
-		// array markers
-		markers.KubebuilderMinItemsMarker:    ScopeField,
-		markers.KubebuilderMaxItemsMarker:    ScopeField,
-		markers.KubebuilderUniqueItemsMarker: ScopeField,
+		// array markers (field or type, array types)
+		markers.KubebuilderMinItemsMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+			},
+		},
+		markers.KubebuilderMaxItemsMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+			},
+		},
+		markers.KubebuilderUniqueItemsMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+			},
+		},
 
-		// general markers
-		markers.KubebuilderEnumMarker:        ScopeField,
-		markers.KubebuilderFormatMarker:      ScopeField,
-		markers.KubebuilderTypeMarker:        ScopeField,
-		markers.KubebuilderXValidationMarker: ScopeField,
+		// general markers (field or type, any type)
+		markers.KubebuilderEnumMarker:        {Scope: AnyScope, TypeConstraint: nil},
+		markers.KubebuilderFormatMarker:      {Scope: AnyScope, TypeConstraint: nil},
+		markers.KubebuilderTypeMarker:        {Scope: AnyScope, TypeConstraint: nil},
+		markers.KubebuilderXValidationMarker: {Scope: AnyScope, TypeConstraint: nil},
 
-		// Array/slice field markers (Server-Side Apply related)
-		markers.KubebuilderListTypeMarker:   ScopeFieldOrType,
-		markers.KubebuilderListMapKeyMarker: ScopeFieldOrType,
+		// Server-Side Apply topology markers
+		markers.KubebuilderListTypeMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+			},
+		},
+		markers.KubebuilderListMapKeyMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+			},
+		},
+		markers.KubebuilderMapTypeMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
+			},
+		},
+		markers.KubebuilderStructTypeMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
+			},
+		},
 
-		// Array items markers (field-only, apply to array elements)
-		markers.KubebuilderItemsMaxItemsMarker:         ScopeField,
-		markers.KubebuilderItemsMaximumMarker:          ScopeField,
-		markers.KubebuilderItemsMinItemsMarker:         ScopeField,
-		markers.KubebuilderItemsMinLengthMarker:        ScopeField,
-		markers.KubebuilderItemsMinimumMarker:          ScopeField,
-		markers.KubebuilderItemsMaxLengthMarker:        ScopeField,
-		markers.KubebuilderItemsEnumMarker:             ScopeField,
-		markers.KubebuilderItemsFormatMarker:           ScopeField,
-		markers.KubebuilderItemsExclusiveMaximumMarker: ScopeField,
-		markers.KubebuilderItemsExclusiveMinimumMarker: ScopeField,
-		markers.KubebuilderItemsMultipleOfMarker:       ScopeField,
-		markers.KubebuilderItemsPatternMarker:          ScopeField,
-		markers.KubebuilderItemsTypeMarker:             ScopeField,
-		markers.KubebuilderItemsUniqueItemsMarker:      ScopeField,
-		markers.KubebuilderItemsXValidationMarker:      ScopeField,
-		markers.KubebuilderItemsMinPropertiesMarker:    ScopeTypeOrObjectField,
-		markers.KubebuilderItemsMaxPropertiesMarker:    ScopeTypeOrObjectField,
+		// Array items markers (field or type, apply to array elements)
+		// These validate the ELEMENTS of arrays, not the arrays themselves
+		markers.KubebuilderItemsMaxItemsMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				},
+			},
+		},
+		markers.KubebuilderItemsMaximumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
+				},
+			},
+		},
+		markers.KubebuilderItemsMinItemsMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				},
+			},
+		},
+		markers.KubebuilderItemsMinLengthMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+				},
+			},
+		},
+		markers.KubebuilderItemsMinimumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
+				},
+			},
+		},
+		markers.KubebuilderItemsMaxLengthMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+				},
+			},
+		},
+		markers.KubebuilderItemsEnumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				// Enum can apply to any element type
+				ElementConstraint: nil,
+			},
+		},
+		markers.KubebuilderItemsFormatMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				// Format can apply to various types
+				ElementConstraint: nil,
+			},
+		},
+		markers.KubebuilderItemsExclusiveMaximumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+				},
+			},
+		},
+		markers.KubebuilderItemsExclusiveMinimumMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+				},
+			},
+		},
+		markers.KubebuilderItemsMultipleOfMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
+				},
+			},
+		},
+		markers.KubebuilderItemsPatternMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+				},
+			},
+		},
+		markers.KubebuilderItemsTypeMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				// Type marker can override any element type
+				ElementConstraint: nil,
+			},
+		},
+		markers.KubebuilderItemsUniqueItemsMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				},
+			},
+		},
+		markers.KubebuilderItemsXValidationMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				// CEL validation can apply to any element type
+				ElementConstraint: nil,
+			},
+		},
+		markers.KubebuilderItemsMinPropertiesMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
+				},
+			},
+		},
+		markers.KubebuilderItemsMaxPropertiesMarker: {
+			Scope: AnyScope,
+			TypeConstraint: &TypeConstraint{
+				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+				ElementConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
+				},
+			},
+		},
+		// TODO crd.go
+		// TODO package.go
 	}
 }

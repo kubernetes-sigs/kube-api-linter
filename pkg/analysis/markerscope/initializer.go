@@ -57,21 +57,61 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 			fmt.Sprintf("invalid policy, must be one of: %q, %q", MarkerScopePolicyWarn, MarkerScopePolicySuggestFix)))
 	}
 
-	// Validate marker scopes
-	for marker, scope := range cfg.Markers {
-		if err := validateScope(scope); err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("markers", marker), scope, err.Error()))
+	// Validate marker rules
+	for marker, rule := range cfg.MarkerRules {
+		if err := validateMarkerRule(rule); err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("markerRules", marker), rule, err.Error()))
 		}
 	}
 
 	return fieldErrors
 }
 
-func validateScope(scope MarkerScope) error {
-	switch scope {
-	case ScopeField, ScopeType, ScopeFieldOrType, ScopeTypeOrObjectField:
-		return nil
+func validateMarkerRule(rule MarkerScopeRule) error {
+	// Validate scope constraint
+	if rule.Scope == 0 {
+		return fmt.Errorf("scope must be non-zero")
+	}
+
+	// Validate that scope is a valid combination of FieldScope and/or TypeScope
+	validScopes := FieldScope | TypeScope
+	if rule.Scope&^validScopes != 0 {
+		return fmt.Errorf("invalid scope bits")
+	}
+
+	// Validate type constraint if present
+	if rule.TypeConstraint != nil {
+		if err := validateTypeConstraint(rule.TypeConstraint); err != nil {
+			return fmt.Errorf("invalid type constraint: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func validateTypeConstraint(tc *TypeConstraint) error {
+	// Validate schema types if specified
+	for _, st := range tc.AllowedSchemaTypes {
+		if !isValidSchemaType(st) {
+			return fmt.Errorf("invalid schema type: %q", st)
+		}
+	}
+
+	// Validate element constraint recursively
+	if tc.ElementConstraint != nil {
+		if err := validateTypeConstraint(tc.ElementConstraint); err != nil {
+			return fmt.Errorf("invalid element constraint: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func isValidSchemaType(st SchemaType) bool {
+	switch st {
+	case SchemaTypeInteger, SchemaTypeNumber, SchemaTypeString, SchemaTypeBoolean, SchemaTypeArray, SchemaTypeObject:
+		return true
 	default:
-		return fmt.Errorf("invalid scope %q, must be one of: %q, %q, %q, %q", scope, ScopeField, ScopeType, ScopeFieldOrType, ScopeTypeOrObjectField)
+		return false
 	}
 }
