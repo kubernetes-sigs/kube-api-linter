@@ -18,6 +18,7 @@ package markerscope
 import (
 	"fmt"
 	"go/ast"
+	"go/types"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -144,8 +145,19 @@ func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, mark
 		// Check if FieldScope is allowed
 		if !rule.Scope.Allows(FieldScope) {
 			a.reportScopeViolation(pass, marker, rule)
+			continue
 		}
-		// TODO: Add type constraint validation here
+
+		// Check type constraints if present
+		if rule.TypeConstraint != nil {
+			if err := a.validateFieldTypeConstraint(pass, field, rule.TypeConstraint); err != nil {
+				pass.Report(analysis.Diagnostic{
+					Pos:     marker.Pos,
+					End:     marker.End,
+					Message: fmt.Sprintf("marker %q: %s", marker.Identifier, err),
+				})
+			}
+		}
 	}
 }
 
@@ -173,9 +185,138 @@ func (a *analyzer) checkTypeMarkers(pass *analysis.Pass, genDecl *ast.GenDecl, m
 			// Check if TypeScope is allowed
 			if !rule.Scope.Allows(TypeScope) {
 				a.reportScopeViolation(pass, marker, rule)
+				continue
 			}
-			// TODO: Add type constraint validation here
+
+			// Check type constraints if present
+			if rule.TypeConstraint != nil {
+				if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint); err != nil {
+					pass.Report(analysis.Diagnostic{
+						Pos:     marker.Pos,
+						End:     marker.End,
+						Message: fmt.Sprintf("marker %q: %s", marker.Identifier, err),
+					})
+				}
+			}
 		}
 	}
 }
 
+// validateFieldTypeConstraint validates that a field's type matches the type constraint
+func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, tc *TypeConstraint) error {
+	// Get the type of the field
+	tv, ok := pass.TypesInfo.Types[field.Type]
+	if !ok {
+		return nil // Skip if we can't determine the type
+	}
+
+	return validateTypeAgainstConstraint(tv.Type, tc)
+}
+
+// validateTypeSpecTypeConstraint validates that a type spec's type matches the type constraint
+func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint) error {
+	// Get the type of the type spec
+	obj := pass.TypesInfo.Defs[typeSpec.Name]
+	if obj == nil {
+		return nil // Skip if we can't determine the type
+	}
+
+	typeName, ok := obj.(*types.TypeName)
+	if !ok {
+		return nil
+	}
+
+	return validateTypeAgainstConstraint(typeName.Type(), tc)
+}
+
+// validateTypeAgainstConstraint validates that a Go type satisfies the type constraint
+func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
+	if tc == nil {
+		return nil
+	}
+
+	// Get the schema type from the Go type
+	schemaType := getSchemaType(t)
+
+	// Check if the schema type is allowed
+	if len(tc.AllowedSchemaTypes) > 0 {
+		allowed := false
+		for _, allowedType := range tc.AllowedSchemaTypes {
+			if schemaType == allowedType {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			return fmt.Errorf("type %s is not allowed (expected one of: %v)", schemaType, tc.AllowedSchemaTypes)
+		}
+	}
+
+	// Validate element constraint for arrays/slices
+	if tc.ElementConstraint != nil && schemaType == SchemaTypeArray {
+		elemType := getElementType(t)
+		if elemType != nil {
+			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint); err != nil {
+				return fmt.Errorf("array element: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// getSchemaType converts a Go type to an OpenAPI schema type
+func getSchemaType(t types.Type) SchemaType {
+	// Unwrap pointer types
+	if ptr, ok := t.(*types.Pointer); ok {
+		t = ptr.Elem()
+	}
+
+	// Unwrap named types to get underlying type
+	if named, ok := t.(*types.Named); ok {
+		t = named.Underlying()
+	}
+
+	switch ut := t.Underlying().(type) {
+	case *types.Basic:
+		switch ut.Kind() {
+		case types.Bool:
+			return SchemaTypeBoolean
+		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
+			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
+			return SchemaTypeInteger
+		case types.Float32, types.Float64:
+			return SchemaTypeNumber
+		case types.String:
+			return SchemaTypeString
+		}
+	case *types.Slice, *types.Array:
+		return SchemaTypeArray
+	case *types.Map, *types.Struct:
+		return SchemaTypeObject
+	}
+
+	return ""
+}
+
+// getElementType returns the element type of an array or slice
+func getElementType(t types.Type) types.Type {
+	// Unwrap pointer types
+	if ptr, ok := t.(*types.Pointer); ok {
+		t = ptr.Elem()
+	}
+
+	// Unwrap named types to get underlying type
+	if named, ok := t.(*types.Named); ok {
+		t = named.Underlying()
+	}
+
+	switch ut := t.(type) {
+	case *types.Slice:
+		return ut.Elem()
+	case *types.Array:
+		return ut.Elem()
+	}
+
+	return nil
+}

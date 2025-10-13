@@ -95,24 +95,6 @@ type MarkerScopeRule struct {
 	TypeConstraint *TypeConstraint
 }
 
-// MarkerScope defines where a marker is allowed to be placed (legacy).
-// Deprecated: Use MarkerScopeRule with ScopeConstraint instead.
-type MarkerScope string
-
-const (
-	// ScopeField indicates the marker can only be placed on fields.
-	ScopeField MarkerScope = "field"
-
-	// ScopeType indicates the marker can only be placed on type definitions.
-	ScopeType MarkerScope = "type"
-
-	// ScopeFieldOrType indicates the marker can be placed on either fields or types.
-	ScopeFieldOrType MarkerScope = "field_or_type"
-
-	// ScopeTypeOrObjectField indicates the marker can be placed on type definitions or object fields (struct/map).
-	ScopeTypeOrObjectField MarkerScope = "type_or_object_field"
-)
-
 // MarkerScopePolicy defines how the linter should handle violations.
 type MarkerScopePolicy string
 
@@ -175,13 +157,13 @@ func DefaultMarkerRules() map[string]MarkerScopeRule {
 		markers.KubebuilderExclusiveMaximumMarker: {
 			Scope: AnyScope,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 		markers.KubebuilderExclusiveMinimumMarker: {
 			Scope: AnyScope,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 		markers.KubebuilderMultipleOfMarker: {
@@ -354,7 +336,7 @@ func DefaultMarkerRules() map[string]MarkerScopeRule {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},
@@ -363,7 +345,7 @@ func DefaultMarkerRules() map[string]MarkerScopeRule {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeBoolean},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},
