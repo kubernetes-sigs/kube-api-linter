@@ -89,6 +89,7 @@ type AnyScopeOnFieldTest struct {
 type NumericType int32
 
 type NumericMarkersFieldTest struct {
+	// Valid: numeric markers on numeric types
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=100
 	// +kubebuilder:validation:ExclusiveMinimum=false
@@ -99,6 +100,14 @@ type NumericMarkersFieldTest struct {
 	// +kubebuilder:validation:Minimum=0.0
 	// +kubebuilder:validation:Maximum=1.0
 	ValidFloatField float64 `json:"validFloatField"`
+
+	// Invalid: numeric marker on string field
+	// +kubebuilder:validation:Minimum=0 // want `marker "kubebuilder:validation:Minimum": type string is not allowed \(expected one of: \[integer number\]\)`
+	InvalidMinimumOnString string `json:"invalidMinimumOnString"`
+
+	// Invalid: numeric marker on bool field
+	// +kubebuilder:validation:Maximum=100 // want `marker "kubebuilder:validation:Maximum": type boolean is not allowed \(expected one of: \[integer number\]\)`
+	InvalidMaximumOnBool bool `json:"invalidMaximumOnBool"`
 }
 
 // ============================================================================
@@ -111,10 +120,19 @@ type NumericMarkersFieldTest struct {
 type StringType string
 
 type StringMarkersFieldTest struct {
+	// Valid: string markers on string field
 	// +kubebuilder:validation:Pattern="^[a-z]+$"
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=100
 	ValidStringField string `json:"validStringField"`
+
+	// Invalid: string marker on int field
+	// +kubebuilder:validation:Pattern="^[0-9]+$" // want `marker "kubebuilder:validation:Pattern": type integer is not allowed \(expected one of: \[string\]\)`
+	InvalidPatternOnInt int32 `json:"invalidPatternOnInt"`
+
+	// Invalid: string marker on array field
+	// +kubebuilder:validation:MinLength=5 // want `marker "kubebuilder:validation:MinLength": type array is not allowed \(expected one of: \[string\]\)`
+	InvalidMinLengthOnArray []string `json:"invalidMinLengthOnArray"`
 }
 
 // ============================================================================
@@ -127,10 +145,19 @@ type StringMarkersFieldTest struct {
 type StringArray []string
 
 type ArrayMarkersFieldTest struct {
+	// Valid: array markers on array field
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=10
 	// +kubebuilder:validation:UniqueItems=true
 	ValidArrayField []string `json:"validArrayField"`
+
+	// Invalid: array marker on string field
+	// +kubebuilder:validation:MinItems=1 // want `marker "kubebuilder:validation:MinItems": type string is not allowed \(expected one of: \[array\]\)`
+	InvalidMinItemsOnString string `json:"invalidMinItemsOnString"`
+
+	// Invalid: array marker on object field
+	// +kubebuilder:validation:MaxItems=10 // want `marker "kubebuilder:validation:MaxItems": type object is not allowed \(expected one of: \[array\]\)`
+	InvalidMaxItemsOnObject map[string]string `json:"invalidMaxItemsOnObject"`
 }
 
 // ============================================================================
@@ -145,9 +172,18 @@ type ObjectType struct {
 }
 
 type ObjectMarkersFieldTest struct {
+	// Valid: object markers on map field
 	// +kubebuilder:validation:MinProperties=1
 	// +kubebuilder:validation:MaxProperties=10
 	ValidObjectField map[string]string `json:"validObjectField"`
+
+	// Invalid: object marker on string field
+	// +kubebuilder:validation:MinProperties=2 // want `marker "kubebuilder:validation:MinProperties": type string is not allowed \(expected one of: \[object\]\)`
+	InvalidMinPropertiesOnString string `json:"invalidMinPropertiesOnString"`
+
+	// Invalid: object marker on array field
+	// +kubebuilder:validation:MaxProperties=5 // want `marker "kubebuilder:validation:MaxProperties": type array is not allowed \(expected one of: \[object\]\)`
+	InvalidMaxPropertiesOnArray []string `json:"invalidMaxPropertiesOnArray"`
 }
 
 // ============================================================================
@@ -228,7 +264,7 @@ type NestedArrayType [][]string
 type ObjectArrayType []map[string]string
 
 type ArrayItemsMarkersFieldTest struct {
-	// Numeric element constraints
+	// Valid: Numeric element constraints
 	// +kubebuilder:validation:items:Maximum=100
 	// +kubebuilder:validation:items:Minimum=0
 	// +kubebuilder:validation:items:MultipleOf=5
@@ -236,27 +272,43 @@ type ArrayItemsMarkersFieldTest struct {
 	// +kubebuilder:validation:items:ExclusiveMinimum=false
 	ValidNumericArrayItems []int32 `json:"validNumericArrayItems"`
 
-	// String element constraints
+	// Valid: String element constraints
 	// +kubebuilder:validation:items:Pattern="^[a-z]+$"
 	// +kubebuilder:validation:items:MinLength=1
 	// +kubebuilder:validation:items:MaxLength=50
 	ValidStringArrayItems []string `json:"validStringArrayItems"`
 
-	// Nested array constraints
+	// Valid: Nested array constraints
 	// +kubebuilder:validation:items:MinItems=1
 	// +kubebuilder:validation:items:MaxItems=5
 	// +kubebuilder:validation:items:UniqueItems=true
 	ValidNestedArrayItems [][]string `json:"validNestedArrayItems"`
 
-	// Object element constraints
+	// Valid: Object element constraints
 	// +kubebuilder:validation:items:MinProperties=1
 	// +kubebuilder:validation:items:MaxProperties=5
 	ValidObjectArrayItems []map[string]string `json:"validObjectArrayItems"`
 
-	// General items markers
+	// Valid: General items markers
 	// +kubebuilder:validation:items:Enum=A;B;C
 	// +kubebuilder:validation:items:Format=uuid
 	// +kubebuilder:validation:items:Type=string
 	// +kubebuilder:validation:items:XValidation:rule="self != ''"
 	ValidGeneralArrayItems []string `json:"validGeneralArrayItems"`
+
+	// Invalid: items:Maximum on string array (element type mismatch)
+	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
+	InvalidItemsMaximumOnStringArray []string `json:"invalidItemsMaximumOnStringArray"`
+
+	// Invalid: items:Pattern on int array (element type mismatch)
+	// +kubebuilder:validation:items:Pattern="^[0-9]+$" // want `marker "kubebuilder:validation:items:Pattern": array element: type integer is not allowed \(expected one of: \[string\]\)`
+	InvalidItemsPatternOnIntArray []int32 `json:"invalidItemsPatternOnIntArray"`
+
+	// Invalid: items:MinProperties on string array (element type mismatch)
+	// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": array element: type string is not allowed \(expected one of: \[object\]\)`
+	InvalidItemsMinPropertiesOnStringArray []string `json:"invalidItemsMinPropertiesOnStringArray"`
+
+	// Invalid: items marker on non-array field
+	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": type string is not allowed \(expected one of: \[array\]\)`
+	InvalidItemsMarkerOnNonArray string `json:"invalidItemsMarkerOnNonArray"`
 }
