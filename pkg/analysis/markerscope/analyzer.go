@@ -33,6 +33,7 @@ const (
 	name = "markerscope"
 )
 
+// TODO: SuggestFix
 func init() {
 	// Register all markers we want to validate scope for
 	defaults := DefaultMarkerRules()
@@ -55,15 +56,8 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 	}
 
 	a := &analyzer{
-		markerRules: DefaultMarkerRules(),
+		markerRules: mergeMarkerRules(DefaultMarkerRules(), cfg.MarkerRules),
 		policy:      cfg.Policy,
-	}
-
-	// Override with custom rules if provided
-	if cfg.MarkerRules != nil {
-		for marker, rule := range cfg.MarkerRules {
-			a.markerRules[marker] = rule
-		}
 	}
 
 	// Set default policy if not specified
@@ -78,6 +72,24 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		Requires:         []*analysis.Analyzer{inspect.Analyzer, markershelper.Analyzer},
 		RunDespiteErrors: true,
 	}
+}
+
+// mergeMarkerRules merges custom marker rules with default marker rules.
+// Custom rules take precedence over default rules for the same marker.
+func mergeMarkerRules(defaults, custom map[string]MarkerScopeRule) map[string]MarkerScopeRule {
+	merged := make(map[string]MarkerScopeRule, len(defaults)+len(custom))
+
+	// Copy all default rules
+	for marker, rule := range defaults {
+		merged[marker] = rule
+	}
+
+	// Override with custom rules
+	for marker, rule := range custom {
+		merged[marker] = rule
+	}
+
+	return merged
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
