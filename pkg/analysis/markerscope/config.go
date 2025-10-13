@@ -109,7 +109,19 @@ const (
 // MarkerScopeConfig contains configuration for marker scope validation.
 type MarkerScopeConfig struct {
 	// MarkerRules maps marker names to their scope rules with scope and type constraints.
-	// If a marker is not in this map, no scope validation is performed.
+	// This map can be used to:
+	//   - Override default rules for built-in markers (from DefaultMarkerRules)
+	//   - Add rules for custom markers not included in DefaultMarkerRules
+	//
+	// If a marker is not in this map AND not in DefaultMarkerRules(), no scope validation is performed.
+	// If a marker is in both this map and DefaultMarkerRules(), this map takes precedence.
+	//
+	// Example: Adding a custom marker
+	//   markerRules:
+	//     "mycompany:validation:CustomMarker":
+	//       scope: any
+	//       typeConstraint:
+	//         allowedSchemaTypes: ["string"]
 	MarkerRules map[string]MarkerScopeRule `json:"markerRules,omitempty"`
 
 	// Policy determines whether to suggest fixes or just warn.
@@ -117,6 +129,11 @@ type MarkerScopeConfig struct {
 }
 
 // DefaultMarkerRules returns the default marker scope rules with type constraints.
+// These rules are based on kubebuilder markers and k8s declarative validation markers.
+//
+// Users can override these rules or add custom markers by providing a MarkerScopeConfig
+// with MarkerRules that will be merged with (and take precedence over) these defaults.
+//
 // ref: https://github.com/kubernetes-sigs/controller-tools/blob/v0.19.0/pkg/crd/markers/
 func DefaultMarkerRules() map[string]MarkerScopeRule {
 	return map[string]MarkerScopeRule{

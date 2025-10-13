@@ -427,39 +427,113 @@ lintersConfig:
 
 ## MarkerScope
 
-The `markerscope` linter validates that markers are applied in the correct scope. It ensures that markers are placed on appropriate Go language constructs (types, fields) according to their intended usage.
+The `markerscope` linter validates that markers are applied in the correct scope and to the correct types. It ensures that markers are placed on appropriate Go language constructs (types, fields) and applied to compatible data types according to their intended usage.
+
+The linter performs two levels of validation:
+
+1. **Scope validation**: Ensures markers are placed on the correct location (field vs type)
+2. **Type constraint validation**: Ensures markers are applied to compatible data types (e.g., numeric markers on numeric types only)
+
+### Scope Types
 
 The linter defines different scope types for markers:
 
-- **Field-only markers**: Can only be applied to struct fields (e.g., `required`, `kubebuilder:validation:Required`)
-- **Type-only markers**: Can only be applied to type definitions 
-- **Type or Map/Slice fields**: Can be applied to type definitions, map fields, or slice fields (e.g., `kubebuilder:validation:MinProperties`)
-- **Field or Type markers**: Can be applied to either fields or type definitions
+- **FieldScope**: Can only be applied to struct fields (e.g., `optional`, `required`, `nullable`)
+- **TypeScope**: Can only be applied to type definitions (e.g., `kubebuilder:validation:items:ExactlyOneOf`)
+- **AnyScope**: Can be applied to either fields or type definitions (e.g., `kubebuilder:validation:Minimum`, `kubebuilder:validation:Pattern`)
 
-### Default Scope Rules
+### Type Constraints
 
-By default, the linter enforces these scope rules:
+The linter validates that markers are applied to compatible OpenAPI schema types:
 
-- `required` and `kubebuilder:validation:Required`: Field-only
-- `kubebuilder:validation:MinProperties`: Type definitions, map fields, or slice fields only
+- **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` or `number` types
+- **String markers** (`Pattern`, `MinLength`, `MaxLength`): Only for `string` types
+- **Array markers** (`MinItems`, `MaxItems`, `UniqueItems`): Only for `array` types
+- **Object markers** (`MinProperties`, `MaxProperties`): Only for `object` types (struct/map)
+- **Array items markers** (`items:Minimum`, `items:Pattern`, etc.): Apply constraints to array element types
+
+OpenAPI schema types map to Go types as follows:
+- `integer`: int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64
+- `number`: float32, float64
+- `string`: string
+- `boolean`: bool
+- `array`: []T, [N]T (slices and arrays)
+- `object`: struct, map[K]V
+
+### Default Marker Rules
+
+The linter includes built-in rules for all standard kubebuilder markers and k8s declarative validation markers. Examples:
+
+**Field-only markers:**
+- `optional`, `required`, `nullable`
+- `kubebuilder:default`, `kubebuilder:validation:Example`
+
+**Type-only markers:**
+- `kubebuilder:validation:items:ExactlyOneOf`
+- `kubebuilder:validation:items:AtMostOneOf`
+- `kubebuilder:validation:items:AtLeastOneOf`
+
+**AnyScope markers with type constraints:**
+- `kubebuilder:validation:Minimum` (integer/number types only)
+- `kubebuilder:validation:Pattern` (string types only)
+- `kubebuilder:validation:MinItems` (array types only)
+- `kubebuilder:validation:MinProperties` (object types only)
+
+**AnyScope markers without type constraints:**
+- `kubebuilder:validation:Enum`, `kubebuilder:validation:Format`
+- `kubebuilder:pruning:PreserveUnknownFields`, `kubebuilder:title`
 
 ### Configuration
+
+You can customize marker rules or add support for custom markers:
 
 ```yaml
 lintersConfig:
   markerscope:
-    policy: SuggestFix | Warn # The policy for marker scope violations. Defaults to `SuggestFix`.
+    policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `Warn`.
+    markerRules:
+      # Override default rule for a built-in marker
+      "optional":
+        scope: field  # or: type, any
+
+      # Add a custom marker with scope constraint only
+      "mycompany:validation:CustomMarker":
+        scope: any
+
+      # Add a custom marker with scope and type constraints
+      "mycompany:validation:NumericLimit":
+        scope: any
+        typeConstraint:
+          allowedSchemaTypes:
+            - integer
+            - number
+
+      # Add a custom array items marker with element type constraint
+      "mycompany:validation:items:StringFormat":
+        scope: any
+        typeConstraint:
+          allowedSchemaTypes:
+            - array
+          elementConstraint:
+            allowedSchemaTypes:
+              - string
 ```
+
+**Scope values:**
+- `field`: FieldScope - marker can only be on fields
+- `type`: TypeScope - marker can only be on types
+- `any`: AnyScope - marker can be on fields or types
+
+**Type constraint fields:**
+- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
+- `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
+
+If a marker is not in `markerRules` and not in the default rules, no validation is performed for that marker.
+If a marker is in both `markerRules` and the default rules, your configuration takes precedence.
 
 ### Fixes
 
-The `markerscope` linter can automatically fix scope violations when `policy` is set to `SuggestFix`:
-
-1. **Remove incorrect markers**: Suggests removing markers that are in the wrong scope
-2. **Move markers to correct locations**: 
-   - Move field-only markers from types to appropriate fields
-   - Move type-only markers from fields to their corresponding type definitions
-3. **Preserve marker values**: When moving markers like `kubebuilder:validation:MinProperties=1`
+The `markerscope` linter does not currently provide automatic fixes. It reports violations as warnings or errors based on the configured policy.
 
 **Note**: This linter is not enabled by default and must be explicitly enabled in the configuration. 
 
