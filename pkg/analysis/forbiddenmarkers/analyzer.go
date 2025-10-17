@@ -112,7 +112,7 @@ func markerMatchesAttributeRules(marker markers.Marker, attrRules ...MarkerAttri
 	for _, attrRule := range attrRules {
 		// if the marker doesn't contain the attribute for a specified rule it fails the AND
 		// operation.
-		val, ok := marker.Expressions[attrRule.Name]
+		val, ok := marker.Arguments[attrRule.Name]
 		if !ok {
 			return false
 		}
