@@ -234,7 +234,7 @@ func enumFieldAllowsEmpty(fieldMarkers markershelper.MarkerSet) bool {
 	enumMarker := fieldMarkers.Get(markers.KubebuilderEnumMarker)
 
 	for _, marker := range enumMarker {
-		return slices.Contains(strings.Split(marker.Expressions[""], ";"), "\"\"")
+		return slices.Contains(strings.Split(marker.Payload.Value, ";"), "\"\"")
 	}
 
 	return false
@@ -290,10 +290,11 @@ func getMarkerNumericValueByName[N number](marker markershelper.MarkerSet, marke
 // getMarkerNumericValue extracts a numeric value from the default value of a marker.
 // Works for markers like MaxLength, MinLength, etc.
 func getMarkerNumericValue[N number](marker markershelper.Marker) (N, error) {
-	rawValue, ok := marker.Expressions[""]
-	if !ok {
+	if marker.Payload.Value == "" {
 		return N(0), errMarkerMissingValue
 	}
+
+	rawValue := marker.Payload.Value
 
 	value, err := strconv.ParseFloat(rawValue, 64)
 	if err != nil {

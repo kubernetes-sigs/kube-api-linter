@@ -9,6 +9,7 @@ require (
 	github.com/onsi/gomega v1.38.0
 	golang.org/x/tools v0.37.0
 	k8s.io/apimachinery v0.32.3
+	k8s.io/gengo/v2 v2.0.0-20250922181213-ec3ebc5fd46b
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
 	sigs.k8s.io/yaml v1.4.0
 )

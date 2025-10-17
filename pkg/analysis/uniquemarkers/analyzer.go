@@ -121,17 +121,42 @@ func constructIdentifier(marker markers.Marker, attributes ...string) string {
 		return marker.Identifier
 	}
 
-	// If a marker doesn't specify the attribute, we should assume it is equivalent
-	// to the empty string ("") so that we can still key on uniqueness of other attributes
-	// effectively.
-	id := fmt.Sprintf("%s:", marker.Identifier)
-	for _, attr := range attributes {
-		id += fmt.Sprintf("%s=%s,", attr, marker.Expressions[attr])
+	switch marker.Type {
+	case markers.MarkerTypeDeclarativeValidation:
+		// If a marker doesn't specify the attribute, we should assume it is equivalent
+		// to the empty string ("") so that we can still key on uniqueness of other attributes
+		// effectively.
+		id := fmt.Sprintf("%s(", marker.Identifier)
+
+		for _, attr := range attributes {
+			if attr == "" {
+				id += marker.Arguments[attr]
+				continue
+			}
+
+			id += fmt.Sprintf("%s: %s,", attr, marker.Arguments[attr])
+		}
+
+		id = strings.TrimSuffix(id, ",")
+		id += ")"
+
+		return id
+	case markers.MarkerTypeKubebuilder:
+		// If a marker doesn't specify the attribute, we should assume it is equivalent
+		// to the empty string ("") so that we can still key on uniqueness of other attributes
+		// effectively.
+		id := fmt.Sprintf("%s:", marker.Identifier)
+		for _, attr := range attributes {
+			id += fmt.Sprintf("%s=%s,", attr, marker.Arguments[attr])
+		}
+
+		id = strings.TrimSuffix(id, ",")
+
+		return id
+	default:
+		// programmer error
+		panic(fmt.Sprintf("unknown marker format %s", marker.Type))
 	}
-
-	id = strings.TrimSuffix(id, ",")
-
-	return id
 }
 
 func reportField(pass *analysis.Pass, field *ast.Field) func(id string) {

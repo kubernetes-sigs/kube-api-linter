@@ -19,215 +19,357 @@ import (
 	"go/ast"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	. "github.com/onsi/gomega"
 )
 
-func TestExtractMarkerIdAndExpressions(t *testing.T) {
-	type testcase struct {
-		name                string
-		marker              string
-		expectedID          string
-		expectedExpressions map[string]string
-	}
-
-	testcases := []testcase{
-		{
-			name:       "registered marker with single unnamed expression using '='",
-			marker:     "kubebuilder:object:root=true",
-			expectedID: "kubebuilder:object:root",
-			expectedExpressions: map[string]string{
-				"": "true",
-			},
-		},
-		{
-			name:       "registered marker with single unnamed expression using ':='",
-			marker:     "kubebuilder:object:root:=true",
-			expectedID: "kubebuilder:object:root",
-			expectedExpressions: map[string]string{
-				"": "true",
-			},
-		},
-		{
-			name:                "registered marker with no expressions",
-			marker:              "required",
-			expectedID:          "required",
-			expectedExpressions: map[string]string{},
-		},
-		{
-			name:       "registered marker with multiple named expressions",
-			marker:     "kubebuilder:validation:XValidation:rule='has(self.field)',message='must have field!'",
-			expectedID: "kubebuilder:validation:XValidation",
-			expectedExpressions: map[string]string{
-				"rule":    "'has(self.field)'",
-				"message": "'must have field!'",
-			},
-		},
-		{
-			name:       " unregistered marker with expression wrapped in double quotes (\")",
-			marker:     "foo:bar:rule=\"foo\"",
-			expectedID: "foo:bar:rule",
-			expectedExpressions: map[string]string{
-				"": "\"foo\"",
-			},
-		},
-		{
-			name:       "registered marker with expression with a comma in its value",
-			marker:     `kubebuilder:validation:XValidation:rule='self.map(a, a == "someValue")',message='must have field!'`,
-			expectedID: "kubebuilder:validation:XValidation",
-			expectedExpressions: map[string]string{
-				"rule":    `'self.map(a, a == "someValue")'`,
-				"message": "'must have field!'",
-			},
-		},
-		{
-			name:       "registered marker with expression with a comma in its value with double quotes",
-			marker:     `kubebuilder:validation:XValidation:rule="self.map(a, a == \"someValue\")",message="must have field!"`,
-			expectedID: "kubebuilder:validation:XValidation",
-			expectedExpressions: map[string]string{
-				"rule":    `"self.map(a, a == \"someValue\")"`,
-				"message": `"must have field!"`,
-			},
-		},
-		{
-			name:       "registered marker with expression ending in a valid double quote",
-			marker:     `kubebuilder:validation:Enum:=foo;bar;baz;""`,
-			expectedID: "kubebuilder:validation:Enum",
-			expectedExpressions: map[string]string{
-				"": `foo;bar;baz;""`,
-			},
-		},
-		{
-			name:       "registered marker with chained expressions without quotes",
-			marker:     `custom:marker:fruit=apple,color=blue,country=UK`,
-			expectedID: "custom:marker",
-			expectedExpressions: map[string]string{
-				"fruit":   "apple",
-				"color":   "blue",
-				"country": "UK",
-			},
-		},
-		{
-			name:       "registered marker with numeric value",
-			marker:     `kubebuilder:validation:Minimum=10`,
-			expectedID: "kubebuilder:validation:Minimum",
-			expectedExpressions: map[string]string{
-				"": "10",
-			},
-		},
-		{
-			name:       "registered marker with negative numeric value",
-			marker:     `kubebuilder:validation:Minimum=-10`,
-			expectedID: "kubebuilder:validation:Minimum",
-			expectedExpressions: map[string]string{
-				"": "-10",
-			},
-		},
-		{
-			name:       "registered marker with named expression using backtick ('`') for strings",
-			marker:     "kubebuilder:validation:XValidation:rule=`has(self.field)`,message=`must have field!`",
-			expectedID: "kubebuilder:validation:XValidation",
-			expectedExpressions: map[string]string{
-				"rule":    "`has(self.field)`",
-				"message": "`must have field!`",
-			},
-		},
-	}
-
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			g := NewWithT(t)
-
-			reg := NewRegistry()
-			reg.Register(tc.expectedID)
-
-			id, expressions := extractMarkerIDAndExpressions(reg, tc.marker)
-
-			g.Expect(id).To(Equal(tc.expectedID), "marker", tc.marker)
-			g.Expect(expressions).To(Equal(tc.expectedExpressions), "marker", tc.marker)
-		})
-	}
-}
-
 func TestExtractMarker(t *testing.T) {
 	type testcase struct {
-		name           string
-		comment        string
-		shouldBeMarker bool
-		expectedID     string
+		name     string
+		comment  *ast.Comment
+		expected Marker
 	}
 
 	testcases := []testcase{
+		// Kubebuilder-style markers
 		{
-			name:           "valid marker - required",
-			comment:        "// +required",
-			shouldBeMarker: true,
-			expectedID:     "required",
+			name:    "non-namespaced marker",
+			comment: &ast.Comment{Text: "// +required"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "required",
+				Arguments:  make(map[string]string),
+			},
 		},
 		{
-			name:           "valid marker - kubebuilder:validation:Required",
-			comment:        "// +kubebuilder:validation:Required",
-			shouldBeMarker: true,
-			expectedID:     "kubebuilder:validation:Required",
+			name:    "non-namespaced marker with payload value",
+			comment: &ast.Comment{Text: "// +listType=atomic"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "listType",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "atomic",
+				},
+			},
 		},
 		{
-			name:           "valid marker - with expressions",
-			comment:        "// +kubebuilder:validation:XValidation:rule=\"something\",message=\"haha\"",
-			shouldBeMarker: true,
-			expectedID:     "kubebuilder:validation:XValidation",
+			name:    "kubebuilder marker with single unnamed expression using '='",
+			comment: &ast.Comment{Text: "// +kubebuilder:object:root=true"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:object:root",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "true",
+				},
+			},
 		},
 		{
-			name:           "valid marker - with parentheses",
-			comment:        "// +k8s:ifEnabled(\"foo\")=+k8s:required",
-			shouldBeMarker: true,
-			expectedID:     "k8s:ifEnabled(\"foo\")",
+			name:    "kubebuilder marker with single unnamed expression using ':='",
+			comment: &ast.Comment{Text: "// +kubebuilder:object:root:=true"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:object:root",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "true",
+				},
+			},
 		},
 		{
-			name:           "valid marker - with single quotes and parentheses",
-			comment:        "// +k8s:ifEnabled('foo')=+k8s:required",
-			shouldBeMarker: true,
-			expectedID:     "k8s:ifEnabled('foo')",
+			name:    "kubebuilder marker with no expressions",
+			comment: &ast.Comment{Text: "// +kubebuilder:validation:Required"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:Required",
+				Arguments:  make(map[string]string),
+			},
 		},
 		{
-			name:           "valid marker - with backtickets and parentheses",
-			comment:        "// +k8s:ifEnabled(`foo`)=+k8s:required",
-			shouldBeMarker: true,
-			expectedID:     "k8s:ifEnabled(`foo`)",
+			name:    "kubebuilder marker with multiple named expressions",
+			comment: &ast.Comment{Text: "// +kubebuilder:validation:XValidation:rule='has(self.field)',message='must have field!'"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:XValidation",
+				Arguments: map[string]string{
+					"rule":    "'has(self.field)'",
+					"message": "'must have field!'",
+				},
+			},
 		},
 		{
-			name:           "invalid marker - markdown table border",
-			comment:        "// +-------+-------+-------+",
-			shouldBeMarker: false,
-			expectedID:     "",
+			name:    "other namespaced marker in kubebuilder-style with expression wrapped in double quotes (\")",
+			comment: &ast.Comment{Text: "// +foo:bar:rule=\"foo\""},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "foo:bar:rule",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "\"foo\"",
+				},
+			},
 		},
 		{
-			name:           "invalid marker - markdown table border without pipes",
-			comment:        "// +----------",
-			shouldBeMarker: false,
-			expectedID:     "",
+			name:    "kubebuilder marker with expression with a comma in its value",
+			comment: &ast.Comment{Text: `// +kubebuilder:validation:XValidation:rule='self.map(a, a == "someValue")',message='must have field!'`},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:XValidation",
+				Arguments: map[string]string{
+					"rule":    `'self.map(a, a == "someValue")'`,
+					"message": "'must have field!'",
+				},
+			},
 		},
 		{
-			name:           "invalid marker - starts with special characters",
-			comment:        "// +!*@(#&KSDJUF:A",
-			shouldBeMarker: false,
-			expectedID:     "",
+			name:    "kubebuilder marker with expression with a comma in its value with double quotes",
+			comment: &ast.Comment{Text: `// +kubebuilder:validation:XValidation:rule="self.map(a, a == \"someValue\")",message="must have field!"`},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:XValidation",
+				Arguments: map[string]string{
+					"rule":    `"self.map(a, a == \"someValue\")"`,
+					"message": `"must have field!"`,
+				},
+			},
 		},
 		{
-			name:           "regular comment - no plus sign",
-			comment:        "// This is a regular comment",
-			shouldBeMarker: false,
-			expectedID:     "",
+			name:    "kubebuilder marker with expression ending in a valid double quote",
+			comment: &ast.Comment{Text: `// +kubebuilder:validation:Enum:=foo;bar;baz;""`},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:Enum",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "foo;bar;baz;\"\"",
+				},
+			},
 		},
 		{
-			name:           "valid marker - complex nested expression",
-			comment:        "// +k8s:someThing(one: \"a\", two: \"b\")=+k8s:required",
-			shouldBeMarker: true,
-			expectedID:     "k8s:someThing(one: \"a\", two: \"b\")",
+			name:    "other namespaced kubebuilder-style marker with chained expressions without quotes",
+			comment: &ast.Comment{Text: `// +custom:marker:fruit=apple,color=blue,country=UK`},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "custom:marker",
+				Arguments: map[string]string{
+					"fruit":   "apple",
+					"color":   "blue",
+					"country": "UK",
+				},
+			},
 		},
 		{
-			name:           "valid marker - complex nested expression with '",
-			comment:        "// +k8s:someThing(one: 'a', two: 'b')=+k8s:required",
-			shouldBeMarker: true,
-			expectedID:     "k8s:someThing(one: 'a', two: 'b')",
+			name:    "kubebuilder marker with numeric value",
+			comment: &ast.Comment{Text: `// +kubebuilder:validation:Minimum=10`},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:Minimum",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "10",
+				},
+			},
+		},
+		{
+			name:    "kubebuilder marker with negative numeric value",
+			comment: &ast.Comment{Text: `// +kubebuilder:validation:Minimum=-10`},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:Minimum",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "-10",
+				},
+			},
+		},
+		{
+			name:    "kubebuilder marker with named expression using backtick ('`') for strings",
+			comment: &ast.Comment{Text: "// +kubebuilder:validation:XValidation:rule=`has(self.field)`,message=`must have field!`"},
+			expected: Marker{
+				Type:       MarkerTypeKubebuilder,
+				Identifier: "kubebuilder:validation:XValidation",
+				Arguments: map[string]string{
+					"rule":    "`has(self.field)`",
+					"message": "`must have field!`",
+				},
+			},
+		},
+
+		//  Not actually markers
+		{
+			name:     "invalid marker - markdown table border",
+			comment:  &ast.Comment{Text: "// +-------+-------+-------+"},
+			expected: Marker{},
+		},
+		{
+			name:     "invalid marker - markdown table border without pipes",
+			comment:  &ast.Comment{Text: "// +----------"},
+			expected: Marker{},
+		},
+		{
+			name:     "invalid marker - starts with special characters",
+			comment:  &ast.Comment{Text: "// +!*@(#&KSDJUF:A"},
+			expected: Marker{},
+		},
+		{
+			name:     "regular comment - no plus sign",
+			comment:  &ast.Comment{Text: "// This is a regular comment"},
+			expected: Marker{},
+		},
+
+		// Declarative Validation Tag Parsing
+		{
+			name: "simple declarative validation marker",
+			comment: &ast.Comment{
+				Text: "// +k8s:required",
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:required",
+				Arguments:  make(map[string]string),
+			},
+		},
+		{
+			name: "declarative validation marker with a value",
+			comment: &ast.Comment{
+				Text: "// +k8s:maxLength=10",
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:maxLength",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "10",
+				},
+			},
+		},
+		{
+			name: "declarative validation marker with named argument",
+			comment: &ast.Comment{
+				Text: "// +k8s:unionMember(union: \"union1\")",
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:unionMember",
+				Arguments: map[string]string{
+					"union": "union1",
+				},
+			},
+		},
+		{
+			name:    "declarative validation marker with multiple named arguments",
+			comment: &ast.Comment{Text: "// +k8s:someThing(one: \"a\", two: \"b\")=+k8s:required"},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:someThing",
+				Arguments: map[string]string{
+					"one": "a",
+					"two": "b",
+				},
+				Payload: Payload{
+					Marker: &Marker{
+						Type:       MarkerTypeDeclarativeValidation,
+						Identifier: "k8s:required",
+						Arguments:  make(map[string]string),
+					},
+				},
+			},
+		},
+		{
+			name: "declarative validation marker with unnamed argument",
+			comment: &ast.Comment{
+				Text: "// +k8s:doesWork(100)", // not a real DV marker, but AFAIK nothing stops something like this from coming up
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:doesWork",
+				Arguments: map[string]string{
+					"": "100",
+				},
+			},
+		},
+		{
+			name:    "declarative validation marker with unnamed argument in backticks",
+			comment: &ast.Comment{Text: "// +k8s:doesWork(`foo`)"}, // not a real DV marker, but AFAIK nothing stops something like this from coming up
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:doesWork",
+				Arguments: map[string]string{
+					"": "foo",
+				},
+			},
+		},
+		{
+			name: "declarative validation marker with unnamed argument and simple validation tag payload",
+			comment: &ast.Comment{
+				Text: "// +k8s:ifEnabled(\"my-feature\")=+k8s:required",
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:ifEnabled",
+				Arguments: map[string]string{
+					"": "my-feature",
+				},
+				Payload: Payload{
+					Marker: &Marker{
+						Type:       MarkerTypeDeclarativeValidation,
+						Identifier: "k8s:required",
+						Arguments:  make(map[string]string),
+					},
+				},
+			},
+		},
+		{
+			name: "declarative validation marker with deeper chained validation tags",
+			comment: &ast.Comment{
+				Text: "// +k8s:ifEnabled(\"my-feature\")=+k8s:item(type: \"Approved\")=+k8s:zeroOrOneOfMember",
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:ifEnabled",
+				Arguments: map[string]string{
+					"": "my-feature",
+				},
+				Payload: Payload{
+					Marker: &Marker{
+						Type:       MarkerTypeDeclarativeValidation,
+						Identifier: "k8s:item",
+						Arguments: map[string]string{
+							"type": "Approved",
+						},
+						Payload: Payload{
+							Marker: &Marker{
+								Type:       MarkerTypeDeclarativeValidation,
+								Identifier: "k8s:zeroOrOneOfMember",
+								Arguments:  make(map[string]string),
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "declarative validation marker parsing error",
+			comment: &ast.Comment{
+				Text: "// +k8s:ifEnabled(\"my-feature\")=a,b,c,d", // DV tags do not allow comma separated payloads
+			},
+			expected: Marker{},
+		},
+		{
+			name: "declarative validation ':='",
+			comment: &ast.Comment{
+				Text: "// +k8s:format:=password", // DV tags parse out ':=' weirdly. This is a typo, DV tags are supposed to use '='.
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:format:",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Value: "password",
+				},
+			},
 		},
 	}
 
@@ -235,18 +377,10 @@ func TestExtractMarker(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			g := NewWithT(t)
 
-			// Create a mock comment
-			comment := &ast.Comment{
-				Text: tc.comment,
-			}
+			marker := extractMarker(tc.comment)
 
-			marker := extractMarker(comment)
-
-			if tc.shouldBeMarker {
-				g.Expect(marker.Identifier).To(Equal(tc.expectedID), "comment", tc.comment)
-			} else {
-				g.Expect(marker.Identifier).To(BeEmpty(), "comment", tc.comment)
-			}
+			diff := cmp.Diff(marker, tc.expected, cmpopts.IgnoreFields(Marker{}, "RawComment", "End", "Pos"))
+			g.Expect(diff).To(BeEmpty())
 		})
 	}
 }
