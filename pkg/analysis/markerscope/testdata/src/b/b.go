@@ -15,27 +15,63 @@ limitations under the License.
 */
 package b
 
-// +kubebuilder:validation:MinProperties=1
-type ValidTypeMarkers struct {
-	// +optional
+// ============================================================================
+// Custom marker tests
+// These test custom marker configurations
+// ============================================================================
+
+// Custom marker that should only apply to fields
+type CustomFieldMarkerTest struct {
+	// +custom:field-only
+	ValidFieldMarker string `json:"validFieldMarker"`
+}
+
+// +custom:field-only // want `marker "custom:field-only" can only be applied to fields`
+type InvalidCustomFieldMarkerOnType struct {
 	Name string `json:"name"`
 }
 
-// +required // want `marker "required" can only be applied to fields`
-type InvalidTypeMarkers struct {
-	// +kubebuilder:validation:Required
+// Custom marker that should only apply to types
+// +custom:type-only
+type ValidCustomTypeMarker struct {
 	Name string `json:"name"`
 }
 
-type FieldMarkerTest struct {
-	// +required
-	// +kubebuilder:validation:MinProperties=1
-	ValidMinPropertiesField map[string]string `json:"validMinPropertiesField"`
+type CustomTypeMarkerTest struct {
+	// +custom:type-only // want `marker "custom:type-only" can only be applied to types`
+	InvalidTypeMarker string `json:"invalidTypeMarker"`
+}
 
-	// +required
-	// +kubebuilder:validation:MinProperties=1
-	ValidMinPropertiesField2 []string `json:"validMinPropertiesField2"`
+// Custom marker with type constraints
+type CustomTypeConstraintTest struct {
+	// Valid: string type field with string-only custom marker
+	// +custom:string-only
+	ValidStringField string `json:"validStringField"`
 
-	// +kubebuilder:validation:MinProperties=1 // want `marker "kubebuilder:validation:MinProperties" can only be applied to type definitions, map fields, or slice fields`
-	InvalidTypeMarker InvalidTypeMarkers `json:"invalidTypeMarker"`
+	// Invalid: integer type field with string-only custom marker
+	// +custom:string-only // want `marker "custom:string-only": type integer is not allowed \(expected one of: \[string\]\)`
+	InvalidIntegerField int `json:"invalidIntegerField"`
+
+	// Valid: integer type field with integer-only custom marker
+	// +custom:integer-only
+	ValidIntegerField int `json:"validIntegerField"`
+
+	// Invalid: string type field with integer-only custom marker
+	// +custom:integer-only // want `marker "custom:integer-only": type string is not allowed \(expected one of: \[integer\]\)`
+	InvalidStringField string `json:"invalidStringField"`
+}
+
+// Custom marker with array element type constraints
+type CustomArrayConstraintTest struct {
+	// Valid: array of strings with string element constraint
+	// +custom:string-array
+	ValidStringArray []string `json:"validStringArray"`
+
+	// Invalid: array of integers with string element constraint
+	// +custom:string-array // want `marker "custom:string-array": array element: type integer is not allowed \(expected one of: \[string\]\)`
+	InvalidIntegerArray []int `json:"invalidIntegerArray"`
+
+	// Invalid: not an array type with array constraint
+	// +custom:string-array // want `marker "custom:string-array": type string is not allowed \(expected one of: \[array\]\)`
+	InvalidNonArray string `json:"invalidNonArray"`
 }

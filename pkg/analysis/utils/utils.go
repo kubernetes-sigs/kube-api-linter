@@ -549,3 +549,44 @@ func getFieldTypeName(field *ast.Field) string {
 
 	return ""
 }
+
+// LookupFieldsUsingType returns all fields in the package that use the given type.
+func LookupFieldsUsingType(pass *analysis.Pass, typeSpec *ast.TypeSpec) []*ast.Field {
+	var fields []*ast.Field
+
+	// Get the type name
+	typeName := typeSpec.Name.Name
+
+	// Iterate through all files in the package
+	for _, file := range pass.Files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			field, ok := n.(*ast.Field)
+			if !ok {
+				return true
+			}
+
+			// Check if the field's type matches the type we're looking for
+			if matchesType(field.Type, typeName) {
+				fields = append(fields, field)
+			}
+
+			return true
+		})
+	}
+
+	return fields
+}
+
+// matchesType checks if an expression matches the given type name.
+func matchesType(expr ast.Expr, typeName string) bool {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e.Name == typeName
+	case *ast.StarExpr:
+		return matchesType(e.X, typeName)
+	case *ast.ArrayType:
+		return matchesType(e.Elt, typeName)
+	default:
+		return false
+	}
+}

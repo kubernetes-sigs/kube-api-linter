@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package b
+package c
 
 // +kubebuilder:validation:MinProperties=1
 type ValidTypeMarkers struct {
@@ -21,7 +21,8 @@ type ValidTypeMarkers struct {
 	Name string `json:"name"`
 }
 
-// +kubebuilder:validation:MinProperties=1
+// +kubebuilder:MinProperties=1
+// +kubebuilder:validation:items:ExactlyOneOf={field1}
 type InvalidTypeMarkers struct {
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
@@ -33,9 +34,8 @@ type FieldMarkerTest struct {
 	ValidMinPropertiesField map[string]string `json:"validMinPropertiesField"`
 
 	// +required
-	// +kubebuilder:validation:MinProperties=1
 	ValidMinPropertiesField2 []string `json:"validMinPropertiesField2"`
 
-	// +required
+	// +required	
 	InvalidTypeMarker InvalidTypeMarkers `json:"invalidTypeMarker"`
 }

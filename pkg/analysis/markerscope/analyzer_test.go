@@ -29,3 +29,55 @@ func TestAnalyzerWarnOnly(t *testing.T) {
 	analyzer := newAnalyzer(cfg)
 	analysistest.Run(t, testdata, analyzer, "a")
 }
+
+func TestAnalyzerWithCustomMarkers(t *testing.T) {
+	testdata := analysistest.TestData()
+	cfg := &MarkerScopeConfig{
+		Policy: MarkerScopePolicyWarn,
+		MarkerRules: map[string]MarkerScopeRule{
+			// Custom field-only marker
+			"custom:field-only": {
+				Scope: FieldScope,
+			},
+			// Custom type-only marker
+			"custom:type-only": {
+				Scope: TypeScope,
+			},
+			// Custom marker with string type constraint
+			"custom:string-only": {
+				Scope: FieldScope,
+				TypeConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+				},
+			},
+			// Custom marker with integer type constraint
+			"custom:integer-only": {
+				Scope: FieldScope,
+				TypeConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				},
+			},
+			// Custom marker with array of strings constraint
+			"custom:string-array": {
+				Scope: FieldScope,
+				TypeConstraint: &TypeConstraint{
+					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
+					ElementConstraint: &TypeConstraint{
+						AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+					},
+				},
+			},
+		},
+	}
+	analyzer := newAnalyzer(cfg)
+	analysistest.Run(t, testdata, analyzer, "b")
+}
+
+func TestAnalyzerWithSuggestFix(t *testing.T) {
+	testdata := analysistest.TestData()
+	cfg := &MarkerScopeConfig{
+		Policy: MarkerScopePolicySuggestFix,
+	}
+	analyzer := newAnalyzer(cfg)
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "c")
+}

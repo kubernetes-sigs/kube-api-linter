@@ -70,13 +70,13 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 func validateMarkerRule(rule MarkerScopeRule) error {
 	// Validate scope constraint
 	if rule.Scope == 0 {
-		return fmt.Errorf("scope must be non-zero")
+		return errScopeNonZero
 	}
 
 	// Validate that scope is a valid combination of FieldScope and/or TypeScope
 	validScopes := FieldScope | TypeScope
 	if rule.Scope&^validScopes != 0 {
-		return fmt.Errorf("invalid scope bits")
+		return errInvalidScopeBits
 	}
 
 	// Validate type constraint if present
@@ -90,10 +90,14 @@ func validateMarkerRule(rule MarkerScopeRule) error {
 }
 
 func validateTypeConstraint(tc *TypeConstraint) error {
+	if tc == nil {
+		return nil
+	}
+
 	// Validate schema types if specified
 	for _, st := range tc.AllowedSchemaTypes {
 		if !isValidSchemaType(st) {
-			return fmt.Errorf("invalid schema type: %q", st)
+			return fmt.Errorf("%w: %q", errInvalidSchemaType, st)
 		}
 	}
 
