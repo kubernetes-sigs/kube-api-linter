@@ -50,8 +50,9 @@ func init() {
 }
 
 type analyzer struct {
-	markerRules map[string]MarkerScopeRule
-	policy      MarkerScopePolicy
+	markerRules         map[string]MarkerScopeRule
+	policy              MarkerScopePolicy
+	allowDangerousTypes bool
 }
 
 // newAnalyzer creates a new analyzer.
@@ -61,8 +62,9 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 	}
 
 	a := &analyzer{
-		markerRules: mergeMarkerRules(DefaultMarkerRules(), cfg.MarkerRules),
-		policy:      cfg.Policy,
+		markerRules:         mergeMarkerRules(DefaultMarkerRules(), cfg.MarkerRules),
+		policy:              cfg.Policy,
+		allowDangerousTypes: cfg.AllowDangerousTypes,
 	}
 
 	// Register all markers (both default and custom) with the markers helper
@@ -168,22 +170,20 @@ func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, mark
 		}
 
 		// Check type constraints if present
-		if rule.TypeConstraint != nil {
-			if err := a.validateFieldTypeConstraint(pass, field, rule.TypeConstraint); err != nil {
-				if a.policy == MarkerScopePolicySuggestFix {
-					pass.Report(analysis.Diagnostic{
-						Pos:            marker.Pos,
-						End:            marker.End,
-						Message:        fmt.Sprintf("marker %q: %s", marker.Identifier, err),
-						SuggestedFixes: a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule),
-					})
-				} else {
-					pass.Report(analysis.Diagnostic{
-						Pos:     marker.Pos,
-						End:     marker.End,
-						Message: fmt.Sprintf("marker %q: %s", marker.Identifier, err),
-					})
-				}
+		if err := a.validateFieldTypeConstraint(pass, field, rule, a.allowDangerousTypes); err != nil {
+			if a.policy == MarkerScopePolicySuggestFix {
+				pass.Report(analysis.Diagnostic{
+					Pos:            marker.Pos,
+					End:            marker.End,
+					Message:        fmt.Sprintf("marker %q: %s", marker.Identifier, err),
+					SuggestedFixes: a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule),
+				})
+			} else {
+				pass.Report(analysis.Diagnostic{
+					Pos:     marker.Pos,
+					End:     marker.End,
+					Message: fmt.Sprintf("marker %q: %s", marker.Identifier, err),
+				})
 			}
 		}
 	}
@@ -223,9 +223,7 @@ func (a *analyzer) checkSingleTypeMarkers(pass *analysis.Pass, typeSpec *ast.Typ
 		}
 
 		// Check type constraints if present
-		if rule.TypeConstraint != nil {
-			a.checkTypeConstraintViolation(pass, typeSpec, marker, rule)
-		}
+		a.checkTypeConstraintViolation(pass, typeSpec, marker, rule, a.allowDangerousTypes)
 	}
 }
 
@@ -254,8 +252,8 @@ func (a *analyzer) reportTypeScopeViolation(pass *analysis.Pass, typeSpec *ast.T
 }
 
 // checkTypeConstraintViolation checks and reports type constraint violations.
-func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
-	if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint); err != nil {
+func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule, allowDangerousTypes bool) {
+	if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint, allowDangerousTypes); err != nil {
 		var fixes []analysis.SuggestedFix
 
 		if a.policy == MarkerScopePolicySuggestFix {
@@ -273,22 +271,29 @@ func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *a
 }
 
 // validateFieldTypeConstraint validates that a field's type matches the type constraint.
-func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, tc *TypeConstraint) error {
+func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, rule MarkerScopeRule, allowDangerousTypes bool) error {
 	// Get the type of the field
 	tv, ok := pass.TypesInfo.Types[field.Type]
 	if !ok {
 		return nil // Skip if we can't determine the type
 	}
 
-	if err := validateTypeAgainstConstraint(tv.Type, tc); err != nil {
+	if err := validateTypeAgainstConstraint(tv.Type, rule.TypeConstraint, allowDangerousTypes); err != nil {
 		return err
+	}
+
+	if rule.StrictTypeConstraint && rule.Scope == AnyScope {
+		namedType, ok := tv.Type.(*types.Named)
+		if ok {
+			return fmt.Errorf("%w of %s instead of the field", errMarkerShouldBeOnTypeDefinition, namedType.Obj().Name())
+		}
 	}
 
 	return nil
 }
 
 // validateTypeSpecTypeConstraint validates that a type spec's type matches the type constraint.
-func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint) error {
+func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint, allowDangerousTypes bool) error {
 	// Get the type of the type spec
 	obj := pass.TypesInfo.Defs[typeSpec.Name]
 	if obj == nil {
@@ -300,22 +305,29 @@ func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec 
 		return nil
 	}
 
-	return validateTypeAgainstConstraint(typeName.Type(), tc)
+	return validateTypeAgainstConstraint(typeName.Type(), tc, allowDangerousTypes)
 }
 
 // validateTypeAgainstConstraint validates that a Go type satisfies the type constraint.
-func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
+func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint, allowDangerousTypes bool) error {
+	// Get the schema type from the Go type
+	schemaType := getSchemaType(t)
+
+	// Check if dangerous types are disallowed
+	if !allowDangerousTypes && schemaType == SchemaTypeNumber {
+		// Get the underlying type for better error messages
+		underlyingType := getUnderlyingType(t)
+		return fmt.Errorf("type %s is dangerous and not allowed (set allowDangerousTypes to true to permit)", underlyingType.String())
+	}
+
 	if tc == nil {
 		return nil
 	}
 
-	// Get the schema type from the Go type
-	schemaType := getSchemaType(t)
-
 	// Check if the schema type is allowed
 	if len(tc.AllowedSchemaTypes) > 0 {
 		if !slices.Contains(tc.AllowedSchemaTypes, schemaType) {
-			return fmt.Errorf("%w: type %s (expected one of: %v)", errTypeNotAllowed, schemaType, tc.AllowedSchemaTypes)
+			return fmt.Errorf("type %s is not allowed (expected one of: %v)", schemaType, tc.AllowedSchemaTypes)
 		}
 	}
 
@@ -323,73 +335,10 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	if tc.ElementConstraint != nil && schemaType == SchemaTypeArray {
 		elemType := getElementType(t)
 		if elemType != nil {
-			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint); err != nil {
+			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint, allowDangerousTypes); err != nil {
 				return fmt.Errorf("array element: %w", err)
 			}
 		}
-	}
-
-	return nil
-}
-
-// getSchemaType converts a Go type to an OpenAPI schema type.
-//
-//nolint:cyclop // This function has many cases for different Go types
-func getSchemaType(t types.Type) SchemaType {
-	// Unwrap pointer types
-	if ptr, ok := t.(*types.Pointer); ok {
-		t = ptr.Elem()
-	}
-
-	// Unwrap named types to get underlying type
-	if named, ok := t.(*types.Named); ok {
-		t = named.Underlying()
-	}
-
-	switch ut := t.Underlying().(type) {
-	case *types.Basic:
-		switch ut.Kind() {
-		case types.Bool:
-			return SchemaTypeBoolean
-		case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
-			types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
-			return SchemaTypeInteger
-		case types.Float32, types.Float64:
-			return SchemaTypeNumber
-		case types.String:
-			return SchemaTypeString
-		case types.Invalid, types.Uintptr, types.Complex64, types.Complex128,
-			types.UnsafePointer, types.UntypedBool, types.UntypedInt, types.UntypedRune,
-			types.UntypedFloat, types.UntypedComplex, types.UntypedString, types.UntypedNil:
-			// These types are not supported in OpenAPI schemas
-			return ""
-		}
-	case *types.Slice, *types.Array:
-		return SchemaTypeArray
-	case *types.Map, *types.Struct:
-		return SchemaTypeObject
-	}
-
-	return ""
-}
-
-// getElementType returns the element type of an array or slice.
-func getElementType(t types.Type) types.Type {
-	// Unwrap pointer types
-	if ptr, ok := t.(*types.Pointer); ok {
-		t = ptr.Elem()
-	}
-
-	// Unwrap named types to get underlying type
-	if named, ok := t.(*types.Named); ok {
-		t = named.Underlying()
-	}
-
-	switch ut := t.(type) {
-	case *types.Slice:
-		return ut.Elem()
-	case *types.Array:
-		return ut.Elem()
 	}
 
 	return nil
