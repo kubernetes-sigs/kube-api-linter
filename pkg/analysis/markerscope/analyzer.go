@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"maps"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -27,20 +29,23 @@ import (
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 const (
 	name = "markerscope"
 )
 
-// TODO: SuggestFix
+// TODO: SuggestFix.
 func init() {
 	// Register all markers we want to validate scope for
 	defaults := DefaultMarkerRules()
 	markers := make([]string, 0, len(defaults))
+
 	for marker := range defaults {
 		markers = append(markers, marker)
 	}
+
 	markershelper.DefaultRegistry().Register(markers...)
 }
 
@@ -58,6 +63,13 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 	a := &analyzer{
 		markerRules: mergeMarkerRules(DefaultMarkerRules(), cfg.MarkerRules),
 		policy:      cfg.Policy,
+	}
+
+	// Register all markers (both default and custom) with the markers helper
+	// This must be done before the analyzer runs because the markers helper
+	// analyzer needs to know about these markers
+	for marker := range a.markerRules {
+		markershelper.DefaultRegistry().Register(marker)
 	}
 
 	// Set default policy if not specified
@@ -80,14 +92,10 @@ func mergeMarkerRules(defaults, custom map[string]MarkerScopeRule) map[string]Ma
 	merged := make(map[string]MarkerScopeRule, len(defaults)+len(custom))
 
 	// Copy all default rules
-	for marker, rule := range defaults {
-		merged[marker] = rule
-	}
+	maps.Copy(merged, defaults)
 
 	// Override with custom rules
-	for marker, rule := range custom {
-		merged[marker] = rule
-	}
+	maps.Copy(merged, custom)
 
 	return merged
 }
@@ -118,32 +126,10 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		}
 	})
 
-	return nil, nil
+	return nil, nil //nolint:nilnil
 }
 
-// reportScopeViolation reports a scope violation error
-func (a *analyzer) reportScopeViolation(pass *analysis.Pass, marker markershelper.Marker, rule MarkerScopeRule) {
-	var allowedScopes []string
-	if rule.Scope&FieldScope != 0 {
-		allowedScopes = append(allowedScopes, "fields")
-	}
-	if rule.Scope&TypeScope != 0 {
-		allowedScopes = append(allowedScopes, "types")
-	}
-
-	scopeMsg := strings.Join(allowedScopes, " or ")
-	if len(allowedScopes) == 0 {
-		scopeMsg = "unknown scope"
-	}
-
-	pass.Report(analysis.Diagnostic{
-		Pos:     marker.Pos,
-		End:     marker.End,
-		Message: fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, scopeMsg),
-	})
-}
-
-// checkFieldMarkers checks markers on fields for violations
+// checkFieldMarkers checks markers on fields for violations.
 func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
@@ -156,53 +142,42 @@ func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, mark
 
 		// Check if FieldScope is allowed
 		if !rule.Scope.Allows(FieldScope) {
-			a.reportScopeViolation(pass, marker, rule)
+			var message string
+
+			var fixes []analysis.SuggestedFix
+
+			if rule.Scope == TypeScope {
+				message = fmt.Sprintf("marker %q can only be applied to types", marker.Identifier)
+
+				if a.policy == MarkerScopePolicySuggestFix {
+					fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
+				}
+			} else {
+				// This shouldn't happen in practice, but handle it gracefully
+				message = fmt.Sprintf("marker %q cannot be applied to fields", marker.Identifier)
+			}
+
+			pass.Report(analysis.Diagnostic{
+				Pos:            marker.Pos,
+				End:            marker.End,
+				Message:        message,
+				SuggestedFixes: fixes,
+			})
+
 			continue
 		}
 
 		// Check type constraints if present
 		if rule.TypeConstraint != nil {
 			if err := a.validateFieldTypeConstraint(pass, field, rule.TypeConstraint); err != nil {
-				pass.Report(analysis.Diagnostic{
-					Pos:     marker.Pos,
-					End:     marker.End,
-					Message: fmt.Sprintf("marker %q: %s", marker.Identifier, err),
-				})
-			}
-		}
-	}
-}
-
-// checkTypeMarkers checks markers on types for violations
-func (a *analyzer) checkTypeMarkers(pass *analysis.Pass, genDecl *ast.GenDecl, markersAccess markershelper.Markers) {
-	if len(genDecl.Specs) == 0 {
-		return
-	}
-
-	for i := range genDecl.Specs {
-		typeSpec, ok := genDecl.Specs[i].(*ast.TypeSpec)
-		if !ok {
-			continue
-		}
-
-		typeMarkers := markersAccess.TypeMarkers(typeSpec)
-
-		for _, marker := range typeMarkers.UnsortedList() {
-			rule, ok := a.markerRules[marker.Identifier]
-			if !ok {
-				// No rule defined for this marker, skip validation
-				continue
-			}
-
-			// Check if TypeScope is allowed
-			if !rule.Scope.Allows(TypeScope) {
-				a.reportScopeViolation(pass, marker, rule)
-				continue
-			}
-
-			// Check type constraints if present
-			if rule.TypeConstraint != nil {
-				if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint); err != nil {
+				if a.policy == MarkerScopePolicySuggestFix {
+					pass.Report(analysis.Diagnostic{
+						Pos:            marker.Pos,
+						End:            marker.End,
+						Message:        fmt.Sprintf("marker %q: %s", marker.Identifier, err),
+						SuggestedFixes: a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule),
+					})
+				} else {
 					pass.Report(analysis.Diagnostic{
 						Pos:     marker.Pos,
 						End:     marker.End,
@@ -214,7 +189,90 @@ func (a *analyzer) checkTypeMarkers(pass *analysis.Pass, genDecl *ast.GenDecl, m
 	}
 }
 
-// validateFieldTypeConstraint validates that a field's type matches the type constraint
+// checkTypeMarkers checks markers on types for violations.
+func (a *analyzer) checkTypeMarkers(pass *analysis.Pass, genDecl *ast.GenDecl, markersAccess markershelper.Markers) {
+	if len(genDecl.Specs) == 0 {
+		return
+	}
+
+	for i := range genDecl.Specs {
+		typeSpec, ok := genDecl.Specs[i].(*ast.TypeSpec)
+		if !ok {
+			continue
+		}
+
+		a.checkSingleTypeMarkers(pass, typeSpec, markersAccess)
+	}
+}
+
+// checkSingleTypeMarkers checks markers on a single type for violations.
+func (a *analyzer) checkSingleTypeMarkers(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
+	typeMarkers := markersAccess.TypeMarkers(typeSpec)
+
+	for _, marker := range typeMarkers.UnsortedList() {
+		rule, ok := a.markerRules[marker.Identifier]
+		if !ok {
+			// No rule defined for this marker, skip validation
+			continue
+		}
+
+		// Check if TypeScope is allowed
+		if !rule.Scope.Allows(TypeScope) {
+			a.reportTypeScopeViolation(pass, typeSpec, marker, rule)
+			continue
+		}
+
+		// Check type constraints if present
+		if rule.TypeConstraint != nil {
+			a.checkTypeConstraintViolation(pass, typeSpec, marker, rule)
+		}
+	}
+}
+
+// reportTypeScopeViolation reports a scope violation for a type marker.
+func (a *analyzer) reportTypeScopeViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
+	var message string
+
+	var fixes []analysis.SuggestedFix
+
+	if rule.Scope == FieldScope {
+		message = fmt.Sprintf("marker %q can only be applied to fields", marker.Identifier)
+
+		if a.policy == MarkerScopePolicySuggestFix {
+			fixes = a.suggestMoveToField(pass, typeSpec, marker, rule)
+		}
+	} else {
+		message = fmt.Sprintf("marker %q cannot be applied to types", marker.Identifier)
+	}
+
+	pass.Report(analysis.Diagnostic{
+		Pos:            marker.Pos,
+		End:            marker.End,
+		Message:        message,
+		SuggestedFixes: fixes,
+	})
+}
+
+// checkTypeConstraintViolation checks and reports type constraint violations.
+func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
+	if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint); err != nil {
+		var fixes []analysis.SuggestedFix
+
+		if a.policy == MarkerScopePolicySuggestFix {
+			fixes = a.suggestMoveToField(pass, typeSpec, marker, rule)
+		}
+
+		message := fmt.Sprintf("marker %q: %s", marker.Identifier, err)
+		pass.Report(analysis.Diagnostic{
+			Pos:            marker.Pos,
+			End:            marker.End,
+			Message:        message,
+			SuggestedFixes: fixes,
+		})
+	}
+}
+
+// validateFieldTypeConstraint validates that a field's type matches the type constraint.
 func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, tc *TypeConstraint) error {
 	// Get the type of the field
 	tv, ok := pass.TypesInfo.Types[field.Type]
@@ -222,10 +280,14 @@ func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.F
 		return nil // Skip if we can't determine the type
 	}
 
-	return validateTypeAgainstConstraint(tv.Type, tc)
+	if err := validateTypeAgainstConstraint(tv.Type, tc); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-// validateTypeSpecTypeConstraint validates that a type spec's type matches the type constraint
+// validateTypeSpecTypeConstraint validates that a type spec's type matches the type constraint.
 func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint) error {
 	// Get the type of the type spec
 	obj := pass.TypesInfo.Defs[typeSpec.Name]
@@ -241,7 +303,7 @@ func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec 
 	return validateTypeAgainstConstraint(typeName.Type(), tc)
 }
 
-// validateTypeAgainstConstraint validates that a Go type satisfies the type constraint
+// validateTypeAgainstConstraint validates that a Go type satisfies the type constraint.
 func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	if tc == nil {
 		return nil
@@ -252,15 +314,8 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 
 	// Check if the schema type is allowed
 	if len(tc.AllowedSchemaTypes) > 0 {
-		allowed := false
-		for _, allowedType := range tc.AllowedSchemaTypes {
-			if schemaType == allowedType {
-				allowed = true
-				break
-			}
-		}
-		if !allowed {
-			return fmt.Errorf("type %s is not allowed (expected one of: %v)", schemaType, tc.AllowedSchemaTypes)
+		if !slices.Contains(tc.AllowedSchemaTypes, schemaType) {
+			return fmt.Errorf("%w: type %s (expected one of: %v)", errTypeNotAllowed, schemaType, tc.AllowedSchemaTypes)
 		}
 	}
 
@@ -277,7 +332,9 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	return nil
 }
 
-// getSchemaType converts a Go type to an OpenAPI schema type
+// getSchemaType converts a Go type to an OpenAPI schema type.
+//
+//nolint:cyclop // This function has many cases for different Go types
 func getSchemaType(t types.Type) SchemaType {
 	// Unwrap pointer types
 	if ptr, ok := t.(*types.Pointer); ok {
@@ -301,6 +358,11 @@ func getSchemaType(t types.Type) SchemaType {
 			return SchemaTypeNumber
 		case types.String:
 			return SchemaTypeString
+		case types.Invalid, types.Uintptr, types.Complex64, types.Complex128,
+			types.UnsafePointer, types.UntypedBool, types.UntypedInt, types.UntypedRune,
+			types.UntypedFloat, types.UntypedComplex, types.UntypedString, types.UntypedNil:
+			// These types are not supported in OpenAPI schemas
+			return ""
 		}
 	case *types.Slice, *types.Array:
 		return SchemaTypeArray
@@ -311,7 +373,7 @@ func getSchemaType(t types.Type) SchemaType {
 	return ""
 }
 
-// getElementType returns the element type of an array or slice
+// getElementType returns the element type of an array or slice.
 func getElementType(t types.Type) types.Type {
 	// Unwrap pointer types
 	if ptr, ok := t.(*types.Pointer); ok {
@@ -331,4 +393,109 @@ func getElementType(t types.Type) types.Type {
 	}
 
 	return nil
+}
+
+// extractIdent extracts an *ast.Ident from an ast.Expr, unwrapping pointers and arrays.
+func extractIdent(expr ast.Expr) *ast.Ident {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e
+	case *ast.StarExpr:
+		return extractIdent(e.X)
+	case *ast.ArrayType:
+		return extractIdent(e.Elt)
+	default:
+		return nil
+	}
+}
+
+func (a *analyzer) suggestMoveToField(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) []analysis.SuggestedFix {
+	// Only suggest moving to field if FieldScope is allowed
+	if !rule.Scope.Allows(FieldScope) {
+		return nil
+	}
+
+	fieldTypeSpecs := utils.LookupFieldsUsingType(pass, typeSpec)
+	fmt.Println("fieldTypeSpecs", fieldTypeSpecs)
+
+	var edits []analysis.TextEdit
+
+	// Remove marker from current field (including the newline)
+	edits = append(edits, analysis.TextEdit{
+		Pos: marker.Pos,
+		End: marker.End + 1,
+	})
+
+	for _, fieldTypeSpec := range fieldTypeSpecs {
+		// Add marker to the line before the type definition
+		markerText := a.extractMarkerText(marker)
+
+		file := pass.Fset.File(fieldTypeSpec.Pos())
+		if file != nil {
+			lineStart := file.LineStart(file.Line(fieldTypeSpec.Pos()))
+			edits = append(edits, analysis.TextEdit{
+				Pos:     lineStart,
+				End:     lineStart,
+				NewText: []byte(markerText),
+			})
+		}
+	}
+
+	return []analysis.SuggestedFix{
+		{
+			Message:   "Move marker to field definition",
+			TextEdits: edits,
+		},
+	}
+}
+
+// suggestMoveToFieldsIfCompatible generates suggested fixes to move a marker from type to compatible fields.
+func (a *analyzer) suggestMoveToFieldsIfCompatible(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) []analysis.SuggestedFix {
+	// Only suggest moving to type if TypeScope is allowed
+	if !rule.Scope.Allows(TypeScope) {
+		return nil
+	}
+
+	// Extract identifier from field type
+	ident := extractIdent(field.Type)
+	if ident == nil {
+		return nil
+	}
+
+	fieldTypeSpec, ok := utils.LookupTypeSpec(pass, ident)
+	if !ok {
+		return nil
+	}
+
+	var edits []analysis.TextEdit
+
+	// Remove marker from current field (including the newline)
+	edits = append(edits, analysis.TextEdit{
+		Pos: marker.Pos,
+		End: marker.End + 1,
+	})
+
+	// Add marker to the line before the type definition
+	markerText := a.extractMarkerText(marker)
+
+	file := pass.Fset.File(fieldTypeSpec.Pos())
+	if file != nil {
+		lineStart := file.LineStart(file.Line(fieldTypeSpec.Pos()))
+		edits = append(edits, analysis.TextEdit{
+			Pos:     lineStart,
+			End:     lineStart,
+			NewText: []byte(markerText),
+		})
+	}
+
+	return []analysis.SuggestedFix{
+		{
+			Message:   "Move marker to type definition",
+			TextEdits: edits,
+		},
+	}
+}
+
+func (a *analyzer) extractMarkerText(marker markershelper.Marker) string {
+	return strings.Split(marker.RawComment, " //")[0] + "\n"
 }
