@@ -1,0 +1,147 @@
+/*
+Copyright 2025 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package a
+
+// +kubebuilder:validation:items:Maximum=100
+// +kubebuilder:validation:items:Minimum=0
+// +kubebuilder:validation:items:MultipleOf=5
+type NumericArrayType []int32
+
+// +kubebuilder:validation:items:Pattern="^[a-z]+$"
+// +kubebuilder:validation:items:MinLength=1
+// +kubebuilder:validation:items:MaxLength=50
+type StringArrayType []string
+
+// +kubebuilder:validation:items:MinItems=1
+// +kubebuilder:validation:items:MaxItems=5
+type NestedArrayType [][]string
+
+// +kubebuilder:validation:items:MinProperties=1
+// +kubebuilder:validation:items:MaxProperties=5
+type ObjectArrayType []map[string]string
+
+// +kubebuilder:validation:items:Enum=A;B;C
+// +kubebuilder:validation:items:Format=uuid
+// +kubebuilder:validation:items:Type=string
+// +kubebuilder:validation:items:XValidation:rule="self != ”"
+type GeneralArrayType []string
+
+// Invalid: items:Maximum on string array type
+// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
+type InvalidItemsMaximumOnStringArrayType []string
+
+// Invalid: items:Pattern on int array type
+// +kubebuilder:validation:items:Pattern="^[0-9]+$" // want `marker "kubebuilder:validation:items:Pattern": array element: type integer is not allowed \(expected one of: \[string\]\)`
+type InvalidItemsPatternOnIntArrayType []int32
+
+// Invalid: items:MinProperties on string array type
+// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": array element: type string is not allowed \(expected one of: \[object\]\)`
+type InvalidItemsMinPropertiesOnStringArrayType []string
+
+type ArrayItemsMarkersFieldTest struct {
+	// Valid: Numeric element constraints
+	// +kubebuilder:validation:items:Maximum=100
+	// +kubebuilder:validation:items:Minimum=0
+	// +kubebuilder:validation:items:MultipleOf=5
+	// +kubebuilder:validation:items:ExclusiveMaximum=false
+	// +kubebuilder:validation:items:ExclusiveMinimum=false
+	ValidNumericArrayItems []int32 `json:"validNumericArrayItems"`
+
+	// Valid: String element constraints
+	// +kubebuilder:validation:items:Pattern="^[a-z]+$"
+	// +kubebuilder:validation:items:MinLength=1
+	// +kubebuilder:validation:items:MaxLength=50
+	ValidStringArrayItems []string `json:"validStringArrayItems"`
+
+	// Valid: Nested array constraints
+	// +kubebuilder:validation:items:MinItems=1
+	// +kubebuilder:validation:items:MaxItems=5
+	// +kubebuilder:validation:items:UniqueItems=true
+	ValidNestedArrayItems [][]string `json:"validNestedArrayItems"`
+
+	// Valid: Object element constraints
+	// +kubebuilder:validation:items:MinProperties=1
+	// +kubebuilder:validation:items:MaxProperties=5
+	ValidObjectArrayItems []map[string]string `json:"validObjectArrayItems"`
+
+	// Valid: General items markers
+	// +kubebuilder:validation:items:Enum=A;B;C
+	// +kubebuilder:validation:items:Format=uuid
+	// +kubebuilder:validation:items:Type=string
+	// +kubebuilder:validation:items:XValidation:rule="self != ''"
+	ValidGeneralArrayItems []string `json:"validGeneralArrayItems"`
+
+	// Valid: Using named type with items markers
+	ValidNumericArrayTyped NumericArrayType `json:"validNumericArrayTyped"`
+
+	// Valid: Using named type with string items
+	ValidStringArrayTyped StringArrayType `json:"validStringArrayTyped"`
+
+	// Valid: Using named type with nested array items
+	ValidNestedArrayTyped NestedArrayType `json:"validNestedArrayTyped"`
+
+	// Valid: Using named type with object items
+	ValidObjectArrayTyped ObjectArrayType `json:"validObjectArrayTyped"`
+
+	// Invalid: items:Maximum marker on named type (should be on type definition)
+	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": marker should be declared on the type definition of NumericArrayType instead of the field`
+	InvalidItemsMaximumOnNumericArrayType NumericArrayType `json:"invalidItemsMaximumOnNumericArrayType"`
+
+	// Invalid: items:Pattern marker on named type (should be on type definition)
+	// +kubebuilder:validation:items:Pattern="^[a-z]+$" // want `marker "kubebuilder:validation:items:Pattern": marker should be declared on the type definition of StringArrayType instead of the field`
+	InvalidItemsPatternOnStringArrayType StringArrayType `json:"invalidItemsPatternOnStringArrayType"`
+
+	// Invalid: items:MinItems marker on named type (should be on type definition)
+	// +kubebuilder:validation:items:MinItems=1 // want `marker "kubebuilder:validation:items:MinItems": marker should be declared on the type definition of NestedArrayType instead of the field`
+	InvalidItemsMinItemsOnNestedArrayType NestedArrayType `json:"invalidItemsMinItemsOnNestedArrayType"`
+
+	// Invalid: items:MinProperties marker on named type (should be on type definition)
+	// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": marker should be declared on the type definition of ObjectArrayType instead of the field`
+	InvalidItemsMinPropertiesOnObjectArrayType ObjectArrayType `json:"invalidItemsMinPropertiesOnObjectArrayType"`
+
+	// Invalid: items:Enum marker on named type (should be on type definition)
+	// +kubebuilder:validation:items:Enum=A;B;C // want `marker "kubebuilder:validation:items:Enum": marker should be declared on the type definition of GeneralArrayType instead of the field`
+	InvalidItemsEnumOnGeneralArrayType GeneralArrayType `json:"invalidItemsEnumOnGeneralArrayType"`
+
+	// Invalid: items:Format marker on named type (should be on type definition)
+	// +kubebuilder:validation:items:Format=uuid // want `marker "kubebuilder:validation:items:Format": marker should be declared on the type definition of GeneralArrayType instead of the field`
+	InvalidItemsFormatOnGeneralArrayType GeneralArrayType `json:"invalidItemsFormatOnGeneralArrayType"`
+
+	// Invalid: items:Maximum on string array (element type mismatch)
+	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
+	InvalidItemsMaximumOnStringArray []string `json:"invalidItemsMaximumOnStringArray"`
+
+	// Invalid: items:Pattern on int array (element type mismatch)
+	// +kubebuilder:validation:items:Pattern="^[0-9]+$" // want `marker "kubebuilder:validation:items:Pattern": array element: type integer is not allowed \(expected one of: \[string\]\)`
+	InvalidItemsPatternOnIntArray []int32 `json:"invalidItemsPatternOnIntArray"`
+
+	// Invalid: items:MinProperties on string array (element type mismatch)
+	// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": array element: type string is not allowed \(expected one of: \[object\]\)`
+	InvalidItemsMinPropertiesOnStringArray []string `json:"invalidItemsMinPropertiesOnStringArray"`
+
+	// Invalid: items marker on non-array field
+	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": type string is not allowed \(expected one of: \[array\]\)`
+	InvalidItemsMarkerOnNonArray string `json:"invalidItemsMarkerOnNonArray"`
+
+	// Invalid: Using invalid named type
+	InvalidItemsMaximumOnStringArrayTyped InvalidItemsMaximumOnStringArrayType `json:"invalidItemsMaximumOnStringArrayTyped"`
+
+	// Invalid: Using invalid named type
+	InvalidItemsPatternOnIntArrayTyped InvalidItemsPatternOnIntArrayType `json:"invalidItemsPatternOnIntArrayTyped"`
+
+	// Invalid: Using invalid named type
+	InvalidItemsMinPropertiesOnStringArrayTyped InvalidItemsMinPropertiesOnStringArrayType `json:"invalidItemsMinPropertiesOnStringArrayTyped"`
+}

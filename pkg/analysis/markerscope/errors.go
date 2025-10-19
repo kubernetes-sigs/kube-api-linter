@@ -18,8 +18,8 @@ package markerscope
 import "errors"
 
 var (
-	errScopeNonZero      = errors.New("scope must be non-zero")
-	errInvalidScopeBits  = errors.New("invalid scope bits")
-	errInvalidSchemaType = errors.New("invalid schema type")
-	errTypeNotAllowed    = errors.New("type not allowed")
+	errScopeNonZero                   = errors.New("scope must be non-zero")
+	errInvalidScopeBits               = errors.New("invalid scope bits")
+	errInvalidSchemaType              = errors.New("invalid schema type")
+	errMarkerShouldBeOnTypeDefinition = errors.New("marker should be declared on the type definition")
 )
