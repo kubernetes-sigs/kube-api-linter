@@ -95,7 +95,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `markerscope.markerRules.custom:marker: Invalid value: markerscope.MarkerScopeRule{Scope:0x0, TypeConstraint:(*markerscope.TypeConstraint)(nil)}: scope must be non-zero`,
+				expectedErr: `markerscope.markerRules.custom:marker: Invalid value: markerscope.MarkerScopeRule{Scope:0x0, StrictTypeConstraint:false, TypeConstraint:(*markerscope.TypeConstraint)(nil)}: scope must be non-zero`,
 			}),
 
 			Entry("With marker rule having invalid scope bits", testCase{
@@ -106,7 +106,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `markerscope.markerRules.custom:marker: Invalid value: markerscope.MarkerScopeRule{Scope:0x8, TypeConstraint:(*markerscope.TypeConstraint)(nil)}: invalid scope bits`,
+				expectedErr: `markerscope.markerRules.custom:marker: Invalid value: markerscope.MarkerScopeRule{Scope:0x8, StrictTypeConstraint:false, TypeConstraint:(*markerscope.TypeConstraint)(nil)}: invalid scope bits`,
 			}),
 
 			Entry("With marker rule having invalid schema type", testCase{
