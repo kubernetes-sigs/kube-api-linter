@@ -39,3 +39,15 @@ type FieldMarkerTest struct {
 	// +kubebuilder:validation:items:ExactlyOneOf={field1} // want `marker "kubebuilder:validation:items:ExactlyOneOf" can only be applied to types`
 	InvalidTypeMarker InvalidTypeMarkers `json:"invalidTypeMarker"`
 }
+
+type MapType map[string]string
+
+type StringType string
+
+type MapTypeFieldTest struct {
+	// +kubebuilder:validation:MinProperties=1 // want `marker "kubebuilder:validation:MinProperties": marker should be declared on the type definition of MapType instead of the field`
+	ValidMinPropertiesField MapType `json:"validMinPropertiesField"`
+
+	// +kubebuilder:validation:MaxLength=10 // want `marker "kubebuilder:validation:MaxLength": marker should be declared on the type definition of StringType instead of the field`
+	ValidMaxLengthField StringType `json:"validMaxLengthField"`
+}

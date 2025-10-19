@@ -39,3 +39,15 @@ type FieldMarkerTest struct {
 	// +required	
 	InvalidTypeMarker InvalidTypeMarkers `json:"invalidTypeMarker"`
 }
+
+// +kubebuilder:validation:MinProperties=1
+type MapType map[string]string
+
+// +kubebuilder:validation:MaxLength=10
+type StringType string
+
+type MapTypeFieldTest struct {
+	ValidMinPropertiesField MapType `json:"validMinPropertiesField"`
+
+	ValidMaxLengthField StringType `json:"validMaxLengthField"`
+}
