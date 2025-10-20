@@ -36,7 +36,6 @@ const (
 	name = "markerscope"
 )
 
-// TODO: SuggestFix.
 func init() {
 	// Register all markers we want to validate scope for
 	defaults := DefaultMarkerRules()
@@ -285,7 +284,7 @@ func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.F
 	if rule.StrictTypeConstraint && rule.Scope == AnyScope {
 		namedType, ok := tv.Type.(*types.Named)
 		if ok {
-			return fmt.Errorf("%w of %s instead of the field", errMarkerShouldBeOnTypeDefinition, namedType.Obj().Name())
+			return &MarkerShouldBeOnTypeDefinitionError{TypeName: namedType.Obj().Name()}
 		}
 	}
 
@@ -317,7 +316,7 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint, allowDanger
 	if !allowDangerousTypes && schemaType == SchemaTypeNumber {
 		// Get the underlying type for better error messages
 		underlyingType := getUnderlyingType(t)
-		return fmt.Errorf("type %s is dangerous and not allowed (set allowDangerousTypes to true to permit)", underlyingType.String())
+		return &DengerousTypeError{Type: underlyingType.String()}
 	}
 
 	if tc == nil {
@@ -327,7 +326,7 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint, allowDanger
 	// Check if the schema type is allowed
 	if len(tc.AllowedSchemaTypes) > 0 {
 		if !slices.Contains(tc.AllowedSchemaTypes, schemaType) {
-			return fmt.Errorf("type %s is not allowed (expected one of: %v)", schemaType, tc.AllowedSchemaTypes)
+			return &TypeNotAllowedError{Type: schemaType, AllowedTypes: tc.AllowedSchemaTypes}
 		}
 	}
 
@@ -336,7 +335,7 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint, allowDanger
 		elemType := getElementType(t)
 		if elemType != nil {
 			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint, allowDangerousTypes); err != nil {
-				return fmt.Errorf("array element: %w", err)
+				return &InvalidElementConstraintError{Err: err}
 			}
 		}
 	}
