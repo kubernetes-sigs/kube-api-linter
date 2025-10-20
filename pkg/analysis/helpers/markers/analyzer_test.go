@@ -16,6 +16,7 @@ limitations under the License.
 package markers
 
 import (
+	"go/ast"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -143,6 +144,109 @@ func TestExtractMarkerIdAndExpressions(t *testing.T) {
 
 			g.Expect(id).To(Equal(tc.expectedID), "marker", tc.marker)
 			g.Expect(expressions).To(Equal(tc.expectedExpressions), "marker", tc.marker)
+		})
+	}
+}
+
+func TestExtractMarker(t *testing.T) {
+	type testcase struct {
+		name           string
+		comment        string
+		shouldBeMarker bool
+		expectedID     string
+	}
+
+	testcases := []testcase{
+		{
+			name:           "valid marker - required",
+			comment:        "// +required",
+			shouldBeMarker: true,
+			expectedID:     "required",
+		},
+		{
+			name:           "valid marker - kubebuilder:validation:Required",
+			comment:        "// +kubebuilder:validation:Required",
+			shouldBeMarker: true,
+			expectedID:     "kubebuilder:validation:Required",
+		},
+		{
+			name:           "valid marker - with expressions",
+			comment:        "// +kubebuilder:validation:XValidation:rule=\"something\",message=\"haha\"",
+			shouldBeMarker: true,
+			expectedID:     "kubebuilder:validation:XValidation",
+		},
+		{
+			name:           "valid marker - with parentheses",
+			comment:        "// +k8s:ifEnabled(\"foo\")=+k8s:required",
+			shouldBeMarker: true,
+			expectedID:     "k8s:ifEnabled(\"foo\")",
+		},
+		{
+			name:           "valid marker - with single quotes and parentheses",
+			comment:        "// +k8s:ifEnabled('foo')=+k8s:required",
+			shouldBeMarker: true,
+			expectedID:     "k8s:ifEnabled('foo')",
+		},
+		{
+			name:           "valid marker - with backtickets and parentheses",
+			comment:        "// +k8s:ifEnabled(`foo`)=+k8s:required",
+			shouldBeMarker: true,
+			expectedID:     "k8s:ifEnabled(`foo`)",
+		},
+		{
+			name:           "invalid marker - markdown table border",
+			comment:        "// +-------+-------+-------+",
+			shouldBeMarker: false,
+			expectedID:     "",
+		},
+		{
+			name:           "invalid marker - markdown table border without pipes",
+			comment:        "// +----------",
+			shouldBeMarker: false,
+			expectedID:     "",
+		},
+		{
+			name:           "invalid marker - starts with special characters",
+			comment:        "// +!*@(#&KSDJUF:A",
+			shouldBeMarker: false,
+			expectedID:     "",
+		},
+		{
+			name:           "regular comment - no plus sign",
+			comment:        "// This is a regular comment",
+			shouldBeMarker: false,
+			expectedID:     "",
+		},
+		{
+			name:           "valid marker - complex nested expression",
+			comment:        "// +k8s:someThing(one: \"a\", two: \"b\")=+k8s:required",
+			shouldBeMarker: true,
+			expectedID:     "k8s:someThing(one: \"a\", two: \"b\")",
+		},
+		{
+			name:           "valid marker - complex nested expression with '",
+			comment:        "// +k8s:someThing(one: 'a', two: 'b')=+k8s:required",
+			shouldBeMarker: true,
+			expectedID:     "k8s:someThing(one: 'a', two: 'b')",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewWithT(t)
+
+			// Create a mock comment
+			comment := &ast.Comment{
+				Text: tc.comment,
+			}
+
+			marker := extractMarker(comment)
+
+			if tc.shouldBeMarker {
+				g.Expect(marker.Identifier).To(Equal(tc.expectedID), "comment", tc.comment)
+			} else {
+				g.Expect(marker.Identifier).To(BeEmpty(), "comment", tc.comment)
+			}
 		})
 	}
 }
