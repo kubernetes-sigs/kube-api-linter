@@ -10,7 +10,18 @@ Kube API Linter is aimed at being an assistant to API review, by catching the me
 
 ## Installation
 
-Kube API Linter ships as a golangci-lint plugin, and a golangci-lint module.
+Kube API Linter ships as a standalone binary, golangci-lint plugin, and a golangci-lint module.
+
+### Standalone binary
+
+The binary version of Kube API Linter can be built with `make build` or a standard `go build` command.
+```bash
+go build -o ./bin ./cmd/golangci-lint-kube-api-linter 
+```
+
+The binary builds a custom version of `golangci-lint` with Kube API Linter included as a module.
+See [Golangci-lint Moduule](#golangci-lint-module) for details on configuration of the module
+under `linter-settings`.
 
 ### Golangci-lint Module
 
