@@ -82,7 +82,9 @@ func validateMarkerRule(rule MarkerScopeRule) error {
 	// Validate type constraint if present
 	if rule.TypeConstraint != nil {
 		if err := validateTypeConstraint(rule.TypeConstraint); err != nil {
-			return fmt.Errorf("invalid type constraint: %w", err)
+			return &InvalidTypeConstraintError{
+				Err: err,
+			}
 		}
 	}
 
@@ -97,7 +99,7 @@ func validateTypeConstraint(tc *TypeConstraint) error {
 	// Validate schema types if specified
 	for _, st := range tc.AllowedSchemaTypes {
 		if !isValidSchemaType(st) {
-			return fmt.Errorf("%w: %q", errInvalidSchemaType, st)
+			return &InvalidSchemaTypeError{SchemaType: string(st)}
 		}
 	}
 
