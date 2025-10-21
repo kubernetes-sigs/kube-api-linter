@@ -280,5 +280,33 @@ func defaultUniqueMarkers() []UniqueMarker {
 			},
 		},
 		// ------
+
+		// K8s-specific unique markers
+		// ------
+		{
+			Identifier: markersconsts.K8sFormatMarker,
+		},
+		{
+			Identifier: markersconsts.K8sMinLengthMarker,
+		},
+		{
+			Identifier: markersconsts.K8sMaxLengthMarker,
+		},
+		{
+			Identifier: markersconsts.K8sMinItemsMarker,
+		},
+		{
+			Identifier: markersconsts.K8sMaxItemsMarker,
+		},
+		{
+			Identifier: markersconsts.K8sMinimumMarker,
+		},
+		{
+			Identifier: markersconsts.K8sMaximumMarker,
+		},
+		{
+			Identifier: markersconsts.K8sListTypeMarker,
+		},
+		// ------
 	}
 }
