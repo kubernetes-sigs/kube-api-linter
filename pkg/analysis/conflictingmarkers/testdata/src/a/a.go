@@ -17,31 +17,31 @@ type TestStruct struct {
 	// Conflict: marker1 vs marker3 (both with values)
 	// +marker1:=value1
 	// +marker3:=value2
-	ConflictWithValuesField string `json:"conflictWithValuesField"` // want "field ConflictWithValuesField has conflicting markers: test_conflict: \\{\\[marker1\\], \\[marker3\\]\\}. Test markers conflict with each other"
+	ConflictWithValuesField string `json:"conflictWithValuesField"` // want "field TestStruct.ConflictWithValuesField has conflicting markers: test_conflict: \\{\\[marker1\\], \\[marker3\\]\\}. Test markers conflict with each other"
 
 	// Conflict: marker1 vs marker3 (mixed with and without values)
 	// +marker1
 	// +marker3:=someValue
-	ConflictMixedField string `json:"conflictMixedField"` // want "field ConflictMixedField has conflicting markers: test_conflict: \\{\\[marker1\\], \\[marker3\\]\\}. Test markers conflict with each other"
+	ConflictMixedField string `json:"conflictMixedField"` // want "field TestStruct.ConflictMixedField has conflicting markers: test_conflict: \\{\\[marker1\\], \\[marker3\\]\\}. Test markers conflict with each other"
 
 	// Multiple conflicts with multiple markers in each set:
 	// +marker1
 	// +marker2
 	// +marker3
 	// +marker4
-	MultipleConflictsField string `json:"multipleConflictsField"` // want "field MultipleConflictsField has conflicting markers: test_conflict: \\{\\[marker1 marker2\\], \\[marker3 marker4\\]\\}. Test markers conflict with each other"
+	MultipleConflictsField string `json:"multipleConflictsField"` // want "field TestStruct.MultipleConflictsField has conflicting markers: test_conflict: \\{\\[marker1 marker2\\], \\[marker3 marker4\\]\\}. Test markers conflict with each other"
 
 	// Three-way conflict: marker5 vs marker7 vs marker9
 	// +marker5
 	// +marker7
 	// +marker9
-	ThreeWayConflictField string `json:"threeWayConflictField"` // want "field ThreeWayConflictField has conflicting markers: three_way_conflict: \\{\\[marker5\\], \\[marker7\\], \\[marker9\\]\\}. Three-way conflict between marker sets"
+	ThreeWayConflictField string `json:"threeWayConflictField"` // want "field TestStruct.ThreeWayConflictField has conflicting markers: three_way_conflict: \\{\\[marker5\\], \\[marker7\\], \\[marker9\\]\\}. Three-way conflict between marker sets"
 
 	// Three-way conflict with values
 	// +marker6:=value1
 	// +marker8:=value2
 	// +marker10:=value3
-	ThreeWayConflictWithValuesField string `json:"threeWayConflictWithValuesField"` // want "field ThreeWayConflictWithValuesField has conflicting markers: three_way_conflict: \\{\\[marker6\\], \\[marker8\\], \\[marker10\\]\\}. Three-way conflict between marker sets"
+	ThreeWayConflictWithValuesField string `json:"threeWayConflictWithValuesField"` // want "field TestStruct.ThreeWayConflictWithValuesField has conflicting markers: three_way_conflict: \\{\\[marker6\\], \\[marker8\\], \\[marker10\\]\\}. Three-way conflict between marker sets"
 
 	// Valid field with markers from same set in three-way conflict
 	// +marker5
@@ -55,10 +55,10 @@ type TestStruct struct {
 	// +marker8
 	// +marker9
 	// +marker10
-	ThreeWayMultipleMarkersField string `json:"threeWayMultipleMarkersField"` // want "field ThreeWayMultipleMarkersField has conflicting markers: three_way_conflict: \\{\\[marker5 marker6\\], \\[marker7 marker8\\], \\[marker10 marker9\\]\\}. Three-way conflict between marker sets"
+	ThreeWayMultipleMarkersField string `json:"threeWayMultipleMarkersField"` // want "field TestStruct.ThreeWayMultipleMarkersField has conflicting markers: three_way_conflict: \\{\\[marker5 marker6\\], \\[marker7 marker8\\], \\[marker10 marker9\\]\\}. Three-way conflict between marker sets"
 
 	// Three-way conflict with only subset of sets triggered (sets 1 and 2 only)
 	// +marker5
 	// +marker7
-	SubsetThreeWayConflictField string `json:"subsetThreeWayConflictField"` // want "field SubsetThreeWayConflictField has conflicting markers: three_way_conflict: \\{\\[marker5\\], \\[marker7\\]\\}. Three-way conflict between marker sets"
+	SubsetThreeWayConflictField string `json:"subsetThreeWayConflictField"` // want "field TestStruct.SubsetThreeWayConflictField has conflicting markers: three_way_conflict: \\{\\[marker5\\], \\[marker7\\]\\}. Three-way conflict between marker sets"
 }

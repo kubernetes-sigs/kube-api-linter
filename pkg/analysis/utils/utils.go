@@ -19,6 +19,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
@@ -347,4 +348,50 @@ func isTypeBasic(t types.Type) bool {
 	}
 
 	return false
+}
+
+// GetStructNameForField inspects the AST of the package and returns the name of the struct
+// that contains the field being inspected.
+func GetStructNameForField(pass *analysis.Pass, field *ast.Field) string {
+	for _, file := range pass.Files {
+		var (
+			structName string
+			found      bool
+		)
+
+		ast.Inspect(file, func(n ast.Node) bool {
+			if found {
+				return false
+			}
+
+			typeSpec, ok := n.(*ast.TypeSpec)
+			if !ok {
+				return true
+			}
+
+			structType, ok := typeSpec.Type.(*ast.StructType)
+			if !ok {
+				return true
+			}
+
+			structName = typeSpec.Name.Name
+
+			if structType.Fields == nil {
+				return true
+			}
+
+			if slices.Contains(structType.Fields.List, field) {
+				found = true
+				return false
+			}
+
+			return true
+		})
+
+		if found {
+			return structName
+		}
+	}
+
+	return ""
 }
