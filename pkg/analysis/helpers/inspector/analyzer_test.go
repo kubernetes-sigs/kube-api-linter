@@ -49,7 +49,7 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, errCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
+	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, _ markers.Markers) {
 		pass.Reportf(field.Pos(), "field: %v", utils.FieldName(field))
 
 		if jsonTagInfo.Name != "" {

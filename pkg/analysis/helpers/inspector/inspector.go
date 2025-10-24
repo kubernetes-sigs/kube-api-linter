@@ -30,7 +30,7 @@ import (
 // Inspector is an interface that allows for the inspection of fields in structs.
 type Inspector interface {
 	// InspectFields is a function that iterates over fields in structs.
-	InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers))
+	InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers))
 
 	// InspectTypeSpec is a function that inspects the type spec and calls the provided inspectTypeSpec function.
 	InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers))
@@ -55,7 +55,7 @@ func newInspector(astinspector *astinspector.Inspector, jsonTags extractjsontags
 // InspectFields iterates over fields in structs, ignoring any struct that is not a type declaration, and any field that is ignored and
 // therefore would not be included in the CRD spec.
 // For the remaining fields, it calls the provided inspectField function to apply analysis logic.
-func (i *inspector) InspectFields(inspectField func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
 	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
 		(*ast.Field)(nil),
@@ -75,7 +75,7 @@ func (i *inspector) InspectFields(inspectField func(field *ast.Field, stack []as
 			return false
 		}
 
-		i.processFieldWithRecovery(field, stack, inspectField)
+		i.processFieldWithRecovery(field, inspectField)
 
 		return true
 	})
@@ -117,7 +117,7 @@ func (i *inspector) shouldSkipField(field *ast.Field) bool {
 }
 
 // processFieldWithRecovery processes a field with panic recovery.
-func (i *inspector) processFieldWithRecovery(field *ast.Field, stack []ast.Node, inspectField func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+func (i *inspector) processFieldWithRecovery(field *ast.Field, inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
 	tagInfo := i.jsonTags.FieldTags(field)
 
 	defer func() {
@@ -128,7 +128,7 @@ func (i *inspector) processFieldWithRecovery(field *ast.Field, stack []ast.Node,
 		}
 	}()
 
-	inspectField(field, stack, tagInfo, i.markers)
+	inspectField(field, tagInfo, i.markers)
 }
 
 // InspectTypeSpec inspects the type spec and calls the provided inspectTypeSpec function.

@@ -67,7 +67,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ []ast.Node, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
 		checkField(pass, field, markersAccess, a.conflictSets)
 	})
 
@@ -119,7 +119,7 @@ func reportConflict(pass *analysis.Pass, field *ast.Field, conflictSet ConflictS
 		setDescriptions = append(setDescriptions, fmt.Sprintf("%v", markersList))
 	}
 
-	fieldName := field.Names[0].Name
+	fieldName := utils.FieldName(field)
 	structName := utils.GetStructNameForField(pass, field)
 
 	if structName != "" {
