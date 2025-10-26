@@ -36,8 +36,11 @@ type AtomicStruct struct {
 }
 
 // Types without markers for testing field markers
+// +listType=map // want `marker "listType": marker should be declared on the type definition of ItemListNoMarker instead of the field`
+// +listMapKey=name // want `marker "listMapKey": marker should be declared on the type definition of ItemListNoMarker instead of the field`
 type ItemListNoMarker []Item
 
+// +mapType=granular // want `marker "mapType": marker should be declared on the type definition of ConfigMapNoMarker instead of the field`
 type ConfigMapNoMarker map[string]string
 
 type AtomicStructNoMarker struct {
@@ -46,17 +49,14 @@ type AtomicStructNoMarker struct {
 }
 
 // Invalid: listType on non-array type
-// +listType=map // want `marker "listType": type object is not allowed \(expected one of: \[array\]\)`
 type InvalidListTypeOnStruct struct {
 	Field string `json:"field"`
 }
 
 // Invalid: mapType on non-map type
-// +mapType=granular // want `marker "mapType": type array is not allowed \(expected one of: \[object\]\)`
 type InvalidMapTypeOnArray []string
 
 // Invalid: structType on non-struct type
-// +structType=atomic // want `marker "structType": type string is not allowed \(expected one of: \[object\]\)`
 type InvalidStructTypeOnString string
 
 type TopologyMarkersFieldTest struct {
@@ -90,12 +90,9 @@ type TopologyMarkersFieldTest struct {
 	ValidAtomicStructTyped AtomicStruct `json:"validAtomicStructTyped"`
 
 	// Invalid: listType marker on named type
-	// +listType=map // want `marker "listType": marker should be declared on the type definition of ItemListNoMarker instead of the field`
-	// +listMapKey=name // want `marker "listMapKey": marker should be declared on the type definition of ItemListNoMarker instead of the field`
 	InvalidListTypeOnItemList ItemListNoMarker `json:"invalidListTypeOnItemList"`
 
 	// Invalid: mapType marker on named type
-	// +mapType=granular // want `marker "mapType": marker should be declared on the type definition of ConfigMapNoMarker instead of the field`
 	InvalidMapTypeOnConfigMap ConfigMapNoMarker `json:"invalidMapTypeOnConfigMap"`
 
 	// Invalid: structType marker on named type
@@ -103,19 +100,15 @@ type TopologyMarkersFieldTest struct {
 	InvalidStructTypeOnAtomicStruct AtomicStructNoMarker `json:"invalidStructTypeOnAtomicStruct"`
 
 	// Invalid: listType marker on string field
-	// +listType=map // want `marker "listType": type string is not allowed \(expected one of: \[array\]\)`
 	InvalidListTypeOnString string `json:"invalidListTypeOnString"`
 
 	// Invalid: mapType marker on array field
-	// +mapType=granular // want `marker "mapType": type array is not allowed \(expected one of: \[object\]\)`
 	InvalidMapTypeOnArray []string `json:"invalidMapTypeOnArray"`
 
 	// Invalid: structType marker on integer field
-	// +structType=atomic // want `marker "structType": type integer is not allowed \(expected one of: \[object\]\)`
 	InvalidStructTypeOnInt int32 `json:"invalidStructTypeOnInt"`
 
 	// Invalid: Using invalid named type
-	// +listType=map // want `marker "listType": type object is not allowed \(expected one of: \[array\]\)`
 	InvalidListTypeOnStructTyped InvalidListTypeOnStruct `json:"invalidListTypeOnStructTyped"`
 
 	// Invalid: Using invalid named type

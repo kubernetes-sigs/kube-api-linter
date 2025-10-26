@@ -16,12 +16,12 @@ limitations under the License.
 package markerscope
 
 import (
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/types"
 	"maps"
 	"slices"
-	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
@@ -143,48 +143,12 @@ func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, mark
 
 		// Check if FieldScope is allowed
 		if !rule.Scope.Allows(FieldScope) {
-			var message string
-
-			var fixes []analysis.SuggestedFix
-
-			if rule.Scope == TypeScope {
-				message = fmt.Sprintf("marker %q can only be applied to types", marker.Identifier)
-
-				if a.policy == MarkerScopePolicySuggestFix {
-					fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
-				}
-			} else {
-				// This shouldn't happen in practice, but handle it gracefully
-				message = fmt.Sprintf("marker %q cannot be applied to fields", marker.Identifier)
-			}
-
-			pass.Report(analysis.Diagnostic{
-				Pos:            marker.Pos,
-				End:            marker.End,
-				Message:        message,
-				SuggestedFixes: fixes,
-			})
-
+			a.reportFieldScopeViolation(pass, field, marker, rule)
 			continue
 		}
 
 		// Check type constraints if present
-		if err := a.validateFieldTypeConstraint(pass, field, rule, a.allowDangerousTypes); err != nil {
-			if a.policy == MarkerScopePolicySuggestFix {
-				pass.Report(analysis.Diagnostic{
-					Pos:            marker.Pos,
-					End:            marker.End,
-					Message:        fmt.Sprintf("marker %q: %s", marker.Identifier, err),
-					SuggestedFixes: a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule),
-				})
-			} else {
-				pass.Report(analysis.Diagnostic{
-					Pos:     marker.Pos,
-					End:     marker.End,
-					Message: fmt.Sprintf("marker %q: %s", marker.Identifier, err),
-				})
-			}
-		}
+		a.checkFieldTypeConstraintViolation(pass, field, marker, rule)
 	}
 }
 
@@ -226,6 +190,67 @@ func (a *analyzer) checkSingleTypeMarkers(pass *analysis.Pass, typeSpec *ast.Typ
 	}
 }
 
+// reportFieldScopeViolation reports a scope violation for a field marker.
+func (a *analyzer) reportFieldScopeViolation(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) {
+	var message string
+
+	var fixes []analysis.SuggestedFix
+
+	if rule.Scope == TypeScope {
+		message = fmt.Sprintf("marker %q can only be applied to types", marker.Identifier)
+
+		if a.policy == MarkerScopePolicySuggestFix {
+			fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
+		}
+	} else {
+		// This shouldn't happen in practice, but handle it gracefully
+		message = fmt.Sprintf("marker %q cannot be applied to fields", marker.Identifier)
+	}
+
+	pass.Report(analysis.Diagnostic{
+		Pos:            marker.Pos,
+		End:            marker.End,
+		Message:        message,
+		SuggestedFixes: fixes,
+	})
+}
+
+// checkFieldTypeConstraintViolation checks and reports type constraint violations for field markers.
+func (a *analyzer) checkFieldTypeConstraintViolation(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) {
+	if err := a.validateFieldTypeConstraint(pass, field, rule, a.allowDangerousTypes); err != nil {
+		var fixes []analysis.SuggestedFix
+
+		if a.policy == MarkerScopePolicySuggestFix {
+			// Check if this is a "should be on type definition" error
+			var moveErr *MarkerShouldBeOnTypeDefinitionError
+			if errors.As(err, &moveErr) {
+				// Suggest moving to type definition
+				fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
+			} else {
+				// Type constraint violation - suggest removing the marker
+				fixes = []analysis.SuggestedFix{
+					{
+						Message: "Remove invalid marker",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos: marker.Pos,
+								End: marker.End + 1, // Include newline
+							},
+						},
+					},
+				}
+			}
+		}
+
+		pass.Report(analysis.Diagnostic{
+			Pos:            marker.Pos,
+			End:            marker.End,
+			Message:        fmt.Sprintf("marker %q: %s", marker.Identifier, err),
+			SuggestedFixes: fixes,
+		})
+	}
+}
+
 // reportTypeScopeViolation reports a scope violation for a type marker.
 func (a *analyzer) reportTypeScopeViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
 	var message string
@@ -256,7 +281,26 @@ func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *a
 		var fixes []analysis.SuggestedFix
 
 		if a.policy == MarkerScopePolicySuggestFix {
-			fixes = a.suggestMoveToField(pass, typeSpec, marker, rule)
+			// Check if this is a "should be on field" error (though validateTypeSpecTypeConstraint doesn't return this)
+			// For consistency with checkFieldMarkers, we check the error type
+			var moveErr *MarkerShouldBeOnTypeDefinitionError
+			if errors.As(err, &moveErr) {
+				// This shouldn't happen for type specs, but handle it for consistency
+				fixes = a.suggestMoveToField(pass, typeSpec, marker, rule)
+			} else {
+				// Type constraint violation - suggest removing the marker
+				fixes = []analysis.SuggestedFix{
+					{
+						Message: "Remove invalid marker",
+						TextEdits: []analysis.TextEdit{
+							{
+								Pos: marker.Pos,
+								End: marker.End + 1, // Include newline
+							},
+						},
+					},
+				}
+			}
 		}
 
 		message := fmt.Sprintf("marker %q: %s", marker.Identifier, err)
@@ -364,7 +408,6 @@ func (a *analyzer) suggestMoveToField(pass *analysis.Pass, typeSpec *ast.TypeSpe
 	}
 
 	fieldTypeSpecs := utils.LookupFieldsUsingType(pass, typeSpec)
-	fmt.Println("fieldTypeSpecs", fieldTypeSpecs)
 
 	var edits []analysis.TextEdit
 
@@ -422,7 +465,6 @@ func (a *analyzer) suggestMoveToFieldsIfCompatible(pass *analysis.Pass, field *a
 		Pos: marker.Pos,
 		End: marker.End + 1,
 	})
-
 	// Add marker to the line before the type definition
 	markerText := a.extractMarkerText(marker)
 
@@ -445,5 +487,5 @@ func (a *analyzer) suggestMoveToFieldsIfCompatible(pass *analysis.Pass, field *a
 }
 
 func (a *analyzer) extractMarkerText(marker markershelper.Marker) string {
-	return strings.Split(marker.RawComment, " //")[0] + "\n"
+	return marker.RawComment + "\n"
 }

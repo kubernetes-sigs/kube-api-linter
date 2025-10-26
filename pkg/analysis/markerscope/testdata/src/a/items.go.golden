@@ -40,22 +40,25 @@ type ObjectArrayType []map[string]string
 type GeneralArrayType []string
 
 // Types without markers for testing field markers
+// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": marker should be declared on the type definition of NumericArrayTypeNoMarker instead of the field`
 type NumericArrayTypeNoMarker []int32
+// +kubebuilder:validation:items:Pattern="^[a-z]+$" // want `marker "kubebuilder:validation:items:Pattern": marker should be declared on the type definition of StringArrayTypeNoMarker instead of the field`
 type StringArrayTypeNoMarker []string
+// +kubebuilder:validation:items:MinItems=1 // want `marker "kubebuilder:validation:items:MinItems": marker should be declared on the type definition of NestedArrayTypeNoMarker instead of the field`
 type NestedArrayTypeNoMarker [][]string
+// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": marker should be declared on the type definition of ObjectArrayTypeNoMarker instead of the field`
 type ObjectArrayTypeNoMarker []map[string]string
+// +kubebuilder:validation:items:Enum=A;B;C // want `marker "kubebuilder:validation:items:Enum": marker should be declared on the type definition of GeneralArrayTypeNoMarker instead of the field`
+// +kubebuilder:validation:items:Format=uuid // want `marker "kubebuilder:validation:items:Format": marker should be declared on the type definition of GeneralArrayTypeNoMarker instead of the field`
 type GeneralArrayTypeNoMarker []string
 
 // Invalid: items:Maximum on string array type
-// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
 type InvalidItemsMaximumOnStringArrayType []string
 
 // Invalid: items:Pattern on int array type
-// +kubebuilder:validation:items:Pattern="^[0-9]+$" // want `marker "kubebuilder:validation:items:Pattern": array element: type integer is not allowed \(expected one of: \[string\]\)`
 type InvalidItemsPatternOnIntArrayType []int32
 
 // Invalid: items:MinProperties on string array type
-// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": array element: type string is not allowed \(expected one of: \[object\]\)`
 type InvalidItemsMinPropertiesOnStringArrayType []string
 
 type ArrayItemsMarkersFieldTest struct {
@@ -104,43 +107,33 @@ type ArrayItemsMarkersFieldTest struct {
 	ValidObjectArrayTyped ObjectArrayType `json:"validObjectArrayTyped"`
 
 	// Invalid: items:Maximum marker on named type (should be on type definition)
-	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": marker should be declared on the type definition of NumericArrayTypeNoMarker instead of the field`
 	InvalidItemsMaximumOnNumericArrayType NumericArrayTypeNoMarker `json:"invalidItemsMaximumOnNumericArrayType"`
 
 	// Invalid: items:Pattern marker on named type (should be on type definition)
-	// +kubebuilder:validation:items:Pattern="^[a-z]+$" // want `marker "kubebuilder:validation:items:Pattern": marker should be declared on the type definition of StringArrayTypeNoMarker instead of the field`
 	InvalidItemsPatternOnStringArrayType StringArrayTypeNoMarker `json:"invalidItemsPatternOnStringArrayType"`
 
 	// Invalid: items:MinItems marker on named type (should be on type definition)
-	// +kubebuilder:validation:items:MinItems=1 // want `marker "kubebuilder:validation:items:MinItems": marker should be declared on the type definition of NestedArrayTypeNoMarker instead of the field`
 	InvalidItemsMinItemsOnNestedArrayType NestedArrayTypeNoMarker `json:"invalidItemsMinItemsOnNestedArrayType"`
 
 	// Invalid: items:MinProperties marker on named type (should be on type definition)
-	// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": marker should be declared on the type definition of ObjectArrayTypeNoMarker instead of the field`
 	InvalidItemsMinPropertiesOnObjectArrayType ObjectArrayTypeNoMarker `json:"invalidItemsMinPropertiesOnObjectArrayType"`
 
 	// Invalid: items:Enum marker on named type (should be on type definition)
-	// +kubebuilder:validation:items:Enum=A;B;C // want `marker "kubebuilder:validation:items:Enum": marker should be declared on the type definition of GeneralArrayTypeNoMarker instead of the field`
 	InvalidItemsEnumOnGeneralArrayType GeneralArrayTypeNoMarker `json:"invalidItemsEnumOnGeneralArrayType"`
 
 	// Invalid: items:Format marker on named type (should be on type definition)
-	// +kubebuilder:validation:items:Format=uuid // want `marker "kubebuilder:validation:items:Format": marker should be declared on the type definition of GeneralArrayTypeNoMarker instead of the field`
 	InvalidItemsFormatOnGeneralArrayType GeneralArrayTypeNoMarker `json:"invalidItemsFormatOnGeneralArrayType"`
 
 	// Invalid: items:Maximum on string array (element type mismatch)
-	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
 	InvalidItemsMaximumOnStringArray []string `json:"invalidItemsMaximumOnStringArray"`
 
 	// Invalid: items:Pattern on int array (element type mismatch)
-	// +kubebuilder:validation:items:Pattern="^[0-9]+$" // want `marker "kubebuilder:validation:items:Pattern": array element: type integer is not allowed \(expected one of: \[string\]\)`
 	InvalidItemsPatternOnIntArray []int32 `json:"invalidItemsPatternOnIntArray"`
 
 	// Invalid: items:MinProperties on string array (element type mismatch)
-	// +kubebuilder:validation:items:MinProperties=1 // want `marker "kubebuilder:validation:items:MinProperties": array element: type string is not allowed \(expected one of: \[object\]\)`
 	InvalidItemsMinPropertiesOnStringArray []string `json:"invalidItemsMinPropertiesOnStringArray"`
 
 	// Invalid: items marker on non-array field
-	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": type string is not allowed \(expected one of: \[array\]\)`
 	InvalidItemsMarkerOnNonArray string `json:"invalidItemsMarkerOnNonArray"`
 
 	// Invalid: Using invalid named type

@@ -26,13 +26,12 @@ type IntegerArray []int32
 // +kubebuilder:validation:MaxItems=100
 type BooleanArray []bool
 
+// +kubebuilder:validation:MinItems=5 // want `marker "kubebuilder:validation:MinItems": marker should be declared on the type definition of FieldMarkerOnNamedArray instead of the field`
 type FieldMarkerOnNamedArray []string
 
 // Type definitions with invalid markers
-// +kubebuilder:validation:MinItems=1 // want `marker "kubebuilder:validation:MinItems": type string is not allowed \(expected one of: \[array\]\)`
 type InvalidArrayMarkerOnStringType string
 
-// +kubebuilder:validation:MaxItems=10 // want `marker "kubebuilder:validation:MaxItems": type object is not allowed \(expected one of: \[array\]\)`
 type InvalidArrayMarkerOnMapType map[string]string
 
 type ArrayMarkersFieldTest struct {
@@ -55,23 +54,18 @@ type ArrayMarkersFieldTest struct {
 	ValidAllArrayMarkers []string `json:"validAllArrayMarkers"`
 
 	// Invalid: MinItems marker on string field
-	// +kubebuilder:validation:MinItems=1 // want `marker "kubebuilder:validation:MinItems": type string is not allowed \(expected one of: \[array\]\)`
 	InvalidMinItemsOnString string `json:"invalidMinItemsOnString"`
 
 	// Invalid: MaxItems marker on map field
-	// +kubebuilder:validation:MaxItems=10 // want `marker "kubebuilder:validation:MaxItems": type object is not allowed \(expected one of: \[array\]\)`
 	InvalidMaxItemsOnMap map[string]string `json:"invalidMaxItemsOnMap"`
 
 	// Invalid: UniqueItems marker on integer field
-	// +kubebuilder:validation:UniqueItems=true // want `marker "kubebuilder:validation:UniqueItems": type integer is not allowed \(expected one of: \[array\]\)`
 	InvalidUniqueItemsOnInteger int32 `json:"invalidUniqueItemsOnInteger"`
 
 	// Invalid: MinItems marker on boolean field
-	// +kubebuilder:validation:MinItems=1 // want `marker "kubebuilder:validation:MinItems": type boolean is not allowed \(expected one of: \[array\]\)`
 	InvalidMinItemsOnBoolean bool `json:"invalidMinItemsOnBoolean"`
 
 	// Invalid: MaxItems marker on struct field
-	// +kubebuilder:validation:MaxItems=10 // want `marker "kubebuilder:validation:MaxItems": type object is not allowed \(expected one of: \[array\]\)`
 	InvalidMaxItemsOnStruct ArrayItem `json:"invalidMaxItemsOnStruct"`
 
 	// Valid: Using named array type with markers
@@ -84,7 +78,6 @@ type ArrayMarkersFieldTest struct {
 	ValidBooleanArrayType BooleanArray `json:"validBooleanArrayType"`
 
 	// Invalid: Field marker on named array type (should use type definition)
-	// +kubebuilder:validation:MinItems=5 // want `marker "kubebuilder:validation:MinItems": marker should be declared on the type definition of FieldMarkerOnNamedArray instead of the field`
 	InvalidFieldMarkerOnNamedArray FieldMarkerOnNamedArray `json:"invalidFieldMarkerOnNamedArray"`
 
 	// Invalid: Using invalid named type with array marker
