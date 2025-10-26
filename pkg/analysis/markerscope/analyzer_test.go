@@ -30,6 +30,15 @@ func TestAnalyzerWarnOnly(t *testing.T) {
 	analysistest.Run(t, testdata, analyzer, "a")
 }
 
+func TestAnalyzerSuggestFixes(t *testing.T) {
+	testdata := analysistest.TestData()
+	cfg := &MarkerScopeConfig{
+		Policy: MarkerScopePolicySuggestFix,
+	}
+	analyzer := newAnalyzer(cfg)
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
+}
+
 func TestAnalyzerWithCustomMarkers(t *testing.T) {
 	testdata := analysistest.TestData()
 	cfg := &MarkerScopeConfig{
@@ -71,13 +80,4 @@ func TestAnalyzerWithCustomMarkers(t *testing.T) {
 	}
 	analyzer := newAnalyzer(cfg)
 	analysistest.Run(t, testdata, analyzer, "b")
-}
-
-func TestAnalyzerWithSuggestFix(t *testing.T) {
-	testdata := analysistest.TestData()
-	cfg := &MarkerScopeConfig{
-		Policy: MarkerScopePolicySuggestFix,
-	}
-	analyzer := newAnalyzer(cfg)
-	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "c")
 }
