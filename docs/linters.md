@@ -460,6 +460,35 @@ OpenAPI schema types map to Go types as follows:
 - `array`: []T, [N]T (slices and arrays)
 - `object`: struct, map[K]V
 
+#### Strict Type Constraints
+
+For markers with `AnyScope` and type constraints, the `strictTypeConstraint` flag controls where the marker should be declared when used with named types:
+
+- When `strictTypeConstraint` is `false` (default): The marker can be declared on either the field or the type definition.
+- When `strictTypeConstraint` is `true`: The marker must be declared on the type definition, not on fields using that type.
+
+Example with `strictTypeConstraint: true`:
+
+```go
+// ✅ Valid: marker on type definition
+// +kubebuilder:validation:Minimum=0
+type Port int32
+
+type Service struct {
+    Port Port `json:"port"`
+}
+
+// ❌ Invalid: marker on field using named type
+type Port int32
+
+type Service struct {
+    // +kubebuilder:validation:Minimum=0 // Error: should be on Port type definition
+    Port Port `json:"port"`
+}
+```
+
+Most built-in kubebuilder validation markers use `strictTypeConstraint: true` to encourage consistent marker placement on type definitions.
+
 ### Default Marker Rules
 
 The linter includes built-in rules for all standard kubebuilder markers and k8s declarative validation markers. Examples:
@@ -491,6 +520,7 @@ You can customize marker rules or add support for custom markers:
 lintersConfig:
   markerscope:
     policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `Warn`.
+    allowDangerousTypes: false # Allow dangerous number types (float32, float64). Defaults to `false`.
     markerRules:
       # Override default rule for a built-in marker
       "optional":
@@ -503,6 +533,7 @@ lintersConfig:
       # Add a custom marker with scope and type constraints
       "mycompany:validation:NumericLimit":
         scope: any
+        strictTypeConstraint: true # Require declaration on type definition for named types
         typeConstraint:
           allowedSchemaTypes:
             - integer
@@ -527,13 +558,22 @@ lintersConfig:
 **Type constraint fields:**
 - `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
 - `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
+- `strictTypeConstraint`: When `true`, markers with `AnyScope` and type constraints applied to fields using named types must be declared on the type definition instead of the field. Defaults to `false`.
 
 If a marker is not in `markerRules` and not in the default rules, no validation is performed for that marker.
 If a marker is in both `markerRules` and the default rules, your configuration takes precedence.
 
 ### Fixes
 
-The `markerscope` linter does not currently provide automatic fixes. It reports violations as warnings or errors based on the configured policy.
+When the `policy` is set to `SuggestFix`, the `markerscope` linter provides automatic fix suggestions for marker violations:
+
+1. **Scope violations**: For markers applied to the wrong scope (field vs type), the linter suggests moving the marker to the correct location.
+
+2. **Type constraint violations**: For markers applied to incompatible types, the linter suggests removing the invalid marker.
+
+3. **Named type violations**: For AnyScope markers with type constraints applied to fields using named types, the linter suggests moving the marker to the type definition if the underlying type is compatible with the marker's type constraints.
+
+When the `policy` is set to `Warn`, violations are reported as warnings without suggesting fixes.
 
 **Note**: This linter is not enabled by default and must be explicitly enabled in the configuration. 
 
