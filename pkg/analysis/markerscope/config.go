@@ -128,6 +128,11 @@ type MarkerScopeConfig struct {
 // Users can override these rules or add custom markers by providing a MarkerScopeConfig
 // with MarkerRules that will be merged with (and take precedence over) these defaults.
 //
+// Note: This function currently covers validation and SSA markers with type and struct constraints.
+// Markers from crd.go (e.g., resource, subresource) and pkg.go (e.g., groupName, versionName)
+// are not included as they don't have type or struct constraints and are out of scope for
+// this linter's current validation capabilities.
+//
 // ref: https://github.com/kubernetes-sigs/controller-tools/blob/v0.19.0/pkg/crd/markers/
 func DefaultMarkerRules() map[string]MarkerScopeRule {
 	rules := make(map[string]MarkerScopeRule)
@@ -142,9 +147,6 @@ func DefaultMarkerRules() map[string]MarkerScopeRule {
 	addGeneralMarkers(rules)
 	addSSATopologyMarkers(rules)
 	addArrayItemsMarkers(rules)
-
-	// TODO crd.go
-	// TODO package.go
 
 	return rules
 }
