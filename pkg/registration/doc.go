@@ -40,6 +40,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/notimestamp"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/references"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/ssatags"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/statusoptional"

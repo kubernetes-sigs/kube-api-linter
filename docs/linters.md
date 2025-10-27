@@ -18,6 +18,7 @@
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
+- [References](#references) - Ensures field names use Ref/Refs instead of Reference/References
 - [RequiredFields](#requiredfields) - Validates required field conventions
 - [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
@@ -554,6 +555,38 @@ If you prefer not to suggest fixes for pointers in required fields, you can chan
 
 If you prefer not to suggest fixes for `omitempty` in required fields, you can change the `omitempty.policy` to `Warn` or `Ignore`.
 If you prefer not to suggest fixes for `omitzero` in required fields, you can change the `omitzero.policy` to `Warn` and also not to consider `omitzero` policy at all, it can be set to `Forbid`.
+
+## References
+
+The `references` linter ensures that field names use 'Ref'/'Refs' suffixes instead of 'Reference'/'References'.
+
+By default, `references` is enabled and enforces this naming convention. The linter checks that:
+- Fields ending with 'Reference' are suggested to use 'Ref' instead
+- Fields ending with 'References' are suggested to use 'Refs' instead
+
+### Configuration
+
+```yaml
+lintersConfig:
+  references:
+    allowRefAndRefs: false | true # Allow Ref/Refs suffixes for OpenShift compatibility. Defaults to `false`.
+```
+
+**Default behavior (allowRefAndRefs=false):**
+- Reports errors for fields ending with 'Reference' or 'References'
+- Also reports errors for fields ending with 'Ref' or 'Refs' (unless they were corrected from Reference/References)
+
+**OpenShift compatibility (allowRefAndRefs=true):**
+- Reports errors for fields ending with 'Reference' or 'References'  
+- Allows fields ending with 'Ref' or 'Refs' without reporting errors
+
+### Fixes
+
+The `references` linter can automatically fix field names by replacing 'Reference' with 'Ref' and 'References' with 'Refs'.
+
+For example:
+- `NodeReference` will be suggested to be changed to `NodeRef`
+- `NodeReferences` will be suggested to be changed to `NodeRefs`
 
 ## SSATags
 
