@@ -6,6 +6,7 @@
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [DependentTags](#dependenttags) - Enforces dependencies between markers
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
@@ -91,6 +92,43 @@ If any of the 5 markers in the example above are missing, the linter will sugges
 
 When `usePatchStrategy` is set to `Ignore`, the linter will not suggest to add the `patchStrategy` and `patchMergeKey` tags to the `Conditions` field markers.
 When `usePatchStrategy` is set to `Forbid`, the linter will suggest to remove the `patchStrategy` and `patchMergeKey` tags from the `Conditions` field markers.
+
+## DependentTags
+
+The `dependenttags` linter enforces dependencies between markers. This prevents API inconsistencies where one marker requires the presence of another.
+
+The linter is configured with a main tag and a list of required dependent tags. If the main tag is present on a field, the linter checks for the presence of the dependent tags based on the `type` field:
+- `All`: Ensures that **all** of the dependent tags are present.
+- `Any`: Ensures that **at least one** of the dependent tags is present.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  dependenttags:
+    rules:
+      - identifier: "k8s:unionMember"
+        type: "All"
+        dependents:
+          - "k8s:optional"
+      - identifier: "listType"
+        type: "All"
+        dependents:
+          - "k8s:listType"
+      - identifier: "example:any"
+        type: "any"
+        dependents:
+          - "dep1"
+          - "dep2"
+```
+
+### Behavior
+
+This linter only checks for the presence or absence of markers; it does not inspect or enforce specific values within those markers. Therefore:
+
+- **Values:** The linter does not care about the values of the `identifier` or `dependent` markers. It only verifies if the markers themselves are present.
+- **Fixes:** This linter does not provide automatic fixes. It only reports violations.
+- **Same/Different Values:** Whether you want the same or different values between dependent markers is outside the scope of this linter. You would need other validation mechanisms (e.g., CEL validation) to enforce value-based dependencies.
 
 ## CommentStart
 
