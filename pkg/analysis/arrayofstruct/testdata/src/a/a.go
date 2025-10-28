@@ -57,7 +57,7 @@ type ValidPrimitiveArray struct {
 // Invalid cases - arrays of structs without any required fields
 
 type InvalidStruct struct {
-	Items []InvalidItem // want "field Items in struct InvalidStruct is an array of structs, but the struct has no required fields"
+	Items []InvalidItem // want "InvalidStruct.Items is an array of structs, but the struct has no required fields"
 }
 
 type InvalidItem struct {
@@ -69,7 +69,7 @@ type InvalidItem struct {
 }
 
 type InvalidStructWithPointer struct {
-	Items []*InvalidPointerItem // want "field Items in struct InvalidStructWithPointer is an array of structs, but the struct has no required fields"
+	Items []*InvalidPointerItem // want "InvalidStructWithPointer.Items is an array of structs, but the struct has no required fields"
 }
 
 type InvalidPointerItem struct {
@@ -79,7 +79,7 @@ type InvalidPointerItem struct {
 
 type InvalidStructWithInlineStruct struct {
 	// Inline struct definitions should also be checked
-	Items []struct { // want "field Items in struct InvalidStructWithInlineStruct is an array of structs, but the struct has no required fields"
+	Items []struct { // want "InvalidStructWithInlineStruct.Items is an array of structs, but the struct has no required fields"
 		// +optional
 		Name string
 	}
@@ -88,7 +88,7 @@ type InvalidStructWithInlineStruct struct {
 // Invalid case - struct with no markers at all
 
 type InvalidStructNoMarkers struct {
-	Items []InvalidItemNoMarkers // want "field Items in struct InvalidStructNoMarkers is an array of structs, but the struct has no required fields"
+	Items []InvalidItemNoMarkers // want "InvalidStructNoMarkers.Items is an array of structs, but the struct has no required fields"
 }
 
 type InvalidItemNoMarkers struct {
@@ -115,12 +115,20 @@ type AllRequiredItem struct {
 type ItemAlias = InvalidItem
 
 type InvalidStructWithAlias struct {
-	Items []ItemAlias // want "field Items in struct InvalidStructWithAlias is an array of structs, but the struct has no required fields"
+	Items []ItemAlias // want "InvalidStructWithAlias.Items is an array of structs, but the struct has no required fields"
+}
+
+// Test with array type alias
+
+type ArrayAlias = []InvalidItem
+
+type InvalidStructWithArrayAlias struct {
+	Items ArrayAlias // want "InvalidStructWithArrayAlias.Items is an array of structs, but the struct has no required fields"
 }
 
 // Valid case with multiple array fields
 
 type ValidMultipleArrays struct {
 	ValidItems   []ValidItem
-	InvalidItems []InvalidItem // want "field InvalidItems in struct ValidMultipleArrays is an array of structs, but the struct has no required fields"
+	InvalidItems []InvalidItem // want "ValidMultipleArrays.InvalidItems is an array of structs, but the struct has no required fields"
 }

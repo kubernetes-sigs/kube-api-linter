@@ -80,8 +80,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 		return
 	}
 
-	// Report the issue with a suggested fix
-	reportArrayOfStructIssue(pass, field, structType, markersAccess)
+	reportArrayOfStructIssue(pass, field)
 }
 
 // getArrayElementType extracts the element type from an array field.
@@ -109,31 +108,23 @@ func getArrayElementType(pass *analysis.Pass, field *ast.Field) ast.Expr {
 }
 
 // reportArrayOfStructIssue reports a diagnostic for an array of structs without required fields.
-func reportArrayOfStructIssue(pass *analysis.Pass, field *ast.Field, structType *ast.StructType, markersAccess markershelper.Markers) {
+func reportArrayOfStructIssue(pass *analysis.Pass, field *ast.Field) {
 	fieldName := utils.FieldName(field)
 	structName := utils.GetStructNameForField(pass, field)
 
 	var prefix string
 	if structName != "" {
-		prefix = fmt.Sprintf("field %s in struct %s", fieldName, structName)
+		prefix = fmt.Sprintf("%s.%s", structName, fieldName)
 	} else {
-		prefix = fmt.Sprintf("field %s", fieldName)
+		prefix = fieldName
 	}
 
 	message := fmt.Sprintf("%s is an array of structs, but the struct has no required fields. At least one field should be marked as %s to prevent ambiguous YAML configurations", prefix, markers.RequiredMarker)
 
-	// Create suggested fix to add +required marker and remove +optional marker from the first field
-	suggestedFix := createSuggestedFix(structType, markersAccess)
-
-	if suggestedFix != nil {
-		pass.Report(analysis.Diagnostic{
-			Pos:            field.Pos(),
-			Message:        message,
-			SuggestedFixes: []analysis.SuggestedFix{*suggestedFix},
-		})
-	} else {
-		pass.Reportf(field.Pos(), "%s", message)
-	}
+	pass.Report(analysis.Diagnostic{
+		Pos:     field.Pos(),
+		Message: message,
+	})
 }
 
 // isObjectType checks if the given expression represents an object type (not a primitive).
@@ -159,8 +150,9 @@ func isObjectType(pass *analysis.Pass, expr ast.Expr) bool {
 		// Pointer to something, check what it points to
 		return isObjectType(pass, et.X)
 	case *ast.SelectorExpr:
-		// Type from another package, assume it's an object
-		return true
+		// Type from another package, we can't inspect it
+		// Return false to be conservative and skip checking these fields
+		return false
 	default:
 		return false
 	}
@@ -196,80 +188,6 @@ func getStructType(pass *analysis.Pass, expr ast.Expr) *ast.StructType {
 	default:
 		return nil
 	}
-}
-
-// createSuggestedFix creates a suggested fix that adds a +required marker
-// and removes any +optional markers from the first field in the struct.
-func createSuggestedFix(structType *ast.StructType, markersAccess markershelper.Markers) *analysis.SuggestedFix {
-	if structType.Fields == nil || len(structType.Fields.List) == 0 {
-		return nil
-	}
-
-	firstField := structType.Fields.List[0]
-	fieldMarkers := markersAccess.FieldMarkers(firstField)
-
-	// Remove all optional markers and track which ones were removed
-	textEdits, removedMarkers := removeOptionalMarkers(fieldMarkers)
-
-	// Add the +required marker before the field
-	textEdits = append(textEdits, analysis.TextEdit{
-		Pos:     firstField.Pos(),
-		End:     firstField.Pos(),
-		NewText: fmt.Appendf(nil, "// +%s\n\t", markers.RequiredMarker),
-	})
-
-	return &analysis.SuggestedFix{
-		Message:   buildFixMessage(removedMarkers),
-		TextEdits: textEdits,
-	}
-}
-
-// removeOptionalMarkers removes all optional marker types from a field
-// and returns the text edits and a list of marker names that were removed.
-func removeOptionalMarkers(fieldMarkers markershelper.MarkerSet) ([]analysis.TextEdit, []string) {
-	var (
-		textEdits      []analysis.TextEdit
-		removedMarkers []string
-	)
-
-	// Define all optional marker types to remove
-	optionalMarkerTypes := []string{
-		markers.OptionalMarker,
-		markers.KubebuilderOptionalMarker,
-		markers.K8sOptionalMarker,
-	}
-
-	for _, markerType := range optionalMarkerTypes {
-		markerList := fieldMarkers[markerType]
-		if len(markerList) > 0 {
-			removedMarkers = append(removedMarkers, markerType)
-
-			for _, marker := range markerList {
-				textEdits = append(textEdits, analysis.TextEdit{
-					Pos:     marker.Pos,
-					End:     marker.End + 1, // +1 to include the newline
-					NewText: nil,
-				})
-			}
-		}
-	}
-
-	return textEdits, removedMarkers
-}
-
-// buildFixMessage constructs the suggested fix message based on which markers were removed.
-func buildFixMessage(removedMarkers []string) string {
-	if len(removedMarkers) == 0 {
-		return fmt.Sprintf("Add `// +%s` marker to the first field", markers.RequiredMarker)
-	}
-
-	if len(removedMarkers) == 1 {
-		return fmt.Sprintf("Add `// +%s` marker and remove `// +%s` marker from the first field",
-			markers.RequiredMarker, removedMarkers[0])
-	}
-
-	return fmt.Sprintf("Add `// +%s` marker and remove optional markers from the first field",
-		markers.RequiredMarker)
 }
 
 // hasRequiredField checks if at least one field in the struct has a required marker.

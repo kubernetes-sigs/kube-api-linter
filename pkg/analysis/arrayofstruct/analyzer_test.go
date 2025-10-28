@@ -24,5 +24,5 @@ import (
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, arrayofstruct.Analyzer, "a")
+	analysistest.Run(t, testdata, arrayofstruct.Analyzer, "a")
 }
