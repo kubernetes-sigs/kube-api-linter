@@ -201,12 +201,26 @@ func extractFieldMarkers(field *ast.Field, results *markers) {
 	results.insertFieldMarkers(field, fieldMarkers)
 }
 
+// validMarkerStart validates that a marker starts with an alphabetic character
+// and contains only valid marker content (letters, numbers, colons, parentheses, quotes, spaces, and commas).
+// This excludes markdown tables (e.g., "-------") and other non-marker content,
+// while supporting declarative validation tags with parentheses and nested markers.
+var validMarkerStart = regexp.MustCompile(`^[a-zA-Z]([a-zA-Z0-9:\(\)\"\" ,])+=?`)
+
 func extractMarker(comment *ast.Comment) Marker {
 	if !strings.HasPrefix(comment.Text, "// +") {
 		return Marker{}
 	}
 
 	markerContent := strings.TrimPrefix(comment.Text, "// +")
+
+	// Valid markers must start with an alphabetic character (a-zA-Z).
+	// This excludes markdown tables (e.g., "// +-------") and other non-marker content,
+	// while supporting declarative validation tags that may include parentheses and nested markers.
+	if !validMarkerStart.MatchString(markerContent) {
+		return Marker{}
+	}
+
 	id, expressions := extractMarkerIDAndExpressions(DefaultRegistry(), markerContent)
 
 	return Marker{
