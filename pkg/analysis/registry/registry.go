@@ -21,9 +21,9 @@ import (
 	"sync"
 
 	"golang.org/x/tools/go/analysis"
-	"gopkg.in/yaml.v3"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/yaml"
 
 	kerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
