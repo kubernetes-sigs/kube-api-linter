@@ -25,12 +25,12 @@ Naming conventions must have:
 - A unique human-readable name.
 - A human-readable message to be included in violation errors.
 - A regular expression that will match text within the field name that violates the convention.
-- A defined "operation". Allowed operations are "Inform", "Drop", "DropField", and "Replace".
+- A defined "operation". Allowed operations are "Inform", "Drop", "DropField", and "Replacement".
 
 The "Inform" operation will simply inform via a linter error when a field name violates the naming convention.
 The "Drop" operation will suggest a fix that drops violating text from the field name.
 The "DropField" operation will suggest a fix that removes the field in it's entirety.
-The "Replace" operation will suggest a fix that replaces the violating text in the field name with a defined replacement value.
+The "Replacement" operation will suggest a fix that replaces the violating text in the field name with a defined replacement value.
 
 Some example configurations:
 

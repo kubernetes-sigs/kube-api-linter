@@ -339,12 +339,12 @@ Naming conventions must have:
 - A unique human-readable name.
 - A human-readable message to be included in violation errors.
 - A regular expression that will match text within the field name that violates the convention.
-- A defined "operation". Allowed operations are `Inform`, `Drop`, `DropField`, and `Replace`.
+- A defined "operation". Allowed operations are `Inform`, `Drop`, `DropField`, and `Replacement`.
 
 The `Inform` operation will simply inform when a field name violates the naming convention.
 The `Drop` operation will suggest a fix that drops violating text from the field name.
 The `DropField` operation will suggest a fix that removes the field in it's entirety.
-The `Replace` operation will suggest a fix that replaces the violating text in the field name with a defined replacement value.
+The `Replacement` operation will suggest a fix that replaces the violating text in the field name with a defined replacement value.
 
 High-level configuration overview:
 ```yaml
@@ -353,8 +353,8 @@ linterConfig:
     conventions: 
       - name: {human readable string} # must be unique
         violationMatcher: {regular expression}
-        operation: Inform | Drop | DropField | Replace
-        replace: { replacement string } # required when operation is 'Replace', forbidden otherwise
+        operation: Inform | Drop | DropField | Replacement
+        replacement: { replacement string } # required when operation is 'Replacement', forbidden otherwise
         message: {human readable string}
 ```
 
@@ -400,8 +400,8 @@ linterConfig:
     conventions:
       - name: BritishEnglishColour 
         violationMatcher: (?i)color
-        operation: Replace
-        replace: colour
+        operation: Replacement
+        replacement: colour
         message: prefer 'colour' over 'color' when referring to colours in field names
 ```
 
