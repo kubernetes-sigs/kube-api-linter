@@ -1,5 +1,6 @@
 # Linters
 
+- [ArrayOfStruct](#arrayofstruct) - Ensures arrays of structs have at least one required field
 - [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
@@ -23,6 +24,27 @@
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
 - [StatusSubresource](#statussubresource) - Validates status subresource configuration
 - [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
+
+## ArrayOfStruct
+
+The `arrayofstruct` linter checks that arrays containing structs have at least one required field to prevent ambiguous YAML representations.
+
+When an array contains structs where all fields are optional or unmarked, it becomes difficult to distinguish between different array elements in YAML configurations. This can lead to ambiguous or confusing API definitions.
+
+The linter enforces that at least one field in the struct must be marked with one of the following required markers:
+- `// +required`
+- `// +kubebuilder:validation:Required`
+- `// +k8s:required`
+
+This applies to:
+- Direct array fields containing struct types
+- Arrays of pointers to struct types
+- Arrays of inline struct definitions
+- Arrays using type aliases that resolve to struct types
+
+The linter does not check:
+- Arrays of primitive types (strings, integers, etc.)
+- Arrays of types from external packages (cannot inspect their fields)
 
 ## Conditions
 

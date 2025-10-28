@@ -23,6 +23,7 @@ Instead, use blank imports in your own registry invocation.
 package registration
 
 import (
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/arrayofstruct"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/conflictingmarkers"
