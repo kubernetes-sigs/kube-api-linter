@@ -57,7 +57,7 @@ type ValidPrimitiveArray struct {
 // Invalid cases - arrays of structs without any required fields
 
 type InvalidStruct struct {
-	Items []InvalidItem // want "InvalidStruct.Items is an array of structs, but the struct has no required fields"
+	Items []InvalidItem // want "InvalidStruct.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 }
 
 type InvalidItem struct {
@@ -69,7 +69,7 @@ type InvalidItem struct {
 }
 
 type InvalidStructWithPointer struct {
-	Items []*InvalidPointerItem // want "InvalidStructWithPointer.Items is an array of structs, but the struct has no required fields"
+	Items []*InvalidPointerItem // want "InvalidStructWithPointer.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 }
 
 type InvalidPointerItem struct {
@@ -79,7 +79,7 @@ type InvalidPointerItem struct {
 
 type InvalidStructWithInlineStruct struct {
 	// Inline struct definitions should also be checked
-	Items []struct { // want "InvalidStructWithInlineStruct.Items is an array of structs, but the struct has no required fields"
+	Items []struct { // want "InvalidStructWithInlineStruct.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 		// +optional
 		Name string
 	}
@@ -88,7 +88,7 @@ type InvalidStructWithInlineStruct struct {
 // Invalid case - struct with no markers at all
 
 type InvalidStructNoMarkers struct {
-	Items []InvalidItemNoMarkers // want "InvalidStructNoMarkers.Items is an array of structs, but the struct has no required fields"
+	Items []InvalidItemNoMarkers // want "InvalidStructNoMarkers.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 }
 
 type InvalidItemNoMarkers struct {
@@ -115,7 +115,7 @@ type AllRequiredItem struct {
 type ItemAlias = InvalidItem
 
 type InvalidStructWithAlias struct {
-	Items []ItemAlias // want "InvalidStructWithAlias.Items is an array of structs, but the struct has no required fields"
+	Items []ItemAlias // want "InvalidStructWithAlias.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 }
 
 // Test with array type alias
@@ -123,12 +123,30 @@ type InvalidStructWithAlias struct {
 type ArrayAlias = []InvalidItem
 
 type InvalidStructWithArrayAlias struct {
-	Items ArrayAlias // want "InvalidStructWithArrayAlias.Items is an array of structs, but the struct has no required fields"
+	Items ArrayAlias // want "InvalidStructWithArrayAlias.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 }
 
 // Valid case with multiple array fields
 
 type ValidMultipleArrays struct {
 	ValidItems   []ValidItem
-	InvalidItems []InvalidItem // want "ValidMultipleArrays.InvalidItems is an array of structs, but the struct has no required fields"
+	InvalidItems []InvalidItem // want "ValidMultipleArrays.InvalidItems is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
+}
+
+// Valid case - type alias to basic type (should not trigger linter)
+
+type StringAlias = string
+
+type ValidStructWithBasicTypeAlias struct {
+	// This should not trigger the linter because StringAlias resolves to string, a basic type
+	Items []StringAlias
+}
+
+// Valid case - custom type wrapping basic type (should not trigger linter)
+
+type CustomString string
+
+type ValidStructWithCustomBasicType struct {
+	// This should not trigger the linter because CustomString is based on string, a basic type
+	Items []CustomString
 }
