@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 // SerializationCheck is an interface for checking serialization of fields.
@@ -208,18 +209,9 @@ func (s *serializationCheck) handleFieldShouldHaveOmitZero(pass *analysis.Pass, 
 func (s *serializationCheck) handleFieldShouldBePointer(pass *analysis.Pass, field *ast.Field, fieldName string, isPointer bool, underlying ast.Expr, markersAccess markershelper.Markers, reason string) {
 	if utils.IsPointerType(pass, underlying) {
 		if isPointer {
-			// Check if this is a pointer-to-slice/map with explicit MinItems=0 or MinProperties=0
-			// In this case, the pointer is intentional to distinguish nil from empty
-			if hasExplicitZeroMinValidation(pass, field, underlying, markersAccess) {
-				return
-			}
-
-			switch s.pointerPolicy {
-			case PointersPolicySuggestFix:
-				reportShouldRemovePointer(pass, field, PointersPolicySuggestFix, fieldName, "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
-			case PointersPolicyWarn:
-				pass.Reportf(field.Pos(), "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
-			}
+			s.handlePointerToPointerType(pass, field, fieldName, underlying, markersAccess)
+		} else if s.pointerPreference == PointersPreferenceAlways {
+			s.handleNonPointerToPointerType(pass, field, fieldName, underlying, markersAccess)
 		}
 
 		return
@@ -229,6 +221,35 @@ func (s *serializationCheck) handleFieldShouldBePointer(pass *analysis.Pass, fie
 		return
 	}
 
+	s.reportShouldAddPointerMessage(pass, field, fieldName, reason)
+}
+
+func (s *serializationCheck) handlePointerToPointerType(pass *analysis.Pass, field *ast.Field, fieldName string, underlying ast.Expr, markersAccess markershelper.Markers) {
+	// Check if this is a pointer-to-slice/map with explicit MinItems=0 or MinProperties=0
+	// In this case, the pointer is intentional to distinguish nil from empty
+	if hasExplicitZeroMinValidation(pass, field, underlying, markersAccess) {
+		return
+	}
+
+	switch s.pointerPolicy {
+	case PointersPolicySuggestFix:
+		reportShouldRemovePointer(pass, field, PointersPolicySuggestFix, fieldName, "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
+	case PointersPolicyWarn:
+		pass.Reportf(field.Pos(), "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
+	}
+}
+
+func (s *serializationCheck) handleNonPointerToPointerType(pass *analysis.Pass, field *ast.Field, fieldName string, underlying ast.Expr, markersAccess markershelper.Markers) {
+	// Check if this is a slice/map WITHOUT a pointer but with explicit MinItems=0 or MinProperties=0
+	// In this case, we should suggest adding a pointer to distinguish nil from empty
+	if !hasExplicitZeroMinValidation(pass, field, underlying, markersAccess) {
+		return
+	}
+
+	s.reportShouldAddPointerMessage(pass, field, fieldName, "with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil (unset) from empty.")
+}
+
+func (s *serializationCheck) reportShouldAddPointerMessage(pass *analysis.Pass, field *ast.Field, fieldName, reason string) {
 	switch s.pointerPolicy {
 	case PointersPolicySuggestFix:
 		reportShouldAddPointer(pass, field, PointersPolicySuggestFix, fieldName, "field %s %s", fieldName, reason)
@@ -252,17 +273,22 @@ func (s *serializationCheck) handleFieldShouldNotBePointer(pass *analysis.Pass, 
 }
 
 // hasExplicitZeroMinValidation checks if a field has an explicit MinItems=0 or MinProperties=0 marker.
-// This indicates the developer intentionally wants to distinguish between nil and empty for slices/maps.
+// This indicates the developer intentionally wants to distinguish between nil and empty for slices/maps:
+//   - nil: field not provided by the user, use defaults or treat as unset
+//   - []/{}:  explicitly set to empty by the user
+//
+// Using a pointer allows preserving this semantic difference, which is why MinItems=0/MinProperties=0
+// combined with a pointer is a valid pattern despite slices/maps being reference types.
 func hasExplicitZeroMinValidation(pass *analysis.Pass, field *ast.Field, underlying ast.Expr, markersAccess markershelper.Markers) bool {
 	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	switch underlying.(type) {
 	case *ast.ArrayType:
 		// Check for explicit MinItems=0
-		return fieldMarkers.HasWithValue("kubebuilder:validation:MinItems=0")
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker + "=0")
 	case *ast.MapType:
 		// Check for explicit MinProperties=0
-		return fieldMarkers.HasWithValue("kubebuilder:validation:MinProperties=0")
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker + "=0")
 	}
 
 	return false

@@ -1,6 +1,9 @@
 package a
 
 type TestPointerToSliceWithMinZero struct {
+	// Pointer to slice with MinItems=0 allows distinguishing:
+	// - nil (unset, use defaults)
+	// - [] (explicitly empty)
 	// +kubebuilder:validation:MinItems=0
 	PtrArrayWithZeroMinItems *[]string `json:"ptrArrayWithZeroMinItems,omitempty"`
 
@@ -9,6 +12,9 @@ type TestPointerToSliceWithMinZero struct {
 }
 
 type TestPointerToMapWithMinZero struct {
+	// Pointer to map with MinProperties=0 allows distinguishing:
+	// - nil (unset, use defaults)
+	// - {} (explicitly empty)
 	// +kubebuilder:validation:MinProperties=0
 	MapPtrWithZeroMinProperties *map[string]string `json:"mapPtrWithZeroMinProperties,omitempty"`
 
