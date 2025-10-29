@@ -58,9 +58,17 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 	}
 
 	// Validate marker rules
-	for marker, rule := range cfg.MarkerRules {
+	for i, rule := range cfg.MarkerRules {
+		markerRulePath := fldPath.Child("markerRules").Index(i)
+
+		// Validate that name is not empty
+		if rule.Name == "" {
+			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("name"), "marker name is required"))
+			continue
+		}
+
 		if err := validateMarkerRule(rule); err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("markerRules", marker), rule, err.Error()))
+			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath, rule, err.Error()))
 		}
 	}
 
@@ -69,14 +77,16 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 
 func validateMarkerRule(rule MarkerScopeRule) error {
 	// Validate scope constraint
-	if rule.Scope == 0 {
-		return errScopeNonZero
+	if rule.Scope == "" {
+		return errScopeRequired
 	}
 
-	// Validate that scope is a valid combination of FieldScope and/or TypeScope
-	validScopes := FieldScope | TypeScope
-	if rule.Scope&^validScopes != 0 {
-		return errInvalidScopeBits
+	// Validate that scope is a valid value
+	switch rule.Scope {
+	case FieldScope, TypeScope, AnyScope:
+		// Valid scope
+	default:
+		return &InvalidScopeConstraintError{Scope: string(rule.Scope)}
 	}
 
 	// Validate type constraint if present

@@ -73,13 +73,14 @@ var _ = Describe("markerscope initializer", func() {
 				config: markerscope.MarkerScopeConfig{
 					Policy: "invalid-policy",
 				},
-				expectedErr: `markerscope.policy: Invalid value: "invalid-policy": invalid policy, must be one of: "warn", "suggest_fix"`,
+				expectedErr: `markerscope.policy: Invalid value: "invalid-policy": invalid policy, must be one of: "Warn", "SuggestFix"`,
 			}),
 
 			Entry("With valid marker rules", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:marker": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:marker",
 							Scope: markerscope.FieldScope,
 						},
 					},
@@ -87,32 +88,35 @@ var _ = Describe("markerscope initializer", func() {
 				expectedErr: "",
 			}),
 
-			Entry("With marker rule having zero scope", testCase{
+			Entry("With marker rule having empty scope", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:marker": {
-							Scope: 0,
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:marker",
+							Scope: "",
 						},
 					},
 				},
-				expectedErr: `markerscope.markerRules.custom:marker: Invalid value: markerscope.MarkerScopeRule{Scope:0x0, StrictTypeConstraint:false, TypeConstraint:(*markerscope.TypeConstraint)(nil)}: scope must be non-zero`,
+				expectedErr: `scope is required`,
 			}),
 
-			Entry("With marker rule having invalid scope bits", testCase{
+			Entry("With marker rule having invalid scope value", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:marker": {
-							Scope: 8, // Invalid bit
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:marker",
+							Scope: "invalid",
 						},
 					},
 				},
-				expectedErr: `markerscope.markerRules.custom:marker: Invalid value: markerscope.MarkerScopeRule{Scope:0x8, StrictTypeConstraint:false, TypeConstraint:(*markerscope.TypeConstraint)(nil)}: invalid scope bits`,
+				expectedErr: `invalid scope: "invalid" (must be one of: Field, Type, Any)`,
 			}),
 
 			Entry("With marker rule having invalid schema type", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:marker": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:marker",
 							Scope: markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{"invalid-type"},
@@ -125,8 +129,9 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with string type", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:string-marker": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:string-marker",
 							Scope: markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeString},
@@ -139,8 +144,9 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with integer type", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:integer-marker": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:integer-marker",
 							Scope: markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeInteger},
@@ -153,8 +159,9 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with multiple types", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:numeric-marker": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name: "custom:numeric-marker",
 							Scope: markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{
@@ -170,8 +177,9 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with element constraint", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:string-array": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:string-array",
 							Scope: markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeArray},
@@ -187,8 +195,9 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With invalid element constraint", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:invalid-array": {
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:invalid-array",
 							Scope: markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeArray},
@@ -202,11 +211,12 @@ var _ = Describe("markerscope initializer", func() {
 				expectedErr: `invalid type constraint: invalid element constraint: invalid schema type: "invalid-type"`,
 			}),
 
-			Entry("With both field and type scope", testCase{
+			Entry("With Any scope (field and type)", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: map[string]markerscope.MarkerScopeRule{
-						"custom:flexible-marker": {
-							Scope: markerscope.FieldScope | markerscope.TypeScope,
+					MarkerRules: []markerscope.MarkerScopeRule{
+						{
+							Name:  "custom:flexible-marker",
+							Scope: markerscope.AnyScope,
 						},
 					},
 				},
@@ -233,8 +243,9 @@ var _ = Describe("markerscope initializer", func() {
 		It("should initialize analyzer with custom markers", func() {
 			cfg := &markerscope.MarkerScopeConfig{
 				Policy: markerscope.MarkerScopePolicyWarn,
-				MarkerRules: map[string]markerscope.MarkerScopeRule{
-					"custom:marker": {
+				MarkerRules: []markerscope.MarkerScopeRule{
+					{
+						Name:  "custom:marker",
 						Scope: markerscope.FieldScope,
 					},
 				},

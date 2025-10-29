@@ -60,8 +60,11 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		cfg = &MarkerScopeConfig{}
 	}
 
+	// Convert list of marker rules to map
+	customRules := markerRulesListToMap(cfg.MarkerRules)
+
 	a := &analyzer{
-		markerRules:         mergeMarkerRules(DefaultMarkerRules(), cfg.MarkerRules),
+		markerRules:         mergeMarkerRules(DefaultMarkerRules(), customRules),
 		policy:              cfg.Policy,
 		allowDangerousTypes: cfg.AllowDangerousTypes,
 	}
@@ -85,6 +88,17 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		Requires:         []*analysis.Analyzer{inspect.Analyzer, markershelper.Analyzer},
 		RunDespiteErrors: true,
 	}
+}
+
+// markerRulesListToMap converts a list of marker rules to a map keyed by marker name.
+func markerRulesListToMap(rules []MarkerScopeRule) map[string]MarkerScopeRule {
+	result := make(map[string]MarkerScopeRule, len(rules))
+	for _, rule := range rules {
+		if rule.Name != "" {
+			result[rule.Name] = rule
+		}
+	}
+	return result
 }
 
 // mergeMarkerRules merges custom marker rules with default marker rules.

@@ -523,16 +523,16 @@ lintersConfig:
     allowDangerousTypes: false # Allow dangerous number types (float32, float64). Defaults to `false`.
     markerRules:
       # Override default rule for a built-in marker
-      "optional":
-        scope: field  # or: type, any
+      - name: "optional"
+        scope: Field  # or: Type, Any
 
       # Add a custom marker with scope constraint only
-      "mycompany:validation:CustomMarker":
-        scope: any
+      - name: "mycompany:validation:CustomMarker"
+        scope: Any
 
       # Add a custom marker with scope and type constraints
-      "mycompany:validation:NumericLimit":
-        scope: any
+      - name: "mycompany:validation:NumericLimit"
+        scope: Any
         strictTypeConstraint: true # Require declaration on type definition for named types
         typeConstraint:
           allowedSchemaTypes:
@@ -540,8 +540,8 @@ lintersConfig:
             - number
 
       # Add a custom array items marker with element type constraint
-      "mycompany:validation:items:StringFormat":
-        scope: any
+      - name: "mycompany:validation:items:StringFormat"
+        scope: Any
         typeConstraint:
           allowedSchemaTypes:
             - array
@@ -551,9 +551,9 @@ lintersConfig:
 ```
 
 **Scope values:**
-- `field`: FieldScope - marker can only be on fields
-- `type`: TypeScope - marker can only be on types
-- `any`: AnyScope - marker can be on fields or types
+- `Field`: FieldScope - marker can only be on fields
+- `Type`: TypeScope - marker can only be on types
+- `Any`: AnyScope - marker can be on fields or types
 
 **Type constraint fields:**
 - `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)

@@ -43,31 +43,36 @@ func TestAnalyzerWithCustomMarkers(t *testing.T) {
 	testdata := analysistest.TestData()
 	cfg := &MarkerScopeConfig{
 		Policy: MarkerScopePolicyWarn,
-		MarkerRules: map[string]MarkerScopeRule{
+		MarkerRules: []MarkerScopeRule{
 			// Custom field-only marker
-			"custom:field-only": {
+			{
+				Name:  "custom:field-only",
 				Scope: FieldScope,
 			},
 			// Custom type-only marker
-			"custom:type-only": {
+			{
+				Name:  "custom:type-only",
 				Scope: TypeScope,
 			},
 			// Custom marker with string type constraint
-			"custom:string-only": {
+			{
+				Name:  "custom:string-only",
 				Scope: FieldScope,
 				TypeConstraint: &TypeConstraint{
 					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
 				},
 			},
 			// Custom marker with integer type constraint
-			"custom:integer-only": {
+			{
+				Name:  "custom:integer-only",
 				Scope: FieldScope,
 				TypeConstraint: &TypeConstraint{
 					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 				},
 			},
 			// Custom marker with array of strings constraint
-			"custom:string-array": {
+			{
+				Name:  "custom:string-array",
 				Scope: FieldScope,
 				TypeConstraint: &TypeConstraint{
 					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
