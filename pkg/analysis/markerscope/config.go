@@ -21,36 +21,24 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
-// ScopeConstraint defines where a marker is allowed to be placed using bit flags.
-type ScopeConstraint uint8
+// ScopeConstraint defines where a marker is allowed to be placed.
+type ScopeConstraint string
 
 const (
 	// FieldScope indicates the marker can be placed on fields.
-	FieldScope ScopeConstraint = 1 << iota
+	FieldScope ScopeConstraint = "Field"
 	// TypeScope indicates the marker can be placed on type definitions.
-	TypeScope
-
+	TypeScope ScopeConstraint = "Type"
 	// AnyScope indicates the marker can be placed on either fields or types.
-	AnyScope = FieldScope | TypeScope
+	AnyScope ScopeConstraint = "Any"
 )
-
-// String returns a human-readable representation of the scope constraint.
-func (s ScopeConstraint) String() string {
-	switch s {
-	case FieldScope:
-		return "field"
-	case TypeScope:
-		return "type"
-	case AnyScope:
-		return "any"
-	default:
-		return "unknown"
-	}
-}
 
 // Allows checks if the given scope is allowed by this constraint.
 func (s ScopeConstraint) Allows(scope ScopeConstraint) bool {
-	return s&scope != 0
+	if s == AnyScope {
+		return true
+	}
+	return s == scope
 }
 
 // TypeConstraint defines what types a marker can be applied to.
@@ -69,6 +57,10 @@ type TypeConstraint struct {
 
 // MarkerScopeRule defines comprehensive scope validation rules for a marker.
 type MarkerScopeRule struct {
+	// Name is the marker identifier (e.g., "optional", "kubebuilder:validation:Minimum").
+	// This field is only used when MarkerScopeRule is part of a list configuration.
+	Name string `json:"name,omitempty"`
+
 	// Scope specifies where the marker can be placed (field vs type).
 	Scope ScopeConstraint
 
@@ -89,29 +81,29 @@ type MarkerScopePolicy string
 
 const (
 	// MarkerScopePolicyWarn only reports warnings without suggesting fixes.
-	MarkerScopePolicyWarn MarkerScopePolicy = "warn"
+	MarkerScopePolicyWarn MarkerScopePolicy = "Warn"
 
 	// MarkerScopePolicySuggestFix reports warnings and suggests automatic fixes.
-	MarkerScopePolicySuggestFix MarkerScopePolicy = "suggest_fix"
+	MarkerScopePolicySuggestFix MarkerScopePolicy = "SuggestFix"
 )
 
 // MarkerScopeConfig contains configuration for marker scope validation.
 type MarkerScopeConfig struct {
-	// MarkerRules maps marker names to their scope rules with scope and type constraints.
-	// This map can be used to:
+	// MarkerRules is a list of marker rules with scope and type constraints.
+	// This list can be used to:
 	//   - Override default rules for built-in markers (from DefaultMarkerRules)
 	//   - Add rules for custom markers not included in DefaultMarkerRules
 	//
-	// If a marker is not in this map AND not in DefaultMarkerRules(), no scope validation is performed.
-	// If a marker is in both this map and DefaultMarkerRules(), this map takes precedence.
+	// If a marker is not in this list AND not in DefaultMarkerRules(), no scope validation is performed.
+	// If a marker is in both this list and DefaultMarkerRules(), this list takes precedence.
 	//
 	// Example: Adding a custom marker
 	//   markerRules:
-	//     "mycompany:validation:CustomMarker":
+	//     - name: "mycompany:validation:CustomMarker"
 	//       scope: any
 	//       typeConstraint:
 	//         allowedSchemaTypes: ["string"]
-	MarkerRules map[string]MarkerScopeRule `json:"markerRules,omitempty"`
+	MarkerRules []MarkerScopeRule `json:"markerRules,omitempty"`
 
 	// AllowDangerousTypes specifies if dangerous types are allowed.
 	// If true, dangerous types are allowed.

@@ -21,9 +21,17 @@ import (
 )
 
 var (
-	errScopeNonZero     = errors.New("scope must be non-zero")
-	errInvalidScopeBits = errors.New("invalid scope bits")
+	errScopeRequired = errors.New("scope is required")
 )
+
+// InvalidScopeConstraintError represents an error when a scope constraint is invalid.
+type InvalidScopeConstraintError struct {
+	Scope string
+}
+
+func (e *InvalidScopeConstraintError) Error() string {
+	return fmt.Sprintf("invalid scope: %q (must be one of: Field, Type, Any)", e.Scope)
+}
 
 // InvalidSchemaTypeError represents an error when a schema type is invalid.
 type InvalidSchemaTypeError struct {
