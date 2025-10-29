@@ -107,7 +107,7 @@ func testSerializationAnalyzer(cfg *serialization.Config) *analysis.Analyzer {
 				return nil, errCouldNotGetInspector
 			}
 
-			inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
+			inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
 				serialization.New(cfg).Check(pass, field, markersAccess, jsonTagInfo)
 			})
 
