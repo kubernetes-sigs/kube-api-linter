@@ -16,12 +16,22 @@ limitations under the License.
 package defaultorrequired
 
 import (
+	"errors"
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conflictingmarkers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
-const name = "defaultorrequired"
+const (
+	name = "defaultorrequired"
+	doc  = "Checks that fields marked as required do not have default values applied"
+)
+
+var errUnexpectedInitializerType = errors.New("expected conflictingmarkers.Initializer() to be of type initializer.ConfigurableAnalyzerInitializer, but was not")
 
 // newAnalyzer creates a new analyzer that wraps conflictingmarkers with a predefined configuration
 // for checking default and required marker conflicts.
@@ -39,12 +49,23 @@ func newAnalyzer() *analysis.Analyzer {
 		},
 	}
 
-	// Create the underlying conflicting markers analyzer
-	analyzer := conflictingmarkers.NewAnalyzer(cfg)
+	configInit, ok := conflictingmarkers.Initializer().(initializer.ConfigurableAnalyzerInitializer)
+	if !ok {
+		panic(fmt.Errorf("getting initializer: %w", errUnexpectedInitializerType))
+	}
 
-	// Override the name to match this linter
+	errs := configInit.ValidateConfig(cfg, field.NewPath("defaultorrequired"))
+	if err := errs.ToAggregate(); err != nil {
+		panic(fmt.Errorf("defaultorrequired linter has an invalid conflictingmarkers configuration: %w", err))
+	}
+
+	analyzer, err := configInit.Init(cfg)
+	if err != nil {
+		panic(fmt.Errorf("defaultorrequired linter encountered an error initializing wrapped conflictingmarkers analyzer: %w", err))
+	}
+
 	analyzer.Name = name
-	analyzer.Doc = "Checks that fields marked as required do not have default values applied"
+	analyzer.Doc = doc
 
 	return analyzer
 }
