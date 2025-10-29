@@ -16,8 +16,8 @@ type TestMaps struct {
 	MapWithPositiveMinPropertiesWithOmitEmpty map[string]string `json:"mapWithPositiveMinPropertiesWithOmitEmpty,omitempty"`
 
 	// +kubebuilder:validation:MinProperties=0
-	MapWithZeroMinProperties map[string]string `json:"mapWithZeroMinProperties"` // want "field MapWithZeroMinProperties should have the omitempty tag."
+	MapWithZeroMinProperties map[string]string `json:"mapWithZeroMinProperties"` // want "field MapWithZeroMinProperties should have the omitempty tag." "field MapWithZeroMinProperties with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil \\(unset\\) from empty."
 
 	// +kubebuilder:validation:MinProperties=0
-	MapWithZeroMinPropertiesWithOmitEmpty map[string]string `json:"mapWithZeroMinPropertiesWithOmitEmpty,omitempty"`
+	MapWithZeroMinPropertiesWithOmitEmpty map[string]string `json:"mapWithZeroMinPropertiesWithOmitEmpty,omitempty"` // want "field MapWithZeroMinPropertiesWithOmitEmpty with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil \\(unset\\) from empty."
 }

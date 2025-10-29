@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 // SerializationCheck is an interface for checking serialization of fields.
@@ -98,31 +99,31 @@ func (s *serializationCheck) Check(pass *analysis.Pass, field *ast.Field, marker
 	switch s.pointerPreference {
 	case PointersPreferenceAlways:
 		// The field must always be a pointer, pointers require omitempty, so enforce that too.
-		s.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying, "should be a pointer.")
+		s.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying, markersAccess, "should be a pointer.")
 		s.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
 	case PointersPreferenceWhenRequired:
-		s.handleFieldOmitZero(pass, field, fieldName, jsonTags, hasOmitZero, hasValidZeroValue, isPointer, isStruct)
+		s.handleFieldOmitZero(pass, field, fieldName, jsonTags, underlying, hasOmitZero, hasValidZeroValue, isPointer, isStruct, markersAccess)
 
 		if s.omitEmptyPolicy != OmitEmptyPolicyIgnore || hasOmitEmpty {
 			// If we require omitempty, or the field has omitempty, we can check the field properties based on it being an omitempty field.
-			s.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, hasOmitEmpty, hasValidZeroValue, completeValidation, isPointer, isStruct)
+			s.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, hasOmitEmpty, hasValidZeroValue, completeValidation, isPointer, isStruct, markersAccess)
 		} else {
 			// The field does not have omitempty, and does not require it.
-			s.checkFieldPropertiesWithoutOmitEmpty(pass, field, fieldName, jsonTags, underlying, hasValidZeroValue, completeValidation, isPointer, isStruct)
+			s.checkFieldPropertiesWithoutOmitEmpty(pass, field, fieldName, jsonTags, underlying, hasValidZeroValue, completeValidation, isPointer, isStruct, markersAccess)
 		}
 	default:
 		panic(fmt.Sprintf("unknown pointer preference: %s", s.pointerPreference))
 	}
 }
 
-func (s *serializationCheck) handleFieldOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, hasOmitZero, hasValidZeroValue, isPointer, isStruct bool) {
+func (s *serializationCheck) handleFieldOmitZero(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasOmitZero, hasValidZeroValue, isPointer, isStruct bool, markersAccess markershelper.Markers) {
 	switch s.omitZeroPolicy {
 	case OmitZeroPolicyForbid:
 		// when the omitzero policy is set to forbid, we need to report removing omitzero if set on the struct fields.
 		s.checkFieldPropertiesWithOmitZeroForbidPolicy(pass, field, fieldName, isStruct, hasOmitZero, jsonTags)
 	case OmitZeroPolicyWarn, OmitZeroPolicySuggestFix:
 		// If we require omitzero, or the field has omitzero, we can check the field properties based on it being an omitzero field.
-		s.checkFieldPropertiesWithOmitZeroRequired(pass, field, fieldName, jsonTags, hasOmitZero, isPointer, isStruct, hasValidZeroValue)
+		s.checkFieldPropertiesWithOmitZeroRequired(pass, field, fieldName, jsonTags, underlying, hasOmitZero, isPointer, isStruct, hasValidZeroValue, markersAccess)
 	default:
 		panic(fmt.Sprintf("unknown omit zero policy: %s", s.omitZeroPolicy))
 	}
@@ -136,7 +137,7 @@ func (s *serializationCheck) handleFieldShouldHaveOmitEmpty(pass *analysis.Pass,
 	reportShouldAddOmitEmpty(pass, field, s.omitEmptyPolicy, fieldName, "field %s should have the omitempty tag.", jsonTags)
 }
 
-func (s *serializationCheck) checkFieldPropertiesWithOmitEmptyRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasOmitEmpty, hasValidZeroValue, completeValidation, isPointer, isStruct bool) {
+func (s *serializationCheck) checkFieldPropertiesWithOmitEmptyRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasOmitEmpty, hasValidZeroValue, completeValidation, isPointer, isStruct bool, markersAccess markershelper.Markers) {
 	switch {
 	case isStruct && !hasValidZeroValue && s.omitZeroPolicy != OmitZeroPolicyForbid:
 		// The struct field need not be pointer if it does not have a valid zero value.
@@ -145,27 +146,27 @@ func (s *serializationCheck) checkFieldPropertiesWithOmitEmptyRequired(pass *ana
 		zeroValue := utils.GetTypedZeroValue(pass, underlying)
 		validationHint := utils.GetTypedValidationHint(pass, underlying)
 
-		s.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying, fmt.Sprintf("has a valid zero value (%s), but the validation is not complete (e.g. %s). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer.", zeroValue, validationHint))
+		s.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying, markersAccess, fmt.Sprintf("has a valid zero value (%s), but the validation is not complete (e.g. %s). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer.", zeroValue, validationHint))
 	case hasValidZeroValue, isStruct:
 		// The field validation infers that the zero value is valid, the field needs to be a pointer.
 		// Structs with omitempty should always be pointers, else they won't actually be omitted.
 		zeroValue := utils.GetTypedZeroValue(pass, underlying)
 
-		s.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying, fmt.Sprintf("has a valid zero value (%s) and should be a pointer.", zeroValue))
+		s.handleFieldShouldBePointer(pass, field, fieldName, isPointer, underlying, markersAccess, fmt.Sprintf("has a valid zero value (%s) and should be a pointer.", zeroValue))
 	case !hasValidZeroValue && completeValidation && !isStruct:
 		// The validation is fully complete, and the zero value is not valid, so we don't need a pointer.
-		s.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s does not allow the zero value. The field does not need to be a pointer.")
+		s.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, underlying, markersAccess, "field %s does not allow the zero value. The field does not need to be a pointer.")
 	}
 
 	// In this case, we should always add the omitempty if it isn't present.
 	s.handleFieldShouldHaveOmitEmpty(pass, field, fieldName, hasOmitEmpty, jsonTags)
 }
 
-func (s *serializationCheck) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasValidZeroValue, completeValidation, isPointer, isStruct bool) {
+func (s *serializationCheck) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasValidZeroValue, completeValidation, isPointer, isStruct bool, markersAccess markershelper.Markers) {
 	switch {
 	case hasValidZeroValue:
 		// The field is not omitempty, and the zero value is valid, the field does not need to be a pointer.
-		s.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s does not have omitempty and allows the zero value. The field does not need to be a pointer.")
+		s.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, underlying, markersAccess, "field %s does not have omitempty and allows the zero value. The field does not need to be a pointer.")
 	case !hasValidZeroValue:
 		// The zero value would not be accepted, so the field needs to have omitempty.
 		// Force the omitempty policy to suggest a fix. We can only get to this function when the policy is configured to Ignore.
@@ -174,17 +175,17 @@ func (s *serializationCheck) checkFieldPropertiesWithoutOmitEmpty(pass *analysis
 		// Once it has the omitempty tag, it will also need to be a pointer in some cases.
 		// Now handle it as if it had the omitempty already.
 		// We already handle the omitempty tag above, so force the `hasOmitEmpty` to true.
-		s.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, true, hasValidZeroValue, completeValidation, isPointer, isStruct)
+		s.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, true, hasValidZeroValue, completeValidation, isPointer, isStruct, markersAccess)
 	}
 }
 
-func (s *serializationCheck) checkFieldPropertiesWithOmitZeroRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, hasOmitZero, isPointer, isStruct, hasValidZeroValue bool) {
+func (s *serializationCheck) checkFieldPropertiesWithOmitZeroRequired(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasOmitZero, isPointer, isStruct, hasValidZeroValue bool, markersAccess markershelper.Markers) {
 	if !isStruct || hasValidZeroValue {
 		return
 	}
 
 	s.handleFieldShouldHaveOmitZero(pass, field, fieldName, hasOmitZero, jsonTags)
-	s.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, "field %s does not allow the zero value. The field does not need to be a pointer.")
+	s.handleFieldShouldNotBePointer(pass, field, fieldName, isPointer, underlying, markersAccess, "field %s does not allow the zero value. The field does not need to be a pointer.")
 }
 
 func (s *serializationCheck) checkFieldPropertiesWithOmitZeroForbidPolicy(pass *analysis.Pass, field *ast.Field, fieldName string, isStruct, hasOmitZero bool, jsonTags extractjsontags.FieldTagInfo) {
@@ -205,15 +206,12 @@ func (s *serializationCheck) handleFieldShouldHaveOmitZero(pass *analysis.Pass, 
 	reportShouldAddOmitZero(pass, field, s.omitZeroPolicy, fieldName, "field %s does not allow the zero value. It must have the omitzero tag.", jsonTags)
 }
 
-func (s *serializationCheck) handleFieldShouldBePointer(pass *analysis.Pass, field *ast.Field, fieldName string, isPointer bool, underlying ast.Expr, reason string) {
+func (s *serializationCheck) handleFieldShouldBePointer(pass *analysis.Pass, field *ast.Field, fieldName string, isPointer bool, underlying ast.Expr, markersAccess markershelper.Markers, reason string) {
 	if utils.IsPointerType(pass, underlying) {
 		if isPointer {
-			switch s.pointerPolicy {
-			case PointersPolicySuggestFix:
-				reportShouldRemovePointer(pass, field, PointersPolicySuggestFix, fieldName, "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
-			case PointersPolicyWarn:
-				pass.Reportf(field.Pos(), "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
-			}
+			s.handlePointerToPointerType(pass, field, fieldName, underlying, markersAccess)
+		} else if s.pointerPreference == PointersPreferenceAlways {
+			s.handleNonPointerToPointerType(pass, field, fieldName, underlying, markersAccess)
 		}
 
 		return
@@ -223,6 +221,35 @@ func (s *serializationCheck) handleFieldShouldBePointer(pass *analysis.Pass, fie
 		return
 	}
 
+	s.reportShouldAddPointerMessage(pass, field, fieldName, reason)
+}
+
+func (s *serializationCheck) handlePointerToPointerType(pass *analysis.Pass, field *ast.Field, fieldName string, underlying ast.Expr, markersAccess markershelper.Markers) {
+	// Check if this is a pointer-to-slice/map with explicit MinItems=0 or MinProperties=0
+	// In this case, the pointer is intentional to distinguish nil from empty
+	if hasExplicitZeroMinValidation(pass, field, underlying, markersAccess) {
+		return
+	}
+
+	switch s.pointerPolicy {
+	case PointersPolicySuggestFix:
+		reportShouldRemovePointer(pass, field, PointersPolicySuggestFix, fieldName, "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
+	case PointersPolicyWarn:
+		pass.Reportf(field.Pos(), "field %s underlying type does not need to be a pointer. The pointer should be removed.", fieldName)
+	}
+}
+
+func (s *serializationCheck) handleNonPointerToPointerType(pass *analysis.Pass, field *ast.Field, fieldName string, underlying ast.Expr, markersAccess markershelper.Markers) {
+	// Check if this is a slice/map WITHOUT a pointer but with explicit MinItems=0 or MinProperties=0
+	// In this case, we should suggest adding a pointer to distinguish nil from empty
+	if !hasExplicitZeroMinValidation(pass, field, underlying, markersAccess) {
+		return
+	}
+
+	s.reportShouldAddPointerMessage(pass, field, fieldName, "with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil (unset) from empty.")
+}
+
+func (s *serializationCheck) reportShouldAddPointerMessage(pass *analysis.Pass, field *ast.Field, fieldName, reason string) {
 	switch s.pointerPolicy {
 	case PointersPolicySuggestFix:
 		reportShouldAddPointer(pass, field, PointersPolicySuggestFix, fieldName, "field %s %s", fieldName, reason)
@@ -231,10 +258,38 @@ func (s *serializationCheck) handleFieldShouldBePointer(pass *analysis.Pass, fie
 	}
 }
 
-func (s *serializationCheck) handleFieldShouldNotBePointer(pass *analysis.Pass, field *ast.Field, fieldName string, isPointer bool, message string) {
+func (s *serializationCheck) handleFieldShouldNotBePointer(pass *analysis.Pass, field *ast.Field, fieldName string, isPointer bool, underlying ast.Expr, markersAccess markershelper.Markers, message string) {
 	if !isPointer {
 		return
 	}
 
+	// Check if this is a pointer-to-slice/map with explicit MinItems=0 or MinProperties=0
+	// In this case, the pointer is intentional to distinguish nil from empty
+	if hasExplicitZeroMinValidation(pass, field, underlying, markersAccess) {
+		return
+	}
+
 	reportShouldRemovePointer(pass, field, s.pointerPolicy, fieldName, message, fieldName)
+}
+
+// hasExplicitZeroMinValidation checks if a field has an explicit MinItems=0 or MinProperties=0 marker.
+// This indicates the developer intentionally wants to distinguish between nil and empty for slices/maps:
+//   - nil: field not provided by the user, use defaults or treat as unset
+//   - []/{}:  explicitly set to empty by the user
+//
+// Using a pointer allows preserving this semantic difference, which is why MinItems=0/MinProperties=0
+// combined with a pointer is a valid pattern despite slices/maps being reference types.
+func hasExplicitZeroMinValidation(pass *analysis.Pass, field *ast.Field, underlying ast.Expr, markersAccess markershelper.Markers) bool {
+	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
+
+	switch underlying.(type) {
+	case *ast.ArrayType:
+		// Check for explicit MinItems=0
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker + "=0")
+	case *ast.MapType:
+		// Check for explicit MinProperties=0
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker + "=0")
+	}
+
+	return false
 }

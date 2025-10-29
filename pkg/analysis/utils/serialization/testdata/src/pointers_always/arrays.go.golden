@@ -16,10 +16,10 @@ type TestArrays struct {
 	ArrayWithPositiveMinItemsWithOmitEmpty []string `json:"arrayWithPositiveMinItemsWithOmitEmpty,omitempty"`
 
 	// +kubebuilder:validation:MinItems=0
-	ArrayWithZeroMinItems []string `json:"arrayWithZeroMinItems,omitempty"` // want "field ArrayWithZeroMinItems should have the omitempty tag."
+	ArrayWithZeroMinItems *[]string `json:"arrayWithZeroMinItems,omitempty"` // want "field ArrayWithZeroMinItems should have the omitempty tag." "field ArrayWithZeroMinItems with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil \\(unset\\) from empty."
 
 	// +kubebuilder:validation:MinItems=0
-	ArrayWithZeroMinItemsWithOmitEmpty []string `json:"arrayWithZeroMinItemsWithOmitEmpty,omitempty"`
+	ArrayWithZeroMinItemsWithOmitEmpty *[]string `json:"arrayWithZeroMinItemsWithOmitEmpty,omitempty"` // want "field ArrayWithZeroMinItemsWithOmitEmpty with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil \\(unset\\) from empty."
 
 	ByteArray []byte `json:"byteArray,omitempty"` // want "field ByteArray should have the omitempty tag."
 
