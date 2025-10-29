@@ -15,10 +15,20 @@ limitations under the License.
 */
 package references
 
+// Policy defines the policy for handling Ref/Refs.
+type Policy string
+
+const (
+	// PolicyAllowRefAndRefs allows Ref/Refs in field names.
+	PolicyAllowRefAndRefs Policy = "AllowRefAndRefs"
+	// PolicyForbidRefAndRefs forbids Ref/Refs in field names.
+	PolicyForbidRefAndRefs Policy = "ForbidRefAndRefs"
+)
+
 // Config represents the configuration for the references linter.
 type Config struct {
-	// AllowRefAndRefs, when set to true, allows fields ending with "Ref" or "Refs".
-	// This is useful for OpenShift compatibility where Ref/Refs fields are used instead of Reference/References.
-	// When false (default), the linter will report errors for all fields ending with "Ref" or "Refs".
-	AllowRefAndRefs bool `json:"allowRefAndRefs,omitempty"`
+	// Policy controls whether Ref/Refs are allowed or forbidden in field names.
+	// When set to AllowRefAndRefs, fields containing Ref/Refs are allowed.
+	// When set to ForbidRefAndRefs (default), fields containing Ref/Refs are flagged as errors.
+	Policy Policy `json:"policy,omitempty"`
 }

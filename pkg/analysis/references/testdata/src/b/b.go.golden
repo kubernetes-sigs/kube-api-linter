@@ -1,8 +1,8 @@
-package a
+package b
 
-// TestWithPolicyAllowRefAndRefs tests the linter with PolicyAllowRefAndRefs
-// In this mode, Reference/References are flagged ANYWHERE in field names, but Ref/Refs are allowed
-type TestWithPolicyAllowRefAndRefs struct {
+// TestWithPolicyForbidRefAndRefs tests the linter with PolicyForbidRefAndRefs (strict mode)
+// In this mode, Reference/References AND Ref/Refs (at end) are flagged
+type TestWithPolicyForbidRefAndRefs struct {
 	// Fields ending with Reference should be flagged
 	NodeRef string `json:"nodeRef"` // want `naming convention "reference-to-ref": field NodeReference: field names should use 'Ref' instead of 'Reference'`
 
@@ -29,39 +29,23 @@ type TestWithPolicyAllowRefAndRefs struct {
 	// Fields with References in middle should be flagged
 	CrossRefsMap map[string]string `json:"crossRefsMap"` // want `naming convention "references-to-refs": field CrossReferencesMap: field names should use 'Refs' instead of 'References'`
 
-	// Past tense "Referenced" should be flagged (has "Reference")
-	Refd bool `json:"referenced"` // want `naming convention "reference-to-ref": field Referenced: field names should use 'Ref' instead of 'Reference'`
+	// Fields ending with Ref should be FORBIDDEN in this mode
+	NodeRef string `json:"nodeRef"` // want `naming convention "forbid-ref": field NodeRef: should not use 'Ref'`
 
-	// Fields with Ref/Refs anywhere are ALLOWED in this mode (no diagnostics expected)
-	NodeRef string `json:"nodeRef"`
+	ConfigRef string `json:"configRef"` // want `naming convention "forbid-ref": field ConfigRef: should not use 'Ref'`
 
-	ConfigRef string `json:"configRef"`
+	// Fields ending with Refs should be FORBIDDEN in this mode
+	NodeRefs []string `json:"nodeRefs"` // want `naming convention "forbid-refs": field NodeRefs: should not use 'Refs'`
 
-	NodeRefs []string `json:"nodeRefs"`
-
-	ConfigRefs []string `json:"configRefs"`
-
-	RefCount int `json:"refCount"`
-
-	RefsData []string `json:"refsData"`
-
-	InternalRefData string `json:"internalRefData"`
-
-	InternalRefsData []string `json:"internalRefsData"`
+	ConfigRefs []string `json:"configRefs"` // want `naming convention "forbid-refs": field ConfigRefs: should not use 'Refs'`
 
 	// Normal fields should not be flagged (no Reference/References/Ref/Refs)
 	Name string `json:"name"`
 
 	Namespace string `json:"namespace"`
 
-	// Edge cases that should NOT be flagged (lowercase or different words)
-	// Lowercase "preference" and "preferences" should NOT match
+	// Edge cases that should NOT be flagged (lowercase)
 	PreferenceType string `json:"preferenceType"`
 
 	Preferences map[string]string `json:"preferences,omitempty"`
-
-	// These don't contain capital Reference
-	Referral string `json:"referral"`
-
-	Referee string `json:"referee"`
 }

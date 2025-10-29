@@ -558,35 +558,38 @@ If you prefer not to suggest fixes for `omitzero` in required fields, you can ch
 
 ## References
 
-The `references` linter ensures that field names use 'Ref'/'Refs' suffixes instead of 'Reference'/'References'.
+The `references` linter ensures that field names use 'Ref'/'Refs' instead of 'Reference'/'References'.
 
-By default, `references` is enabled and enforces this naming convention. The linter checks that:
-- Fields ending with 'Reference' are suggested to use 'Ref' instead
-- Fields ending with 'References' are suggested to use 'Refs' instead
+By default, `references` is enabled and operates in strict mode, prohibiting the use of 'Reference', 'References', 'Ref', or 'Refs' anywhere in field names
 
 ### Configuration
 
 ```yaml
 lintersConfig:
   references:
-    allowRefAndRefs: false | true # Allow Ref/Refs suffixes for OpenShift compatibility. Defaults to `false`.
+    policy: ForbidRefAndRefs | AllowRefAndRefs # Defaults to `ForbidRefAndRefs`.
 ```
 
-**Default behavior (allowRefAndRefs=false):**
-- Reports errors for fields ending with 'Reference' or 'References'
-- Also reports errors for fields ending with 'Ref' or 'Refs' (unless they were corrected from Reference/References)
+**Default behavior (policy: ForbidRefAndRefs):**
+- Reports errors for fields containing 'Reference' or 'References' anywhere and suggests replacing with 'Ref' or 'Refs'
+- **Also reports errors** for fields containing 'Ref' or 'Refs' anywhere (these should be dropped/removed entirely)
+- In this strict mode, the goal is to avoid all Ref/Refs/Reference/References in field names
 
-**OpenShift compatibility (allowRefAndRefs=true):**
-- Reports errors for fields ending with 'Reference' or 'References'  
-- Allows fields ending with 'Ref' or 'Refs' without reporting errors
+**Allow Ref/Refs (policy: AllowRefAndRefs):**
+- Reports errors for fields containing 'Reference' or 'References' and suggests replacing with 'Ref' or 'Refs'
+- **Allows** fields containing 'Ref' or 'Refs' without reporting errors
 
 ### Fixes
 
-The `references` linter can automatically fix field names by replacing 'Reference' with 'Ref' and 'References' with 'Refs'.
+The `references` linter can automatically fix field names by replacing 'Reference' with 'Ref' and 'References' with 'Refs' anywhere in the field name.
 
 For example:
-- `NodeReference` will be suggested to be changed to `NodeRef`
-- `NodeReferences` will be suggested to be changed to `NodeRefs`
+- `NodeReference` → `NodeRef`
+- `ReferenceNode` → `RefNode`
+- `NodeReferenceConfig` → `NodeRefConfig`
+- `NodeReferences` → `NodeRefs`
+
+Note: In the default `ForbidRefAndRefs` mode, these fixes are intermediate - the linter will still report errors on the resulting 'Ref'/'Refs' patterns, indicating they should be removed entirely
 
 ## SSATags
 

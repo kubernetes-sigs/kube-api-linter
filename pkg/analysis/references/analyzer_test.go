@@ -22,11 +22,11 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/references"
 )
 
-func TestDefaultConfiguration(t *testing.T) {
+func TestAllowRefAndRefs(t *testing.T) {
 	testdata := analysistest.TestData()
 
 	cfg := &references.Config{
-		AllowRefAndRefs: true,
+		Policy: references.PolicyAllowRefAndRefs,
 	}
 
 	analyzer, err := references.Initializer().Init(cfg)
@@ -35,4 +35,35 @@ func TestDefaultConfiguration(t *testing.T) {
 	}
 
 	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
+}
+
+func TestEmptyConfig(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	// Test with empty config - should default to ForbidRefAndRefs behavior
+	cfg := &references.Config{}
+
+	analyzer, err := references.Initializer().Init(cfg)
+	if err != nil {
+		t.Fatalf("initializing references linter: %v", err)
+	}
+
+	// With default config (empty Policy), it should default to ForbidRefAndRefs behavior
+	// So we test with folder 'b' which has the same expectations
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "b")
+}
+
+func TestForbidRefAndRefs(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	cfg := &references.Config{
+		Policy: references.PolicyForbidRefAndRefs,
+	}
+
+	analyzer, err := references.Initializer().Init(cfg)
+	if err != nil {
+		t.Fatalf("initializing references linter: %v", err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "b")
 }

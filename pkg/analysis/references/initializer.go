@@ -43,6 +43,20 @@ func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
 
 // validateConfig validates the configuration for the references linter.
 func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
-	// No validation needed for this simple config
-	return nil
+	if cfg == nil {
+		return nil // nil config is valid, will use defaults
+	}
+
+	var errs field.ErrorList
+
+	// Validate Policy enum if provided
+	if cfg.Policy != "" && cfg.Policy != PolicyAllowRefAndRefs && cfg.Policy != PolicyForbidRefAndRefs {
+		errs = append(errs, field.NotSupported(
+			fldPath.Child("policy"),
+			cfg.Policy,
+			[]string{string(PolicyAllowRefAndRefs), string(PolicyForbidRefAndRefs)},
+		))
+	}
+
+	return errs
 }

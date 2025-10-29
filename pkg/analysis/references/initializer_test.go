@@ -44,19 +44,29 @@ var _ = Describe("references initializer", func() {
 		},
 			Entry("With a valid references configuration with allowRefAndRefs=false", testCase{
 				config: &references.Config{
-					AllowRefAndRefs: false,
+					Policy: references.PolicyForbidRefAndRefs,
 				},
 				expectedErr: "",
 			}),
 			Entry("With a valid references configuration with allowRefAndRefs=true", testCase{
 				config: &references.Config{
-					AllowRefAndRefs: true,
+					Policy: references.PolicyAllowRefAndRefs,
 				},
 				expectedErr: "",
 			}),
 			Entry("With a nil config", testCase{
 				config:      nil,
 				expectedErr: "",
+			}),
+			Entry("With an empty config", testCase{
+				config:      &references.Config{},
+				expectedErr: "",
+			}),
+			Entry("With an invalid policy value", testCase{
+				config: &references.Config{
+					Policy: "InvalidPolicy",
+				},
+				expectedErr: "references.policy: Unsupported value: \"InvalidPolicy\": supported values: \"AllowRefAndRefs\", \"ForbidRefAndRefs\"",
 			}),
 		)
 	})

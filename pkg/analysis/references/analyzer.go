@@ -16,116 +16,90 @@ limitations under the License.
 package references
 
 import (
-	"fmt"
-	"go/ast"
-	"strings"
-
 	"golang.org/x/tools/go/analysis"
-	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/namingconventions"
 )
 
 const name = "references"
 
-type analyzer struct {
-	allowRefAndRefs bool
-}
-
 // newAnalyzer creates a new analysis.Analyzer for the references linter.
+// The references linter is implemented as a wrapper around the namingconventions
+// linter with fixed configuration based on the policy.
 func newAnalyzer(cfg *Config) *analysis.Analyzer {
 	if cfg == nil {
 		cfg = &Config{}
 	}
 
-	a := &analyzer{
-		allowRefAndRefs: cfg.AllowRefAndRefs,
+	// Default to ForbidRefAndRefs if no policy is specified
+	policy := cfg.Policy
+	if policy == "" {
+		policy = PolicyForbidRefAndRefs
 	}
 
+	// Build naming conventions based on policy
+	conventions := buildConventions(policy)
+
+	// Create namingconventions config
+	ncConfig := &namingconventions.Config{
+		Conventions: conventions,
+	}
+
+	// Create the underlying namingconventions analyzer
+	ncAnalyzer := namingconventions.NewAnalyzer(ncConfig)
+
+	// Wrap it to return our name
 	analyzer := &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Enforces that fields use Ref/Refs and not Reference/References",
-		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspector.Analyzer, extractjsontags.Analyzer},
+		Run:      ncAnalyzer.Run,
+		Requires: ncAnalyzer.Requires,
 	}
 
 	return analyzer
 }
 
-func (a *analyzer) run(pass *analysis.Pass) (any, error) {
-	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
-	if !ok {
-		return nil, kalerrors.ErrCouldNotGetInspector
+// buildConventions creates the naming conventions based on the policy
+func buildConventions(policy Policy) []namingconventions.Convention {
+	conventions := []namingconventions.Convention{
+		// Match "References" anywhere (case-sensitive, capital R)
+		{
+			Name:             "references-to-refs",
+			ViolationMatcher: "References",
+			Operation:        namingconventions.OperationReplacement,
+			Replacement:      "Refs",
+			Message:          "field names should use 'Refs' instead of 'References'",
+		},
+		// Match "Reference" but not when part of "References"
+		// Match Reference followed by: end-of-string OR non-'s' character
+		{
+			Name:             "reference-to-ref",
+			ViolationMatcher: "Reference([^s]|$)",
+			Operation:        namingconventions.OperationReplacement,
+			Replacement:      "Ref$1",
+			Message:          "field names should use 'Ref' instead of 'Reference'",
+		},
 	}
 
-	inspect.InspectFields(func(field *ast.Field, stack []ast.Node, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		a.checkField(pass, field, jsonTagInfo)
-	})
-
-	return nil, nil //nolint:nilnil
-}
-
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo) {
-	if field == nil || len(field.Names) == 0 {
-		return
-	}
-
-	fieldName := utils.FieldName(field)
-
-	if strings.HasSuffix(fieldName, "Reference") {
-		suggestedName := strings.TrimSuffix(fieldName, "Reference") + "Ref"
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf("field %s should use 'Ref' instead of 'Reference'", fieldName),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "replace 'Reference' with 'Ref'",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     field.Names[0].Pos(),
-							NewText: []byte(suggestedName),
-							End:     field.Names[0].End(),
-						},
-					},
-				},
+	// If policy is ForbidRefAndRefs, add conventions to forbid Ref/Refs anywhere
+	// Exclude patterns already handled by Reference/References above
+	if policy == PolicyForbidRefAndRefs {
+		conventions = append(conventions,
+			// Match "Refs" but not when part of "References"
+			namingconventions.Convention{
+				Name:             "forbid-refs",
+				ViolationMatcher: "Refs([^a-z]|$)",
+				Operation:        namingconventions.OperationInform,
+				Message:          "should not use 'Refs'",
 			},
-		})
-		return
-	}
-
-	if strings.HasSuffix(fieldName, "References") {
-		suggestedName := strings.TrimSuffix(fieldName, "References") + "Refs"
-		pass.Report(analysis.Diagnostic{
-			Pos:     field.Pos(),
-			Message: fmt.Sprintf("field %s should use 'Refs' instead of 'References'", fieldName),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "replace 'References' with 'Refs'",
-					TextEdits: []analysis.TextEdit{
-						{
-							Pos:     field.Names[0].Pos(),
-							NewText: []byte(suggestedName),
-							End:     field.Names[0].End(),
-						},
-					},
-				},
+			// Match "Ref" but not when part of "Reference", "References", or "Refs"
+			namingconventions.Convention{
+				Name:             "forbid-ref",
+				ViolationMatcher: "Ref([^ers]|$)",
+				Operation:        namingconventions.OperationInform,
+				Message:          "should not use 'Ref'",
 			},
-		})
-		return
+		)
 	}
 
-	// If allowRefAndRefs is false, report errors for standalone Ref/Refs fields
-	// If allowRefAndRefs is true (OpenShift), don't report errors for Ref/Refs fields
-	if !a.allowRefAndRefs {
-		// Check for fields ending with Ref or Refs (excluding those already handled above)
-		if fieldName != "Ref" && strings.HasSuffix(fieldName, "Ref") && !strings.HasSuffix(fieldName, "eRef") {
-			pass.Reportf(field.Pos(), "field %s should not use 'Ref' suffix", fieldName)
-		}
-
-		if fieldName != "Refs" && strings.HasSuffix(fieldName, "Refs") && !strings.HasSuffix(fieldName, "eRefs") {
-			pass.Reportf(field.Pos(), "field %s should not use 'Refs' suffix", fieldName)
-		}
-	}
+	return conventions
 }

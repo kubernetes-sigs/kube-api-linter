@@ -42,7 +42,7 @@ func Initializer() initializer.AnalyzerInitializer {
 }
 
 func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
-	return newAnalyzer(cfg), nil
+	return NewAnalyzer(cfg), nil
 }
 
 // validateConfig implements validation of the conditions linter config.
