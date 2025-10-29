@@ -36,6 +36,13 @@ type analyzer struct {
 }
 
 func newAnalyzer(cfg *ConflictingMarkersConfig) *analysis.Analyzer {
+	return NewAnalyzer(cfg)
+}
+
+// NewAnalyzer creates a new conflictingmarkers analyzer with the given configuration.
+// This function is exported so that other linters can use conflictingmarkers functionality
+// with custom configurations.
+func NewAnalyzer(cfg *ConflictingMarkersConfig) *analysis.Analyzer {
 	if cfg == nil {
 		cfg = &ConflictingMarkersConfig{}
 	}

@@ -4,6 +4,7 @@
 - [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
+- [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
@@ -138,6 +139,37 @@ lintersConfig:
 **Note**: This linter is not enabled by default and must be explicitly enabled in the configuration.
 
 The linter does not provide automatic fixes as it cannot determine which conflicting marker should be removed.
+
+## DefaultOrRequired
+
+The `defaultorrequired` linter checks that fields marked as required do not have default values applied.
+
+A field cannot be both required and have a default value, as these are conflicting concepts:
+- A **required** field must be provided by the user and cannot be omitted
+- A **default** value is used when a field is not provided
+
+This linter helps prevent common configuration errors where a field is marked as required but also has a default value, which creates ambiguity about whether the field truly needs to be provided by the user.
+
+### Example
+
+The following will be flagged by the linter:
+
+```go
+type MyStruct struct {
+	// +required
+	// +default:=value
+	ConflictedField string `json:"conflictedField"` // Error: field cannot have both a default value and be marked as required
+}
+```
+
+The linter also detects conflicts with:
+- `+required` 
+- `+default`
+- `+k8s:required`
+- `+kubebuilder:validation:Required`
+- `+kubebuilder:default`
+
+This linter is enabled by default and helps ensure that API designs are consistent and unambiguous about whether fields are truly required or have default values.
 
 ## DuplicateMarkers
 
