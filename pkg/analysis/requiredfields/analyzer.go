@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
@@ -104,8 +105,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		return
 	}
 
-	fieldMarkers := markersAccess.FieldMarkers(field)
-	if !isFieldRequired(fieldMarkers) {
+	if !utils.IsFieldRequired(field, markersAccess) {
 		// The field is not marked required, so we don't need to check it.
 		return
 	}
@@ -130,9 +130,4 @@ func defaultConfig(cfg *RequiredFieldsConfig) {
 	if cfg.OmitZero.Policy == "" {
 		cfg.OmitZero.Policy = RequiredFieldsOmitZeroPolicySuggestFix
 	}
-}
-
-// isFieldRequired checks if a field has an required marker.
-func isFieldRequired(fieldMarkers markershelper.MarkerSet) bool {
-	return fieldMarkers.Has(markers.RequiredMarker) || fieldMarkers.Has(markers.KubebuilderRequiredMarker)
 }
