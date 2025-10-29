@@ -113,3 +113,5 @@ type ComplexValidStruct struct {
 	// +kubebuilder:validation:Required
 	ValidField string `json:"validField"`
 }
+
+type NoLintMarker //nolint

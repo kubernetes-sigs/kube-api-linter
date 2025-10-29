@@ -96,19 +96,19 @@ type ExampleTypo2 string
 
 // Missing space after // prefix
 
-//+kubebuilder:validation:MaxLength:=256 // want "marker should have space after '//' comment prefix"
+// +kubebuilder:validation:MaxLength:=256 // want "marker should have space after '//' comment prefix"
 type MissingSpaceKubebuilder string
 
-//+required // want "marker should have space after '//' comment prefix"
+// +required // want "marker should have space after '//' comment prefix"
 type MissingSpaceNonKubebuilder string
 
-//+optional // want "marker should have space after '//' comment prefix"
+// +optional // want "marker should have space after '//' comment prefix"
 type MissingSpaceOptional string
 
-//+kubebuilder:object:root:=true // want "marker should have space after '//' comment prefix"
+// +kubebuilder:object:root:=true // want "marker should have space after '//' comment prefix"
 type MissingSpaceKubebuilderObject string
 
-//+default:value="test" // want "marker should have space after '//' comment prefix"
+// +default:value="test" // want "marker should have space after '//' comment prefix"
 type MissingSpaceDefault string
 
 // Complex cases with multiple issues
@@ -116,13 +116,13 @@ type MissingSpaceDefault string
 // + kubebuidler:validaton:MaxLength=256 // want "marker should not have space after '\\+' symbol" "possible typo: 'kubebuidler' should be 'kubebuilder'" "possible typo: 'validaton' should be 'validation'"
 type MultipleIssues string
 
-//+kubebuidler:validaton:MaxLength=256 // want "marker should have space after '//' comment prefix" "possible typo: 'kubebuidler' should be 'kubebuilder'" "possible typo: 'validaton' should be 'validation'"
+// +kubebuidler:validaton:MaxLength=256 // want "marker should have space after '//' comment prefix" "possible typo: 'kubebuidler' should be 'kubebuilder'" "possible typo: 'validaton' should be 'validation'"
 type MultipleIssuesWithMissingSpace string
 
-//+requied // want "marker should have space after '//' comment prefix" "possible typo: 'requied' should be 'required'"
+// +requied // want "marker should have space after '//' comment prefix" "possible typo: 'requied' should be 'required'"
 type MissingSpaceAndTypo string
 
-//+defualt:value:="test" // want "marker should have space after '//' comment prefix" "possible typo: 'defualt' should be 'default'"
+// +defualt:value:="test" // want "marker should have space after '//' comment prefix" "possible typo: 'defualt' should be 'default'"
 type MissingSpaceDefaultTypoWrongSyntax string
 
 // +kubebuilder:validation:MaxLength:=256
@@ -139,3 +139,6 @@ type ComplexValidStruct struct {
 	// +kubebuilder:validation:Required
 	ValidField string `json:"validField"`
 }
+
+type NoLintMarker //nolint
+
