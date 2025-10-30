@@ -514,24 +514,43 @@ The linter includes built-in rules for all standard kubebuilder markers and k8s 
 
 ### Configuration
 
-You can customize marker rules or add support for custom markers:
+You can customize marker rules or add support for custom markers.
+
+**Scope values:**
+- `Field`: Marker can only be applied to struct fields
+- `Type`: Marker can only be applied to type definitions
+- `Any`: Marker can be applied to either fields or type definitions
+
+**Type constraints:**
+
+The `typeConstraint` field allows you to restrict which Go types a marker can be applied to. This ensures that markers are only used with compatible data types (e.g., numeric markers like `Minimum` are only applied to integer/number types).
+
+**Type constraint fields:**
+- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
+- `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
+- `strictTypeConstraint`: When `true`, markers with `AnyScope` and type constraints applied to fields using named types must be declared on the type definition instead of the field. Defaults to `false`.
+
+**Configuration example:**
 
 ```yaml
 lintersConfig:
   markerscope:
     policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `Warn`.
     allowDangerousTypes: false # Allow dangerous number types (float32, float64). Defaults to `false`.
-    markerRules:
-      # Override default rule for a built-in marker
-      - name: "optional"
+
+    # Override default rules for built-in markers
+    overrideMarkers:
+      - identifier: "optional"
         scope: Field  # or: Type, Any
 
-      # Add a custom marker with scope constraint only
-      - name: "mycompany:validation:CustomMarker"
+    # Add rules for custom markers
+    customMarkers:
+      # Custom marker with scope constraint only
+      - identifier: "mycompany:validation:CustomMarker"
         scope: Any
 
-      # Add a custom marker with scope and type constraints
-      - name: "mycompany:validation:NumericLimit"
+      # Custom marker with scope and type constraints
+      - identifier: "mycompany:validation:NumericLimit"
         scope: Any
         strictTypeConstraint: true # Require declaration on type definition for named types
         typeConstraint:
@@ -539,8 +558,8 @@ lintersConfig:
             - integer
             - number
 
-      # Add a custom array items marker with element type constraint
-      - name: "mycompany:validation:items:StringFormat"
+      # Custom array items marker with element type constraint
+      - identifier: "mycompany:validation:items:StringFormat"
         scope: Any
         typeConstraint:
           allowedSchemaTypes:
@@ -550,18 +569,10 @@ lintersConfig:
               - string
 ```
 
-**Scope values:**
-- `Field`: FieldScope - marker can only be on fields
-- `Type`: TypeScope - marker can only be on types
-- `Any`: AnyScope - marker can be on fields or types
-
-**Type constraint fields:**
-- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
-- `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
-- `strictTypeConstraint`: When `true`, markers with `AnyScope` and type constraints applied to fields using named types must be declared on the type definition instead of the field. Defaults to `false`.
-
-If a marker is not in `markerRules` and not in the default rules, no validation is performed for that marker.
-If a marker is in both `markerRules` and the default rules, your configuration takes precedence.
+**Configuration notes:**
+- Use `overrideMarkers` to customize the behavior of built-in kubebuilder/controller-runtime markers
+- Use `customMarkers` to add validation for your own custom markers
+- If a marker is not in either list and not in the default rules, no validation is performed for that marker
 
 ### Fixes
 
