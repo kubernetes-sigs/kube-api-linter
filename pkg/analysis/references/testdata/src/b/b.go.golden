@@ -14,14 +14,14 @@ type TestWithPolicyForbidRefAndRefs struct {
 	ConfigRefs []string `json:"configRefs"` // want `naming convention "references-to-refs": field ConfigReferences: field names should use 'Refs' instead of 'References'`
 
 	// Fields with Reference at beginning should be flagged
-	RefCount int `json:"referenceCount"` // want `naming convention "reference-to-ref": field ReferenceCount: field names should use 'Ref' instead of 'Reference'`
+	RefCount int `json:"refCount"` // want `naming convention "reference-to-ref": field ReferenceCount: field names should use 'Ref' instead of 'Reference'`
 
-	RefData string `json:"referenceData"` // want `naming convention "reference-to-ref": field ReferenceData: field names should use 'Ref' instead of 'Reference'`
+	RefData string `json:"refData"` // want `naming convention "reference-to-ref": field ReferenceData: field names should use 'Ref' instead of 'Reference'`
 
 	// Fields with References at beginning should be flagged
-	RefsCount int `json:"referencesCount"` // want `naming convention "references-to-refs": field ReferencesCount: field names should use 'Refs' instead of 'References'`
+	RefsCount int `json:"refsCount"` // want `naming convention "references-to-refs": field ReferencesCount: field names should use 'Refs' instead of 'References'`
 
-	RefsData []string `json:"referencesData"` // want `naming convention "references-to-refs": field ReferencesData: field names should use 'Refs' instead of 'References'`
+	RefsData []string `json:"refsData"` // want `naming convention "references-to-refs": field ReferencesData: field names should use 'Refs' instead of 'References'`
 
 	// Fields with Reference in middle should be flagged
 	CrossRefID string `json:"crossRefID"` // want `naming convention "reference-to-ref": field CrossReferenceID: field names should use 'Ref' instead of 'Reference'`
@@ -44,8 +44,8 @@ type TestWithPolicyForbidRefAndRefs struct {
 
 	Namespace string `json:"namespace"`
 
-	// Edge cases that should NOT be flagged (lowercase)
-	PreferenceType string `json:"preferenceType"`
+	// Edge cases - Preference contains "reference" and will be flagged
+	PRefType string `json:"pRefType"` // want `naming convention "reference-to-ref": field PreferenceType: field names should use 'Ref' instead of 'Reference'`
 
-	Preferences map[string]string `json:"preferences,omitempty"`
+	PRefs map[string]string `json:"pRefs,omitempty"` // want `naming convention "references-to-refs": field Preferences: field names should use 'Refs' instead of 'References'`
 }

@@ -54,11 +54,11 @@ type TestWithPolicyAllowRefAndRefs struct {
 
 	Namespace string `json:"namespace"`
 
-	// Edge cases that should NOT be flagged (lowercase or different words)
-	// Lowercase "preference" and "preferences" should NOT match
-	PreferenceType string `json:"preferenceType"`
+	// Edge cases - Preference contains "reference" and WILL be flagged with (?i)
+	// This is intentional to catch all variations including malformed casing
+	PreferenceType string `json:"preferenceType"` // want `naming convention "reference-to-ref": field PreferenceType: field names should use 'Ref' instead of 'Reference'`
 
-	Preferences map[string]string `json:"preferences,omitempty"`
+	Preferences map[string]string `json:"preferences,omitempty"` // want `naming convention "references-to-refs": field Preferences: field names should use 'Refs' instead of 'References'`
 
 	// These don't contain capital Reference
 	Referral string `json:"referral"`

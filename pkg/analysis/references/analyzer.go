@@ -61,19 +61,18 @@ func newAnalyzer(cfg *Config) *analysis.Analyzer {
 // buildConventions creates the naming conventions based on the policy
 func buildConventions(policy Policy) []namingconventions.Convention {
 	conventions := []namingconventions.Convention{
-		// Match "References" anywhere (case-sensitive, capital R)
+		// Match "References" anywhere
 		{
 			Name:             "references-to-refs",
-			ViolationMatcher: "References",
+			ViolationMatcher: "(?i)references",
 			Operation:        namingconventions.OperationReplacement,
 			Replacement:      "Refs",
 			Message:          "field names should use 'Refs' instead of 'References'",
 		},
 		// Match "Reference" but not when part of "References"
-		// Match Reference followed by: end-of-string OR non-'s' character
 		{
 			Name:             "reference-to-ref",
-			ViolationMatcher: "Reference([^s]|$)",
+			ViolationMatcher: "(?i)reference([^s]|$)",
 			Operation:        namingconventions.OperationReplacement,
 			Replacement:      "Ref$1",
 			Message:          "field names should use 'Ref' instead of 'Reference'",
@@ -87,14 +86,14 @@ func buildConventions(policy Policy) []namingconventions.Convention {
 			// Match "Refs" but not when part of "References"
 			namingconventions.Convention{
 				Name:             "forbid-refs",
-				ViolationMatcher: "Refs([^a-z]|$)",
+				ViolationMatcher: "(?i)refs([^a-z]|$)",
 				Operation:        namingconventions.OperationInform,
 				Message:          "should not use 'Refs'",
 			},
 			// Match "Ref" but not when part of "Reference", "References", or "Refs"
 			namingconventions.Convention{
 				Name:             "forbid-ref",
-				ViolationMatcher: "Ref([^ers]|$)",
+				ViolationMatcher: "(?i)ref([^ers]|$)",
 				Operation:        namingconventions.OperationInform,
 				Message:          "should not use 'Ref'",
 			},
