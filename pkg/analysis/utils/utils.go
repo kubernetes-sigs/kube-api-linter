@@ -550,8 +550,8 @@ func getFieldTypeName(field *ast.Field) string {
 	return ""
 }
 
-// LookupFieldsUsingType returns all fields in the package that use the given type.
-func LookupFieldsUsingType(pass *analysis.Pass, typeSpec *ast.TypeSpec) []*ast.Field {
+// LookupTypeSpecUsage returns all fields in the package that use the given type.
+func LookupTypeSpecUsage(pass *analysis.Pass, typeSpec *ast.TypeSpec) []*ast.Field {
 	var fields []*ast.Field
 
 	// Get the type name
@@ -588,5 +588,46 @@ func matchesType(expr ast.Expr, typeName string) bool {
 		return matchesType(e.Elt, typeName)
 	default:
 		return false
+	}
+}
+
+// UnwrapType unwraps pointer, named, slice, and array types to get the underlying element type.
+// For pointer types, it returns the element type.
+// For named types, it returns the underlying type.
+// For slice and array types, it recursively unwraps to get the element type.
+// Otherwise, it returns the type as-is.
+func UnwrapType(t types.Type) types.Type {
+	// Unwrap pointer types
+	if ptr, ok := t.(*types.Pointer); ok {
+		t = ptr.Elem()
+	}
+
+	// Unwrap named types to get underlying type
+	if named, ok := t.(*types.Named); ok {
+		t = named.Underlying()
+	}
+
+	// Unwrap slice and array types to get element type
+	switch ut := t.Underlying().(type) {
+	case *types.Slice:
+		return ut.Elem()
+	case *types.Array:
+		return ut.Elem()
+	}
+
+	return t
+}
+
+// ExtractIdent extracts an *ast.Ident from an ast.Expr, unwrapping pointers and arrays.
+func ExtractIdent(expr ast.Expr) *ast.Ident {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e
+	case *ast.StarExpr:
+		return ExtractIdent(e.X)
+	case *ast.ArrayType:
+		return ExtractIdent(e.Elt)
+	default:
+		return nil
 	}
 }
