@@ -6,3 +6,5 @@ package v1
 type TypeMeta struct{}
 
 type ObjectMeta struct{}
+
+type ListMeta struct{}
