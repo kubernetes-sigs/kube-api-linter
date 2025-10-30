@@ -61,6 +61,7 @@ func getSchemaType(t types.Type) SchemaType {
 
 // getBasicTypeSchema returns the schema type for a basic Go type.
 func getBasicTypeSchema(bt *types.Basic) SchemaType {
+	//nolint:exhaustive // Only supporting OpenAPI-compatible types
 	switch bt.Kind() {
 	case types.Bool:
 		return SchemaTypeBoolean
@@ -69,13 +70,8 @@ func getBasicTypeSchema(bt *types.Basic) SchemaType {
 		return SchemaTypeInteger
 	case types.String:
 		return SchemaTypeString
-	case types.Invalid, types.Uintptr, types.Float32, types.Float64,
-		types.Complex64, types.Complex128, types.UnsafePointer,
-		types.UntypedBool, types.UntypedInt, types.UntypedRune,
-		types.UntypedFloat, types.UntypedComplex, types.UntypedString, types.UntypedNil:
-		// These types are not supported in OpenAPI schemas
-		return ""
 	default:
+		// Other types (float, complex, unsafe, untyped) are not supported in OpenAPI schemas
 		return ""
 	}
 }
