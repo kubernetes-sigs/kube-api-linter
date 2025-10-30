@@ -18,7 +18,7 @@ package a
 
 type Union struct {
 	// +k8s:unionMember
-	InvalidMember string // want "field with marker \\+k8s:unionMember is missing required marker\\(s\\): \\+k8s:optional"
+	InvalidMember string // want "field Union.InvalidMember with marker \\+k8s:unionMember is missing required marker\\(s\\): \\+k8s:optional"
 
 	// +k8s:unionMember
 	// +k8s:optional
@@ -27,7 +27,7 @@ type Union struct {
 
 type List struct {
 	// +listType
-	InvalidList []string // want "field with marker \\+listType is missing required marker\\(s\\): \\+k8s:listType"
+	InvalidList []string // want "field List.InvalidList with marker \\+listType is missing required marker\\(s\\): \\+k8s:listType"
 
 	// +listType
 	// +k8s:listType
@@ -36,7 +36,7 @@ type List struct {
 
 type AnyOf struct {
 	// +example:any
-	InvalidAny string // want "field with marker \\+example:any requires at least one of the following markers, but none were found: \\+dep1, \\+dep2"
+	InvalidAny string // want "field AnyOf.InvalidAny with marker \\+example:any requires at least one of the following markers, but none were found: \\+dep1, \\+dep2"
 
 	// +example:any
 	// +dep1
@@ -52,7 +52,7 @@ type MyString string
 
 type TypeAlias struct {
 	// +example:any
-	InvalidAlias string // want "field with marker \\+example:any requires at least one of the following markers, but none were found: \\+dep1, \\+dep2"
+	InvalidAlias string // want "field TypeAlias.InvalidAlias with marker \\+example:any requires at least one of the following markers, but none were found: \\+dep1, \\+dep2"
 
 	// +example:any
 	ValidAlias MyString

@@ -115,7 +115,7 @@ lintersConfig:
         dependents:
           - "k8s:listType"
       - identifier: "example:any"
-        type: "any"
+        type: "Any"
         dependents:
           - "dep1"
           - "dep2"

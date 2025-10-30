@@ -17,107 +17,94 @@ limitations under the License.
 package dependenttags_test
 
 import (
-	"testing"
+	"fmt"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/dependenttags"
 )
 
-func TestInitializer(t *testing.T) {
-	cases := []struct {
-		name      string
-		cfg       *dependenttags.Config
-		expectErr bool
-	}{
-		{
-			name: "valid config",
-			cfg: &dependenttags.Config{
-				Rules: []dependenttags.Rule{
-					{
-						Identifier: "k8s:unionMember",
-						Type:       dependenttags.DependencyTypeAll,
-						Dependents: []string{"k8s:optional"},
-					},
-				},
-			},
-			expectErr: false,
-		},
-		{
-			name: "missing type",
-			cfg: &dependenttags.Config{
-				Rules: []dependenttags.Rule{
-					{
-						Identifier: "k8s:unionMember",
-						Dependents: []string{"k8s:optional"},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "empty rules",
-			cfg: &dependenttags.Config{
-				Rules: []dependenttags.Rule{},
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing identifier",
-			cfg: &dependenttags.Config{
-				Rules: []dependenttags.Rule{
-					{
-						Type:       dependenttags.DependencyTypeAll,
-						Dependents: []string{"k8s:optional"},
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "missing dependents",
-			cfg: &dependenttags.Config{
-				Rules: []dependenttags.Rule{
-					{
-						Identifier: "k8s:unionMember",
-						Type:       dependenttags.DependencyTypeAll,
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "invalid type",
-			cfg: &dependenttags.Config{
-				Rules: []dependenttags.Rule{
-					{
-						Identifier: "k8s:unionMember",
-						Type:       "invalid",
-						Dependents: []string{"k8s:optional"},
-					},
-				},
-			},
-			expectErr: true,
-		},
-	}
+var _ = Describe("dependenttags initializer", func() {
+	Context("config validation", func() {
+		type testCase struct {
+			config      dependenttags.Config
+			expectedErr string
+		}
 
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			initializer := dependenttags.Initializer()
-			errs := initializer.ValidateConfig(tc.cfg, field.NewPath(""))
+		DescribeTable("should validate the provided config", func(in testCase) {
+			ci := dependenttags.Initializer()
 
-			if tc.expectErr && len(errs) == 0 {
-				t.Errorf("expected validation errors, but got none")
+			errs := ci.ValidateConfig(&in.config, field.NewPath("dependenttags"))
+			if len(in.expectedErr) > 0 {
+				Expect(errs.ToAggregate()).To(MatchError(in.expectedErr))
+			} else {
+				Expect(errs).To(HaveLen(0), "No errors were expected")
 			}
-
-			if !tc.expectErr && len(errs) > 0 {
-				t.Errorf("unexpected validation errors: %v", errs)
-			}
-
-			if !tc.expectErr {
-				if _, err := initializer.Init(tc.cfg); err != nil {
-					t.Errorf("unexpected error initializing analyzer: %v", err)
-				}
-			}
-		})
-	}
-}
+		},
+			Entry("with a valid config", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Identifier: "k8s:unionMember",
+							Type:       dependenttags.DependencyTypeAll,
+							Dependents: []string{"k8s:optional"},
+						},
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("with missing type", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Identifier: "k8s:unionMember",
+							Dependents: []string{"k8s:optional"},
+						},
+					},
+				},
+				expectedErr: fmt.Sprintf("dependenttags.rules[0].type: Required value: type must be explicitly set to '%s' or '%s'", dependenttags.DependencyTypeAll, dependenttags.DependencyTypeAny),
+			}),
+			Entry("with empty rules", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{},
+				},
+				expectedErr: "dependenttags.rules: Invalid value: []dependenttags.Rule{}: rules cannot be empty",
+			}),
+			Entry("with missing identifier", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Type:       dependenttags.DependencyTypeAll,
+							Dependents: []string{"k8s:optional"},
+						},
+					},
+				},
+				expectedErr: "dependenttags.rules[0].identifier: Invalid value: \"\": identifier marker cannot be empty",
+			}),
+			Entry("with missing dependents", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Identifier: "k8s:unionMember",
+							Type:       dependenttags.DependencyTypeAll,
+						},
+					},
+				},
+				expectedErr: "dependenttags.rules[0].dependents: Invalid value: []string(nil): dependents list cannot be empty",
+			}),
+			Entry("with invalid type", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Identifier: "k8s:unionMember",
+							Type:       "invalid",
+							Dependents: []string{"k8s:optional"},
+						},
+					},
+				},
+				expectedErr: fmt.Sprintf(`dependenttags.rules[0].type: Invalid value: "invalid": type must be '%s' or '%s'`, dependenttags.DependencyTypeAll, dependenttags.DependencyTypeAny),
+			}),
+		)
+	})
+})

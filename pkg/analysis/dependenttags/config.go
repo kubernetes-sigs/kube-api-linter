@@ -21,9 +21,9 @@ type DependencyType string
 
 const (
 	// DependencyTypeAll indicates that all dependent markers are required.
-	DependencyTypeAll DependencyType = "all"
+	DependencyTypeAll DependencyType = "All"
 	// DependencyTypeAny indicates that at least one of the dependent markers is required.
-	DependencyTypeAny DependencyType = "any"
+	DependencyTypeAny DependencyType = "Any"
 )
 
 // Config defines the configuration for the dependenttags linter.

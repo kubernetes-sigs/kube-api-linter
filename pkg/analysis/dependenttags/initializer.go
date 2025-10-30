@@ -17,6 +17,8 @@ limitations under the License.
 package dependenttags
 
 import (
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
@@ -73,13 +75,13 @@ func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 		}
 
 		if rule.Type == "" {
-			errs = append(errs, field.Required(rulesPath.Index(i).Child("type"), "type must be explicitly set to 'all' or 'any'"))
+			errs = append(errs, field.Required(rulesPath.Index(i).Child("type"), fmt.Sprintf("type must be explicitly set to '%s' or '%s'", DependencyTypeAll, DependencyTypeAny)))
 		} else {
 			switch rule.Type {
 			case DependencyTypeAll, DependencyTypeAny:
 				// valid
 			default:
-				errs = append(errs, field.Invalid(rulesPath.Index(i).Child("type"), rule.Type, "type must be 'all' or 'any'"))
+				errs = append(errs, field.Invalid(rulesPath.Index(i).Child("type"), rule.Type, fmt.Sprintf("type must be '%s' or '%s'", DependencyTypeAll, DependencyTypeAny)))
 			}
 		}
 	}
