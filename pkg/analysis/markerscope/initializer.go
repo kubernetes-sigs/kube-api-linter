@@ -55,7 +55,7 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 	fieldErrors = append(fieldErrors, validatePolicy(cfg.Policy, fldPath)...)
 
 	// Get default marker rules for validation
-	defaultRules := DefaultMarkerRules()
+	defaultRules := defaultMarkerRules()
 
 	// Validate override marker rules
 	fieldErrors = append(fieldErrors, validateOverrideMarkers(cfg.OverrideMarkers, defaultRules, fldPath)...)

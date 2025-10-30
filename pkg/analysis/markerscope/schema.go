@@ -15,7 +15,9 @@ limitations under the License.
 */
 package markerscope
 
-import "go/types"
+import (
+	"go/types"
+)
 
 // SchemaType represents OpenAPI schema types that markers can target.
 type SchemaType string
@@ -35,7 +37,15 @@ const (
 
 // getSchemaType converts a Go type to its corresponding OpenAPI schema type.
 func getSchemaType(t types.Type) SchemaType {
-	t = unwrapType(t)
+	// Unwrap pointer types
+	if ptr, ok := t.(*types.Pointer); ok {
+		t = ptr.Elem()
+	}
+
+	// Unwrap named types to get underlying type
+	if named, ok := t.(*types.Named); ok {
+		t = named.Underlying()
+	}
 
 	switch ut := t.Underlying().(type) {
 	case *types.Basic:
@@ -49,21 +59,6 @@ func getSchemaType(t types.Type) SchemaType {
 	return ""
 }
 
-// unwrapType unwraps pointer and named types to get the underlying type.
-func unwrapType(t types.Type) types.Type {
-	// Unwrap pointer types
-	if ptr, ok := t.(*types.Pointer); ok {
-		t = ptr.Elem()
-	}
-
-	// Unwrap named types to get underlying type
-	if named, ok := t.(*types.Named); ok {
-		t = named.Underlying()
-	}
-
-	return t
-}
-
 // getBasicTypeSchema returns the schema type for a basic Go type.
 func getBasicTypeSchema(bt *types.Basic) SchemaType {
 	switch bt.Kind() {
@@ -74,34 +69,13 @@ func getBasicTypeSchema(bt *types.Basic) SchemaType {
 		return SchemaTypeInteger
 	case types.String:
 		return SchemaTypeString
-	case types.Float32, types.Float64, types.Invalid, types.Uintptr, types.Complex64, types.Complex128,
-		types.UnsafePointer, types.UntypedBool, types.UntypedInt, types.UntypedRune,
+	case types.Invalid, types.Uintptr, types.Float32, types.Float64,
+		types.Complex64, types.Complex128, types.UnsafePointer,
+		types.UntypedBool, types.UntypedInt, types.UntypedRune,
 		types.UntypedFloat, types.UntypedComplex, types.UntypedString, types.UntypedNil:
 		// These types are not supported in OpenAPI schemas
 		return ""
 	default:
 		return ""
 	}
-}
-
-// getElementType returns the element type of an array or slice.
-func getElementType(t types.Type) types.Type {
-	// Unwrap pointer types
-	if ptr, ok := t.(*types.Pointer); ok {
-		t = ptr.Elem()
-	}
-
-	// Unwrap named types
-	if named, ok := t.(*types.Named); ok {
-		t = named.Underlying()
-	}
-
-	switch ut := t.Underlying().(type) {
-	case *types.Slice:
-		return ut.Elem()
-	case *types.Array:
-		return ut.Elem()
-	}
-
-	return nil
 }

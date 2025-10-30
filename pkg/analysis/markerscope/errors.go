@@ -72,6 +72,12 @@ func (e *markerShouldBeOnTypeDefinitionError) Error() string {
 	return fmt.Sprintf("marker should be declared on the type definition of %s instead of the field", e.typeName)
 }
 
+// Is implements error matching for markerShouldBeOnTypeDefinitionError.
+func (e *markerShouldBeOnTypeDefinitionError) Is(target error) bool {
+	_, ok := target.(*markerShouldBeOnTypeDefinitionError)
+	return ok
+}
+
 type typeNotAllowedError struct {
 	schemaType   SchemaType
 	allowedTypes []SchemaType
