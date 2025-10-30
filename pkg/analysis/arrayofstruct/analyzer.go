@@ -25,7 +25,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 const name = "arrayofstruct"
@@ -119,7 +118,7 @@ func reportArrayOfStructIssue(pass *analysis.Pass, field *ast.Field) {
 		prefix = fieldName
 	}
 
-	message := fmt.Sprintf("%s is an array of structs, but the struct has no required fields. At least one field should be marked as %s to prevent ambiguous YAML configurations", prefix, markers.RequiredMarker)
+	message := fmt.Sprintf("%s is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations", prefix)
 
 	pass.Report(analysis.Diagnostic{
 		Pos:     field.Pos(),
@@ -166,6 +165,11 @@ func getStructType(pass *analysis.Pass, expr ast.Expr) *ast.StructType {
 		// Inline struct definition
 		return et
 	case *ast.Ident:
+		// Check if it's a basic type - exit condition for recursion
+		if utils.IsBasicType(pass, et) {
+			return nil
+		}
+
 		// Named struct type or type alias
 		typeSpec, ok := utils.LookupTypeSpec(pass, et)
 		if !ok {
@@ -197,12 +201,7 @@ func hasRequiredField(structType *ast.StructType, markersAccess markershelper.Ma
 	}
 
 	for _, field := range structType.Fields.List {
-		fieldMarkers := markersAccess.FieldMarkers(field)
-
-		// Check for any of the required markers
-		if fieldMarkers.Has(markers.RequiredMarker) ||
-			fieldMarkers.Has(markers.KubebuilderRequiredMarker) ||
-			fieldMarkers.Has(markers.K8sRequiredMarker) {
+		if utils.IsFieldRequired(field, markersAccess) {
 			return true
 		}
 	}
