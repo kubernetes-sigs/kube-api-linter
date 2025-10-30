@@ -78,10 +78,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid marker rules", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:marker",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:marker",
+							Scope:      markerscope.FieldScope,
 						},
 					},
 				},
@@ -90,10 +90,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With marker rule having empty scope", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:marker",
-							Scope: "",
+							Identifier: "custom:marker",
+							Scope:      "",
 						},
 					},
 				},
@@ -102,10 +102,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With marker rule having invalid scope value", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:marker",
-							Scope: "invalid",
+							Identifier: "custom:marker",
+							Scope:      "invalid",
 						},
 					},
 				},
@@ -114,10 +114,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With marker rule having invalid schema type", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:marker",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:marker",
+							Scope:      markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{"invalid-type"},
 							},
@@ -129,10 +129,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with string type", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:string-marker",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:string-marker",
+							Scope:      markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeString},
 							},
@@ -144,10 +144,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with integer type", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:integer-marker",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:integer-marker",
+							Scope:      markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeInteger},
 							},
@@ -159,10 +159,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with multiple types", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name: "custom:numeric-marker",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:numeric-marker",
+							Scope:      markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{
 									markerscope.SchemaTypeInteger,
@@ -177,10 +177,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With valid type constraint with element constraint", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:string-array",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:string-array",
+							Scope:      markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeArray},
 								ElementConstraint: &markerscope.TypeConstraint{
@@ -195,10 +195,10 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With invalid element constraint", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:invalid-array",
-							Scope: markerscope.FieldScope,
+							Identifier: "custom:invalid-array",
+							Scope:      markerscope.FieldScope,
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeArray},
 								ElementConstraint: &markerscope.TypeConstraint{
@@ -213,10 +213,64 @@ var _ = Describe("markerscope initializer", func() {
 
 			Entry("With Any scope (field and type)", testCase{
 				config: markerscope.MarkerScopeConfig{
-					MarkerRules: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Name:  "custom:flexible-marker",
-							Scope: markerscope.AnyScope,
+							Identifier: "custom:flexible-marker",
+							Scope:      markerscope.AnyScope,
+						},
+					},
+				},
+				expectedErr: "",
+			}),
+
+			Entry("With override marker for built-in marker", testCase{
+				config: markerscope.MarkerScopeConfig{
+					OverrideMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier: "optional",
+							Scope:      markerscope.AnyScope, // Override default FieldScope
+						},
+					},
+				},
+				expectedErr: "",
+			}),
+
+			Entry("With override marker for non-built-in marker", testCase{
+				config: markerscope.MarkerScopeConfig{
+					OverrideMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier: "custom:nonexistent",
+							Scope:      markerscope.FieldScope,
+						},
+					},
+				},
+				expectedErr: "override marker must be a built-in marker; use customMarkers for custom markers",
+			}),
+
+			Entry("With custom marker for built-in marker", testCase{
+				config: markerscope.MarkerScopeConfig{
+					CustomMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier: "optional", // Built-in marker
+							Scope:      markerscope.AnyScope,
+						},
+					},
+				},
+				expectedErr: "custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers",
+			}),
+
+			Entry("With both override and custom markers", testCase{
+				config: markerscope.MarkerScopeConfig{
+					OverrideMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier: "optional",
+							Scope:      markerscope.AnyScope,
+						},
+					},
+					CustomMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier: "custom:marker",
+							Scope:      markerscope.FieldScope,
 						},
 					},
 				},
@@ -243,10 +297,49 @@ var _ = Describe("markerscope initializer", func() {
 		It("should initialize analyzer with custom markers", func() {
 			cfg := &markerscope.MarkerScopeConfig{
 				Policy: markerscope.MarkerScopePolicyWarn,
-				MarkerRules: []markerscope.MarkerScopeRule{
+				CustomMarkers: []markerscope.MarkerScopeRule{
 					{
-						Name:  "custom:marker",
-						Scope: markerscope.FieldScope,
+						Identifier: "custom:marker",
+						Scope:      markerscope.FieldScope,
+					},
+				},
+			}
+			analyzer, err := markerscope.Initializer().Init(cfg)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(analyzer).ToNot(BeNil())
+		})
+
+		It("should initialize analyzer with override markers", func() {
+			cfg := &markerscope.MarkerScopeConfig{
+				Policy: markerscope.MarkerScopePolicyWarn,
+				OverrideMarkers: []markerscope.MarkerScopeRule{
+					{
+						Identifier: "optional",
+						Scope:      markerscope.AnyScope, // Override default FieldScope
+					},
+				},
+			}
+			analyzer, err := markerscope.Initializer().Init(cfg)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(analyzer).ToNot(BeNil())
+		})
+
+		It("should initialize analyzer with both override and custom markers", func() {
+			cfg := &markerscope.MarkerScopeConfig{
+				Policy: markerscope.MarkerScopePolicySuggestFix,
+				OverrideMarkers: []markerscope.MarkerScopeRule{
+					{
+						Identifier: "optional",
+						Scope:      markerscope.AnyScope,
+					},
+				},
+				CustomMarkers: []markerscope.MarkerScopeRule{
+					{
+						Identifier: "custom:validation:MyMarker",
+						Scope:      markerscope.FieldScope,
+						TypeConstraint: &markerscope.TypeConstraint{
+							AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeString},
+						},
 					},
 				},
 			}

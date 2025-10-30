@@ -57,9 +57,8 @@ type TypeConstraint struct {
 
 // MarkerScopeRule defines comprehensive scope validation rules for a marker.
 type MarkerScopeRule struct {
-	// Name is the marker identifier (e.g., "optional", "kubebuilder:validation:Minimum").
-	// This field is only used when MarkerScopeRule is part of a list configuration.
-	Name string `json:"name,omitempty"`
+	// Identifier is the marker identifier (e.g., "optional", "kubebuilder:validation:Minimum").
+	Identifier string `json:"identifier,omitempty"`
 
 	// Scope specifies where the marker can be placed (field vs type).
 	Scope ScopeConstraint
@@ -89,21 +88,25 @@ const (
 
 // MarkerScopeConfig contains configuration for marker scope validation.
 type MarkerScopeConfig struct {
-	// MarkerRules is a list of marker rules with scope and type constraints.
-	// This list can be used to:
-	//   - Override default rules for built-in markers (from DefaultMarkerRules)
-	//   - Add rules for custom markers not included in DefaultMarkerRules
+	// OverrideMarkers is a list of marker rules that override default rules for built-in markers.
+	// Use this to customize the behavior of standard kubebuilder/controller-runtime markers.
 	//
-	// If a marker is not in this list AND not in DefaultMarkerRules(), no scope validation is performed.
-	// If a marker is in both this list and DefaultMarkerRules(), this list takes precedence.
+	// Example: Override the built-in "optional" marker
+	//   overrideMarkers:
+	//     - identifier: "optional"
+	//       scope: Field
+	OverrideMarkers []MarkerScopeRule `json:"overrideMarkers,omitempty"`
+
+	// CustomMarkers is a list of marker rules for custom markers not included in the default rules.
+	// Use this to add validation for your own custom markers.
 	//
-	// Example: Adding a custom marker
-	//   markerRules:
-	//     - name: "mycompany:validation:CustomMarker"
-	//       scope: any
+	// Example: Add a custom marker
+	//   customMarkers:
+	//     - identifier: "mycompany:validation:CustomMarker"
+	//       scope: Any
 	//       typeConstraint:
 	//         allowedSchemaTypes: ["string"]
-	MarkerRules []MarkerScopeRule `json:"markerRules,omitempty"`
+	CustomMarkers []MarkerScopeRule `json:"customMarkers,omitempty"`
 
 	// AllowDangerousTypes specifies if dangerous types are allowed.
 	// If true, dangerous types are allowed.
