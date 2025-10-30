@@ -32,6 +32,7 @@ func TestAnalyzerWithDefaultConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	analysistest.Run(t, testdata, analyzer, "a")
 }
 
@@ -40,10 +41,12 @@ func TestAnalyzerSuggestFixes(t *testing.T) {
 	cfg := &markerscope.MarkerScopeConfig{
 		Policy: markerscope.MarkerScopePolicySuggestFix,
 	}
+
 	analyzer, err := markerscope.Initializer().Init(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
 
@@ -111,9 +114,11 @@ func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 			},
 		},
 	}
+
 	analyzer, err := markerscope.Initializer().Init(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	analysistest.Run(t, testdata, analyzer, "b")
 }

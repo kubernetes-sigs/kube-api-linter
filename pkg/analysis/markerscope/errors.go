@@ -24,57 +24,59 @@ var (
 	errScopeRequired = errors.New("scope is required")
 )
 
-// InvalidScopeConstraintError represents an error when a scope constraint is invalid.
-type InvalidScopeConstraintError struct {
-	Scope string
+type invalidScopeConstraintError struct {
+	scope string
 }
 
-func (e *InvalidScopeConstraintError) Error() string {
-	return fmt.Sprintf("invalid scope: %q (must be one of: Field, Type, Any)", e.Scope)
+func (e *invalidScopeConstraintError) Error() string {
+	return fmt.Sprintf("invalid scope: %q (must be one of: Field, Type, Any)", e.scope)
 }
 
-// InvalidSchemaTypeError represents an error when a schema type is invalid.
-type InvalidSchemaTypeError struct {
-	SchemaType string
+type invalidNamedTypeConstraintError struct {
+	constraint string
 }
 
-func (e *InvalidSchemaTypeError) Error() string {
-	return fmt.Sprintf("invalid schema type: %q", e.SchemaType)
+func (e *invalidNamedTypeConstraintError) Error() string {
+	return fmt.Sprintf("invalid namedTypeConstraint: %q (must be one of: AllowField, RequireTypeDefinition, or empty)", e.constraint)
 }
 
-// InvalidTypeConstraintError represents an error when a type constraint is invalid.
-type InvalidTypeConstraintError struct {
-	Err error
+type invalidSchemaTypeError struct {
+	schemaType string
 }
 
-func (e *InvalidTypeConstraintError) Error() string {
-	return fmt.Sprintf("invalid type constraint: %v", e.Err)
+func (e *invalidSchemaTypeError) Error() string {
+	return fmt.Sprintf("invalid schema type: %q", e.schemaType)
 }
 
-// InvalidElementConstraintError represents an error when an element constraint is invalid.
-type InvalidElementConstraintError struct {
-	Err error
+type invalidTypeConstraintError struct {
+	err error
 }
 
-func (e *InvalidElementConstraintError) Error() string {
-	return fmt.Sprintf("array element: %v", e.Err)
+func (e *invalidTypeConstraintError) Error() string {
+	return fmt.Sprintf("invalid type constraint: %v", e.err)
 }
 
-// MarkerShouldBeOnTypeDefinitionError represents an error when a marker should be declared on the type definition.
-type MarkerShouldBeOnTypeDefinitionError struct {
-	TypeName string
+type invalidElementConstraintError struct {
+	err error
 }
 
-func (e *MarkerShouldBeOnTypeDefinitionError) Error() string {
-	return fmt.Sprintf("marker should be declared on the type definition of %s instead of the field", e.TypeName)
+func (e *invalidElementConstraintError) Error() string {
+	return fmt.Sprintf("array element: %v", e.err)
 }
 
-// TypeNotAllowedError represents an error when a type is not allowed.
-type TypeNotAllowedError struct {
-	Type         SchemaType
-	AllowedTypes []SchemaType
+type markerShouldBeOnTypeDefinitionError struct {
+	typeName string
 }
 
-func (e *TypeNotAllowedError) Error() string {
-	return fmt.Sprintf("type %s is not allowed (expected one of: %v)", e.Type, e.AllowedTypes)
+func (e *markerShouldBeOnTypeDefinitionError) Error() string {
+	return fmt.Sprintf("marker should be declared on the type definition of %s instead of the field", e.typeName)
+}
+
+type typeNotAllowedError struct {
+	schemaType   SchemaType
+	allowedTypes []SchemaType
+}
+
+func (e *typeNotAllowedError) Error() string {
+	return fmt.Sprintf("type %s is not allowed (expected one of: %v)", e.schemaType, e.allowedTypes)
 }

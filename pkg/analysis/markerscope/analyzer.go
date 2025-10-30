@@ -106,11 +106,13 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 // markerRulesListToMap converts a list of marker rules to a map keyed by marker identifier.
 func markerRulesListToMap(rules []MarkerScopeRule) map[string]MarkerScopeRule {
 	result := make(map[string]MarkerScopeRule, len(rules))
+
 	for _, rule := range rules {
 		if rule.Identifier != "" {
 			result[rule.Identifier] = rule
 		}
 	}
+
 	return result
 }
 
@@ -120,7 +122,6 @@ func defaultConfig(cfg *MarkerScopeConfig) {
 	if cfg.Policy == "" {
 		cfg.Policy = MarkerScopePolicyWarn
 	}
-	// overrideMarkers and customMarkers default to empty (zero value)
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
@@ -244,7 +245,7 @@ func (a *analyzer) checkFieldTypeConstraintViolation(pass *analysis.Pass, field 
 
 		if a.policy == MarkerScopePolicySuggestFix {
 			// Check if this is a "should be on type definition" error
-			var moveErr *MarkerShouldBeOnTypeDefinitionError
+			var moveErr *markerShouldBeOnTypeDefinitionError
 			if errors.As(err, &moveErr) {
 				// Suggest moving to type definition
 				fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
@@ -305,7 +306,7 @@ func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *a
 		if a.policy == MarkerScopePolicySuggestFix {
 			// Check if this is a "should be on field" error (though validateTypeSpecTypeConstraint doesn't return this)
 			// For consistency with checkFieldMarkers, we check the error type
-			var moveErr *MarkerShouldBeOnTypeDefinitionError
+			var moveErr *markerShouldBeOnTypeDefinitionError
 			if errors.As(err, &moveErr) {
 				// This shouldn't happen for type specs, but handle it for consistency
 				fixes = a.suggestMoveToField(pass, typeSpec, marker, rule)
@@ -347,10 +348,11 @@ func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.F
 		return err
 	}
 
-	if rule.StrictTypeConstraint && rule.Scope == AnyScope {
+	// Check if the marker should be on the type definition instead of the field
+	if rule.NamedTypeConstraint == NamedTypeConstraintRequireTypeDefinition && rule.Scope == AnyScope {
 		namedType, ok := tv.Type.(*types.Named)
 		if ok {
-			return &MarkerShouldBeOnTypeDefinitionError{TypeName: namedType.Obj().Name()}
+			return &markerShouldBeOnTypeDefinitionError{typeName: namedType.Obj().Name()}
 		}
 	}
 
@@ -385,7 +387,7 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	// Check if the schema type is allowed
 	if len(tc.AllowedSchemaTypes) > 0 {
 		if !slices.Contains(tc.AllowedSchemaTypes, schemaType) {
-			return &TypeNotAllowedError{Type: schemaType, AllowedTypes: tc.AllowedSchemaTypes}
+			return &typeNotAllowedError{schemaType: schemaType, allowedTypes: tc.AllowedSchemaTypes}
 		}
 	}
 
@@ -394,7 +396,7 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 		elemType := getElementType(t)
 		if elemType != nil {
 			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint); err != nil {
-				return &InvalidElementConstraintError{Err: err}
+				return &invalidElementConstraintError{err: err}
 			}
 		}
 	}
