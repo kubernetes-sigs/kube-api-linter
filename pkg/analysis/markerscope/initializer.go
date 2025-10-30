@@ -52,21 +52,41 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 	fieldErrors := field.ErrorList{}
 
 	// Validate policy
-	if cfg.Policy != "" && cfg.Policy != MarkerScopePolicyWarn && cfg.Policy != MarkerScopePolicySuggestFix {
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), cfg.Policy,
-			fmt.Sprintf("invalid policy, must be one of: %q, %q", MarkerScopePolicyWarn, MarkerScopePolicySuggestFix)))
-	}
+	fieldErrors = append(fieldErrors, validatePolicy(cfg.Policy, fldPath)...)
 
 	// Get default marker rules for validation
 	defaultRules := DefaultMarkerRules()
 
 	// Validate override marker rules
-	for i, rule := range cfg.OverrideMarkers {
+	fieldErrors = append(fieldErrors, validateOverrideMarkers(cfg.OverrideMarkers, defaultRules, fldPath)...)
+
+	// Validate custom marker rules
+	fieldErrors = append(fieldErrors, validateCustomMarkers(cfg.CustomMarkers, defaultRules, fldPath)...)
+
+	return fieldErrors
+}
+
+func validatePolicy(policy MarkerScopePolicy, fldPath *field.Path) field.ErrorList {
+	if policy != "" && policy != MarkerScopePolicyWarn && policy != MarkerScopePolicySuggestFix {
+		return field.ErrorList{
+			field.Invalid(fldPath.Child("policy"), policy,
+				fmt.Sprintf("invalid policy, must be one of: %q, %q", MarkerScopePolicyWarn, MarkerScopePolicySuggestFix)),
+		}
+	}
+
+	return nil
+}
+
+func validateOverrideMarkers(rules []MarkerScopeRule, defaultRules map[string]MarkerScopeRule, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	for i, rule := range rules {
 		markerRulePath := fldPath.Child("overrideMarkers").Index(i)
 
 		// Validate that identifier is not empty
 		if rule.Identifier == "" {
 			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("identifier"), "marker identifier is required"))
+
 			continue
 		}
 
@@ -74,6 +94,7 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 		if _, exists := defaultRules[rule.Identifier]; !exists {
 			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath.Child("identifier"), rule.Identifier,
 				"override marker must be a built-in marker; use customMarkers for custom markers"))
+
 			continue
 		}
 
@@ -82,13 +103,19 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 		}
 	}
 
-	// Validate custom marker rules
-	for i, rule := range cfg.CustomMarkers {
+	return fieldErrors
+}
+
+func validateCustomMarkers(rules []MarkerScopeRule, defaultRules map[string]MarkerScopeRule, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
+	for i, rule := range rules {
 		markerRulePath := fldPath.Child("customMarkers").Index(i)
 
 		// Validate that identifier is not empty
 		if rule.Identifier == "" {
 			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("identifier"), "marker identifier is required"))
+
 			continue
 		}
 
@@ -96,6 +123,7 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 		if _, exists := defaultRules[rule.Identifier]; exists {
 			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath.Child("identifier"), rule.Identifier,
 				"custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers"))
+
 			continue
 		}
 
@@ -118,14 +146,19 @@ func validateMarkerRule(rule MarkerScopeRule) error {
 	case FieldScope, TypeScope, AnyScope:
 		// Valid scope
 	default:
-		return &InvalidScopeConstraintError{Scope: string(rule.Scope)}
+		return &invalidScopeConstraintError{scope: string(rule.Scope)}
+	}
+
+	// Validate named type constraint if present
+	if !isValidNamedTypeConstraint(rule.NamedTypeConstraint) {
+		return &invalidNamedTypeConstraintError{constraint: string(rule.NamedTypeConstraint)}
 	}
 
 	// Validate type constraint if present
 	if rule.TypeConstraint != nil {
 		if err := validateTypeConstraint(rule.TypeConstraint); err != nil {
-			return &InvalidTypeConstraintError{
-				Err: err,
+			return &invalidTypeConstraintError{
+				err: err,
 			}
 		}
 	}
@@ -141,7 +174,7 @@ func validateTypeConstraint(tc *TypeConstraint) error {
 	// Validate schema types if specified
 	for _, st := range tc.AllowedSchemaTypes {
 		if !isValidSchemaType(st) {
-			return &InvalidSchemaTypeError{SchemaType: string(st)}
+			return &invalidSchemaTypeError{schemaType: string(st)}
 		}
 	}
 
@@ -158,6 +191,20 @@ func validateTypeConstraint(tc *TypeConstraint) error {
 func isValidSchemaType(st SchemaType) bool {
 	switch st {
 	case SchemaTypeInteger, SchemaTypeString, SchemaTypeBoolean, SchemaTypeArray, SchemaTypeObject:
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidNamedTypeConstraint(ntc NamedTypeConstraint) bool {
+	// Empty is valid (defaults to AllowField)
+	if ntc == "" {
+		return true
+	}
+
+	switch ntc {
+	case NamedTypeConstraintAllowField, NamedTypeConstraintRequireTypeDefinition:
 		return true
 	default:
 		return false

@@ -105,17 +105,3 @@ func getElementType(t types.Type) types.Type {
 
 	return nil
 }
-
-// getUnderlyingType recursively unwraps type to find the underlying type.
-func getUnderlyingType(expr types.Type) types.Type {
-	switch t := expr.(type) {
-	case *types.Pointer:
-		return getUnderlyingType(t.Elem())
-	case *types.Named:
-		return getUnderlyingType(t.Underlying())
-	case *types.Alias:
-		return getUnderlyingType(t.Underlying())
-	default:
-		return expr
-	}
-}
