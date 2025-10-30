@@ -39,41 +39,53 @@ func TestAnalyzerSuggestFixes(t *testing.T) {
 	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
 
-func TestAnalyzerWithCustomMarkers(t *testing.T) {
+func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 	testdata := analysistest.TestData()
 	cfg := &MarkerScopeConfig{
 		Policy: MarkerScopePolicyWarn,
-		MarkerRules: []MarkerScopeRule{
+		OverrideMarkers: []MarkerScopeRule{
+			// Override built-in "optional" to allow on types (default is FieldScope only)
+			{
+				Identifier: "optional",
+				Scope:      AnyScope,
+			},
+			// Override built-in "required" to allow on types (default is FieldScope only)
+			{
+				Identifier: "required",
+				Scope:      AnyScope,
+			},
+		},
+		CustomMarkers: []MarkerScopeRule{
 			// Custom field-only marker
 			{
-				Name:  "custom:field-only",
-				Scope: FieldScope,
+				Identifier: "custom:field-only",
+				Scope:      FieldScope,
 			},
 			// Custom type-only marker
 			{
-				Name:  "custom:type-only",
-				Scope: TypeScope,
+				Identifier: "custom:type-only",
+				Scope:      TypeScope,
 			},
 			// Custom marker with string type constraint
 			{
-				Name:  "custom:string-only",
-				Scope: FieldScope,
+				Identifier: "custom:string-only",
+				Scope:      FieldScope,
 				TypeConstraint: &TypeConstraint{
 					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
 				},
 			},
 			// Custom marker with integer type constraint
 			{
-				Name:  "custom:integer-only",
-				Scope: FieldScope,
+				Identifier: "custom:integer-only",
+				Scope:      FieldScope,
 				TypeConstraint: &TypeConstraint{
 					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 				},
 			},
 			// Custom marker with array of strings constraint
 			{
-				Name:  "custom:string-array",
-				Scope: FieldScope,
+				Identifier: "custom:string-array",
+				Scope:      FieldScope,
 				TypeConstraint: &TypeConstraint{
 					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 					ElementConstraint: &TypeConstraint{

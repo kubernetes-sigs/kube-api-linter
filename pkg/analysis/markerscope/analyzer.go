@@ -60,11 +60,22 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		cfg = &MarkerScopeConfig{}
 	}
 
-	// Convert list of marker rules to map
-	customRules := markerRulesListToMap(cfg.MarkerRules)
+	// Convert override and custom marker lists to maps
+	overrideRules := markerRulesListToMap(cfg.OverrideMarkers)
+	customRules := markerRulesListToMap(cfg.CustomMarkers)
+
+	// Merge rules:
+	// 1. Start with default built-in marker rules
+	// 2. Apply overrides (replaces default rules for built-in markers)
+	// 3. Add custom markers (new markers not in defaults)
+	// Note: Validation ensures overrideMarkers only contains built-in markers
+	// and customMarkers only contains non-built-in markers, so no conflicts.
+	rules := DefaultMarkerRules()
+	maps.Copy(rules, overrideRules) // Override built-in markers
+	maps.Copy(rules, customRules)   // Add custom markers
 
 	a := &analyzer{
-		markerRules:         mergeMarkerRules(DefaultMarkerRules(), customRules),
+		markerRules:         rules,
 		policy:              cfg.Policy,
 		allowDangerousTypes: cfg.AllowDangerousTypes,
 	}
@@ -90,29 +101,15 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 	}
 }
 
-// markerRulesListToMap converts a list of marker rules to a map keyed by marker name.
+// markerRulesListToMap converts a list of marker rules to a map keyed by marker identifier.
 func markerRulesListToMap(rules []MarkerScopeRule) map[string]MarkerScopeRule {
 	result := make(map[string]MarkerScopeRule, len(rules))
 	for _, rule := range rules {
-		if rule.Name != "" {
-			result[rule.Name] = rule
+		if rule.Identifier != "" {
+			result[rule.Identifier] = rule
 		}
 	}
 	return result
-}
-
-// mergeMarkerRules merges custom marker rules with default marker rules.
-// Custom rules take precedence over default rules for the same marker.
-func mergeMarkerRules(defaults, custom map[string]MarkerScopeRule) map[string]MarkerScopeRule {
-	merged := make(map[string]MarkerScopeRule, len(defaults)+len(custom))
-
-	// Copy all default rules
-	maps.Copy(merged, defaults)
-
-	// Override with custom rules
-	maps.Copy(merged, custom)
-
-	return merged
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
