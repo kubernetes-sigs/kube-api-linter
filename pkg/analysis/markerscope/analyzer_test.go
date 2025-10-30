@@ -26,7 +26,6 @@ func TestAnalyzerWithDefaultConfig(t *testing.T) {
 	testdata := analysistest.TestData()
 	// Test with nil config - should use all defaults:
 	// - Policy: Warn
-	// - AllowDangerousTypes: false
 	// - OverrideMarkers: empty (use built-in defaults)
 	// - CustomMarkers: empty
 	analyzer, err := markerscope.Initializer().Init(&markerscope.MarkerScopeConfig{})

@@ -166,7 +166,6 @@ var _ = Describe("markerscope initializer", func() {
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{
 									markerscope.SchemaTypeInteger,
-									markerscope.SchemaTypeNumber,
 								},
 							},
 						},
