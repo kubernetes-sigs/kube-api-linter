@@ -1,0 +1,96 @@
+/*
+Copyright 2025 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package a
+
+type ObjectType struct {
+	Field1 string `json:"field1"`
+	Field2 string `json:"field2"`
+}
+
+// Valid: MinProperties on type
+// +kubebuilder:validation:MinProperties=1
+type MinPropertiesType struct {
+	Field string `json:"field"`
+}
+
+// Valid: MaxProperties on type
+// +kubebuilder:validation:MaxProperties=10
+type MaxPropertiesType struct {
+	Field1 string `json:"field1"`
+	Field2 string `json:"field2"`
+}
+
+// Types without markers for testing field markers
+type MinPropertiesTypeNoMarker struct {
+	Field string `json:"field"`
+}
+
+type MaxPropertiesTypeNoMarker struct {
+	Field1 string `json:"field1"`
+	Field2 string `json:"field2"`
+}
+
+// Invalid: MinProperties marker on string type
+// +kubebuilder:validation:MinProperties=2 // want `marker "kubebuilder:validation:MinProperties": type string is not allowed \(expected one of: \[object\]\)`
+type InvalidMinPropertiesOnStringType string
+
+// Invalid: MaxProperties marker on array type
+// +kubebuilder:validation:MaxProperties=5 // want `marker "kubebuilder:validation:MaxProperties": type array is not allowed \(expected one of: \[object\]\)`
+type InvalidMaxPropertiesOnArrayType []string
+
+type ObjectMarkersFieldTest struct {
+	// Valid: MinProperties marker on map field
+	// +kubebuilder:validation:MinProperties=1
+	ValidMinProperties map[string]string `json:"validMinProperties"`
+
+	// Valid: MaxProperties marker on map field
+	// +kubebuilder:validation:MaxProperties=10
+	ValidMaxProperties map[string]string `json:"validMaxProperties"`
+
+	// Valid: All map markers on map field
+	// +kubebuilder:validation:MinProperties=1
+	// +kubebuilder:validation:MaxProperties=10
+	ValidAllObjectMarkers map[string]string `json:"validAllObjectMarkers"`
+
+	// Valid: Using MinPropertiesType
+	ValidMinPropertiesTyped MinPropertiesType `json:"validMinPropertiesTyped"`
+
+	// Valid: Using MaxPropertiesType
+	ValidMaxPropertiesTyped MaxPropertiesType `json:"validMaxPropertiesTyped"`
+
+	// Invalid: MinProperties marker on named type
+	// +kubebuilder:validation:MinProperties=1 // want `marker "kubebuilder:validation:MinProperties": marker should be declared on the type definition of MinPropertiesTypeNoMarker instead of the field`
+	InvalidMinPropertiesOnMinPropertiesTypeNoMarker MinPropertiesTypeNoMarker `json:"invalidMinPropertiesOnMinPropertiesTypeNoMarker"`
+
+	// Invalid: MaxProperties marker on named type
+	// +kubebuilder:validation:MaxProperties=10 // want `marker "kubebuilder:validation:MaxProperties": marker should be declared on the type definition of MaxPropertiesTypeNoMarker instead of the field`
+	InvalidMaxPropertiesOnMaxPropertiesTypeNoMarker MaxPropertiesTypeNoMarker `json:"invalidMaxPropertiesOnMaxPropertiesTypeNoMarker"`
+
+	// Invalid: MinProperties marker on string field
+	// +kubebuilder:validation:MinProperties=2 // want `marker "kubebuilder:validation:MinProperties": type string is not allowed \(expected one of: \[object\]\)`
+	InvalidMinPropertiesOnString string `json:"invalidMinPropertiesOnString"`
+
+	// Invalid: MaxProperties marker on array field
+	// +kubebuilder:validation:MaxProperties=5 // want `marker "kubebuilder:validation:MaxProperties": type array is not allowed \(expected one of: \[object\]\)`
+	InvalidMaxPropertiesOnArray []string `json:"invalidMaxPropertiesOnArray"`
+
+	// Invalid: Using invalid named type
+	// +kubebuilder:validation:MinProperties=2 // want `marker "kubebuilder:validation:MinProperties": type string is not allowed \(expected one of: \[object\]\)`
+	InvalidMinPropertiesOnStringTyped InvalidMinPropertiesOnStringType `json:"invalidMinPropertiesOnStringTyped"`
+
+	// Invalid: Using invalid named type
+	InvalidMaxPropertiesOnArrayTyped InvalidMaxPropertiesOnArrayType `json:"invalidMaxPropertiesOnArrayTyped"`
+}

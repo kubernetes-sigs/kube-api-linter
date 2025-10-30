@@ -85,7 +85,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 
 	// If the field is a byte array, we cannot use listType markers with it.
 	if utils.IsByteArray(pass, field) {
-		listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListTypeMarker)
+		listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.ListTypeMarker)
 		for _, marker := range listTypeMarkers {
 			pass.Report(analysis.Diagnostic{
 				Pos:     field.Pos(),
@@ -109,7 +109,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	}
 
 	fieldName := utils.FieldName(field)
-	listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListTypeMarker)
+	listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.ListTypeMarker)
 
 	if len(listTypeMarkers) == 0 {
 		pass.Report(analysis.Diagnostic{
@@ -149,7 +149,7 @@ func (a *analyzer) checkListTypeMarker(pass *analysis.Pass, listType string, fie
 }
 
 func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.MarkerSet, field *ast.Field) {
-	listMapKeyMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListMapKeyMarker)
+	listMapKeyMarkers := fieldMarkers.Get(kubebuildermarkers.ListMapKeyMarker)
 	fieldName := utils.FieldName(field)
 
 	isObjectList := utils.IsObjectList(pass, field)
