@@ -60,6 +60,9 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		cfg = &MarkerScopeConfig{}
 	}
 
+	// Apply default configuration
+	defaultConfig(cfg)
+
 	// Convert override and custom marker lists to maps
 	overrideRules := markerRulesListToMap(cfg.OverrideMarkers)
 	customRules := markerRulesListToMap(cfg.CustomMarkers)
@@ -87,14 +90,15 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		markershelper.DefaultRegistry().Register(marker)
 	}
 
-	// Set default policy if not specified
-	if a.policy == "" {
-		a.policy = MarkerScopePolicyWarn
-	}
-
 	return &analysis.Analyzer{
-		Name:             name,
-		Doc:              "Validates that markers are applied in the correct scope.",
+		Name: name,
+		Doc: `Validates that markers are applied in the correct scope and to compatible data types.
+		This analyzer performs two levels of validation:
+		1. Scope validation - ensures markers are placed on the correct location (field vs type)
+		2. Type constraint validation - ensures markers are applied to compatible data types
+		The analyzer includes 100+ built-in kubebuilder marker rules. You can override built-in marker
+		rules using overrideMarkers configuration, or add custom markers using customMarkers configuration.
+		`,
 		Run:              a.run,
 		Requires:         []*analysis.Analyzer{inspect.Analyzer, markershelper.Analyzer},
 		RunDespiteErrors: true,
@@ -110,6 +114,16 @@ func markerRulesListToMap(rules []MarkerScopeRule) map[string]MarkerScopeRule {
 		}
 	}
 	return result
+}
+
+// defaultConfig applies default values to the configuration.
+func defaultConfig(cfg *MarkerScopeConfig) {
+	// Set default policy if not specified
+	if cfg.Policy == "" {
+		cfg.Policy = MarkerScopePolicyWarn
+	}
+	// allowDangerousTypes defaults to false (zero value)
+	// overrideMarkers and customMarkers default to empty (zero value)
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {

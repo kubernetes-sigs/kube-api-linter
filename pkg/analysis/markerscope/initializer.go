@@ -34,7 +34,7 @@ func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewConfigurableInitializer(
 		name,
 		initAnalyzer,
-		false, // Not enabled by default
+		true,
 		validateConfig,
 	)
 }

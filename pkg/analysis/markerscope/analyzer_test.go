@@ -13,88 +13,108 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package markerscope
+package markerscope_test
 
 import (
 	"testing"
 
 	"golang.org/x/tools/go/analysis/analysistest"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/markerscope"
 )
 
-func TestAnalyzerWarnOnly(t *testing.T) {
+func TestAnalyzerWithDefaultConfig(t *testing.T) {
 	testdata := analysistest.TestData()
-	cfg := &MarkerScopeConfig{
-		Policy: MarkerScopePolicyWarn,
+	// Test with nil config - should use all defaults:
+	// - Policy: Warn
+	// - AllowDangerousTypes: false
+	// - OverrideMarkers: empty (use built-in defaults)
+	// - CustomMarkers: empty
+	analyzer, err := markerscope.Initializer().Init(&markerscope.MarkerScopeConfig{})
+	if err != nil {
+		t.Fatal(err)
 	}
-	analyzer := newAnalyzer(cfg)
 	analysistest.Run(t, testdata, analyzer, "a")
 }
 
 func TestAnalyzerSuggestFixes(t *testing.T) {
 	testdata := analysistest.TestData()
-	cfg := &MarkerScopeConfig{
-		Policy: MarkerScopePolicySuggestFix,
+	cfg := &markerscope.MarkerScopeConfig{
+		Policy: markerscope.MarkerScopePolicySuggestFix,
 	}
-	analyzer := newAnalyzer(cfg)
+	analyzer, err := markerscope.Initializer().Init(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
 	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
 
 func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 	testdata := analysistest.TestData()
-	cfg := &MarkerScopeConfig{
-		Policy: MarkerScopePolicyWarn,
-		OverrideMarkers: []MarkerScopeRule{
+	cfg := &markerscope.MarkerScopeConfig{
+		Policy: markerscope.MarkerScopePolicyWarn,
+		OverrideMarkers: []markerscope.MarkerScopeRule{
 			// Override built-in "optional" to allow on types (default is FieldScope only)
 			{
 				Identifier: "optional",
-				Scope:      AnyScope,
+				Scope:      markerscope.AnyScope,
 			},
 			// Override built-in "required" to allow on types (default is FieldScope only)
 			{
 				Identifier: "required",
-				Scope:      AnyScope,
+				Scope:      markerscope.AnyScope,
 			},
 		},
-		CustomMarkers: []MarkerScopeRule{
+		CustomMarkers: []markerscope.MarkerScopeRule{
 			// Custom field-only marker
 			{
 				Identifier: "custom:field-only",
-				Scope:      FieldScope,
+				Scope:      markerscope.FieldScope,
 			},
 			// Custom type-only marker
 			{
 				Identifier: "custom:type-only",
-				Scope:      TypeScope,
+				Scope:      markerscope.TypeScope,
 			},
 			// Custom marker with string type constraint
 			{
 				Identifier: "custom:string-only",
-				Scope:      FieldScope,
-				TypeConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+				Scope:      markerscope.FieldScope,
+				TypeConstraint: &markerscope.TypeConstraint{
+					AllowedSchemaTypes: []markerscope.SchemaType{
+						markerscope.SchemaTypeString,
+					},
 				},
 			},
 			// Custom marker with integer type constraint
 			{
 				Identifier: "custom:integer-only",
-				Scope:      FieldScope,
-				TypeConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				Scope:      markerscope.FieldScope,
+				TypeConstraint: &markerscope.TypeConstraint{
+					AllowedSchemaTypes: []markerscope.SchemaType{
+						markerscope.SchemaTypeInteger,
+					},
 				},
 			},
 			// Custom marker with array of strings constraint
 			{
 				Identifier: "custom:string-array",
-				Scope:      FieldScope,
-				TypeConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
-					ElementConstraint: &TypeConstraint{
-						AllowedSchemaTypes: []SchemaType{SchemaTypeString},
+				Scope:      markerscope.FieldScope,
+				TypeConstraint: &markerscope.TypeConstraint{
+					AllowedSchemaTypes: []markerscope.SchemaType{
+						markerscope.SchemaTypeArray,
+					},
+					ElementConstraint: &markerscope.TypeConstraint{
+						AllowedSchemaTypes: []markerscope.SchemaType{
+							markerscope.SchemaTypeString,
+						},
 					},
 				},
 			},
 		},
 	}
-	analyzer := newAnalyzer(cfg)
+	analyzer, err := markerscope.Initializer().Init(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
 	analysistest.Run(t, testdata, analyzer, "b")
 }
