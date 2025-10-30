@@ -157,7 +157,7 @@ func validateTypeConstraint(tc *TypeConstraint) error {
 
 func isValidSchemaType(st SchemaType) bool {
 	switch st {
-	case SchemaTypeInteger, SchemaTypeNumber, SchemaTypeString, SchemaTypeBoolean, SchemaTypeArray, SchemaTypeObject:
+	case SchemaTypeInteger, SchemaTypeString, SchemaTypeBoolean, SchemaTypeArray, SchemaTypeObject:
 		return true
 	default:
 		return false

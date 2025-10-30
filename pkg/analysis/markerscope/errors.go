@@ -69,15 +69,6 @@ func (e *MarkerShouldBeOnTypeDefinitionError) Error() string {
 	return fmt.Sprintf("marker should be declared on the type definition of %s instead of the field", e.TypeName)
 }
 
-// DengerousTypeError represents an error when a dangerous type is used.
-type DengerousTypeError struct {
-	Type string
-}
-
-func (e *DengerousTypeError) Error() string {
-	return fmt.Sprintf("type %s is dangerous and not allowed (set allowDangerousTypes to true to permit)", e.Type)
-}
-
 // TypeNotAllowedError represents an error when a type is not allowed.
 type TypeNotAllowedError struct {
 	Type         SchemaType

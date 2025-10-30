@@ -49,9 +49,8 @@ func init() {
 }
 
 type analyzer struct {
-	markerRules         map[string]MarkerScopeRule
-	policy              MarkerScopePolicy
-	allowDangerousTypes bool
+	markerRules map[string]MarkerScopeRule
+	policy      MarkerScopePolicy
 }
 
 // newAnalyzer creates a new analyzer.
@@ -78,9 +77,8 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 	maps.Copy(rules, customRules)   // Add custom markers
 
 	a := &analyzer{
-		markerRules:         rules,
-		policy:              cfg.Policy,
-		allowDangerousTypes: cfg.AllowDangerousTypes,
+		markerRules: rules,
+		policy:      cfg.Policy,
 	}
 
 	// Register all markers (both default and custom) with the markers helper
@@ -122,7 +120,6 @@ func defaultConfig(cfg *MarkerScopeConfig) {
 	if cfg.Policy == "" {
 		cfg.Policy = MarkerScopePolicyWarn
 	}
-	// allowDangerousTypes defaults to false (zero value)
 	// overrideMarkers and customMarkers default to empty (zero value)
 }
 
@@ -211,7 +208,7 @@ func (a *analyzer) checkSingleTypeMarkers(pass *analysis.Pass, typeSpec *ast.Typ
 		}
 
 		// Check type constraints if present
-		a.checkTypeConstraintViolation(pass, typeSpec, marker, rule, a.allowDangerousTypes)
+		a.checkTypeConstraintViolation(pass, typeSpec, marker, rule)
 	}
 }
 
@@ -242,7 +239,7 @@ func (a *analyzer) reportFieldScopeViolation(pass *analysis.Pass, field *ast.Fie
 
 // checkFieldTypeConstraintViolation checks and reports type constraint violations for field markers.
 func (a *analyzer) checkFieldTypeConstraintViolation(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) {
-	if err := a.validateFieldTypeConstraint(pass, field, rule, a.allowDangerousTypes); err != nil {
+	if err := a.validateFieldTypeConstraint(pass, field, rule); err != nil {
 		var fixes []analysis.SuggestedFix
 
 		if a.policy == MarkerScopePolicySuggestFix {
@@ -301,8 +298,8 @@ func (a *analyzer) reportTypeScopeViolation(pass *analysis.Pass, typeSpec *ast.T
 }
 
 // checkTypeConstraintViolation checks and reports type constraint violations.
-func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule, allowDangerousTypes bool) {
-	if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint, allowDangerousTypes); err != nil {
+func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
+	if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint); err != nil {
 		var fixes []analysis.SuggestedFix
 
 		if a.policy == MarkerScopePolicySuggestFix {
@@ -339,14 +336,14 @@ func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *a
 }
 
 // validateFieldTypeConstraint validates that a field's type matches the type constraint.
-func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, rule MarkerScopeRule, allowDangerousTypes bool) error {
+func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, rule MarkerScopeRule) error {
 	// Get the type of the field
 	tv, ok := pass.TypesInfo.Types[field.Type]
 	if !ok {
 		return nil // Skip if we can't determine the type
 	}
 
-	if err := validateTypeAgainstConstraint(tv.Type, rule.TypeConstraint, allowDangerousTypes); err != nil {
+	if err := validateTypeAgainstConstraint(tv.Type, rule.TypeConstraint); err != nil {
 		return err
 	}
 
@@ -361,7 +358,7 @@ func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.F
 }
 
 // validateTypeSpecTypeConstraint validates that a type spec's type matches the type constraint.
-func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint, allowDangerousTypes bool) error {
+func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint) error {
 	// Get the type of the type spec
 	obj := pass.TypesInfo.Defs[typeSpec.Name]
 	if obj == nil {
@@ -373,20 +370,13 @@ func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec 
 		return nil
 	}
 
-	return validateTypeAgainstConstraint(typeName.Type(), tc, allowDangerousTypes)
+	return validateTypeAgainstConstraint(typeName.Type(), tc)
 }
 
 // validateTypeAgainstConstraint validates that a Go type satisfies the type constraint.
-func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint, allowDangerousTypes bool) error {
+func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	// Get the schema type from the Go type
 	schemaType := getSchemaType(t)
-
-	// Check if dangerous types are disallowed
-	if !allowDangerousTypes && schemaType == SchemaTypeNumber {
-		// Get the underlying type for better error messages
-		underlyingType := getUnderlyingType(t)
-		return &DengerousTypeError{Type: underlyingType.String()}
-	}
 
 	if tc == nil {
 		return nil
@@ -403,7 +393,7 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint, allowDanger
 	if tc.ElementConstraint != nil && schemaType == SchemaTypeArray {
 		elemType := getElementType(t)
 		if elemType != nil {
-			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint, allowDangerousTypes); err != nil {
+			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint); err != nil {
 				return &InvalidElementConstraintError{Err: err}
 			}
 		}
