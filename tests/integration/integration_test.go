@@ -28,3 +28,12 @@ var _ = It("With all ok data", func() {
 
 	runner.RunTestsFromDir("testdata/all_ok")
 })
+
+var _ = It("With default configurations", func() {
+	runner := runner.NewRunnerBuilder().
+		WithBinPath(binPath).
+		WithExitCode(1).
+		Runner()
+
+	runner.RunTestsFromDir("testdata/default_configurations")
+})
