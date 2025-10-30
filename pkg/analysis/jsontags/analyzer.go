@@ -18,15 +18,17 @@ package jsontags
 import (
 	"fmt"
 	"go/ast"
+	"go/token"
 	"regexp"
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	markersconsts "sigs.k8s.io/kube-api-linter/pkg/markers"
 
 	"golang.org/x/tools/go/analysis"
+	astinspector "golang.org/x/tools/go/ast/inspector"
 )
 
 const (
@@ -61,21 +63,103 @@ func newAnalyzer(cfg *JSONTagsConfig) (*analysis.Analyzer, error) {
 		Name:     name,
 		Doc:      "Check that all struct fields in an API are tagged with json tags",
 		Run:      a.run,
-		Requires: []*analysis.Analyzer{inspector.Analyzer},
+		Requires: []*analysis.Analyzer{extractjsontags.Analyzer, markers.Analyzer},
 	}, nil
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
-	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
+	astInspector := astinspector.New(pass.Files)
+
+	jsonTags, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
 	if !ok {
-		return nil, kalerrors.ErrCouldNotGetInspector
+		return nil, kalerrors.ErrCouldNotGetJSONTags
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, _ markers.Markers) {
-		a.checkField(pass, field, jsonTagInfo)
-	})
+	markersAccess, ok := pass.ResultOf[markers.Analyzer].(markers.Markers)
+	if !ok {
+		return nil, kalerrors.ErrCouldNotGetMarkers
+	}
+
+	// Custom field iteration that includes list types
+	a.inspectFieldsIncludingListTypes(astInspector, jsonTags, markersAccess, pass)
 
 	return nil, nil //nolint:nilnil
+}
+
+// inspectFieldsIncludingListTypes iterates over fields in structs, including list types.
+// This is a custom implementation that bypasses the inspector's InspectFields helper
+// to ensure list types are also linted for proper JSON tags.
+func (a *analyzer) inspectFieldsIncludingListTypes(
+	inspector *astinspector.Inspector,
+	jsonTags extractjsontags.StructFieldTags,
+	markersAccess markers.Markers,
+	pass *analysis.Pass,
+) {
+	nodeFilter := []ast.Node{
+		(*ast.Field)(nil),
+	}
+
+	inspector.WithStack(nodeFilter, func(n ast.Node, push bool, stack []ast.Node) (proceed bool) {
+		if !push {
+			return false
+		}
+
+		field, ok := n.(*ast.Field)
+		if !ok || !a.shouldProcessField(stack) {
+			return ok
+		}
+
+		if a.shouldSkipField(field, jsonTags, markersAccess) {
+			return false
+		}
+
+		tagInfo := jsonTags.FieldTags(field)
+		a.checkField(pass, field, tagInfo)
+
+		return true
+	})
+}
+
+// shouldProcessField checks if the field should be processed.
+// This is similar to the inspector's version but does NOT skip list types.
+func (a *analyzer) shouldProcessField(stack []ast.Node) bool {
+	if len(stack) < 3 {
+		return false
+	}
+
+	// The 0th node in the stack is the *ast.File.
+	// The 1st node in the stack is the *ast.GenDecl.
+	decl, ok := stack[1].(*ast.GenDecl)
+	if !ok || decl.Tok != token.TYPE {
+		// Make sure that we don't inspect structs within a function or non-type declarations.
+		return false
+	}
+
+	_, ok = stack[len(stack)-3].(*ast.StructType)
+	if !ok {
+		// Not in a struct.
+		return false
+	}
+
+	return true
+}
+
+// shouldSkipField checks if a field should be skipped.
+func (a *analyzer) shouldSkipField(field *ast.Field, jsonTags extractjsontags.StructFieldTags, markersAccess markers.Markers) bool {
+	tagInfo := jsonTags.FieldTags(field)
+	if tagInfo.Ignored {
+		return true
+	}
+
+	markerSet := markersAccess.FieldMarkers(field)
+
+	return isSchemalessType(markerSet)
+}
+
+func isSchemalessType(markerSet markers.MarkerSet) bool {
+	// Check if the field is marked as schemaless.
+	schemalessMarker := markerSet.Get(markersconsts.KubebuilderSchemaLessMarker)
+	return len(schemalessMarker) > 0
 }
 
 func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo) {
