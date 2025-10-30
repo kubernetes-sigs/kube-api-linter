@@ -57,13 +57,45 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 			fmt.Sprintf("invalid policy, must be one of: %q, %q", MarkerScopePolicyWarn, MarkerScopePolicySuggestFix)))
 	}
 
-	// Validate marker rules
-	for i, rule := range cfg.MarkerRules {
-		markerRulePath := fldPath.Child("markerRules").Index(i)
+	// Get default marker rules for validation
+	defaultRules := DefaultMarkerRules()
 
-		// Validate that name is not empty
-		if rule.Name == "" {
-			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("name"), "marker name is required"))
+	// Validate override marker rules
+	for i, rule := range cfg.OverrideMarkers {
+		markerRulePath := fldPath.Child("overrideMarkers").Index(i)
+
+		// Validate that identifier is not empty
+		if rule.Identifier == "" {
+			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("identifier"), "marker identifier is required"))
+			continue
+		}
+
+		// Validate that override marker exists in default rules
+		if _, exists := defaultRules[rule.Identifier]; !exists {
+			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath.Child("identifier"), rule.Identifier,
+				"override marker must be a built-in marker; use customMarkers for custom markers"))
+			continue
+		}
+
+		if err := validateMarkerRule(rule); err != nil {
+			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath, rule, err.Error()))
+		}
+	}
+
+	// Validate custom marker rules
+	for i, rule := range cfg.CustomMarkers {
+		markerRulePath := fldPath.Child("customMarkers").Index(i)
+
+		// Validate that identifier is not empty
+		if rule.Identifier == "" {
+			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("identifier"), "marker identifier is required"))
+			continue
+		}
+
+		// Validate that custom marker does not exist in default rules
+		if _, exists := defaultRules[rule.Identifier]; exists {
+			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath.Child("identifier"), rule.Identifier,
+				"custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers"))
 			continue
 		}
 
