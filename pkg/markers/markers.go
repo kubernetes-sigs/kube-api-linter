@@ -153,17 +153,17 @@ const (
 	// KubebuilderItemsXValidationMarker is the marker used to specify CEL validation rules for entries to a nested array type or field in kubebuilder.
 	KubebuilderItemsXValidationMarker = "kubebuilder:validation:items:XValidation"
 
-	// KubebuilderListTypeMarker is the marker used to specify the type of list for server-side apply operations.
-	KubebuilderListTypeMarker = "listType"
+	// ListTypeMarker is the marker used to specify the type of list for server-side apply operations.
+	ListTypeMarker = "listType"
 
-	// KubebuilderListMapKeyMarker is the marker used to specify the key field for map-type lists.
-	KubebuilderListMapKeyMarker = "listMapKey"
+	// ListMapKeyMarker is the marker used to specify the key field for map-type lists.
+	ListMapKeyMarker = "listMapKey"
 
-	// KubebuilderMapTypeMarker is the marker used to specify the atomicity level of a map.
-	KubebuilderMapTypeMarker = "mapType"
+	// MapTypeMarker is the marker used to specify the atomicity level of a map.
+	MapTypeMarker = "mapType"
 
-	// KubebuilderStructTypeMarker is the marker used to specify the atomicity level of a struct.
-	KubebuilderStructTypeMarker = "structType"
+	// StructTypeMarker is the marker used to specify the atomicity level of a struct.
+	StructTypeMarker = "structType"
 
 	// KubebuilderSchemaLessMarker is the marker that indicates that a struct is schemaless.
 	KubebuilderSchemaLessMarker = "kubebuilder:validation:Schemaless"

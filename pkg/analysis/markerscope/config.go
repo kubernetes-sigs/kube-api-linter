@@ -351,28 +351,28 @@ func addGeneralMarkers(rules map[string]MarkerScopeRule) {
 func addSSATopologyMarkers(rules map[string]MarkerScopeRule) {
 	ssaMarkers := map[string]MarkerScopeRule{
 		// Server-Side Apply topology markers
-		markers.KubebuilderListTypeMarker: {
+		markers.ListTypeMarker: {
 			Scope:               AnyScope,
 			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
 		},
-		markers.KubebuilderListMapKeyMarker: {
+		markers.ListMapKeyMarker: {
 			Scope:               AnyScope,
 			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
 		},
-		markers.KubebuilderMapTypeMarker: {
+		markers.MapTypeMarker: {
 			Scope:               AnyScope,
 			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
 			},
 		},
-		markers.KubebuilderStructTypeMarker: {
+		markers.StructTypeMarker: {
 			Scope: AnyScope,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
