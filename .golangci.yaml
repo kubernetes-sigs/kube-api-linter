@@ -101,7 +101,7 @@ linters:
           - gocyclo
           - gosec
         # Exclude some linters from running on tests files.
-        path: _test\.go
+        path: _test\.go|tests
       - linters:
           - all
         path: testdata
