@@ -45,14 +45,14 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
-		checkField(pass, field, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) {
 	// Get the element type of the array
 	elementType := getArrayElementType(pass, field)
 	if elementType == nil {
@@ -80,7 +80,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 		return
 	}
 
-	reportArrayOfStructIssue(pass, field)
+	reportArrayOfStructIssue(pass, field, qualifiedFieldName)
 }
 
 // getArrayElementType extracts the element type from an array field.
@@ -108,18 +108,8 @@ func getArrayElementType(pass *analysis.Pass, field *ast.Field) ast.Expr {
 }
 
 // reportArrayOfStructIssue reports a diagnostic for an array of structs without required fields.
-func reportArrayOfStructIssue(pass *analysis.Pass, field *ast.Field) {
-	fieldName := utils.FieldName(field)
-	structName := utils.GetStructNameForField(pass, field)
-
-	var prefix string
-	if structName != "" {
-		prefix = fmt.Sprintf("%s.%s", structName, fieldName)
-	} else {
-		prefix = fieldName
-	}
-
-	message := fmt.Sprintf("%s is an array of structs, but the struct has no required fields. At least one field should be marked as %s to prevent ambiguous YAML configurations", prefix, markers.RequiredMarker)
+func reportArrayOfStructIssue(pass *analysis.Pass, field *ast.Field, qualifiedFieldName string) {
+	message := fmt.Sprintf("%s is an array of structs, but the struct has no required fields. At least one field should be marked as %s to prevent ambiguous YAML configurations", qualifiedFieldName, markers.RequiredMarker)
 
 	pass.Report(analysis.Diagnostic{
 		Pos:     field.Pos(),

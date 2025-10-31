@@ -67,14 +67,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		checkField(pass, field, markersAccess, a.conflictSets)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, a.conflictSets, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, conflictSets []ConflictSet) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, conflictSets []ConflictSet, qualifiedFieldName string) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
@@ -82,11 +82,11 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 	markers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	for _, conflictSet := range conflictSets {
-		checkConflict(pass, field, markers, conflictSet)
+		checkConflict(pass, field, markers, conflictSet, qualifiedFieldName)
 	}
 }
 
-func checkConflict(pass *analysis.Pass, field *ast.Field, markers markers.MarkerSet, conflictSet ConflictSet) {
+func checkConflict(pass *analysis.Pass, field *ast.Field, markers markers.MarkerSet, conflictSet ConflictSet, qualifiedFieldName string) {
 	// Track which sets have markers present
 	conflictingMarkers := make([]sets.Set[string], 0)
 
@@ -106,11 +106,11 @@ func checkConflict(pass *analysis.Pass, field *ast.Field, markers markers.Marker
 
 	// If two or more sets have markers, report the conflict
 	if len(conflictingMarkers) >= 2 {
-		reportConflict(pass, field, conflictSet, conflictingMarkers)
+		reportConflict(pass, field, conflictSet, conflictingMarkers, qualifiedFieldName)
 	}
 }
 
-func reportConflict(pass *analysis.Pass, field *ast.Field, conflictSet ConflictSet, conflictingMarkers []sets.Set[string]) {
+func reportConflict(pass *analysis.Pass, field *ast.Field, conflictSet ConflictSet, conflictingMarkers []sets.Set[string], qualifiedFieldName string) {
 	// Build a descriptive message showing which sets conflict
 	setDescriptions := make([]string, 0, len(conflictingMarkers))
 
@@ -119,15 +119,8 @@ func reportConflict(pass *analysis.Pass, field *ast.Field, conflictSet ConflictS
 		setDescriptions = append(setDescriptions, fmt.Sprintf("%v", markersList))
 	}
 
-	fieldName := utils.FieldName(field)
-	structName := utils.GetStructNameForField(pass, field)
-
-	if structName != "" {
-		fieldName = structName + "." + fieldName
-	}
-
 	message := fmt.Sprintf("field %s has conflicting markers: %s: {%s}. %s",
-		fieldName,
+		qualifiedFieldName,
 		conflictSet.Name,
 		strings.Join(setDescriptions, ", "),
 		conflictSet.Description)
