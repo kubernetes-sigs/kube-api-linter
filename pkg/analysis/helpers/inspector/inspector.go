@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"slices"
 
 	astinspector "golang.org/x/tools/go/ast/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
@@ -30,10 +31,10 @@ import (
 // Inspector is an interface that allows for the inspection of fields in structs.
 type Inspector interface {
 	// InspectFields is a function that iterates over fields in structs.
-	InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers))
+	InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string))
 
 	// InspectFieldsIncludingListTypes is a function that iterates over fields in structs, including list types.
-	InspectFieldsIncludingListTypes(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers))
+	InspectFieldsIncludingListTypes(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string))
 
 	// InspectTypeSpec is a function that inspects the type spec and calls the provided inspectTypeSpec function.
 	InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers))
@@ -58,19 +59,19 @@ func newInspector(astinspector *astinspector.Inspector, jsonTags extractjsontags
 // InspectFields iterates over fields in structs, ignoring any struct that is not a type declaration, and any field that is ignored and
 // therefore would not be included in the CRD spec.
 // For the remaining fields, it calls the provided inspectField function to apply analysis logic.
-func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string)) {
 	i.inspectFields(inspectField, true)
 }
 
 // InspectFieldsIncludingListTypes iterates over fields in structs, including list types.
 // Unlike InspectFields, this method does not skip fields in list type structs.
-func (i *inspector) InspectFieldsIncludingListTypes(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+func (i *inspector) InspectFieldsIncludingListTypes(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string)) {
 	i.inspectFields(inspectField, false)
 }
 
 // inspectFields is a shared implementation for field iteration.
 // The skipListTypes parameter controls whether list type structs should be skipped.
-func (i *inspector) inspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers), skipListTypes bool) {
+func (i *inspector) inspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string), skipListTypes bool) {
 	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
 		(*ast.Field)(nil),
@@ -90,7 +91,21 @@ func (i *inspector) inspectFields(inspectField func(field *ast.Field, jsonTagInf
 			return false
 		}
 
-		i.processFieldWithRecovery(field, inspectField)
+		var structName string
+
+		qualifiedFieldName := utils.FieldName(field)
+
+		// The 0th node in the stack is the *ast.File.
+		file, ok := stack[0].(*ast.File)
+		if ok {
+			structName = getStructName(file, field)
+		}
+
+		if structName != "" {
+			qualifiedFieldName = fmt.Sprintf("%s.%s", structName, qualifiedFieldName)
+		}
+
+		i.processFieldWithRecovery(field, qualifiedFieldName, inspectField)
 
 		return true
 	})
@@ -138,7 +153,7 @@ func (i *inspector) shouldSkipField(field *ast.Field) bool {
 }
 
 // processFieldWithRecovery processes a field with panic recovery.
-func (i *inspector) processFieldWithRecovery(field *ast.Field, inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+func (i *inspector) processFieldWithRecovery(field *ast.Field, qualifiedFieldName string, inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string)) {
 	tagInfo := i.jsonTags.FieldTags(field)
 
 	defer func() {
@@ -149,7 +164,7 @@ func (i *inspector) processFieldWithRecovery(field *ast.Field, inspectField func
 		}
 	}()
 
-	inspectField(field, tagInfo, i.markers)
+	inspectField(field, tagInfo, i.markers, qualifiedFieldName)
 }
 
 // InspectTypeSpec inspects the type spec and calls the provided inspectTypeSpec function.
@@ -182,4 +197,46 @@ func printDebugInfo(field *ast.Field) string {
 	debug += fmt.Sprintf("Panic observed while inspecting field: %v (type: %v)\n", utils.FieldName(field), field.Type)
 
 	return debug
+}
+
+func getStructName(file *ast.File, field *ast.Field) string {
+	var (
+		structName string
+		found      bool
+	)
+
+	ast.Inspect(file, func(n ast.Node) bool {
+		if found {
+			return false
+		}
+
+		typeSpec, ok := n.(*ast.TypeSpec)
+		if !ok {
+			return true
+		}
+
+		structType, ok := typeSpec.Type.(*ast.StructType)
+		if !ok {
+			return true
+		}
+
+		structName = typeSpec.Name.Name
+
+		if structType.Fields == nil {
+			return true
+		}
+
+		if slices.Contains(structType.Fields.List, field) {
+			found = true
+			return false
+		}
+
+		return true
+	})
+
+	if found {
+		return structName
+	}
+
+	return ""
 }
