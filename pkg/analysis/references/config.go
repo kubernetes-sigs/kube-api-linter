@@ -15,20 +15,22 @@ limitations under the License.
 */
 package references
 
-// policy defines the policy for handling Ref/Refs.
+// policy defines the policy for handling references in field names.
 type Policy string
 
 const (
-	// PolicyAllowRefAndRefs allows Ref/Refs in field names.
-	PolicyAllowRefAndRefs Policy = "AllowRefAndRefs"
-	// PolicyForbidRefAndRefs forbids Ref/Refs in field names.
-	PolicyForbidRefAndRefs Policy = "ForbidRefAndRefs"
+	// PolicyPreferAbbreviatedReference allows abbreviated forms (Ref/Refs) in field names.
+	// It suggests replacing Reference/References with Ref/Refs.
+	PolicyPreferAbbreviatedReference Policy = "PreferAbbreviatedReference"
+	// PolicyNoReferences forbids any reference-related words in field names.
+	// It suggests removing Ref/Refs/Reference/References entirely.
+	PolicyNoReferences Policy = "NoReferences"
 )
 
 // Config represents the configuration for the references linter.
 type Config struct {
-	// policy controls whether Ref/Refs are allowed or forbidden in field names.
-	// When set to AllowRefAndRefs (default), fields containing Ref/Refs are allowed.
-	// When set to ForbidRefAndRefs, fields containing Ref/Refs are flagged as errors.
+	// policy controls how reference-related words are handled in field names.
+	// When set to PreferAbbreviatedReference (default), Reference/References are replaced with Ref/Refs.
+	// When set to NoReferences, all reference-related words are suggested to be removed.
 	Policy Policy `json:"policy,omitempty"`
 }

@@ -38,10 +38,10 @@ func newAnalyzer(cfg *Config) *analysis.Analyzer {
 		cfg = &Config{}
 	}
 
-	// Default to AllowRefAndRefs if no policy is specified
+	// Default to PreferAbbreviatedReference if no policy is specified
 	policy := cfg.Policy
 	if policy == "" {
-		policy = PolicyAllowRefAndRefs
+		policy = PolicyPreferAbbreviatedReference
 	}
 
 	// Build the namingconventions config based on the policy
@@ -75,36 +75,45 @@ func newAnalyzer(cfg *Config) *analysis.Analyzer {
 
 // buildConventions creates the naming conventions based on the policy.
 func buildConventions(policy Policy) []namingconventions.Convention {
-	// Base convention: Replace "Reference" or "References" with "Ref" or "Refs"
-	// Using a single regex with optional 's' capture group to handle both cases
-	conventions := []namingconventions.Convention{
-		{
-			Name:             "reference-to-ref",
-			ViolationMatcher: "(?i)reference(s?)",
-			Operation:        namingconventions.OperationReplacement,
-			Replacement:      "Ref$1",
-			Message:          "field names should use 'Ref' instead of 'Reference'",
-		},
-	}
-
-	// If policy is ForbidRefAndRefs, also flag Ref/Refs as problematic (no fix provided)
-	// This creates a two-step hint: fix Reference→Ref, but know that Ref also needs changing
-	if policy == PolicyForbidRefAndRefs {
-		conventions = append(conventions,
-			namingconventions.Convention{
-				Name:             "forbid-refs",
-				ViolationMatcher: "(?i)refs([^a-z]|$)",
-				Operation:        namingconventions.OperationInform,
-				Message:          "should not use 'Refs'",
+	switch policy {
+	case PolicyPreferAbbreviatedReference:
+		// Replace "Reference" or "References" with "Ref" or "Refs"
+		// Using a single regex with optional 's' capture group to handle both cases
+		return []namingconventions.Convention{
+			{
+				Name:             "reference-to-ref",
+				ViolationMatcher: "(?i)reference(s?)",
+				Operation:        namingconventions.OperationReplacement,
+				Replacement:      "Ref$1",
+				Message:          "field names should use 'Ref' instead of 'Reference'",
 			},
-			namingconventions.Convention{
-				Name:             "forbid-ref",
-				ViolationMatcher: "(?i)ref([^ers]|$)",
-				Operation:        namingconventions.OperationInform,
-				Message:          "should not use 'Ref'",
-			},
-		)
-	}
+		}
 
-	return conventions
+	case PolicyNoReferences:
+		// Drop any reference-related words from field names
+		// Using a regex that matches Ref/Refs/Reference/References at start or end
+		// At start: matches when followed by an uppercase letter, preserving that letter
+		// At end: matches at the end of the field name
+		return []namingconventions.Convention{
+			{
+				Name:             "no-references",
+				ViolationMatcher: "^([Rr]ef(?:erence)?s?)([A-Z])|([Rr]ef(?:erence)?s?)$",
+				Operation:        namingconventions.OperationReplacement,
+				Replacement:      "$2",
+				Message:          "field names should not contain reference-related words",
+			},
+		}
+
+	default:
+		// Should not happen due to validation, but return PreferAbbreviatedReference conventions as fallback
+		return []namingconventions.Convention{
+			{
+				Name:             "reference-to-ref",
+				ViolationMatcher: "(?i)reference(s?)",
+				Operation:        namingconventions.OperationReplacement,
+				Replacement:      "Ref$1",
+				Message:          "field names should use 'Ref' instead of 'Reference'",
+			},
+		}
+	}
 }

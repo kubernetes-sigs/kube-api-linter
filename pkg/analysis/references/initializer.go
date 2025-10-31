@@ -51,12 +51,12 @@ func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 
 	// Validate Policy enum if provided
 	switch cfg.Policy {
-	case PolicyAllowRefAndRefs, PolicyForbidRefAndRefs, "":
+	case PolicyPreferAbbreviatedReference, PolicyNoReferences, "":
 	default:
 		errs = append(errs, field.NotSupported(
 			fldPath.Child("policy"),
 			cfg.Policy,
-			[]string{string(PolicyAllowRefAndRefs), string(PolicyForbidRefAndRefs)},
+			[]string{string(PolicyPreferAbbreviatedReference), string(PolicyNoReferences)},
 		))
 	}
 	return errs

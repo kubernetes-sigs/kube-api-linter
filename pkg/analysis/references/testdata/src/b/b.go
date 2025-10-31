@@ -1,51 +1,40 @@
 package b
 
-// TestWithPolicyForbidRefAndRefs tests the linter with PolicyForbidRefAndRefs (strict mode)
-// In this mode, Reference/References AND Ref/Refs (at end) are flagged
-type TestWithPolicyForbidRefAndRefs struct {
+// TestWithPolicyNoReferences tests the linter with PolicyNoReferences (strict mode)
+// In this mode, all reference-related words (Reference/References/Ref/Refs) are removed
+type TestWithPolicyNoReferences struct {
 	// Fields ending with Reference should be flagged
-	NodeReference string `json:"nodeReference"` // want `naming convention "reference-to-ref": field NodeReference: field names should use 'Ref' instead of 'Reference'`
-
-	ConfigReference string `json:"configReference"` // want `naming convention "reference-to-ref": field ConfigReference: field names should use 'Ref' instead of 'Reference'`
+	NodeReference string `json:"nodeReference"` // want `naming convention "no-references": field NodeReference: field names should not contain reference-related words`
 
 	// Fields ending with References should be flagged
-	NodeReferences []string `json:"nodeReferences"` // want `naming convention "reference-to-ref": field NodeReferences: field names should use 'Ref' instead of 'Reference'`
-
-	ConfigReferences []string `json:"configReferences"` // want `naming convention "reference-to-ref": field ConfigReferences: field names should use 'Ref' instead of 'Reference'`
+	ConfigReferences []string `json:"configReferences"` // want `naming convention "no-references": field ConfigReferences: field names should not contain reference-related words`
 
 	// Fields with Reference at beginning should be flagged
-	ReferenceCount int `json:"referenceCount"` // want `naming convention "reference-to-ref": field ReferenceCount: field names should use 'Ref' instead of 'Reference'`
-
-	ReferenceData string `json:"referenceData"` // want `naming convention "reference-to-ref": field ReferenceData: field names should use 'Ref' instead of 'Reference'`
+	ReferenceCount int `json:"referenceCount"` // want `naming convention "no-references": field ReferenceCount: field names should not contain reference-related words`
 
 	// Fields with References at beginning should be flagged
-	ReferencesCount int `json:"referencesCount"` // want `naming convention "reference-to-ref": field ReferencesCount: field names should use 'Ref' instead of 'Reference'`
+	ReferencesData []string `json:"referencesData"` // want `naming convention "no-references": field ReferencesData: field names should not contain reference-related words`
 
-	ReferencesData []string `json:"referencesData"` // want `naming convention "reference-to-ref": field ReferencesData: field names should use 'Ref' instead of 'Reference'`
+	// Fields ending with Ref should be flagged
+	PodRef string `json:"podRef"` // want `naming convention "no-references": field PodRef: field names should not contain reference-related words`
 
-	// Fields with Reference in middle should be flagged
-	CrossReferenceID string `json:"crossReferenceID"` // want `naming convention "reference-to-ref": field CrossReferenceID: field names should use 'Ref' instead of 'Reference'`
+	// Fields ending with Refs should be flagged
+	ContainerRefs []string `json:"containerRefs"` // want `naming convention "no-references": field ContainerRefs: field names should not contain reference-related words`
 
-	// Fields with References in middle should be flagged
-	CrossReferencesMap map[string]string `json:"crossReferencesMap"` // want `naming convention "reference-to-ref": field CrossReferencesMap: field names should use 'Ref' instead of 'Reference'`
+	// Fields starting with Ref should be flagged
+	RefStatus string `json:"refStatus"` // want `naming convention "no-references": field RefStatus: field names should not contain reference-related words`
 
-	// Fields ending with Ref should be FORBIDDEN in this mode
-	NodeRef string `json:"nodeRef"` // want `naming convention "forbid-ref": field NodeRef: should not use 'Ref'`
+	// Fields starting with Refs should be flagged
+	RefsTotal int `json:"refsTotal"` // want `naming convention "no-references": field RefsTotal: field names should not contain reference-related words`
 
-	ConfigRef string `json:"configRef"` // want `naming convention "forbid-ref": field ConfigRef: should not use 'Ref'`
-
-	// Fields ending with Refs should be FORBIDDEN in this mode
-	NodeRefs []string `json:"nodeRefs"` // want `naming convention "forbid-refs": field NodeRefs: should not use 'Refs'`
-
-	ConfigRefs []string `json:"configRefs"` // want `naming convention "forbid-refs": field ConfigRefs: should not use 'Refs'`
-
-	// Normal fields should not be flagged (no Reference/References/Ref/Refs)
+	// Normal fields should not be flagged
 	Name string `json:"name"`
 
 	Namespace string `json:"namespace"`
 
-	// Edge cases - Preference contains "reference" and will be flagged
-	PreferenceType string `json:"preferenceType"` // want `naming convention "reference-to-ref": field PreferenceType: field names should use 'Ref' instead of 'Reference'`
+	// Edge cases - "erence" in the middle of a word is not flagged (only start/end boundaries)
+	PreferenceType string `json:"preferenceType"`
 
-	Preferences map[string]string `json:"preferences,omitempty"` // want `naming convention "reference-to-ref": field Preferences: field names should use 'Ref' instead of 'Reference'`
+	// But "Preferences" ending with 's' after "erence" IS flagged since it ends with "ences"
+	Preferences map[string]string `json:"preferences,omitempty"` // want `naming convention "no-references": field Preferences: field names should not contain reference-related words`
 }

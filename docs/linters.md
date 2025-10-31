@@ -567,29 +567,38 @@ By default, `references` is enabled and operates in standard mode, allowing 'Ref
 ```yaml
 lintersConfig:
   references:
-    policy: AllowRefAndRefs | ForbidRefAndRefs # Defaults to `AllowRefAndRefs`.
+    policy: PreferAbbreviatedReference | NoReferences # Defaults to `PreferAbbreviatedReference`.
 ```
 
-**Default behavior (policy: AllowRefAndRefs):**
-- Reports errors for fields containing 'Reference' or 'References' and suggests replacing with 'Ref' or 'Refs'
+**Default behavior (policy: PreferAbbreviatedReference):**
+- Reports errors for fields containing 'Reference' or 'References' and replaces with 'Ref' or 'Refs'
 - **Allows** fields containing 'Ref' or 'Refs' without reporting errors
 
-**Strict mode (policy: ForbidRefAndRefs):**
-- Reports errors for fields containing 'Reference' or 'References' anywhere and suggests replacing with 'Ref' or 'Refs'
-- **Also reports errors** for fields containing 'Ref' or 'Refs' anywhere (no automatic fix provided)
-- In this strict mode, the goal is to avoid all Ref/Refs/Reference/References in field names entirely
+**Strict mode (policy: NoReferences):**
+- Reports errors for any reference-related words in field names
+- Suggests removing 'Ref', 'Refs', 'Reference', or 'References' entirely from the beginning or end of field names
+- In this strict mode, the goal is to avoid all reference-related words in field names
 
 ### Fixes
 
-The `references` linter can automatically fix field names by replacing 'Reference' with 'Ref' and 'References' with 'Refs' anywhere in the field name.
+The `references` linter can automatically fix field names based on the policy:
 
-For example:
-- `NodeReference` → `NodeRef`
-- `ReferenceNode` → `RefNode`
-- `NodeReferenceConfig` → `NodeRefConfig`
-- `NodeReferences` → `NodeRefs`
+**PreferAbbreviatedReference mode:**
+- Replaces 'Reference' with 'Ref' and 'References' with 'Refs' anywhere in the field name
+- Examples:
+  - `NodeReference` → `NodeRef`
+  - `ReferenceNode` → `RefNode`
+  - `NodeReferenceConfig` → `NodeRefConfig`
+  - `NodeReferences` → `NodeRefs`
 
-Note: In the `ForbidRefAndRefs` mode, the fixes are intermediate. As, the linter will still report errors on the resulting 'Ref'/'Refs' patterns, indicating they should be removed entirely
+**NoReferences mode:**
+- Removes all reference-related words (Ref/Refs/Reference/References) from the beginning or end of field names
+- Examples:
+  - `RefNode` → `Node`
+  - `NodeRef` → `Node`
+  - `ReferenceName` → `Name`
+  - `ConfigReferences` → `Config`
+  - `ReferenceCount` → `Count`
 
 ## SSATags
 

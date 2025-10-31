@@ -42,15 +42,15 @@ var _ = Describe("references initializer", func() {
 				Expect(errs).To(HaveLen(0), "No errors were expected")
 			}
 		},
-			Entry("With a valid references configuration with policy=ForbidRefAndRefs", testCase{
+			Entry("With a valid references configuration with policy=NoReferences", testCase{
 				config: &references.Config{
-					Policy: references.PolicyForbidRefAndRefs,
+					Policy: references.PolicyNoReferences,
 				},
 				expectedErr: "",
 			}),
-			Entry("With a valid references configuration with policy=AllowRefAndRefs", testCase{
+			Entry("With a valid references configuration with policy=PreferAbbreviatedReference", testCase{
 				config: &references.Config{
-					Policy: references.PolicyAllowRefAndRefs,
+					Policy: references.PolicyPreferAbbreviatedReference,
 				},
 				expectedErr: "",
 			}),
@@ -66,7 +66,7 @@ var _ = Describe("references initializer", func() {
 				config: &references.Config{
 					Policy: "InvalidPolicy",
 				},
-				expectedErr: "references.policy: Unsupported value: \"InvalidPolicy\": supported values: \"AllowRefAndRefs\", \"ForbidRefAndRefs\"",
+				expectedErr: "references.policy: Unsupported value: \"InvalidPolicy\": supported values: \"PreferAbbreviatedReference\", \"NoReferences\"",
 			}),
 		)
 	})

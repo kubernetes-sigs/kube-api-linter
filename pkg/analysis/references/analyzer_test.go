@@ -22,11 +22,11 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/references"
 )
 
-func TestAllowRefAndRefs(t *testing.T) {
+func TestPreferAbbreviatedReference(t *testing.T) {
 	testdata := analysistest.TestData()
 
 	cfg := &references.Config{
-		Policy: references.PolicyAllowRefAndRefs,
+		Policy: references.PolicyPreferAbbreviatedReference,
 	}
 
 	analyzer, err := references.Initializer().Init(cfg)
@@ -40,7 +40,7 @@ func TestAllowRefAndRefs(t *testing.T) {
 func TestEmptyConfig(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	// Test with empty config - should default to AllowRefAndRefs behavior
+	// Test with empty config - should default to PreferAbbreviatedReference behavior
 	cfg := &references.Config{}
 
 	analyzer, err := references.Initializer().Init(cfg)
@@ -48,16 +48,16 @@ func TestEmptyConfig(t *testing.T) {
 		t.Fatalf("initializing references linter: %v", err)
 	}
 
-	// With default config (empty Policy), it should default to AllowRefAndRefs behavior
+	// With default config (empty Policy), it should default to PreferAbbreviatedReference behavior
 	// So we test with folder 'a' which has the same expectations
 	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
 
-func TestForbidRefAndRefs(t *testing.T) {
+func TestNoReferences(t *testing.T) {
 	testdata := analysistest.TestData()
 
 	cfg := &references.Config{
-		Policy: references.PolicyForbidRefAndRefs,
+		Policy: references.PolicyNoReferences,
 	}
 
 	analyzer, err := references.Initializer().Init(cfg)
