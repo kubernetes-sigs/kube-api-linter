@@ -1,0 +1,69 @@
+package a
+
+// TestWithPolicyAllowRefAndRefs tests the linter with PolicyAllowRefAndRefs
+// In this mode, Reference/References are flagged ANYWHERE in field names, but Ref/Refs are allowed
+type TestWithPolicyAllowRefAndRefs struct {
+	// Fields ending with Reference should be flagged
+	NodeRef string `json:"nodeRef"` // want `naming convention "reference-to-ref": field NodeReference: field names should use 'Ref' instead of 'Reference'`
+
+	ConfigRef string `json:"configRef"` // want `naming convention "reference-to-ref": field ConfigReference: field names should use 'Ref' instead of 'Reference'`
+
+	// Fields ending with References should be flagged
+	NodeRefs []string `json:"nodeRefs"` // want `naming convention "reference-to-ref": field NodeReferences: field names should use 'Ref' instead of 'Reference'`
+
+	ConfigRefs []string `json:"configRefs"` // want `naming convention "reference-to-ref": field ConfigReferences: field names should use 'Ref' instead of 'Reference'`
+
+	// Fields with Reference at beginning should be flagged
+	RefCount int `json:"refCount"` // want `naming convention "reference-to-ref": field ReferenceCount: field names should use 'Ref' instead of 'Reference'`
+
+	RefData string `json:"refData"` // want `naming convention "reference-to-ref": field ReferenceData: field names should use 'Ref' instead of 'Reference'`
+
+	// Fields with References at beginning should be flagged
+	RefsCount int `json:"refsCount"` // want `naming convention "reference-to-ref": field ReferencesCount: field names should use 'Ref' instead of 'Reference'`
+
+	RefsData []string `json:"refsData"` // want `naming convention "reference-to-ref": field ReferencesData: field names should use 'Ref' instead of 'Reference'`
+
+	// Fields with Reference in middle should be flagged
+	CrossRefID string `json:"crossRefID"` // want `naming convention "reference-to-ref": field CrossReferenceID: field names should use 'Ref' instead of 'Reference'`
+
+	// Fields with References in middle should be flagged
+	CrossRefsMap map[string]string `json:"crossRefsMap"` // want `naming convention "reference-to-ref": field CrossReferencesMap: field names should use 'Ref' instead of 'Reference'`
+
+	// Past tense "Referenced" should be flagged (has "Reference")
+	Refd bool `json:"refd"` // want `naming convention "reference-to-ref": field Referenced: field names should use 'Ref' instead of 'Reference'`
+
+	// Fields with Ref/Refs anywhere are ALLOWED in this mode (no diagnostics expected)
+	NodeRef string `json:"nodeRef"`
+
+	ConfigRef string `json:"configRef"`
+
+	NodeRefs []string `json:"nodeRefs"`
+
+	ConfigRefs []string `json:"configRefs"`
+
+	RefCount int `json:"refCount"`
+
+	RefsData []string `json:"refsData"`
+
+	InternalRefData string `json:"internalRefData"`
+
+	InternalRefsData []string `json:"internalRefsData"`
+
+	// Normal fields should not be flagged (no Reference/References/Ref/Refs)
+	Name string `json:"name"`
+
+	Namespace string `json:"namespace"`
+
+	// Edge cases - Preference contains "reference" and WILL be flagged with (?i)
+	// This is intentional to catch all variations including malformed casing
+	PRefType string `json:"pRefType"` // want `naming convention "reference-to-ref": field PreferenceType: field names should use 'Ref' instead of 'Reference'`
+
+	PRefs map[string]string `json:"pRefs,omitempty"` // want `naming convention "reference-to-ref": field Preferences: field names should use 'Ref' instead of 'Reference'`
+
+	// These don't contain capital Reference
+	Referral string `json:"referral"`
+
+	Referee string `json:"referee"`
+}
+
+

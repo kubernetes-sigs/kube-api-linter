@@ -20,6 +20,7 @@
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
+- [References](#references) - Ensures field names use Ref/Refs instead of Reference/References
 - [RequiredFields](#requiredfields) - Validates required field conventions
 - [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
@@ -608,6 +609,50 @@ If you prefer not to suggest fixes for pointers in required fields, you can chan
 
 If you prefer not to suggest fixes for `omitempty` in required fields, you can change the `omitempty.policy` to `Warn` or `Ignore`.
 If you prefer not to suggest fixes for `omitzero` in required fields, you can change the `omitzero.policy` to `Warn` and also not to consider `omitzero` policy at all, it can be set to `Forbid`.
+
+## References
+
+The `references` linter ensures that field names use 'Ref'/'Refs' instead of 'Reference'/'References'.
+
+By default, `references` is enabled and operates in standard mode, allowing 'Ref'/'Refs' but prohibiting 'Reference'/'References' in field names.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  references:
+    policy: PreferAbbreviatedReference | NoReferences # Defaults to `PreferAbbreviatedReference`.
+```
+
+**Default behavior (policy: PreferAbbreviatedReference):**
+- Reports errors for fields containing 'Reference' or 'References' and replaces with 'Ref' or 'Refs'
+- **Allows** fields containing 'Ref' or 'Refs' without reporting errors
+
+**Strict mode (policy: NoReferences):**
+- Reports errors for any reference-related words in field names
+- Suggests removing 'Ref', 'Refs', 'Reference', or 'References' entirely from the beginning or end of field names
+- In this strict mode, the goal is to avoid all reference-related words in field names
+
+### Fixes
+
+The `references` linter can automatically fix field names based on the policy:
+
+**PreferAbbreviatedReference mode:**
+- Replaces 'Reference' with 'Ref' and 'References' with 'Refs' anywhere in the field name
+- Examples:
+  - `NodeReference` → `NodeRef`
+  - `ReferenceNode` → `RefNode`
+  - `NodeReferenceConfig` → `NodeRefConfig`
+  - `NodeReferences` → `NodeRefs`
+
+**NoReferences mode:**
+- Removes all reference-related words (Ref/Refs/Reference/References) from the beginning or end of field names
+- Examples:
+  - `RefNode` → `Node`
+  - `NodeRef` → `Node`
+  - `ReferenceName` → `Name`
+  - `ConfigReferences` → `Config`
+  - `ReferenceCount` → `Count`
 
 ## SSATags
 
