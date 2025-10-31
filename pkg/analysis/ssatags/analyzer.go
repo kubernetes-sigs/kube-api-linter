@@ -73,7 +73,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers) { //nolint:funlen
 	if !utils.IsArrayTypeOrAlias(pass, field) {
 		return
 	}
@@ -121,7 +121,11 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	}
 
 	for _, marker := range listTypeMarkers {
-		listType := marker.Expressions[""]
+		if marker.Payload == nil {
+			continue
+		}
+
+		listType := marker.Payload.Value
 
 		a.checkListTypeMarker(pass, listType, field)
 
@@ -208,7 +212,11 @@ func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, li
 	fieldName := utils.FieldName(field)
 
 	for _, marker := range listMapKeyMarkers {
-		keyName := marker.Expressions[""]
+		if marker.Payload == nil {
+			continue
+		}
+
+		keyName := marker.Payload.Value
 		if keyName == "" {
 			continue
 		}

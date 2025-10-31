@@ -54,6 +54,30 @@ type B struct {
 	// +custom:MultiMarker:fruit=apple,color=blue
 	// +custom:MultiMarker:fruit=apple,color=blue
 	NonUniqueMultiAttributeMarkerFromMissingAttribute string // want "field NonUniqueMultiAttributeMarkerFromMissingAttribute has multiple definitions of marker custom:MultiMarker:fruit=apple,color=blue,country= when only a single definition should exist"
+
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=10
+	// +k8s:uniqueMarkerArguments(fruit: "blueberry")=10
+	UniqueDeclarativeValidationMarkerWithArgumentsSimplePayload string
+
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=10
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=20
+	NonUniqueDeclarativeValidationMarkerWithArgumentsSimplePayload string
+
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:maxLength=10
+	// +k8s:uniqueMarkerArguments(fruit: "blueberry")=+k8s:maxLength=10
+	UniqueDeclarativeValidationMarkerWithArgumentsTagPayload string
+
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:maxLength=10
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:maxLength=20
+	NonUniqueDeclarativeValidationMarkerWithArgumentsTagPayload string
+
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:ifEnabled("thingy")=+k8s:maxLength=10
+	// +k8s:uniqueMarkerArguments(fruit: "blueberry")=+k8s:ifEnabled("thingy")=+k8s:maxLength=10
+	UniqueDeclarativeValidationMarkerWithArgumentsComplexPayload string
+
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:ifEnabled("thingy")=+k8s:maxLength=10
+	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:ifEnabled("otherthingy")=+k8s:maxLength=20
+	NonUniqueDeclarativeValidationMarkerWithArgumentsComplexPayload string
 }
 
 // +custom:SomeCustomMarker:=diffvalue
