@@ -39,6 +39,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nonullable"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/nophase"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/notimestamp"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/numericbounds"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/optionalfields"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/optionalorrequired"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/requiredfields"
