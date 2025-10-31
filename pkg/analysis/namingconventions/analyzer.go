@@ -36,11 +36,9 @@ type analyzer struct {
 	conventions []Convention
 }
 
-// NewAnalyzer creates a new analysis.Analyzer for the namingconventions
+// newAnalyzer creates a new analysis.Analyzer for the namingconventions
 // linter based on the provided config.
-// This function is exported to allow other linters to wrap namingconventions
-// with fixed configuration.
-func NewAnalyzer(cfg *Config) *analysis.Analyzer {
+func newAnalyzer(cfg *Config) *analysis.Analyzer {
 	a := &analyzer{
 		conventions: cfg.Conventions,
 	}

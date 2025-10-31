@@ -16,81 +16,87 @@ limitations under the License.
 package references
 
 import (
+	"errors"
+	"fmt"
+
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/namingconventions"
 )
 
-const name = "references"
+const (
+	name = "references"
+	doc  = "Enforces that fields use Ref/Refs and not Reference/References"
+)
 
-// newAnalyzer creates a new analysis.Analyzer for the references linter.
-// The references linter is implemented as a wrapper around the namingconventions
-// linter with fixed configuration based on the policy.
+var errUnexpectedInitializerType = errors.New("expected namingconventions.Initializer() to be of type initializer.ConfigurableAnalyzerInitializer, but was not")
+
+// newAnalyzer creates a new analyzer for the references linter that is a wrapper around the namingconventions linter.
 func newAnalyzer(cfg *Config) *analysis.Analyzer {
 	if cfg == nil {
 		cfg = &Config{}
 	}
 
-	// Default to ForbidRefAndRefs if no policy is specified
+	// Default to AllowRefAndRefs if no policy is specified
 	policy := cfg.Policy
 	if policy == "" {
-		policy = PolicyForbidRefAndRefs
+		policy = PolicyAllowRefAndRefs
 	}
 
-	// Build naming conventions based on policy
-	conventions := buildConventions(policy)
-
-	// Create namingconventions config
+	// Build the namingconventions config based on the policy
 	ncConfig := &namingconventions.Config{
-		Conventions: conventions,
+		Conventions: buildConventions(policy),
 	}
 
-	// Create the underlying namingconventions analyzer
-	ncAnalyzer := namingconventions.NewAnalyzer(ncConfig)
-
-	// Wrap it to return our name
-	analyzer := &analysis.Analyzer{
-		Name:     name,
-		Doc:      "Enforces that fields use Ref/Refs and not Reference/References",
-		Run:      ncAnalyzer.Run,
-		Requires: ncAnalyzer.Requires,
+	// Get the configurable initializer for namingconventions
+	configInit, ok := namingconventions.Initializer().(initializer.ConfigurableAnalyzerInitializer)
+	if !ok {
+		panic(fmt.Errorf("getting initializer: %w", errUnexpectedInitializerType))
 	}
+
+	// Validate generated namingconventions configuration
+	errs := configInit.ValidateConfig(ncConfig, field.NewPath("references"))
+	if err := errs.ToAggregate(); err != nil {
+		panic(fmt.Errorf("references linter has an invalid namingconventions configuration: %w", err))
+	}
+
+	// Initialize the wrapped analyzer
+	analyzer, err := configInit.Init(ncConfig)
+	if err != nil {
+		panic(fmt.Errorf("references linter encountered an error initializing wrapped namingconventions analyzer: %w", err))
+	}
+
+	analyzer.Name = name
+	analyzer.Doc = doc
 
 	return analyzer
 }
 
-// buildConventions creates the naming conventions based on the policy
+// buildConventions creates the naming conventions based on the policy.
 func buildConventions(policy Policy) []namingconventions.Convention {
+	// Base convention: Replace "Reference" or "References" with "Ref" or "Refs"
+	// Using a single regex with optional 's' capture group to handle both cases
 	conventions := []namingconventions.Convention{
-		// Match "References" anywhere
-		{
-			Name:             "references-to-refs",
-			ViolationMatcher: "(?i)references",
-			Operation:        namingconventions.OperationReplacement,
-			Replacement:      "Refs",
-			Message:          "field names should use 'Refs' instead of 'References'",
-		},
-		// Match "Reference" but not when part of "References"
 		{
 			Name:             "reference-to-ref",
-			ViolationMatcher: "(?i)reference([^s]|$)",
+			ViolationMatcher: "(?i)reference(s?)",
 			Operation:        namingconventions.OperationReplacement,
 			Replacement:      "Ref$1",
 			Message:          "field names should use 'Ref' instead of 'Reference'",
 		},
 	}
 
-	// If policy is ForbidRefAndRefs, add conventions to forbid Ref/Refs anywhere
-	// Exclude patterns already handled by Reference/References above
+	// If policy is ForbidRefAndRefs, also flag Ref/Refs as problematic (no fix provided)
+	// This creates a two-step hint: fix Reference→Ref, but know that Ref also needs changing
 	if policy == PolicyForbidRefAndRefs {
 		conventions = append(conventions,
-			// Match "Refs" but not when part of "References"
 			namingconventions.Convention{
 				Name:             "forbid-refs",
 				ViolationMatcher: "(?i)refs([^a-z]|$)",
 				Operation:        namingconventions.OperationInform,
 				Message:          "should not use 'Refs'",
 			},
-			// Match "Ref" but not when part of "Reference", "References", or "Refs"
 			namingconventions.Convention{
 				Name:             "forbid-ref",
 				ViolationMatcher: "(?i)ref([^ers]|$)",

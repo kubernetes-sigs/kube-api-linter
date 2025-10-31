@@ -16,24 +16,12 @@ limitations under the License.
 
 /*
 The `references` linter ensures that field names use 'Ref'/'Refs' instead of 'Reference'/'References'.
-
 By default, `references` is enabled and enforces this naming convention.
-
 The linter checks that 'Reference' anywhere in field names (beginning, middle, or end) is replaced with 'Ref'.
 Similarly, 'References' anywhere in field names is replaced with 'Refs'.
 
 Example configuration:
-
-**Default behavior (forbid Ref/Refs in field names):**
-```yaml
-lintersConfig:
-
-	references:
-	  policy: ForbidRefAndRefs
-
-```
-
-**For compatibility (allow Ref/Refs in field names):**
+**Default behavior (allow Ref/Refs in field names):**
 ```yaml
 lintersConfig:
 
@@ -41,8 +29,15 @@ lintersConfig:
 	  policy: AllowRefAndRefs
 
 ```
+**Strict mode (forbid Ref/Refs in field names):**
+```yaml
+lintersConfig:
 
-When `policy` is set to `ForbidRefAndRefs` (the default), fields containing 'Ref' or 'Refs' anywhere in their names will be reported as errors.
-This is useful to ensure consistency across the codebase. The policy can be set to `AllowRefAndRefs` to allow such field names.
+	references:
+	  policy: ForbidRefAndRefs
+
+```
+When `policy` is set to `AllowRefAndRefs` (the default), fields containing 'Ref' or 'Refs' are allowed.
+The policy can be set to `ForbidRefAndRefs` to also report errors for 'Ref' or 'Refs' in field names.
 */
 package references

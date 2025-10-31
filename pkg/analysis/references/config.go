@@ -15,7 +15,7 @@ limitations under the License.
 */
 package references
 
-// Policy defines the policy for handling Ref/Refs.
+// policy defines the policy for handling Ref/Refs.
 type Policy string
 
 const (
@@ -27,8 +27,8 @@ const (
 
 // Config represents the configuration for the references linter.
 type Config struct {
-	// Policy controls whether Ref/Refs are allowed or forbidden in field names.
-	// When set to AllowRefAndRefs, fields containing Ref/Refs are allowed.
-	// When set to ForbidRefAndRefs (default), fields containing Ref/Refs are flagged as errors.
+	// policy controls whether Ref/Refs are allowed or forbidden in field names.
+	// When set to AllowRefAndRefs (default), fields containing Ref/Refs are allowed.
+	// When set to ForbidRefAndRefs, fields containing Ref/Refs are flagged as errors.
 	Policy Policy `json:"policy,omitempty"`
 }

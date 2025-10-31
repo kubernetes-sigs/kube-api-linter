@@ -560,24 +560,24 @@ If you prefer not to suggest fixes for `omitzero` in required fields, you can ch
 
 The `references` linter ensures that field names use 'Ref'/'Refs' instead of 'Reference'/'References'.
 
-By default, `references` is enabled and operates in strict mode, prohibiting the use of 'Reference', 'References', 'Ref', or 'Refs' anywhere in field names
+By default, `references` is enabled and operates in standard mode, allowing 'Ref'/'Refs' but prohibiting 'Reference'/'References' in field names.
 
 ### Configuration
 
 ```yaml
 lintersConfig:
   references:
-    policy: ForbidRefAndRefs | AllowRefAndRefs # Defaults to `ForbidRefAndRefs`.
+    policy: AllowRefAndRefs | ForbidRefAndRefs # Defaults to `AllowRefAndRefs`.
 ```
 
-**Default behavior (policy: ForbidRefAndRefs):**
-- Reports errors for fields containing 'Reference' or 'References' anywhere and suggests replacing with 'Ref' or 'Refs'
-- **Also reports errors** for fields containing 'Ref' or 'Refs' anywhere (these should be dropped/removed entirely)
-- In this strict mode, the goal is to avoid all Ref/Refs/Reference/References in field names
-
-**Allow Ref/Refs (policy: AllowRefAndRefs):**
+**Default behavior (policy: AllowRefAndRefs):**
 - Reports errors for fields containing 'Reference' or 'References' and suggests replacing with 'Ref' or 'Refs'
 - **Allows** fields containing 'Ref' or 'Refs' without reporting errors
+
+**Strict mode (policy: ForbidRefAndRefs):**
+- Reports errors for fields containing 'Reference' or 'References' anywhere and suggests replacing with 'Ref' or 'Refs'
+- **Also reports errors** for fields containing 'Ref' or 'Refs' anywhere (no automatic fix provided)
+- In this strict mode, the goal is to avoid all Ref/Refs/Reference/References in field names entirely
 
 ### Fixes
 
@@ -589,7 +589,7 @@ For example:
 - `NodeReferenceConfig` → `NodeRefConfig`
 - `NodeReferences` → `NodeRefs`
 
-Note: In the default `ForbidRefAndRefs` mode, these fixes are intermediate - the linter will still report errors on the resulting 'Ref'/'Refs' patterns, indicating they should be removed entirely
+Note: In the `ForbidRefAndRefs` mode, the fixes are intermediate. As, the linter will still report errors on the resulting 'Ref'/'Refs' patterns, indicating they should be removed entirely
 
 ## SSATags
 

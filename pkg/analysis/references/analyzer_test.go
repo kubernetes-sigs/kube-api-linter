@@ -40,7 +40,7 @@ func TestAllowRefAndRefs(t *testing.T) {
 func TestEmptyConfig(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	// Test with empty config - should default to ForbidRefAndRefs behavior
+	// Test with empty config - should default to AllowRefAndRefs behavior
 	cfg := &references.Config{}
 
 	analyzer, err := references.Initializer().Init(cfg)
@@ -48,9 +48,9 @@ func TestEmptyConfig(t *testing.T) {
 		t.Fatalf("initializing references linter: %v", err)
 	}
 
-	// With default config (empty Policy), it should default to ForbidRefAndRefs behavior
-	// So we test with folder 'b' which has the same expectations
-	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "b")
+	// With default config (empty Policy), it should default to AllowRefAndRefs behavior
+	// So we test with folder 'a' which has the same expectations
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
 
 func TestForbidRefAndRefs(t *testing.T) {

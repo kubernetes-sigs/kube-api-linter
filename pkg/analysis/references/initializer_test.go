@@ -42,13 +42,13 @@ var _ = Describe("references initializer", func() {
 				Expect(errs).To(HaveLen(0), "No errors were expected")
 			}
 		},
-			Entry("With a valid references configuration with allowRefAndRefs=false", testCase{
+			Entry("With a valid references configuration with policy=ForbidRefAndRefs", testCase{
 				config: &references.Config{
 					Policy: references.PolicyForbidRefAndRefs,
 				},
 				expectedErr: "",
 			}),
-			Entry("With a valid references configuration with allowRefAndRefs=true", testCase{
+			Entry("With a valid references configuration with policy=AllowRefAndRefs", testCase{
 				config: &references.Config{
 					Policy: references.PolicyAllowRefAndRefs,
 				},
