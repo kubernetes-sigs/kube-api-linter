@@ -12,6 +12,7 @@
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
+- [NumericBounds](#numericbounds) - Validates numeric fields have appropriate bounds validation markers
 - [NoBools](#nobools) - Prevents usage of boolean types
 - [NoDurations](#nodurations) - Prevents usage of duration types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
@@ -476,6 +477,68 @@ linterConfig:
         operation: Replacement
         replacement: colour
         message: prefer 'colour' over 'color' when referring to colours in field names
+```
+
+## NumericBounds
+
+The `numericbounds` linter checks that numeric fields (`int32` and `int64`) have appropriate bounds validation markers.
+
+According to Kubernetes API conventions, numeric fields should have bounds checking to prevent values that are too small, negative (when not intended), or too large.
+
+This linter ensures that:
+- `int32` and `int64` fields have both `+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum` markers
+- `int64` fields with bounds outside the JavaScript safe integer range are flagged
+
+### JavaScript Safe Integer Range
+
+For `int64` fields, the linter checks if the bounds exceed the JavaScript safe integer range of `-(2^53)` to `(2^53)` (specifically, `-9007199254740991` to `9007199254740991`).
+
+JavaScript represents all numbers as IEEE 754 double-precision floating-point values, which can only safely represent integers in this range. Values outside this range may lose precision when processed by JavaScript clients.
+
+When an `int64` field has bounds that exceed this range, the linter will suggest using a string type instead to avoid precision loss.
+
+### Examples
+
+**Valid:** Numeric field with proper bounds markers
+```go
+type Example struct {
+    // +kubebuilder:validation:Minimum=0
+    // +kubebuilder:validation:Maximum=100
+    Count int32
+}
+```
+
+**Valid:** Int64 field with JavaScript-safe bounds
+```go
+type Example struct {
+    // +kubebuilder:validation:Minimum=-9007199254740991
+    // +kubebuilder:validation:Maximum=9007199254740991
+    Timestamp int64
+}
+```
+
+**Invalid:** Missing bounds markers
+```go
+type Example struct {
+    Count int32 // want: should have minimum and maximum bounds validation markers
+}
+```
+
+**Invalid:** Only one bound specified
+```go
+type Example struct {
+    // +kubebuilder:validation:Minimum=0
+    Count int32 // want: has minimum but is missing maximum bounds validation marker
+}
+```
+
+**Invalid:** Int64 with bounds exceeding JavaScript safe range
+```go
+type Example struct {
+    // +kubebuilder:validation:Minimum=-10000000000000000
+    // +kubebuilder:validation:Maximum=10000000000000000
+    LargeNumber int64 // want: bounds exceed JavaScript safe integer range
+}
 ```
 
 ## NoBools
