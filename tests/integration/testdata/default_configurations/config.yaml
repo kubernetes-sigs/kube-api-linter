@@ -1,0 +1,4 @@
+linters:
+  enabled: [] # This will mean only the default enabled linters are enabled.
+  disabled: [] # This will mean only the default disabled linters are disabled.
+linterSettings: {} # This will mean only the default linter settings are used.
