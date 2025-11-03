@@ -42,6 +42,11 @@ func TestAnalyzer(t *testing.T) {
 				Type:       dependenttags.DependencyTypeAny,
 				Dependents: []string{"dep1", "dep2"},
 			},
+			{
+				Identifier: "listType=map",
+				Type:       dependenttags.DependencyTypeAll,
+				Dependents: []string{"listMapKey"},
+			},
 		},
 	}
 	analyzer, err := dependenttags.Initializer().Init(&cfg)

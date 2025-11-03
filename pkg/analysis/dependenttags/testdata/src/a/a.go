@@ -57,3 +57,12 @@ type TypeAlias struct {
 	// +example:any
 	ValidAlias MyString
 }
+
+type ListMap struct {
+	// +listType=map
+	InvalidListMap []string // want "field ListMap.InvalidListMap with marker \\+listType=map is missing required marker\\(s\\): \\+listMapKey"
+
+	// +listType=map
+	// +listMapKey
+	ValidListMap []string
+}
