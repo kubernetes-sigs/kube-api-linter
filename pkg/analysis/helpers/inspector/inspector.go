@@ -32,6 +32,9 @@ type Inspector interface {
 	// InspectFields is a function that iterates over fields in structs.
 	InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers))
 
+	// InspectFieldsIncludingListTypes is a function that iterates over fields in structs, including list types.
+	InspectFieldsIncludingListTypes(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers))
+
 	// InspectTypeSpec is a function that inspects the type spec and calls the provided inspectTypeSpec function.
 	InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers))
 }
@@ -56,6 +59,18 @@ func newInspector(astinspector *astinspector.Inspector, jsonTags extractjsontags
 // therefore would not be included in the CRD spec.
 // For the remaining fields, it calls the provided inspectField function to apply analysis logic.
 func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+	i.inspectFields(inspectField, true)
+}
+
+// InspectFieldsIncludingListTypes iterates over fields in structs, including list types.
+// Unlike InspectFields, this method does not skip fields in list type structs.
+func (i *inspector) InspectFieldsIncludingListTypes(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers)) {
+	i.inspectFields(inspectField, false)
+}
+
+// inspectFields is a shared implementation for field iteration.
+// The skipListTypes parameter controls whether list type structs should be skipped.
+func (i *inspector) inspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers), skipListTypes bool) {
 	// Filter to fields so that we can iterate over fields in a struct.
 	nodeFilter := []ast.Node{
 		(*ast.Field)(nil),
@@ -67,7 +82,7 @@ func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInf
 		}
 
 		field, ok := n.(*ast.Field)
-		if !ok || !i.shouldProcessField(stack) {
+		if !ok || !i.shouldProcessField(stack, skipListTypes) {
 			return ok
 		}
 
@@ -82,7 +97,8 @@ func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInf
 }
 
 // shouldProcessField checks if the field should be processed.
-func (i *inspector) shouldProcessField(stack []ast.Node) bool {
+// The skipListTypes parameter controls whether list type structs should be skipped.
+func (i *inspector) shouldProcessField(stack []ast.Node, skipListTypes bool) bool {
 	if len(stack) < 3 {
 		return false
 	}
@@ -96,8 +112,13 @@ func (i *inspector) shouldProcessField(stack []ast.Node) bool {
 	}
 
 	structType, ok := stack[len(stack)-3].(*ast.StructType)
-	if !ok || isItemsType(structType) {
-		// Not in a struct or belongs to an items type.
+	if !ok {
+		// Not in a struct.
+		return false
+	}
+
+	if skipListTypes && isItemsType(structType) {
+		// Skip list types if requested.
 		return false
 	}
 
