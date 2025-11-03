@@ -22,6 +22,7 @@ import (
 	"go/token"
 	"go/types"
 	"slices"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
@@ -409,4 +410,84 @@ func GetMinProperties(markerSet markershelper.MarkerSet) (*int, error) {
 	}
 
 	return minProperties, nil
+}
+
+// IsKubernetesListType checks if a struct is a Kubernetes List type.
+// A Kubernetes List type has:
+// - Name ending with "List" (only checked if name is provided)
+// - Exactly 3 fields: TypeMeta, ListMeta, and Items (slice type)
+//
+// The name parameter is optional and can be an empty string. When empty, only
+// the structural pattern (3 fields: TypeMeta, ListMeta, Items) is checked without
+// validating the type name suffix. This is useful for generic field inspection
+// where the type name may not be readily available.
+//
+// Example:
+//
+//	type FooList struct {
+//	    metav1.TypeMeta `json:",inline"`
+//	    metav1.ListMeta `json:"metadata,omitempty"`
+//	    Items           []Foo `json:"items"`
+//	}
+func IsKubernetesListType(sTyp *ast.StructType, name string) bool {
+	if sTyp == nil || sTyp.Fields == nil || sTyp.Fields.List == nil {
+		return false
+	}
+
+	// Check name suffix if name is provided
+	if name != "" && !strings.HasSuffix(name, "List") {
+		return false
+	}
+
+	// Must have exactly 3 fields
+	if len(sTyp.Fields.List) != 3 {
+		return false
+	}
+
+	return hasListFields(sTyp.Fields.List)
+}
+
+// hasListFields checks if the field list contains TypeMeta, ListMeta, and Items.
+func hasListFields(fields []*ast.Field) bool {
+	hasTypeMeta := false
+	hasListMeta := false
+	hasItems := false
+
+	for _, field := range fields {
+		typeName := getFieldTypeName(field)
+
+		// Check for TypeMeta (embedded or named)
+		if typeName == "TypeMeta" {
+			hasTypeMeta = true
+			continue
+		}
+
+		// Check for ListMeta (embedded or named)
+		if typeName == "ListMeta" {
+			hasListMeta = true
+			continue
+		}
+
+		// Check for Items field (must be named "Items" and be a slice type)
+		if len(field.Names) > 0 && field.Names[0].Name == "Items" {
+			if _, ok := field.Type.(*ast.ArrayType); ok {
+				hasItems = true
+			}
+		}
+	}
+
+	return hasTypeMeta && hasListMeta && hasItems
+}
+
+// getFieldTypeName returns the type name of a field, handling both embedded fields
+// and named fields with simple or qualified identifiers (e.g., TypeMeta or metav1.TypeMeta).
+func getFieldTypeName(field *ast.Field) string {
+	switch t := field.Type.(type) {
+	case *ast.Ident:
+		return t.Name
+	case *ast.SelectorExpr:
+		return t.Sel.Name
+	}
+
+	return ""
 }

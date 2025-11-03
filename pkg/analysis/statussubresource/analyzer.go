@@ -26,6 +26,7 @@ import (
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -97,40 +98,47 @@ func checkStruct(pass *analysis.Pass, sTyp *ast.StructType, name string, structM
 		return
 	}
 
+	// Skip Kubernetes List types as they follow a different pattern
+	// and don't use the status subresource
+	if utils.IsKubernetesListType(sTyp, name) {
+		return
+	}
+
 	hasStatusSubresourceMarker := structMarkers.Has(markers.KubebuilderStatusSubresourceMarker)
 	hasStatusField := hasStatusField(sTyp, jsonTags)
 
-	switch {
-	case (hasStatusSubresourceMarker && hasStatusField), (!hasStatusSubresourceMarker && !hasStatusField):
-		// acceptable state
-	case hasStatusSubresourceMarker && !hasStatusField:
-		// Might be able to have some suggested fixes here, but it is likely much more complex
-		// so for now leave it with a descriptive failure message.
+	// Both present or both absent is acceptable
+	if hasStatusSubresourceMarker == hasStatusField {
+		return
+	}
+
+	// Marker present but no status field
+	if hasStatusSubresourceMarker {
 		pass.Reportf(sTyp.Pos(), "root object type %q is marked to enable the status subresource with marker %q but has no status field", name, markers.KubebuilderStatusSubresourceMarker)
-	case !hasStatusSubresourceMarker && hasStatusField:
-		// In this case we can suggest the autofix to add the status subresource marker
-		pass.Report(analysis.Diagnostic{
-			Pos:     sTyp.Pos(),
-			Message: fmt.Sprintf("root object type %q has a status field but does not have the marker %q to enable the status subresource", name, markers.KubebuilderStatusSubresourceMarker),
-			SuggestedFixes: []analysis.SuggestedFix{
-				{
-					Message: "should add the kubebuilder:subresource:status marker",
-					TextEdits: []analysis.TextEdit{
-						// go one line above the struct and add the marker
-						{
-							// sTyp.Pos() is the beginning of the 'struct' keyword. Subtract
-							// the length of the struct name + 7 (2 for spaces surrounding type name, 4 for the 'type' keyword,
-							// and 1 for the newline) to position at the end of the line above the struct
-							// definition.
-							Pos: sTyp.Pos() - token.Pos(len(name)+7),
-							// prefix with a newline to ensure we aren't appending to a previous comment
-							NewText: []byte("\n// +kubebuilder:subresource:status"),
-						},
+		return
+	}
+
+	// Status field present but no marker - suggest autofix
+	pass.Report(analysis.Diagnostic{
+		Pos:     sTyp.Pos(),
+		Message: fmt.Sprintf("root object type %q has a status field but does not have the marker %q to enable the status subresource", name, markers.KubebuilderStatusSubresourceMarker),
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message: "should add the kubebuilder:subresource:status marker",
+				TextEdits: []analysis.TextEdit{
+					{
+						// sTyp.Pos() is the beginning of the 'struct' keyword. Subtract
+						// the length of the struct name + 7 (2 for spaces surrounding type name, 4 for the 'type' keyword,
+						// and 1 for the newline) to position at the end of the line above the struct
+						// definition.
+						Pos: sTyp.Pos() - token.Pos(len(name)+7),
+						// prefix with a newline to ensure we aren't appending to a previous comment
+						NewText: []byte("\n// +kubebuilder:subresource:status"),
 					},
 				},
 			},
-		})
-	}
+		},
+	})
 }
 
 func hasStatusField(sTyp *ast.StructType, jsonTags extractjsontags.StructFieldTags) bool {
