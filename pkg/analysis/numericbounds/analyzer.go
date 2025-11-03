@@ -63,7 +63,8 @@ func run(pass *analysis.Pass) (any, error) {
 }
 
 func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	if field == nil || len(field.Names) == 0 {
+	fieldName := utils.FieldName(field)
+	if fieldName == "" {
 		return
 	}
 
@@ -81,7 +82,6 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 		return
 	}
 
-	fieldName := utils.FieldName(field)
 	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	// Determine which markers to look for based on whether the field is a slice
@@ -125,6 +125,31 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 	checkJavaScriptSafeBounds(pass, field, fieldName, ident.Name, minimum, maximum)
 }
 
+// getNumericTypeIdent returns the identifier for int32 or int64 types.
+// It handles type aliases by looking up the underlying type.
+// Note: This function expects pointers and slices to already be unwrapped.
+func getNumericTypeIdent(pass *analysis.Pass, expr ast.Expr) *ast.Ident {
+	ident, ok := expr.(*ast.Ident)
+	if !ok {
+		return nil
+	}
+
+	// Check if it's a basic int32 or int64 type
+	if ident.Name == "int32" || ident.Name == "int64" {
+		return ident
+	}
+
+	// Check if it's a type alias to int32 or int64
+	if !utils.IsBasicType(pass, ident) {
+		typeSpec, ok := utils.LookupTypeSpec(pass, ident)
+		if ok {
+			return getNumericTypeIdent(pass, typeSpec.Type)
+		}
+	}
+
+	return nil
+}
+
 // unwrapType unwraps pointers and slices to get the underlying type.
 // Returns the unwrapped type and a boolean indicating if it's a slice.
 func unwrapType(expr ast.Expr) (ast.Expr, bool) {
@@ -158,19 +183,6 @@ func getMarkerNames(isSlice bool) (minMarker, maxMarker string) {
 	return markers.KubebuilderMinimumMarker, markers.KubebuilderMaximumMarker
 }
 
-// checkJavaScriptSafeBounds checks if int64 bounds are within JavaScript safe integer range.
-func checkJavaScriptSafeBounds(pass *analysis.Pass, field *ast.Field, fieldName, typeName string, minimum, maximum float64) {
-	if typeName != "int64" {
-		return
-	}
-
-	if minimum < minSafeInt || maximum > maxSafeInt {
-		pass.Reportf(field.Pos(),
-			"field %s of type int64 has bounds [%d, %d] that exceed safe integer range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients",
-			fieldName, int64(minimum), int64(maximum), minSafeInt, maxSafeInt)
-	}
-}
-
 // getMarkerNumericValue extracts the numeric value from the first instance of the marker with the given name.
 func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerName string) (float64, error) {
 	markerList := markerSet.Get(markerName)
@@ -193,27 +205,15 @@ func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerName string)
 	return value, nil
 }
 
-// getNumericTypeIdent returns the identifier for int32 or int64 types.
-// It handles type aliases by looking up the underlying type.
-// Note: This function expects pointers and slices to already be unwrapped.
-func getNumericTypeIdent(pass *analysis.Pass, expr ast.Expr) *ast.Ident {
-	ident, ok := expr.(*ast.Ident)
-	if !ok {
-		return nil
+// checkJavaScriptSafeBounds checks if int64 bounds are within JavaScript safe integer range.
+func checkJavaScriptSafeBounds(pass *analysis.Pass, field *ast.Field, fieldName, typeName string, minimum, maximum float64) {
+	if typeName != "int64" {
+		return
 	}
 
-	// Check if it's a basic int32 or int64 type
-	if ident.Name == "int32" || ident.Name == "int64" {
-		return ident
+	if minimum < minSafeInt || maximum > maxSafeInt {
+		pass.Reportf(field.Pos(),
+			"field %s of type int64 has bounds [%d, %d] that exceed safe integer range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients",
+			fieldName, int64(minimum), int64(maximum), minSafeInt, maxSafeInt)
 	}
-
-	// Check if it's a type alias to int32 or int64
-	if !utils.IsBasicType(pass, ident) {
-		typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-		if ok {
-			return getNumericTypeIdent(pass, typeSpec.Type)
-		}
-	}
-
-	return nil
 }
