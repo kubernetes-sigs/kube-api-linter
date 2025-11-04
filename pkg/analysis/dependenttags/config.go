@@ -39,6 +39,7 @@ type Rule struct {
 	// Dependents are the markers that are required by Main.
 	Dependents []string `mapstructure:"dependents"`
 	// Type defines how to interpret the dependents list.
-	// Can be 'all' (default) or 'any'.
+	// When set to All, every dependent in the list must be present when the identifier is present on a field or type.
+	// When set to Any, at least one of the listed dependents must be present when the identifier is present on a field or type.
 	Type DependencyType `mapstructure:"type,omitempty"`
 }

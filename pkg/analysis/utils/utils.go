@@ -491,11 +491,3 @@ func getFieldTypeName(field *ast.Field) string {
 
 	return ""
 }
-
-// GetStructAndFieldName returns the name of the struct and the field name for a given field.
-func GetStructAndFieldName(pass *analysis.Pass, field *ast.Field) (string, string) {
-	structName := GetStructNameForField(pass, field)
-	fieldName := FieldName(field)
-
-	return structName, fieldName
-}

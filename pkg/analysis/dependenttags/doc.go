@@ -21,14 +21,14 @@ limitations under the License.
 // a set of other markers (dependent tags) are also present. This is useful for enforcing API
 // contracts where certain markers imply the presence of others.
 //
-// For example, a field marked with `+k-8s:unionMember` must also be marked with `+k8s:optional`.
+// For example, a field marked with `+k8s:unionMember` must also be marked with `+k8s:optional`.
 //
 // # Configuration
 //
 // The linter is configured with a list of rules. Each rule specifies an identifier marker and a list of
 // dependent markers. The `type` field is required and specifies how to interpret the dependents list:
-// - `all`: all dependent markers are required.
-// - `any`: at least one of the dependent markers is required.
+// - `All`: all dependent markers are required.
+// - `Any`: at least one of the dependent markers is required.
 //
 // This linter only checks for the presence or absence of markers; it does not inspect or enforce specific values within those markers. It also does not provide automatic fixes.
 //
@@ -36,15 +36,15 @@ limitations under the License.
 //	  dependenttags:
 //	    rules:
 //	    - identifier: "k8s:unionMember"
-//	      type: "all"
+//	      type: "All"
 //	      dependents:
 //	      - "k8s:optional"
 //	    - identifier: "listType"
-//	      type: "all"
+//	      type: "All"
 //	      dependents:
 //	      - "k8s:listType"
 //	    - identifier: "example:any"
-//	      type: "any"
+//	      type: "Any"
 //	      dependents:
 //	      - "dep1"
 //	      - "dep2"

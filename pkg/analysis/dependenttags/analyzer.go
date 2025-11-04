@@ -76,9 +76,9 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 			if _, ok := fieldMarkers[rule.Identifier]; ok {
 				switch rule.Type {
 				case DependencyTypeAny:
-					handleAny(pass, field, rule, fieldMarkers)
+					handleAny(pass, field, rule, fieldMarkers, qualifiedFieldName)
 				case DependencyTypeAll:
-					handleAll(pass, field, rule, fieldMarkers)
+					handleAll(pass, field, rule, fieldMarkers, qualifiedFieldName)
 				default:
 					panic(fmt.Sprintf("unknown dependency type %s", rule.Type))
 				}
@@ -88,7 +88,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 
 	return nil, nil //nolint:nilnil
 }
-func handleAll(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers markers.MarkerSet) {
+func handleAll(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers markers.MarkerSet, qualifiedFieldName string) {
 	missing := make([]string, 0, len(rule.Dependents))
 
 	for _, dependent := range rule.Dependents {
@@ -98,12 +98,11 @@ func handleAll(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 	}
 
 	if len(missing) > 0 {
-		structName, fieldName := utils.GetStructAndFieldName(pass, field)
-		pass.Reportf(field.Pos(), "field %s.%s with marker +%s is missing required marker(s): %s", structName, fieldName, rule.Identifier, strings.Join(missing, ", "))
+		pass.Reportf(field.Pos(), "field %s with marker +%s is missing required marker(s): %s", qualifiedFieldName, rule.Identifier, strings.Join(missing, ", "))
 	}
 }
 
-func handleAny(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers markers.MarkerSet) {
+func handleAny(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers markers.MarkerSet, qualifiedFieldName string) {
 	found := false
 
 	for _, dependent := range rule.Dependents {
@@ -119,7 +118,6 @@ func handleAny(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 			dependents[i] = fmt.Sprintf("+%s", d)
 		}
 
-		structName, fieldName := utils.GetStructAndFieldName(pass, field)
-		pass.Reportf(field.Pos(), "field %s.%s with marker +%s requires at least one of the following markers, but none were found: %s", structName, fieldName, rule.Identifier, strings.Join(dependents, ", "))
+		pass.Reportf(field.Pos(), "field %s with marker +%s requires at least one of the following markers, but none were found: %s", qualifiedFieldName, rule.Identifier, strings.Join(dependents, ", "))
 	}
 }
