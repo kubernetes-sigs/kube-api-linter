@@ -481,65 +481,34 @@ linterConfig:
 
 ## NumericBounds
 
-The `numericbounds` linter checks that numeric fields (`int32` and `int64`) have appropriate bounds validation markers.
+The `numericbounds` linter checks that numeric fields (`int32`, `int64`, `float32`, `float64`) have appropriate bounds validation markers.
 
 According to Kubernetes API conventions, numeric fields should have bounds checking to prevent values that are too small, negative (when not intended), or too large.
 
 This linter ensures that:
-- `int32` and `int64` fields have both `+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum` markers
-- `int64` fields with bounds outside the JavaScript safe integer range are flagged
+- Numeric fields have both `+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum` markers
+- K8s declarative validation markers (`+k8s:minimum` and `+k8s:maximum`) are also supported
+- Bounds values are within the type's valid range (e.g., int32 bounds must fit in int32)
+- `int64` fields with bounds outside the JavaScript safe integer range (±2^53-1) are flagged
 
-### JavaScript Safe Integer Range
+**Note:** While `+k8s:minimum` is documented in the official Kubernetes declarative validation spec, `+k8s:maximum` is not yet officially documented but is supported by this linter for forward compatibility and consistency.
 
-For `int64` fields, the linter checks if the bounds exceed the JavaScript safe integer range of `-(2^53)` to `(2^53)` (specifically, `-9007199254740991` to `9007199254740991`).
+### Configuration
 
-JavaScript represents all numbers as IEEE 754 double-precision floating-point values, which can only safely represent integers in this range. Values outside this range may lose precision when processed by JavaScript clients.
+This linter is **not enabled by default** as it is primarily focused on CRD validation with kubebuilder markers. It can be enabled in your configuration.
 
-When an `int64` field has bounds that exceed this range, the linter will suggest using a string type instead to avoid precision loss.
-
-### Examples
-
-**Valid:** Numeric field with proper bounds markers
-```go
-type Example struct {
-    // +kubebuilder:validation:Minimum=0
-    // +kubebuilder:validation:Maximum=100
-    Count int32
-}
+To enable in `.golangci.yml`:
+```yaml
+linters-settings:
+  custom:
+    kubeapilinter:
+      settings:
+        linters:
+          enable:
+            - numericbounds
 ```
 
-**Valid:** Int64 field with JavaScript-safe bounds
-```go
-type Example struct {
-    // +kubebuilder:validation:Minimum=-9007199254740991
-    // +kubebuilder:validation:Maximum=9007199254740991
-    Timestamp int64
-}
-```
-
-**Invalid:** Missing bounds markers
-```go
-type Example struct {
-    Count int32 // want: should have minimum and maximum bounds validation markers
-}
-```
-
-**Invalid:** Only one bound specified
-```go
-type Example struct {
-    // +kubebuilder:validation:Minimum=0
-    Count int32 // want: has minimum but is missing maximum bounds validation marker
-}
-```
-
-**Invalid:** Int64 with bounds exceeding JavaScript safe range
-```go
-type Example struct {
-    // +kubebuilder:validation:Minimum=-10000000000000000
-    // +kubebuilder:validation:Maximum=10000000000000000
-    LargeNumber int64 // want: bounds exceed JavaScript safe integer range
-}
-```
+See the [package documentation](https://pkg.go.dev/sigs.k8s.io/kube-api-linter/pkg/analysis/numericbounds) for detailed examples and usage.
 
 ## NoBools
 
