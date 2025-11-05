@@ -35,6 +35,35 @@
 | [UniqueMarkers](#uniquemarkers) | Ensures unique marker definitions | True | Native, CRD |
 
 [^1]: Some linters are applicable only to Native (in-tree, go-validated APIs) or only to CRD (Custom Resource Definitions) APIs.
+- [ArrayOfStruct](#arrayofstruct) - Ensures arrays of structs have at least one required field
+- [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
+- [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
+- [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
+- [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
+- [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [Enums](#enums) - Enforces proper usage of enumerated fields with type aliases and +enum marker
+- [DependentTags](#dependenttags) - Enforces dependencies between markers
+- [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
+- [Integers](#integers) - Validates usage of supported integer types
+- [JSONTags](#jsontags) - Ensures proper JSON tag formatting
+- [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
+- [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
+- [NoBools](#nobools) - Prevents usage of boolean types
+- [NoDurations](#nodurations) - Prevents usage of duration types
+- [NoFloats](#nofloats) - Prevents usage of floating-point types
+- [Nomaps](#nomaps) - Restricts usage of map types
+- [NoNullable](#nonullable) - Prevents usage of the nullable marker
+- [Nophase](#nophase) - Prevents usage of 'Phase' fields
+- [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
+- [OptionalFields](#optionalfields) - Validates optional field conventions
+- [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
+- [NoReferences](#noreferences) - Ensures field names use Ref/Refs instead of Reference/References
+- [PreferredMarkers](#preferredmarkers) - Ensures preferred markers are used instead of equivalent markers
+- [RequiredFields](#requiredfields) - Validates required field conventions
+- [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
+- [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
+- [StatusSubresource](#statussubresource) - Validates status subresource configuration
+- [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
 
 ## ArrayOfStruct
 
@@ -305,6 +334,27 @@ will not.
 
 The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
 If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
+
+## Enums
+
+The `enums` linter enforces that enumerated fields use type aliases with the `+enum` marker and that enum values follow PascalCase naming conventions.
+
+This provides better API evolution, self-documentation, and validation compared to plain strings.
+
+By default, `enums` is not enabled.
+
+### Configuration
+
+```yaml
+linterConfig:
+  enums:
+    allowlist:
+      - kubectl
+      - docker
+      - helm
+```
+
+The `allowlist` field contains enum values that should be exempt from PascalCase validation, such as command-line executable names.
 
 ## ForbiddenMarkers
 
