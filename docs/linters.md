@@ -6,6 +6,7 @@
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [Enums](#enums) - Enforces proper usage of enumerated fields with type aliases and +enum marker
 - [DependentTags](#dependenttags) - Enforces dependencies between markers
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
@@ -235,13 +236,34 @@ will not.
 The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
 If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
 
+## Enums
+
+The `enums` linter enforces that enumerated fields use type aliases with the `+enum` marker and that enum values follow PascalCase naming conventions.
+
+This provides better API evolution, self-documentation, and validation compared to plain strings.
+
+By default, `enums` is not enabled.
+
+### Configuration
+
+```yaml
+linterConfig:
+  enums:
+    allowlist:
+      - kubectl
+      - docker
+      - helm
+```
+
+The `allowlist` field contains enum values that should be exempt from PascalCase validation, such as command-line executable names.
+
 ## ForbiddenMarkers
 
 The `forbiddenmarkers` linter ensures that types and fields do not contain any markers that are forbidden.
 
 By default, `forbiddenmarkers` is not enabled.
 
-### Configuation
+### Configuration
 
 It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden.
 
