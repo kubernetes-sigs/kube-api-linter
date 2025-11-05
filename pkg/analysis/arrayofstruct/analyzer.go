@@ -18,8 +18,11 @@ package arrayofstruct
 import (
 	"fmt"
 	"go/ast"
+	"regexp"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
+
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
@@ -71,6 +74,13 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 	// Get the struct type definition
 	structType := getStructType(pass, elementType)
 	if structType == nil {
+		return
+	}
+
+	// Check if the struct has union markers that satisfy the required constraint
+	if hasExactlyOneOfMarker(structType) {
+		// ExactlyOneOf marker enforces that exactly one field is set,
+		// so we don't need to report an error
 		return
 	}
 
@@ -207,4 +217,36 @@ func hasRequiredField(structType *ast.StructType, markersAccess markershelper.Ma
 	}
 
 	return false
+}
+
+// hasExactlyOneOfMarker checks if the struct has an ExactlyOneOf marker,
+// which satisfies the required field constraint by ensuring exactly one field is set.
+func hasExactlyOneOfMarker(structType *ast.StructType) bool {
+	if structType.Fields == nil {
+		return false
+	}
+
+	for _, field := range structType.Fields.List {
+		var markers []string
+
+		if field.Doc != nil {
+			for _, comment := range field.Doc.List {
+				markers = append(markers, comment.Text)
+			}
+		}
+		// Check for ExactlyOneOf marker
+		if hasMarkerPattern(markers, "ExactlyOneOf") {
+			return true
+		}
+	}
+
+	return false
+}
+
+// hasMarkerPattern checks if any of the markers match the given pattern.
+func hasMarkerPattern(markers []string, markerName string) bool {
+	pattern := fmt.Sprintf(`\+kubebuilder:validation:%s=`, markerName)
+	re := regexp.MustCompile(pattern)
+
+	return slices.ContainsFunc(markers, re.MatchString)
 }
