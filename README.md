@@ -16,7 +16,7 @@ Kube API Linter ships as a standalone binary, golangci-lint plugin, and a golang
 
 The binary version of Kube API Linter can be built with `make build` or a standard `go build` command.
 ```bash
-go build -o ./bin/golangci-lint-kube-api-linter ./cmd/golangci-lint-kube-api-linter 
+go build -o ./bin ./cmd/golangci-lint-kube-api-linter 
 ```
 
 The binary builds a custom version of `golangci-lint` with Kube API Linter included as a module.
@@ -30,28 +30,20 @@ If you do not have `golangci-lint` installed, review the `golangci-lint` [instal
 
 [golangci-lint-install]: https://golangci-lint.run/welcome/install/
 
-You will need to create a `.custom-gcl.yml` file to describe the custom linters you want to run.
-
-The following is an example of a `.custom-gcl.yml` file:
+You will need to create a `.custom-gcl.yml` file to describe the custom linters you want to run. The following is an example of a `.custom-gcl.yml` file:
 
 ```yaml
 version: v2.5.0
 name: golangci-lint-kube-api-linter
 destination: ./bin
 plugins:
-  - module: 'sigs.k8s.io/kube-api-linter'
-    version: 'v0.0.0-20251029102002-9992248f8813'
+- module: 'sigs.k8s.io/kube-api-linter'
+  version: 'v0.0.0-20251029102002-9992248f8813'
 ```
 
 **Important - Version Format**: Since this repository does not have releases yet, you must use a [pseudo-version](https://go.dev/ref/mod#pseudo-versions) in the format `v0.0.0-YYYYMMDDHHMMSS-commithash`.
 
-To get the correct pseudo-version for the latest commit, run:
-
-```bash
-TZ=UTC git --no-pager show --quiet --abbrev=12 --date='format-local:%Y%m%d%H%M%S' --format="%cd-%h"
-```
-
-This will output a string like `20251029102002-9992248f8813`. Prepend `v0.0.0-` to form the complete version: `v0.0.0-20251029102002-9992248f8813`.
+To find the latest version listed, check [pkg.go.dev/sigs.k8s.io/kube-api-linter?tab=versions](https://pkg.go.dev/sigs.k8s.io/kube-api-linter?tab=versions)
 
 Once you have created the custom configuration file, you can run the following command to build the custom binary:
 
@@ -59,7 +51,7 @@ Once you have created the custom configuration file, you can run the following c
 golangci-lint custom
 ```
 
-The output binary `./bin/golangci-lint-kube-api-linter` will be a combination of the `golangci-lint` binary with the Kube API Linter included as a module.
+The output binary will be created at the location specified by the `destination` field in `.custom-gcl.yml` and will be a combination of the `golangci-lint` binary with the Kube API Linter included as a module.
 
 This means you can use any of the standard `golangci-lint` configuration or flags to run the binary, with the addition of the Kube API Linter rules.
 
@@ -67,7 +59,6 @@ If you wish to only use the Kube API Linter rules, you can configure your `.gola
 
 ```yaml
 version: "2"
-
 linters-settings:
   custom:
     kubeapilinter:
@@ -94,7 +85,6 @@ If you wish to only run selected linters you can do so by specifying the linters
 
 ```yaml
 version: "2"
-
 linters-settings:
   custom:
     kubeapilinter:
@@ -107,7 +97,6 @@ linters-settings:
             - requiredfields
             - statusoptional
             - statussubresource
-
 linters:
   enable:
     - kubeapilinter
@@ -123,45 +112,36 @@ To provide further configuration, add the `custom.kubeapilinter` section to your
 Where fixes are available within a rule, these can be applied automatically with the `--fix` flag:
 
 ```shell
-./bin/golangci-lint-kube-api-linter run path/to/api/types --fix
+golangci-lint-kube-api-linter run path/to/api/types --fix
 ```
 
 ### Golangci-lint Plugin
 
 The Kube API Linter can also be used as a plugin for `golangci-lint`.
-To do this, you will need to install the `golangci-lint` binary and then build the Kube API Linter plugin.
+To do this, you will need to install the `golangci-lint` binary and then install the Kube API Linter plugin.
 
 More information about golangci-lint plugins can be found in the [golangci-lint plugin documentation][golangci-lint-plugin-docs].
 
 [golangci-lint-plugin-docs]: https://golangci-lint.run/plugins/go-plugins/
 
-**Important**: The plugin must be built from the vendor directory, not directly from the module path.
-
-**Step 1**: Ensure the module is in your project's vendor directory:
+To build the plugin, use the `-buildmode=plugin` flag:
 
 ```shell
-go mod vendor
+go build -buildmode=plugin -o bin/kube-api-linter.so sigs.k8s.io/kube-api-linter/pkg/plugin
 ```
 
-**Step 2**: Build the plugin from the vendor directory:
+**Note**: If you're building the plugin from within another project that vendors kube-api-linter, use the vendor path:
 
 ```shell
-go build -mod=vendor -buildmode=plugin -o $(OUTPUT_DIR)/kube-api-linter.so ./vendor/sigs.k8s.io/kube-api-linter
+go build -mod=vendor -buildmode=plugin -o bin/kube-api-linter.so ./vendor/sigs.k8s.io/kube-api-linter/pkg/plugin
 ```
 
-Example - building into a `bin` directory:
-
-```shell
-go build -mod=vendor -buildmode=plugin -o bin/kube-api-linter.so ./vendor/sigs.k8s.io/kube-api-linter
-```
-
-This will create a `kube-api-linter.so` plugin file in the `bin` directory.
+This will create a `kube-api-linter.so` plugin file in the specified directory.
 
 The `golangci-lint` configuration is similar to the module configuration, however, you will need to specify the plugin path instead in your `.golangci.yml`:
 
 ```yaml
 version: "2"
-
 linters-settings:
   custom:
     kubeapilinter:
@@ -171,7 +151,6 @@ linters-settings:
       settings:
         linters: {}
         lintersConfig: {}
-
 linters:
   enable:
     - kubeapilinter
