@@ -41,5 +41,5 @@ type K8s struct {
 
 	// +k8s:listType=map
 	// +k8s:listType=atomic
-	NonUniqueListType []string // want "field NonUniqueListType has multiple definitions of marker k8s:listType when only a single definition should exist"
+	NonUniqueListType []string // want "field K8s.NonUniqueListType has multiple definitions of marker k8s:listType when only a single definition should exist"
 }

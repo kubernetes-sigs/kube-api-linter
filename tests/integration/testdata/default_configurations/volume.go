@@ -2,13 +2,13 @@ package defaultconfigurations
 
 // VolumeMount describes a mounting of a Volume within a container.
 type VolumeMount struct {
-	// This must match the Name of a Volume. // want "commentstart: godoc for field Name should start with 'name ...'"
-	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field Name must be marked as optional or required"
-	// Mounted read-only if true, read-write otherwise (false or unspecified). // want "commentstart: godoc for field ReadOnly should start with 'readOnly ...'"
+	// This must match the Name of a Volume. // want "commentstart: godoc for field VolumeMount.Name should start with 'name ...'"
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field VolumeMount.Name must be marked as optional or required"
+	// Mounted read-only if true, read-write otherwise (false or unspecified). // want "commentstart: godoc for field VolumeMount.ReadOnly should start with 'readOnly ...'"
 	// Defaults to false.
 	// +optional
 	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
-	// RecursiveReadOnly specifies whether read-only mounts should be handled // want "commentstart: godoc for field RecursiveReadOnly should start with 'recursiveReadOnly ...'"
+	// RecursiveReadOnly specifies whether read-only mounts should be handled // want "commentstart: godoc for field VolumeMount.RecursiveReadOnly should start with 'recursiveReadOnly ...'"
 	// recursively.
 	//
 	// If ReadOnly is false, this field has no meaning and must be unspecified.
@@ -26,10 +26,10 @@ type VolumeMount struct {
 	// If this field is not specified, it is treated as an equivalent of Disabled.
 	// +optional
 	RecursiveReadOnly *RecursiveReadOnlyMode `json:"recursiveReadOnly,omitempty" protobuf:"bytes,7,opt,name=recursiveReadOnly,casttype=RecursiveReadOnlyMode"`
-	// Path within the container at which the volume should be mounted.  Must // want "commentstart: godoc for field MountPath should start with 'mountPath ...'"
+	// Path within the container at which the volume should be mounted.  Must // want "commentstart: godoc for field VolumeMount.MountPath should start with 'mountPath ...'"
 	// not contain ':'.
-	MountPath string `json:"mountPath" protobuf:"bytes,3,opt,name=mountPath"` // want "optionalorrequired: field MountPath must be marked as optional or required"
-	// Path within the volume from which the container's volume should be mounted. // want "commentstart: godoc for field SubPath should start with 'subPath ...'"
+	MountPath string `json:"mountPath" protobuf:"bytes,3,opt,name=mountPath"` // want "optionalorrequired: field VolumeMount.MountPath must be marked as optional or required"
+	// Path within the volume from which the container's volume should be mounted. // want "commentstart: godoc for field VolumeMount.SubPath should start with 'subPath ...'"
 	// Defaults to "" (volume's root).
 	// +optional
 	SubPath string `json:"subPath,omitempty" protobuf:"bytes,4,opt,name=subPath"` // want "optionalfields: field SubPath should be a pointer."
@@ -41,7 +41,7 @@ type VolumeMount struct {
 	// (which defaults to None).
 	// +optional
 	MountPropagation *MountPropagationMode `json:"mountPropagation,omitempty" protobuf:"bytes,5,opt,name=mountPropagation,casttype=MountPropagationMode"`
-	// Expanded path within the volume from which the container's volume should be mounted. // want "commentstart: godoc for field SubPathExpr should start with 'subPathExpr ...'"
+	// Expanded path within the volume from which the container's volume should be mounted. // want "commentstart: godoc for field VolumeMount.SubPathExpr should start with 'subPathExpr ...'"
 	// Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment.
 	// Defaults to "" (volume's root).
 	// SubPathExpr and SubPath are mutually exclusive.
@@ -90,9 +90,9 @@ const (
 // volumeDevice describes a mapping of a raw block device within a container.
 type VolumeDevice struct {
 	// name must match the name of a persistentVolumeClaim in the pod
-	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field Name must be marked as optional or required"
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field VolumeDevice.Name must be marked as optional or required"
 	// devicePath is the path inside of the container that the device will be mapped to.
-	DevicePath string `json:"devicePath" protobuf:"bytes,2,opt,name=devicePath"` // want "optionalorrequired: field DevicePath must be marked as optional or required"
+	DevicePath string `json:"devicePath" protobuf:"bytes,2,opt,name=devicePath"` // want "optionalorrequired: field VolumeDevice.DevicePath must be marked as optional or required"
 }
 
 // Volume represents a named volume in a pod that may be accessed by any container in the pod.
@@ -100,7 +100,7 @@ type Volume struct {
 	// name of the volume.
 	// Must be a DNS_LABEL and unique within the pod.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field Name must be marked as optional or required"
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field Volume.Name must be marked as optional or required"
 	// volumeSource represents the location and type of the mounted volume.
 	// If not specified, the Volume is implied to be an EmptyDir.
 	// This implied behavior is deprecated and will be removed in a future version.
@@ -161,7 +161,7 @@ type VolumeSource struct {
 	// Deprecated: Glusterfs is deprecated and the in-tree glusterfs type is no longer supported.
 	// +optional
 	Glusterfs *GlusterfsVolumeSource `json:"glusterfs,omitempty" protobuf:"bytes,9,opt,name=glusterfs"`
-	// persistentVolumeClaimVolumeSource represents a reference to a // want "commentstart: godoc for field PersistentVolumeClaim should start with 'persistentVolumeClaim ...'"
+	// persistentVolumeClaimVolumeSource represents a reference to a // want "commentstart: godoc for field VolumeSource.PersistentVolumeClaim should start with 'persistentVolumeClaim ...'"
 	// PersistentVolumeClaim in the same namespace.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
 	// +optional
@@ -181,7 +181,7 @@ type VolumeSource struct {
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
 	Cinder *CinderVolumeSource `json:"cinder,omitempty" protobuf:"bytes,13,opt,name=cinder"`
-	// cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. // want "commentstart: godoc for field CephFS should start with 'cephfs ...'"
+	// cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. // want "commentstart: godoc for field VolumeSource.CephFS should start with 'cephfs ...'"
 	// Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.
 	// +optional
 	CephFS *CephFSVolumeSource `json:"cephfs,omitempty" protobuf:"bytes,14,opt,name=cephfs"`
@@ -219,9 +219,9 @@ type VolumeSource struct {
 	AzureDisk *AzureDiskVolumeSource `json:"azureDisk,omitempty" protobuf:"bytes,22,opt,name=azureDisk"`
 	// photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine.
 	// Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.
-	PhotonPersistentDisk *PhotonPersistentDiskVolumeSource `json:"photonPersistentDisk,omitempty" protobuf:"bytes,23,opt,name=photonPersistentDisk"` // want "optionalorrequired: field PhotonPersistentDisk must be marked as optional or required"
+	PhotonPersistentDisk *PhotonPersistentDiskVolumeSource `json:"photonPersistentDisk,omitempty" protobuf:"bytes,23,opt,name=photonPersistentDisk"` // want "optionalorrequired: field VolumeSource.PhotonPersistentDisk must be marked as optional or required"
 	// projected items for all in one resources secrets, configmaps, and downward API
-	Projected *ProjectedVolumeSource `json:"projected,omitempty" protobuf:"bytes,26,opt,name=projected"` // want "optionalorrequired: field Projected must be marked as optional or required"
+	Projected *ProjectedVolumeSource `json:"projected,omitempty" protobuf:"bytes,26,opt,name=projected"` // want "optionalorrequired: field VolumeSource.Projected must be marked as optional or required"
 	// portworxVolume represents a portworx volume attached and mounted on kubelets host machine.
 	// Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type
 	// are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate
@@ -232,7 +232,7 @@ type VolumeSource struct {
 	// Deprecated: ScaleIO is deprecated and the in-tree scaleIO type is no longer supported.
 	// +optional
 	ScaleIO *ScaleIOVolumeSource `json:"scaleIO,omitempty" protobuf:"bytes,25,opt,name=scaleIO"`
-	// storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes. // want "commentstart: godoc for field StorageOS should start with 'storageos ...'"
+	// storageOS represents a StorageOS volume attached and mounted on Kubernetes nodes. // want "commentstart: godoc for field VolumeSource.StorageOS should start with 'storageos ...'"
 	// Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported.
 	// +optional
 	StorageOS *StorageOSVolumeSource `json:"storageos,omitempty" protobuf:"bytes,27,opt,name=storageos"`
@@ -304,7 +304,7 @@ type ProjectedVolumeSource struct {
 
 // ImageVolumeSource represents a image volume resource.
 type ImageVolumeSource struct {
-	// Required: Image or artifact reference to be used. // want "commentstart: godoc for field Reference should start with 'reference ...'"
+	// Required: Image or artifact reference to be used. // want "commentstart: godoc for field ImageVolumeSource.Reference should start with 'reference ...'"
 	// Behaves in the same way as pod.spec.containers[*].image.
 	// Pull secrets will be assembled in the same way as for the container image by looking up node credentials, SA image pull secrets, and pod spec image pull secrets.
 	// More info: https://kubernetes.io/docs/concepts/containers/images
@@ -313,7 +313,7 @@ type ImageVolumeSource struct {
 	// +optional
 	Reference string `json:"reference,omitempty" protobuf:"bytes,1,opt,name=reference"` // want "optionalfields: field Reference should be a pointer."
 
-	// Policy for pulling OCI objects. Possible values are: // want "commentstart: godoc for field PullPolicy should start with 'pullPolicy ...'"
+	// Policy for pulling OCI objects. Possible values are: // want "commentstart: godoc for field ImageVolumeSource.PullPolicy should start with 'pullPolicy ...'"
 	// Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
 	// Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.
 	// IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
@@ -329,7 +329,7 @@ type ImageVolumeSource struct {
 type PersistentVolumeClaimVolumeSource struct {
 	// claimName is the name of a PersistentVolumeClaim in the same namespace as the pod using this volume.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
-	ClaimName string `json:"claimName" protobuf:"bytes,1,opt,name=claimName"` // want "optionalorrequired: field ClaimName must be marked as optional or required"
+	ClaimName string `json:"claimName" protobuf:"bytes,1,opt,name=claimName"` // want "optionalorrequired: field PersistentVolumeClaimVolumeSource.ClaimName must be marked as optional or required"
 	// readOnly Will force the ReadOnly setting in VolumeMounts.
 	// Default false.
 	// +optional
@@ -385,7 +385,7 @@ type PersistentVolumeSource struct {
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
 	Cinder *CinderPersistentVolumeSource `json:"cinder,omitempty" protobuf:"bytes,8,opt,name=cinder"`
-	// cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. // want "commentstart: godoc for field CephFS should start with 'cephfs ...'"
+	// cephFS represents a Ceph FS mount on the host that shares a pod's lifetime. // want "commentstart: godoc for field PersistentVolumeSource.CephFS should start with 'cephfs ...'"
 	// Deprecated: CephFS is deprecated and the in-tree cephfs type is no longer supported.
 	// +optional
 	CephFS *CephFSPersistentVolumeSource `json:"cephfs,omitempty" protobuf:"bytes,9,opt,name=cephfs"`
@@ -422,7 +422,7 @@ type PersistentVolumeSource struct {
 	AzureDisk *AzureDiskVolumeSource `json:"azureDisk,omitempty" protobuf:"bytes,16,opt,name=azureDisk"`
 	// photonPersistentDisk represents a PhotonController persistent disk attached and mounted on kubelets host machine.
 	// Deprecated: PhotonPersistentDisk is deprecated and the in-tree photonPersistentDisk type is no longer supported.
-	PhotonPersistentDisk *PhotonPersistentDiskVolumeSource `json:"photonPersistentDisk,omitempty" protobuf:"bytes,17,opt,name=photonPersistentDisk"` // want "optionalorrequired: field PhotonPersistentDisk must be marked as optional or required"
+	PhotonPersistentDisk *PhotonPersistentDiskVolumeSource `json:"photonPersistentDisk,omitempty" protobuf:"bytes,17,opt,name=photonPersistentDisk"` // want "optionalorrequired: field PersistentVolumeSource.PhotonPersistentDisk must be marked as optional or required"
 	// portworxVolume represents a portworx volume attached and mounted on kubelets host machine.
 	// Deprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type
 	// are redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate
@@ -436,7 +436,7 @@ type PersistentVolumeSource struct {
 	// local represents directly-attached storage with node affinity
 	// +optional
 	Local *LocalVolumeSource `json:"local,omitempty" protobuf:"bytes,20,opt,name=local"`
-	// storageOS represents a StorageOS volume that is attached to the kubelet's host machine and mounted into the pod. // want "commentstart: godoc for field StorageOS should start with 'storageos ...'"
+	// storageOS represents a StorageOS volume that is attached to the kubelet's host machine and mounted into the pod. // want "commentstart: godoc for field PersistentVolumeSource.StorageOS should start with 'storageos ...'"
 	// Deprecated: StorageOS is deprecated and the in-tree storageos type is no longer supported.
 	// More info: https://examples.k8s.io/volumes/storageos/README.md
 	// +optional
@@ -452,7 +452,7 @@ type HostPathVolumeSource struct {
 	// path of the directory on the host.
 	// If the path is a symlink, it will follow the link to the real path.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
-	Path string `json:"path" protobuf:"bytes,1,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,1,opt,name=path"` // want "optionalorrequired: field HostPathVolumeSource.Path must be marked as optional or required"
 	// type for HostPath Volume
 	// Defaults to ""
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#hostpath
@@ -507,11 +507,11 @@ type EmptyDirVolumeSource struct {
 // Glusterfs volumes do not support ownership management or SELinux relabeling.
 type GlusterfsVolumeSource struct {
 	// endpoints is the endpoint name that details Glusterfs topology.
-	EndpointsName string `json:"endpoints" protobuf:"bytes,1,opt,name=endpoints"` // want "optionalorrequired: field EndpointsName must be marked as optional or required"
+	EndpointsName string `json:"endpoints" protobuf:"bytes,1,opt,name=endpoints"` // want "optionalorrequired: field GlusterfsVolumeSource.EndpointsName must be marked as optional or required"
 
 	// path is the Glusterfs volume path.
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
-	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field GlusterfsVolumeSource.Path must be marked as optional or required"
 
 	// readOnly here will force the Glusterfs volume to be mounted with read-only permissions.
 	// Defaults to false.
@@ -525,11 +525,11 @@ type GlusterfsVolumeSource struct {
 type GlusterfsPersistentVolumeSource struct {
 	// endpoints is the endpoint name that details Glusterfs topology.
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
-	EndpointsName string `json:"endpoints" protobuf:"bytes,1,opt,name=endpoints"` // want "optionalorrequired: field EndpointsName must be marked as optional or required"
+	EndpointsName string `json:"endpoints" protobuf:"bytes,1,opt,name=endpoints"` // want "optionalorrequired: field GlusterfsPersistentVolumeSource.EndpointsName must be marked as optional or required"
 
 	// path is the Glusterfs volume path.
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
-	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field GlusterfsPersistentVolumeSource.Path must be marked as optional or required"
 
 	// readOnly here will force the Glusterfs volume to be mounted with read-only permissions.
 	// Defaults to false.
@@ -550,10 +550,10 @@ type RBDVolumeSource struct {
 	// monitors is a collection of Ceph monitors.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +listType=atomic
-	CephMonitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field CephMonitors must be marked as optional or required"
+	CephMonitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field RBDVolumeSource.CephMonitors must be marked as optional or required"
 	// image is the rados image name.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
-	RBDImage string `json:"image" protobuf:"bytes,2,opt,name=image"` // want "optionalorrequired: field RBDImage must be marked as optional or required"
+	RBDImage string `json:"image" protobuf:"bytes,2,opt,name=image"` // want "optionalorrequired: field RBDVolumeSource.RBDImage must be marked as optional or required"
 	// fsType is the filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -598,10 +598,10 @@ type RBDPersistentVolumeSource struct {
 	// monitors is a collection of Ceph monitors.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +listType=atomic
-	CephMonitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field CephMonitors must be marked as optional or required"
+	CephMonitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field RBDPersistentVolumeSource.CephMonitors must be marked as optional or required"
 	// image is the rados image name.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
-	RBDImage string `json:"image" protobuf:"bytes,2,opt,name=image"` // want "optionalorrequired: field RBDImage must be marked as optional or required"
+	RBDImage string `json:"image" protobuf:"bytes,2,opt,name=image"` // want "optionalorrequired: field RBDPersistentVolumeSource.RBDImage must be marked as optional or required"
 	// fsType is the filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -647,7 +647,7 @@ type RBDPersistentVolumeSource struct {
 type CinderVolumeSource struct {
 	// volumeID used to identify the volume in cinder.
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
-	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field VolumeID must be marked as optional or required"
+	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field CinderVolumeSource.VolumeID must be marked as optional or required"
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -672,7 +672,7 @@ type CinderVolumeSource struct {
 type CinderPersistentVolumeSource struct {
 	// volumeID used to identify the volume in cinder.
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
-	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field VolumeID must be marked as optional or required"
+	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field CinderPersistentVolumeSource.VolumeID must be marked as optional or required"
 	// fsType Filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -696,7 +696,7 @@ type CephFSVolumeSource struct {
 	// monitors is Required: Monitors is a collection of Ceph monitors
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +listType=atomic
-	Monitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field Monitors must be marked as optional or required"
+	Monitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field CephFSVolumeSource.Monitors must be marked as optional or required"
 	// path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
 	// +optional
 	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"` // want "optionalfields: field Path should be a pointer."
@@ -725,7 +725,7 @@ type CephFSPersistentVolumeSource struct {
 	// monitors is Required: Monitors is a collection of Ceph monitors
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +listType=atomic
-	Monitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field Monitors must be marked as optional or required"
+	Monitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field CephFSPersistentVolumeSource.Monitors must be marked as optional or required"
 	// path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
 	// +optional
 	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"` // want "optionalfields: field Path should be a pointer."
@@ -780,7 +780,7 @@ const (
 type GCEPersistentDiskVolumeSource struct {
 	// pdName is unique name of the PD resource in GCE. Used to identify the disk in GCE.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
-	PDName string `json:"pdName" protobuf:"bytes,1,opt,name=pdName"` // want "optionalorrequired: field PDName must be marked as optional or required"
+	PDName string `json:"pdName" protobuf:"bytes,1,opt,name=pdName"` // want "optionalorrequired: field GCEPersistentDiskVolumeSource.PDName must be marked as optional or required"
 	// fsType is filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -808,10 +808,10 @@ type QuobyteVolumeSource struct {
 	// registry represents a single or multiple Quobyte Registry services
 	// specified as a string as host:port pair (multiple entries are separated with commas)
 	// which acts as the central registry for volumes
-	Registry string `json:"registry" protobuf:"bytes,1,opt,name=registry"` // want "optionalorrequired: field Registry must be marked as optional or required"
+	Registry string `json:"registry" protobuf:"bytes,1,opt,name=registry"` // want "optionalorrequired: field QuobyteVolumeSource.Registry must be marked as optional or required"
 
 	// volume is a string that references an already created Quobyte volume by name.
-	Volume string `json:"volume" protobuf:"bytes,2,opt,name=volume"` // want "optionalorrequired: field Volume must be marked as optional or required"
+	Volume string `json:"volume" protobuf:"bytes,2,opt,name=volume"` // want "optionalorrequired: field QuobyteVolumeSource.Volume must be marked as optional or required"
 
 	// readOnly here will force the Quobyte volume to be mounted with read-only permissions.
 	// Defaults to false.
@@ -838,7 +838,7 @@ type QuobyteVolumeSource struct {
 // provisioned/attached using an exec based plugin.
 type FlexPersistentVolumeSource struct {
 	// driver is the name of the driver to use for this volume.
-	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field Driver must be marked as optional or required"
+	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field FlexPersistentVolumeSource.Driver must be marked as optional or required"
 	// fsType is the Filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
@@ -864,7 +864,7 @@ type FlexPersistentVolumeSource struct {
 // provisioned/attached using an exec based plugin.
 type FlexVolumeSource struct {
 	// driver is the name of the driver to use for this volume.
-	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field Driver must be marked as optional or required"
+	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field FlexVolumeSource.Driver must be marked as optional or required"
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
@@ -895,7 +895,7 @@ type FlexVolumeSource struct {
 type AWSElasticBlockStoreVolumeSource struct {
 	// volumeID is unique ID of the persistent disk resource in AWS (Amazon EBS volume).
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
-	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field VolumeID must be marked as optional or required"
+	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field AWSElasticBlockStoreVolumeSource.VolumeID must be marked as optional or required"
 	// fsType is the filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -924,7 +924,7 @@ type AWSElasticBlockStoreVolumeSource struct {
 // into the Pod's container.
 type GitRepoVolumeSource struct {
 	// repository is the URL
-	Repository string `json:"repository" protobuf:"bytes,1,opt,name=repository"` // want "optionalorrequired: field Repository must be marked as optional or required"
+	Repository string `json:"repository" protobuf:"bytes,1,opt,name=repository"` // want "optionalorrequired: field GitRepoVolumeSource.Repository must be marked as optional or required"
 	// revision is the commit hash for the specified revision.
 	// +optional
 	Revision string `json:"revision,omitempty" protobuf:"bytes,2,opt,name=revision"` // want "optionalfields: field Revision should be a pointer."
@@ -1002,11 +1002,11 @@ type SecretProjection struct {
 type NFSVolumeSource struct {
 	// server is the hostname or IP address of the NFS server.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
-	Server string `json:"server" protobuf:"bytes,1,opt,name=server"` // want "optionalorrequired: field Server must be marked as optional or required"
+	Server string `json:"server" protobuf:"bytes,1,opt,name=server"` // want "optionalorrequired: field NFSVolumeSource.Server must be marked as optional or required"
 
 	// path that is exported by the NFS server.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
-	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field NFSVolumeSource.Path must be marked as optional or required"
 
 	// readOnly here will force the NFS export to be mounted with read-only permissions.
 	// Defaults to false.
@@ -1021,11 +1021,11 @@ type NFSVolumeSource struct {
 type ISCSIVolumeSource struct {
 	// targetPortal is iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port
 	// is other than default (typically TCP ports 860 and 3260).
-	TargetPortal string `json:"targetPortal" protobuf:"bytes,1,opt,name=targetPortal"` // want "optionalorrequired: field TargetPortal must be marked as optional or required"
+	TargetPortal string `json:"targetPortal" protobuf:"bytes,1,opt,name=targetPortal"` // want "optionalorrequired: field ISCSIVolumeSource.TargetPortal must be marked as optional or required"
 	// iqn is the target iSCSI Qualified Name.
-	IQN string `json:"iqn" protobuf:"bytes,2,opt,name=iqn"` // want "optionalorrequired: field IQN must be marked as optional or required"
+	IQN string `json:"iqn" protobuf:"bytes,2,opt,name=iqn"` // want "optionalorrequired: field ISCSIVolumeSource.IQN must be marked as optional or required"
 	// lun represents iSCSI Target Lun number.
-	Lun int32 `json:"lun" protobuf:"varint,3,opt,name=lun"` // want "optionalorrequired: field Lun must be marked as optional or required"
+	Lun int32 `json:"lun" protobuf:"varint,3,opt,name=lun"` // want "optionalorrequired: field ISCSIVolumeSource.Lun must be marked as optional or required"
 	// iscsiInterface is the interface Name that uses an iSCSI transport.
 	// Defaults to 'default' (tcp).
 	// +optional
@@ -1069,11 +1069,11 @@ type ISCSIVolumeSource struct {
 type ISCSIPersistentVolumeSource struct {
 	// targetPortal is iSCSI Target Portal. The Portal is either an IP or ip_addr:port if the port
 	// is other than default (typically TCP ports 860 and 3260).
-	TargetPortal string `json:"targetPortal" protobuf:"bytes,1,opt,name=targetPortal"` // want "optionalorrequired: field TargetPortal must be marked as optional or required"
+	TargetPortal string `json:"targetPortal" protobuf:"bytes,1,opt,name=targetPortal"` // want "optionalorrequired: field ISCSIPersistentVolumeSource.TargetPortal must be marked as optional or required"
 	// iqn is Target iSCSI Qualified Name.
-	IQN string `json:"iqn" protobuf:"bytes,2,opt,name=iqn"` // want "optionalorrequired: field IQN must be marked as optional or required"
+	IQN string `json:"iqn" protobuf:"bytes,2,opt,name=iqn"` // want "optionalorrequired: field ISCSIPersistentVolumeSource.IQN must be marked as optional or required"
 	// lun is iSCSI Target Lun number.
-	Lun int32 `json:"lun" protobuf:"varint,3,opt,name=lun"` // want "optionalorrequired: field Lun must be marked as optional or required"
+	Lun int32 `json:"lun" protobuf:"varint,3,opt,name=lun"` // want "optionalorrequired: field ISCSIPersistentVolumeSource.Lun must be marked as optional or required"
 	// iscsiInterface is the interface Name that uses an iSCSI transport.
 	// Defaults to 'default' (tcp).
 	// +optional
@@ -1142,9 +1142,9 @@ type FCVolumeSource struct {
 // AzureFile represents an Azure File Service mount on the host and bind mount to the pod.
 type AzureFileVolumeSource struct {
 	// secretName is the  name of secret that contains Azure Storage Account Name and Key
-	SecretName string `json:"secretName" protobuf:"bytes,1,opt,name=secretName"` // want "optionalorrequired: field SecretName must be marked as optional or required"
+	SecretName string `json:"secretName" protobuf:"bytes,1,opt,name=secretName"` // want "optionalorrequired: field AzureFileVolumeSource.SecretName must be marked as optional or required"
 	// shareName is the azure share Name
-	ShareName string `json:"shareName" protobuf:"bytes,2,opt,name=shareName"` // want "optionalorrequired: field ShareName must be marked as optional or required"
+	ShareName string `json:"shareName" protobuf:"bytes,2,opt,name=shareName"` // want "optionalorrequired: field AzureFileVolumeSource.ShareName must be marked as optional or required"
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
@@ -1154,9 +1154,9 @@ type AzureFileVolumeSource struct {
 // AzureFile represents an Azure File Service mount on the host and bind mount to the pod.
 type AzureFilePersistentVolumeSource struct {
 	// secretName is the name of secret that contains Azure Storage Account Name and Key
-	SecretName string `json:"secretName" protobuf:"bytes,1,opt,name=secretName"` // want "optionalorrequired: field SecretName must be marked as optional or required"
+	SecretName string `json:"secretName" protobuf:"bytes,1,opt,name=secretName"` // want "optionalorrequired: field AzureFilePersistentVolumeSource.SecretName must be marked as optional or required"
 	// shareName is the azure Share Name
-	ShareName string `json:"shareName" protobuf:"bytes,2,opt,name=shareName"` // want "optionalorrequired: field ShareName must be marked as optional or required"
+	ShareName string `json:"shareName" protobuf:"bytes,2,opt,name=shareName"` // want "optionalorrequired: field AzureFilePersistentVolumeSource.ShareName must be marked as optional or required"
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
@@ -1170,7 +1170,7 @@ type AzureFilePersistentVolumeSource struct {
 // Represents a vSphere volume resource.
 type VsphereVirtualDiskVolumeSource struct {
 	// volumePath is the path that identifies vSphere volume vmdk
-	VolumePath string `json:"volumePath" protobuf:"bytes,1,opt,name=volumePath"` // want "optionalorrequired: field VolumePath must be marked as optional or required"
+	VolumePath string `json:"volumePath" protobuf:"bytes,1,opt,name=volumePath"` // want "optionalorrequired: field VsphereVirtualDiskVolumeSource.VolumePath must be marked as optional or required"
 	// fsType is filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
@@ -1187,11 +1187,11 @@ type VsphereVirtualDiskVolumeSource struct {
 // Represents a Photon Controller persistent disk resource.
 type PhotonPersistentDiskVolumeSource struct {
 	// pdID is the ID that identifies Photon Controller persistent disk
-	PdID string `json:"pdID" protobuf:"bytes,1,opt,name=pdID"` // want "optionalorrequired: field PdID must be marked as optional or required"
+	PdID string `json:"pdID" protobuf:"bytes,1,opt,name=pdID"` // want "optionalorrequired: field PhotonPersistentDiskVolumeSource.PdID must be marked as optional or required"
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalorrequired: field FSType must be marked as optional or required"
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalorrequired: field PhotonPersistentDiskVolumeSource.FSType must be marked as optional or required"
 }
 
 // +enum
@@ -1213,9 +1213,9 @@ const (
 // AzureDisk represents an Azure Data Disk mount on the host and bind mount to the pod.
 type AzureDiskVolumeSource struct {
 	// diskName is the Name of the data disk in the blob storage
-	DiskName string `json:"diskName" protobuf:"bytes,1,opt,name=diskName"` // want "optionalorrequired: field DiskName must be marked as optional or required"
+	DiskName string `json:"diskName" protobuf:"bytes,1,opt,name=diskName"` // want "optionalorrequired: field AzureDiskVolumeSource.DiskName must be marked as optional or required"
 	// diskURI is the URI of data disk in the blob storage
-	DataDiskURI string `json:"diskURI" protobuf:"bytes,2,opt,name=diskURI"` // want "optionalorrequired: field DataDiskURI must be marked as optional or required"
+	DataDiskURI string `json:"diskURI" protobuf:"bytes,2,opt,name=diskURI"` // want "optionalorrequired: field AzureDiskVolumeSource.DataDiskURI must be marked as optional or required"
 	// cachingMode is the Host Caching mode: None, Read Only, Read Write.
 	// +optional
 	// +default=ref(AzureDataDiskCachingReadWrite)
@@ -1233,17 +1233,17 @@ type AzureDiskVolumeSource struct {
 	ReadOnly *bool `json:"readOnly,omitempty" protobuf:"varint,5,opt,name=readOnly"`
 	// kind expected values are Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared
 	// +default=ref(AzureSharedBlobDisk)
-	Kind *AzureDataDiskKind `json:"kind,omitempty" protobuf:"bytes,6,opt,name=kind,casttype=AzureDataDiskKind"` // want "optionalorrequired: field Kind must be marked as optional or required"
+	Kind *AzureDataDiskKind `json:"kind,omitempty" protobuf:"bytes,6,opt,name=kind,casttype=AzureDataDiskKind"` // want "optionalorrequired: field AzureDiskVolumeSource.Kind must be marked as optional or required"
 }
 
 // PortworxVolumeSource represents a Portworx volume resource.
 type PortworxVolumeSource struct {
 	// volumeID uniquely identifies a Portworx volume
-	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field VolumeID must be marked as optional or required"
-	// fSType represents the filesystem type to mount // want "commentstart: godoc for field FSType should start with 'fsType ...'"
+	VolumeID string `json:"volumeID" protobuf:"bytes,1,opt,name=volumeID"` // want "optionalorrequired: field PortworxVolumeSource.VolumeID must be marked as optional or required"
+	// fSType represents the filesystem type to mount // want "commentstart: godoc for field PortworxVolumeSource.FSType should start with 'fsType ...'"
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs". Implicitly inferred to be "ext4" if unspecified.
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalorrequired: field FSType must be marked as optional or required"
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalorrequired: field PortworxVolumeSource.FSType must be marked as optional or required"
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
@@ -1253,12 +1253,12 @@ type PortworxVolumeSource struct {
 // ScaleIOVolumeSource represents a persistent ScaleIO volume
 type ScaleIOVolumeSource struct {
 	// gateway is the host address of the ScaleIO API Gateway.
-	Gateway string `json:"gateway" protobuf:"bytes,1,opt,name=gateway"` // want "optionalorrequired: field Gateway must be marked as optional or required"
+	Gateway string `json:"gateway" protobuf:"bytes,1,opt,name=gateway"` // want "optionalorrequired: field ScaleIOVolumeSource.Gateway must be marked as optional or required"
 	// system is the name of the storage system as configured in ScaleIO.
-	System string `json:"system" protobuf:"bytes,2,opt,name=system"` // want "optionalorrequired: field System must be marked as optional or required"
+	System string `json:"system" protobuf:"bytes,2,opt,name=system"` // want "optionalorrequired: field ScaleIOVolumeSource.System must be marked as optional or required"
 	// secretRef references to the secret for ScaleIO user and other
 	// sensitive information. If this is not provided, Login operation will fail.
-	SecretRef *LocalObjectReference `json:"secretRef" protobuf:"bytes,3,opt,name=secretRef"` // want "optionalorrequired: field SecretRef must be marked as optional or required"
+	SecretRef *LocalObjectReference `json:"secretRef" protobuf:"bytes,3,opt,name=secretRef"` // want "optionalorrequired: field ScaleIOVolumeSource.SecretRef must be marked as optional or required"
 	// sslEnabled Flag enable/disable SSL communication with Gateway, default false
 	// +optional
 	SSLEnabled bool `json:"sslEnabled,omitempty" protobuf:"varint,4,opt,name=sslEnabled"` // want "optionalfields: field SSLEnabled should be a pointer."
@@ -1275,7 +1275,7 @@ type ScaleIOVolumeSource struct {
 	StorageMode string `json:"storageMode,omitempty" protobuf:"bytes,7,opt,name=storageMode"` // want "optionalfields: field StorageMode should be a pointer."
 	// volumeName is the name of a volume already created in the ScaleIO system
 	// that is associated with this volume source.
-	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,8,opt,name=volumeName"` // want "optionalorrequired: field VolumeName must be marked as optional or required"
+	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,8,opt,name=volumeName"` // want "optionalorrequired: field ScaleIOVolumeSource.VolumeName must be marked as optional or required"
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs".
@@ -1292,12 +1292,12 @@ type ScaleIOVolumeSource struct {
 // ScaleIOPersistentVolumeSource represents a persistent ScaleIO volume
 type ScaleIOPersistentVolumeSource struct {
 	// gateway is the host address of the ScaleIO API Gateway.
-	Gateway string `json:"gateway" protobuf:"bytes,1,opt,name=gateway"` // want "optionalorrequired: field Gateway must be marked as optional or required"
+	Gateway string `json:"gateway" protobuf:"bytes,1,opt,name=gateway"` // want "optionalorrequired: field ScaleIOPersistentVolumeSource.Gateway must be marked as optional or required"
 	// system is the name of the storage system as configured in ScaleIO.
-	System string `json:"system" protobuf:"bytes,2,opt,name=system"` // want "optionalorrequired: field System must be marked as optional or required"
+	System string `json:"system" protobuf:"bytes,2,opt,name=system"` // want "optionalorrequired: field ScaleIOPersistentVolumeSource.System must be marked as optional or required"
 	// secretRef references to the secret for ScaleIO user and other
 	// sensitive information. If this is not provided, Login operation will fail.
-	SecretRef *SecretReference `json:"secretRef" protobuf:"bytes,3,opt,name=secretRef"` // want "optionalorrequired: field SecretRef must be marked as optional or required"
+	SecretRef *SecretReference `json:"secretRef" protobuf:"bytes,3,opt,name=secretRef"` // want "optionalorrequired: field ScaleIOPersistentVolumeSource.SecretRef must be marked as optional or required"
 	// sslEnabled is the flag to enable/disable SSL communication with Gateway, default false
 	// +optional
 	SSLEnabled bool `json:"sslEnabled,omitempty" protobuf:"varint,4,opt,name=sslEnabled"` // want "optionalfields: field SSLEnabled should be a pointer."
@@ -1314,7 +1314,7 @@ type ScaleIOPersistentVolumeSource struct {
 	StorageMode string `json:"storageMode,omitempty" protobuf:"bytes,7,opt,name=storageMode"` // want "optionalfields: field StorageMode should be a pointer."
 	// volumeName is the name of a volume already created in the ScaleIO system
 	// that is associated with this volume source.
-	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,8,opt,name=volumeName"` // want "optionalorrequired: field VolumeName must be marked as optional or required"
+	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,8,opt,name=volumeName"` // want "optionalorrequired: field ScaleIOPersistentVolumeSource.VolumeName must be marked as optional or required"
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs".
@@ -1332,7 +1332,7 @@ type ScaleIOPersistentVolumeSource struct {
 type StorageOSVolumeSource struct {
 	// volumeName is the human-readable name of the StorageOS volume.  Volume
 	// names are only unique within a namespace.
-	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,1,opt,name=volumeName"` // want "optionalorrequired: field VolumeName must be marked as optional or required"
+	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,1,opt,name=volumeName"` // want "optionalorrequired: field StorageOSVolumeSource.VolumeName must be marked as optional or required"
 	// volumeNamespace specifies the scope of the volume within StorageOS.  If no
 	// namespace is specified then the Pod's namespace will be used.  This allows the
 	// Kubernetes name scoping to be mirrored within StorageOS for tighter integration.
@@ -1360,7 +1360,7 @@ type StorageOSVolumeSource struct {
 type StorageOSPersistentVolumeSource struct {
 	// volumeName is the human-readable name of the StorageOS volume.  Volume
 	// names are only unique within a namespace.
-	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,1,opt,name=volumeName"` // want "optionalorrequired: field VolumeName must be marked as optional or required"
+	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,1,opt,name=volumeName"` // want "optionalorrequired: field StorageOSPersistentVolumeSource.VolumeName must be marked as optional or required"
 	// volumeNamespace specifies the scope of the volume within StorageOS.  If no
 	// namespace is specified then the Pod's namespace will be used.  This allows the
 	// Kubernetes name scoping to be mirrored within StorageOS for tighter integration.
@@ -1432,7 +1432,7 @@ type VolumeProjection struct {
 	// +optional
 	ServiceAccountToken *ServiceAccountTokenProjection `json:"serviceAccountToken,omitempty" protobuf:"bytes,4,opt,name=serviceAccountToken"`
 
-	// ClusterTrustBundle allows a pod to access the `.spec.trustBundle` field // want "commentstart: godoc for field ClusterTrustBundle should start with 'clusterTrustBundle ...'"
+	// ClusterTrustBundle allows a pod to access the `.spec.trustBundle` field // want "commentstart: godoc for field VolumeProjection.ClusterTrustBundle should start with 'clusterTrustBundle ...'"
 	// of ClusterTrustBundle objects in an auto-updating file.
 	//
 	// Alpha, gated by the ClusterTrustBundleProjection feature gate.
@@ -1450,7 +1450,7 @@ type VolumeProjection struct {
 	// +optional
 	ClusterTrustBundle *ClusterTrustBundleProjection `json:"clusterTrustBundle,omitempty" protobuf:"bytes,5,opt,name=clusterTrustBundle"`
 
-	// Projects an auto-rotating credential bundle (private key and certificate // want "commentstart: godoc for field PodCertificate should start with 'podCertificate ...'"
+	// Projects an auto-rotating credential bundle (private key and certificate // want "commentstart: godoc for field VolumeProjection.PodCertificate should start with 'podCertificate ...'"
 	// chain) that the pod can use either as a TLS client or server.
 	//
 	// Kubelet generates a private key and uses it to send a
@@ -1493,13 +1493,13 @@ type VolumeProjection struct {
 // Maps a string key to a path within a volume.
 type KeyToPath struct {
 	// key is the key to project.
-	Key string `json:"key" protobuf:"bytes,1,opt,name=key"` // want "optionalorrequired: field Key must be marked as optional or required"
+	Key string `json:"key" protobuf:"bytes,1,opt,name=key"` // want "optionalorrequired: field KeyToPath.Key must be marked as optional or required"
 
 	// path is the relative path of the file to map the key to.
 	// May not be an absolute path.
 	// May not contain the path element '..'.
 	// May not start with the string '..'.
-	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "optionalorrequired: field KeyToPath.Path must be marked as optional or required"
 	// mode is Optional: mode bits used to set permissions on this file.
 	// Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
 	// YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
@@ -1513,11 +1513,11 @@ type KeyToPath struct {
 // DownwardAPIVolumeSource represents a volume containing downward API info.
 // Downward API volumes support ownership management and SELinux relabeling.
 type DownwardAPIVolumeSource struct {
-	// Items is a list of downward API volume file // want "commentstart: godoc for field Items should start with 'items ...'"
+	// Items is a list of downward API volume file // want "commentstart: godoc for field DownwardAPIVolumeSource.Items should start with 'items ...'"
 	// +optional
 	// +listType=atomic
 	Items []DownwardAPIVolumeFile `json:"items,omitempty" protobuf:"bytes,1,rep,name=items"` // want "arrayofstruct: DownwardAPIVolumeSource.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
-	// Optional: mode bits to use on created files by default. Must be a // want "commentstart: godoc for field DefaultMode should start with 'defaultMode ...'"
+	// Optional: mode bits to use on created files by default. Must be a // want "commentstart: godoc for field DownwardAPIVolumeSource.DefaultMode should start with 'defaultMode ...'"
 	// Optional: mode bits used to set permissions on created files by default.
 	// Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
 	// YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
@@ -1531,16 +1531,16 @@ type DownwardAPIVolumeSource struct {
 
 // DownwardAPIVolumeFile represents information to create the file containing the pod field
 type DownwardAPIVolumeFile struct {
-	// Required: Path is  the relative path name of the file to be created. Must not be absolute or contain the '..' path. Must be utf-8 encoded. The first item of the relative path must not start with '..' // want "commentstart: godoc for field Path should start with 'path ...'"
-	Path string `json:"path" protobuf:"bytes,1,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
-	// Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported. // want "commentstart: godoc for field FieldRef should start with 'fieldRef ...'"
+	// Required: Path is  the relative path name of the file to be created. Must not be absolute or contain the '..' path. Must be utf-8 encoded. The first item of the relative path must not start with '..' // want "commentstart: godoc for field DownwardAPIVolumeFile.Path should start with 'path ...'"
+	Path string `json:"path" protobuf:"bytes,1,opt,name=path"` // want "optionalorrequired: field DownwardAPIVolumeFile.Path must be marked as optional or required"
+	// Required: Selects a field of the pod: only annotations, labels, name, namespace and uid are supported. // want "commentstart: godoc for field DownwardAPIVolumeFile.FieldRef should start with 'fieldRef ...'"
 	// +optional
 	FieldRef *ObjectFieldSelector `json:"fieldRef,omitempty" protobuf:"bytes,2,opt,name=fieldRef"`
-	// Selects a resource of the container: only resources limits and requests // want "commentstart: godoc for field ResourceFieldRef should start with 'resourceFieldRef ...'"
+	// Selects a resource of the container: only resources limits and requests // want "commentstart: godoc for field DownwardAPIVolumeFile.ResourceFieldRef should start with 'resourceFieldRef ...'"
 	// (limits.cpu, limits.memory, requests.cpu and requests.memory) are currently supported.
 	// +optional
 	ResourceFieldRef *ResourceFieldSelector `json:"resourceFieldRef,omitempty" protobuf:"bytes,3,opt,name=resourceFieldRef"`
-	// Optional: mode bits used to set permissions on this file, must be an octal value // want "commentstart: godoc for field Mode should start with 'mode ...'"
+	// Optional: mode bits used to set permissions on this file, must be an octal value // want "commentstart: godoc for field DownwardAPIVolumeFile.Mode should start with 'mode ...'"
 	// between 0000 and 0777 or a decimal value between 0 and 511.
 	// YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
 	// If not specified, the volume defaultMode will be used.
@@ -1554,7 +1554,7 @@ type DownwardAPIVolumeFile struct {
 // Note that this is identical to a downwardAPI volume source without the default
 // mode.
 type DownwardAPIProjection struct {
-	// Items is a list of DownwardAPIVolume file // want "commentstart: godoc for field Items should start with 'items ...'"
+	// Items is a list of DownwardAPIVolume file // want "commentstart: godoc for field DownwardAPIProjection.Items should start with 'items ...'"
 	// +optional
 	// +listType=atomic
 	Items []DownwardAPIVolumeFile `json:"items,omitempty" protobuf:"bytes,1,rep,name=items"` // want "arrayofstruct: DownwardAPIProjection.Items is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
@@ -1564,7 +1564,7 @@ type DownwardAPIProjection struct {
 type CSIVolumeSource struct {
 	// driver is the name of the CSI driver that handles this volume.
 	// Consult with your admin for the correct name as registered in the cluster.
-	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field Driver must be marked as optional or required"
+	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field CSIVolumeSource.Driver must be marked as optional or required"
 
 	// readOnly specifies a read-only configuration for the volume.
 	// Defaults to false (read/write).
@@ -1593,7 +1593,7 @@ type CSIVolumeSource struct {
 
 // Represents an ephemeral volume that is handled by a normal storage driver.
 type EphemeralVolumeSource struct {
-	// Will be used to create a stand-alone PVC to provision the volume. // want "commentstart: godoc for field VolumeClaimTemplate should start with 'volumeClaimTemplate ...'"
+	// Will be used to create a stand-alone PVC to provision the volume. // want "commentstart: godoc for field EphemeralVolumeSource.VolumeClaimTemplate should start with 'volumeClaimTemplate ...'"
 	// The pod in which this EphemeralVolumeSource is embedded will be the
 	// owner of the PVC, i.e. the PVC will be deleted together with the
 	// pod.  The name of the PVC will be `<pod name>-<volume name>` where
@@ -1614,7 +1614,7 @@ type EphemeralVolumeSource struct {
 	// to the PVC after it has been created.
 	//
 	// Required, must not be nil.
-	VolumeClaimTemplate *PersistentVolumeClaimTemplate `json:"volumeClaimTemplate,omitempty" protobuf:"bytes,1,opt,name=volumeClaimTemplate"` // want "optionalorrequired: field VolumeClaimTemplate must be marked as optional or required"
+	VolumeClaimTemplate *PersistentVolumeClaimTemplate `json:"volumeClaimTemplate,omitempty" protobuf:"bytes,1,opt,name=volumeClaimTemplate"` // want "optionalorrequired: field EphemeralVolumeSource.VolumeClaimTemplate must be marked as optional or required"
 
 	// ReadOnly is tombstoned to show why 2 is a reserved protobuf tag.
 	// ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"`
@@ -1630,11 +1630,11 @@ type PersistentVolumeClaimTemplate struct {
 	// +optional
 	// metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
 
-	// The specification for the PersistentVolumeClaim. The entire content is // want "commentstart: godoc for field Spec should start with 'spec ...'"
+	// The specification for the PersistentVolumeClaim. The entire content is // want "commentstart: godoc for field PersistentVolumeClaimTemplate.Spec should start with 'spec ...'"
 	// copied unchanged into the PVC that gets created from this
 	// template. The same fields as in a PersistentVolumeClaim
 	// are also valid here.
-	Spec PersistentVolumeClaimSpec `json:"spec" protobuf:"bytes,2,name=spec"` // want "optionalorrequired: field Spec must be marked as optional or required"
+	Spec PersistentVolumeClaimSpec `json:"spec" protobuf:"bytes,2,name=spec"` // want "optionalorrequired: field PersistentVolumeClaimTemplate.Spec must be marked as optional or required"
 }
 
 // Adapts a ConfigMap into a projected volume.
@@ -1682,19 +1682,19 @@ type ServiceAccountTokenProjection struct {
 	ExpirationSeconds *int64 `json:"expirationSeconds,omitempty" protobuf:"varint,2,opt,name=expirationSeconds"`
 	// path is the path relative to the mount point of the file to project the
 	// token into.
-	Path string `json:"path" protobuf:"bytes,3,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,3,opt,name=path"` // want "optionalorrequired: field ServiceAccountTokenProjection.Path must be marked as optional or required"
 }
 
 // ClusterTrustBundleProjection describes how to select a set of
 // ClusterTrustBundle objects and project their contents into the pod
 // filesystem.
 type ClusterTrustBundleProjection struct {
-	// Select a single ClusterTrustBundle by object name.  Mutually-exclusive with // want "commentstart: godoc for field Name should start with 'name ...'"
+	// Select a single ClusterTrustBundle by object name.  Mutually-exclusive with // want "commentstart: godoc for field ClusterTrustBundleProjection.Name should start with 'name ...'"
 	// with signerName and labelSelector.
 	// +optional
 	Name *string `json:"name,omitempty" protobuf:"bytes,1,rep,name=name"`
 
-	// Select all ClusterTrustBundles that match this signer name. // want "commentstart: godoc for field SignerName should start with 'signerName ...'"
+	// Select all ClusterTrustBundles that match this signer name. // want "commentstart: godoc for field ClusterTrustBundleProjection.SignerName should start with 'signerName ...'"
 	// Mutually-exclusive with name.  The contents of all selected
 	// ClusterTrustBundles will be unified and deduplicated.
 	// +optional
@@ -1707,7 +1707,7 @@ type ClusterTrustBundleProjection struct {
 	// +optional
 	// LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty" protobuf:"bytes,3,rep,name=labelSelector"`
 
-	// If true, don't block pod startup if the referenced ClusterTrustBundle(s) // want "commentstart: godoc for field Optional should start with 'optional ...'"
+	// If true, don't block pod startup if the referenced ClusterTrustBundle(s) // want "commentstart: godoc for field ClusterTrustBundleProjection.Optional should start with 'optional ...'"
 	// aren't available.  If using name, then the named ClusterTrustBundle is
 	// allowed not to exist.  If using signerName, then the combination of
 	// signerName and labelSelector is allowed to match zero
@@ -1715,19 +1715,19 @@ type ClusterTrustBundleProjection struct {
 	// +optional
 	Optional *bool `json:"optional,omitempty" protobuf:"varint,5,opt,name=optional"`
 
-	// Relative path from the volume root to write the bundle. // want "commentstart: godoc for field Path should start with 'path ...'"
-	Path string `json:"path" protobuf:"bytes,4,rep,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	// Relative path from the volume root to write the bundle. // want "commentstart: godoc for field ClusterTrustBundleProjection.Path should start with 'path ...'"
+	Path string `json:"path" protobuf:"bytes,4,rep,name=path"` // want "optionalorrequired: field ClusterTrustBundleProjection.Path must be marked as optional or required"
 }
 
 // PodCertificateProjection provides a private key and X.509 certificate in the
 // pod filesystem.
 type PodCertificateProjection struct {
-	// Kubelet's generated CSRs will be addressed to this signer. // want "commentstart: godoc for field SignerName should start with 'signerName ...'"
+	// Kubelet's generated CSRs will be addressed to this signer. // want "commentstart: godoc for field PodCertificateProjection.SignerName should start with 'signerName ...'"
 	//
 	// +required
 	SignerName string `json:"signerName,omitempty" protobuf:"bytes,1,rep,name=signerName"` // want "requiredfields: field SignerName has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
-	// The type of keypair Kubelet will generate for the pod. // want "commentstart: godoc for field KeyType should start with 'keyType ...'"
+	// The type of keypair Kubelet will generate for the pod. // want "commentstart: godoc for field PodCertificateProjection.KeyType should start with 'keyType ...'"
 	//
 	// Valid values are "RSA3072", "RSA4096", "ECDSAP256", "ECDSAP384",
 	// "ECDSAP521", and "ED25519".
@@ -1754,7 +1754,7 @@ type PodCertificateProjection struct {
 	// +optional
 	MaxExpirationSeconds *int32 `json:"maxExpirationSeconds,omitempty" protobuf:"varint,3,opt,name=maxExpirationSeconds"`
 
-	// Write the credential bundle at this path in the projected volume. // want "commentstart: godoc for field CredentialBundlePath should start with 'credentialBundlePath ...'"
+	// Write the credential bundle at this path in the projected volume. // want "commentstart: godoc for field PodCertificateProjection.CredentialBundlePath should start with 'credentialBundlePath ...'"
 	//
 	// The credential bundle is a single file that contains multiple PEM blocks.
 	// The first PEM block is a PRIVATE KEY block, containing a PKCS#8 private
@@ -1771,7 +1771,7 @@ type PodCertificateProjection struct {
 	// +optional
 	CredentialBundlePath string `json:"credentialBundlePath,omitempty" protobuf:"bytes,4,rep,name=credentialBundlePath"` // want "optionalfields: field CredentialBundlePath should be a pointer."
 
-	// Write the key at this path in the projected volume. // want "commentstart: godoc for field KeyPath should start with 'keyPath ...'"
+	// Write the key at this path in the projected volume. // want "commentstart: godoc for field PodCertificateProjection.KeyPath should start with 'keyPath ...'"
 	//
 	// Most applications should use credentialBundlePath.  When using keyPath
 	// and certificateChainPath, your application needs to check that the key
@@ -1781,7 +1781,7 @@ type PodCertificateProjection struct {
 	// +optional
 	KeyPath string `json:"keyPath,omitempty" protobuf:"bytes,5,rep,name=keyPath"` // want "optionalfields: field KeyPath should be a pointer."
 
-	// Write the certificate chain at this path in the projected volume. // want "commentstart: godoc for field CertificateChainPath should start with 'certificateChainPath ...'"
+	// Write the certificate chain at this path in the projected volume. // want "commentstart: godoc for field PodCertificateProjection.CertificateChainPath should start with 'certificateChainPath ...'"
 	//
 	// Most applications should use credentialBundlePath.  When using keyPath
 	// and certificateChainPath, your application needs to check that the key
@@ -1924,7 +1924,7 @@ type VolumeResourceRequirements struct {
 type LocalVolumeSource struct {
 	// path of the full path to the volume on the node.
 	// It can be either a directory or block device (disk, partition, ...).
-	Path string `json:"path" protobuf:"bytes,1,opt,name=path"` // want "optionalorrequired: field Path must be marked as optional or required"
+	Path string `json:"path" protobuf:"bytes,1,opt,name=path"` // want "optionalorrequired: field LocalVolumeSource.Path must be marked as optional or required"
 
 	// fsType is the filesystem type to mount.
 	// It applies only when the Path is a block device.
@@ -1938,12 +1938,12 @@ type LocalVolumeSource struct {
 type CSIPersistentVolumeSource struct {
 	// driver is the name of the driver to use for this volume.
 	// Required.
-	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field Driver must be marked as optional or required"
+	Driver string `json:"driver" protobuf:"bytes,1,opt,name=driver"` // want "optionalorrequired: field CSIPersistentVolumeSource.Driver must be marked as optional or required"
 
 	// volumeHandle is the unique volume name returned by the CSI volume
 	// plugin’s CreateVolume to refer to the volume on all subsequent calls.
 	// Required.
-	VolumeHandle string `json:"volumeHandle" protobuf:"bytes,2,opt,name=volumeHandle"` // want "optionalorrequired: field VolumeHandle must be marked as optional or required"
+	VolumeHandle string `json:"volumeHandle" protobuf:"bytes,2,opt,name=volumeHandle"` // want "optionalorrequired: field CSIPersistentVolumeSource.VolumeHandle must be marked as optional or required"
 
 	// readOnly value to pass to ControllerPublishVolumeRequest.
 	// Defaults to false (read/write).
