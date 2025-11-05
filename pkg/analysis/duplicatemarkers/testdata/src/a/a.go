@@ -45,42 +45,42 @@ type DuplicateMarkerSpec struct { // want "DuplicateMarkerSpec has duplicated ma
 
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Required
-	DuplicatedRequired string `json:"duplicatedRequired"` // want "DuplicatedRequired has duplicated markers kubebuilder:validation:Required"
+	DuplicatedRequired string `json:"duplicatedRequired"` // want "DuplicateMarkerSpec.DuplicatedRequired has duplicated markers kubebuilder:validation:Required"
 
 	// +kubebuilder:validation:Enum=foo;bar;baz
 	// +kubebuilder:validation:Enum=foo;bar;baz
-	DuplicatedEnum string `json:"duplicatedEnum"` // want "DuplicatedEnum has duplicated markers kubebuilder:validation:Enum"
+	DuplicatedEnum string `json:"duplicatedEnum"` // want "DuplicateMarkerSpec.DuplicatedEnum has duplicated markers kubebuilder:validation:Enum"
 
 	// +kubebuilder:validation:MaxLength=10
 	// +kubebuilder:validation:MaxLength=10
-	DuplicatedMaxLength int `json:"duplicatedMaxLength"` // want "DuplicatedMaxLength has duplicated markers kubebuilder:validation:MaxLength=10"
+	DuplicatedMaxLength int `json:"duplicatedMaxLength"` // want "DuplicateMarkerSpec.DuplicatedMaxLength has duplicated markers kubebuilder:validation:MaxLength=10"
 
 	// +kubebuilder:validation:MaxLength=10
-	DuplicatedMaxLengthIncludingTypeMarker MaxLength `json:"duplicatedMaxLengthIncludingTypeMarker"` // want "DuplicatedMaxLengthIncludingTypeMarker has duplicated markers kubebuilder:validation:MaxLength=10"
+	DuplicatedMaxLengthIncludingTypeMarker MaxLength `json:"duplicatedMaxLengthIncludingTypeMarker"` // want "DuplicateMarkerSpec.DuplicatedMaxLengthIncludingTypeMarker has duplicated markers kubebuilder:validation:MaxLength=10"
 
 	// +listType=map
 	// +listMapKey=primaryKey
 	// +listMapKey=secondaryKey
 	// +listType=map
 	// +required
-	DuplicatedListTypeMap Map `json:"duplicatedListTypeMap"` // want "DuplicatedListTypeMap has duplicated markers listType=map"
+	DuplicatedListTypeMap Map `json:"duplicatedListTypeMap"` // want "DuplicateMarkerSpec.DuplicatedListTypeMap has duplicated markers listType=map"
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="replicas must be immutable"
 	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"
-	DuplicatedReplicas *int `json:"duplicatedReplicas"` // want "DuplicatedReplicas has duplicated markers kubebuilder:validation:XValidation:rule=\"self >= 1 && self <= 3\",message=\"must be 1 to 5\""
+	DuplicatedReplicas *int `json:"duplicatedReplicas"` // want "DuplicateMarkerSpec.DuplicatedReplicas has duplicated markers kubebuilder:validation:XValidation:rule=\"self >= 1 && self <= 3\",message=\"must be 1 to 5\""
 
 	// +optional
 	// +kubebuilder:validation:XValidation:rule="self >= 1 && self <= 3",message="must be 1 to 5"
 	// +kubebuilder:validation:XValidation:rule="self == oldSelf",message="replicas must be immutable"
 	// +kubebuilder:validation:XValidation:message="must be 1 to 5",rule="self >= 1 && self <= 3"
-	DuplicatedUnorderedValidationReplicas *int `json:"duplicatedUnorderedValidationReplicas"` // want "DuplicatedUnorderedValidationReplicas has duplicated markers kubebuilder:validation:XValidation:message=\"must be 1 to 5\",rule=\"self >= 1 && self <= 3\""
+	DuplicatedUnorderedValidationReplicas *int `json:"duplicatedUnorderedValidationReplicas"` // want "DuplicateMarkerSpec.DuplicatedUnorderedValidationReplicas has duplicated markers kubebuilder:validation:XValidation:message=\"must be 1 to 5\",rule=\"self >= 1 && self <= 3\""
 
 	StringFromAnotherFile StringFromAnotherFile `json:"stringFromAnotherFile"`
 
 	// +kubebuilder:validation:MaxLength=10
-	StringFromAnotherFileWithMaxLength StringFromAnotherFile `json:"stringFromAnotherFileWithMaxLength"` // want "StringFromAnotherFileWithMaxLength has duplicated markers kubebuilder:validation:MaxLength=10"
+	StringFromAnotherFileWithMaxLength StringFromAnotherFile `json:"stringFromAnotherFileWithMaxLength"` // want "DuplicateMarkerSpec.StringFromAnotherFileWithMaxLength has duplicated markers kubebuilder:validation:MaxLength=10"
 }
 
 type Map struct {

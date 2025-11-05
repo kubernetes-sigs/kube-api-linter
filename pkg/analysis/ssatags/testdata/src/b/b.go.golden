@@ -58,7 +58,7 @@ type SSATagsTestSpec struct {
 	// Invalid map on primitive list - should error even when ListTypeSetUsage=Ignore
 	// +listType=map
 	// +listMapKey=name
-	MapPrimitiveList []string `json:"mapPrimitiveList,omitempty"` // want "MapPrimitiveList with listType=map can only be used for object lists, not primitive lists"
+	MapPrimitiveList []string `json:"mapPrimitiveList,omitempty"` // want "SSATagsTestSpec.MapPrimitiveList with listType=map can only be used for object lists, not primitive lists"
 
 	// Valid map on object list with proper listMapKey - should pass
 	// +listType=map
@@ -67,23 +67,23 @@ type SSATagsTestSpec struct {
 
 	// Map on object list without listMapKey - should error even when ListTypeSetUsage=Ignore
 	// +listType=map
-	MapObjectListNoKey []TestObject `json:"mapObjectListNoKey,omitempty"` // want "MapObjectListNoKey with listType=map must have at least one listMapKey marker"
+	MapObjectListNoKey []TestObject `json:"mapObjectListNoKey,omitempty"` // want "SSATagsTestSpec.MapObjectListNoKey with listType=map must have at least one listMapKey marker"
 
 	// Invalid listType value - should error regardless of config
 	// +listType=invalid
-	InvalidListType []string `json:"invalidListType,omitempty"` // want "InvalidListType has invalid listType \"invalid\", must be one of: atomic, set, map"
+	InvalidListType []string `json:"invalidListType,omitempty"` // want "SSATagsTestSpec.InvalidListType has invalid listType \"invalid\", must be one of: atomic, set, map"
 
 	// Missing listType on primitive array - should warn
-	PrimitiveArrayNoMarker []string `json:"primitiveArrayNoMarker,omitempty"` // want "PrimitiveArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	PrimitiveArrayNoMarker []string `json:"primitiveArrayNoMarker,omitempty"` // want "SSATagsTestSpec.PrimitiveArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Missing listType on object array - should warn
-	ObjectArrayNoMarker []TestObject `json:"objectArrayNoMarker,omitempty"` // want "ObjectArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	ObjectArrayNoMarker []TestObject `json:"objectArrayNoMarker,omitempty"` // want "SSATagsTestSpec.ObjectArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Non-array field - should be ignored
 	SingleValue string `json:"singleValue,omitempty"`
 
 	// Pointer array field - should behave same as non-pointer
-	PointerArrayNoMarker []*TestObject `json:"pointerArrayNoMarker,omitempty"` // want "PointerArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	PointerArrayNoMarker []*TestObject `json:"pointerArrayNoMarker,omitempty"` // want "SSATagsTestSpec.PointerArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Defined type tests - defined types should behave as their underlying types
 	// +listType=atomic
@@ -100,10 +100,10 @@ type SSATagsTestSpec struct {
 	ObjectSetList []Object `json:"objectSetList,omitempty"`
 
 	// Missing listType on defined type to basic type - should warn
-	StringNoMarker []String `json:"stringNoMarker,omitempty"` // want "StringNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	StringNoMarker []String `json:"stringNoMarker,omitempty"` // want "SSATagsTestSpec.StringNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Missing listType on defined type to object - should warn
-	ObjectNoMarker []Object `json:"objectNoMarker,omitempty"` // want "ObjectNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	ObjectNoMarker []Object `json:"objectNoMarker,omitempty"` // want "SSATagsTestSpec.ObjectNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Pointer to defined type - should behave same as defined type
 	// +listType=atomic
@@ -127,10 +127,10 @@ type SSATagsTestSpec struct {
 	ObjectAliasSetList []ObjectAlias `json:"objectAliasSetList,omitempty"`
 
 	// Missing listType on alias to basic type - should warn
-	StringAliasNoMarker []StringAlias `json:"stringAliasNoMarker,omitempty"` // want "StringAliasNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	StringAliasNoMarker []StringAlias `json:"stringAliasNoMarker,omitempty"` // want "SSATagsTestSpec.StringAliasNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Missing listType on alias to object - should warn
-	ObjectAliasNoMarker []ObjectAlias `json:"objectAliasNoMarker,omitempty"` // want "ObjectAliasNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	ObjectAliasNoMarker []ObjectAlias `json:"objectAliasNoMarker,omitempty"` // want "SSATagsTestSpec.ObjectAliasNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Pointer to alias - should behave same as alias
 	// +listType=atomic
@@ -140,7 +140,7 @@ type SSATagsTestSpec struct {
 	PointerToObjectAlias []*ObjectAlias `json:"pointerToObjectAlias,omitempty"`
 
 	// Multiple pointer levels
-	PointerToPointerObject []*(*TestObject) `json:"pointerToPointerObject,omitempty"` // want "PointerToPointerObject should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	PointerToPointerObject []*(*TestObject) `json:"pointerToPointerObject,omitempty"` // want "SSATagsTestSpec.PointerToPointerObject should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Array defined type tests - defined types to array types should behave as array lists
 	// +listType=atomic
@@ -150,7 +150,7 @@ type SSATagsTestSpec struct {
 	StringArraySetList StringArray `json:"stringArraySetList,omitempty"`
 
 	// Missing listType on array defined type - should warn
-	StringArrayNoMarker StringArray `json:"stringArrayNoMarker,omitempty"` // want "StringArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	StringArrayNoMarker StringArray `json:"stringArrayNoMarker,omitempty"` // want "SSATagsTestSpec.StringArrayNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Array type alias tests - aliases to array types should behave as array lists
 	// +listType=atomic
@@ -160,7 +160,7 @@ type SSATagsTestSpec struct {
 	StringArrayAliasSetList StringArrayAlias `json:"stringArrayAliasSetList,omitempty"`
 
 	// Missing listType on array alias - should warn
-	StringArrayAliasNoMarker StringArrayAlias `json:"stringArrayAliasNoMarker,omitempty"` // want "StringArrayAliasNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
+	StringArrayAliasNoMarker StringArrayAlias `json:"stringArrayAliasNoMarker,omitempty"` // want "SSATagsTestSpec.StringArrayAliasNoMarker should have a listType marker for proper Server-Side Apply behavior \\(atomic, set, or map\\)"
 
 	// Valid map with correct JSON tag name - should pass
 	// +listType=map
@@ -170,7 +170,7 @@ type SSATagsTestSpec struct {
 	// Invalid map with non-existent JSON tag name - should error
 	// +listType=map
 	// +listMapKey=invalid_name
-	MapObjectListInvalidName []SimpleObject `json:"mapObjectListInvalidName,omitempty"` // want "MapObjectListInvalidName listMapKey \"invalid_name\" does not exist as a field in the struct"
+	MapObjectListInvalidName []SimpleObject `json:"mapObjectListInvalidName,omitempty"` // want "SSATagsTestSpec.MapObjectListInvalidName listMapKey \"invalid_name\" does not exist as a field in the struct"
 
 	// Byte array tests - these should be skipped by IsByteArray condition
 	// Direct byte array - should be ignored (no listType required)
@@ -183,7 +183,7 @@ type SSATagsTestSpec struct {
 	ByteArrayAliased ByteArrayAlias `json:"byteArrayAliased,omitempty"`
 
 	// Byte array with markers - should be ignored even if markers are present
-	ByteArrayWithMarker []byte `json:"byteArrayWithMarker,omitempty"` // want "ByteArrayWithMarker is a byte array, which does not support the listType marker. Remove the listType marker"
+	ByteArrayWithMarker []byte `json:"byteArrayWithMarker,omitempty"` // want "SSATagsTestSpec.ByteArrayWithMarker is a byte array, which does not support the listType marker. Remove the listType marker"
 
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields

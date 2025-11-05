@@ -47,20 +47,15 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
-		checkField(pass, field, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	fieldName := utils.FieldName(field)
-	if fieldName == "" {
-		return
-	}
-
-	prefix := fmt.Sprintf("field %s", fieldName)
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) {
+	prefix := fmt.Sprintf("field %s", qualifiedFieldName)
 
 	checkTypeExpr(pass, field.Type, field, nil, markersAccess, prefix, markers.KubebuilderMaxLengthMarker, needsStringMaxLength)
 }

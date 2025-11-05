@@ -6,11 +6,11 @@ type CommentStartTestStruct struct {
 	NoJSONTag     string
 	EmptyJSONTag  string `json:""`
 	InlineJSONTag string `json:",inline"`
-	NoComment     string `json:"noComment"` // want "field NoComment is missing godoc comment"
+	NoComment     string `json:"noComment"` // want "field CommentStartTestStruct.NoComment is missing godoc comment"
 	Ignored       string `json:"-"`
-	Hyphen        string `json:"-,"` // want "field Hyphen is missing godoc comment"
+	Hyphen        string `json:"-,"` // want "field CommentStartTestStruct.Hyphen is missing godoc comment"
 
-	AnonymousStruct struct { // want "field AnonymousStruct is missing godoc comment"
+	AnonymousStruct struct { // want "field CommentStartTestStruct.AnonymousStruct is missing godoc comment"
 		NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
 	} `json:"anonymousStruct"`
 
@@ -24,18 +24,18 @@ type CommentStartTestStruct struct {
 
 	StructForInlineField `json:",inline"`
 
-	A `json:"a"` // want "field A is missing godoc comment"
+	A `json:"a"` // want "field CommentStartTestStruct.A is missing godoc comment"
 
-	PkgA pkg.A `json:"pkgA"` // want "field PkgA is missing godoc comment"
+	PkgA pkg.A `json:"pkgA"` // want "field CommentStartTestStruct.PkgA is missing godoc comment"
 
-	pkg.Embedded `json:"embedded"` // want "field pkg.Embedded is missing godoc comment"
+	pkg.Embedded `json:"embedded"` // want "field CommentStartTestStruct.pkg.Embedded is missing godoc comment"
 
-	*pkg.EmbeddedPointer `json:"embeddedPointer"` // want "field \\*pkg.EmbeddedPointer is missing godoc comment"
+	*pkg.EmbeddedPointer `json:"embeddedPointer"` // want "field CommentStartTestStruct.\\*pkg.EmbeddedPointer is missing godoc comment"
 
-	// incorrectStartComment is a field with an incorrect start to the comment. // want "godoc for field IncorrectStartComment should start with 'incorrectStartComment ...'"
+	// incorrectStartComment is a field with an incorrect start to the comment. // want "godoc for field CommentStartTestStruct.IncorrectStartComment should start with 'incorrectStartComment ...'"
 	IncorrectStartComment string `json:"incorrectStartComment"`
 
-	// incorrectStartOptionalComment is a field with an incorrect start to the comment. // want "godoc for field IncorrectStartOptionalComment should start with 'incorrectStartOptionalComment ...'"
+	// incorrectStartOptionalComment is a field with an incorrect start to the comment. // want "godoc for field CommentStartTestStruct.IncorrectStartOptionalComment should start with 'incorrectStartOptionalComment ...'"
 	IncorrectStartOptionalComment string `json:"incorrectStartOptionalComment"`
 
 	// correctStartComment is a field with a correct start to the comment.
@@ -44,7 +44,7 @@ type CommentStartTestStruct struct {
 	// correctStartOptionalComment is a field with a correct start to the comment.
 	CorrectStartOptionalComment string `json:"correctStartOptionalComment,omitempty"`
 
-	// incorrectMultiLineComment is a field with an incorrect start to the comment. // want "godoc for field IncorrectMultiLineComment should start with 'incorrectMultiLineComment ...'"
+	// incorrectMultiLineComment is a field with an incorrect start to the comment. // want "godoc for field CommentStartTestStruct.IncorrectMultiLineComment should start with 'incorrectMultiLineComment ...'"
 	// Except this time there are multiple lines to the comment.
 	IncorrectMultiLineComment string `json:"incorrectMultiLineComment"`
 
@@ -52,7 +52,7 @@ type CommentStartTestStruct struct {
 	// Except this time there are multiple lines to the comment.
 	CorrectMultiLineComment string `json:"correctMultiLineComment"`
 
-	// This comment just isn't correct at all, doesn't even start with anything resembling the field names. // want "godoc for field IncorrectComment should start with 'incorrectComment ...'"
+	// This comment just isn't correct at all, doesn't even start with anything resembling the field names. // want "godoc for field CommentStartTestStruct.IncorrectComment should start with 'incorrectComment ...'"
 	IncorrectComment string `json:"incorrectComment"`
 }
 
@@ -60,23 +60,23 @@ type CommentStartTestStruct struct {
 func (CommentStartTestStruct) DoNothing() {}
 
 type StructForInlineField struct {
-	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+	NoComment string `json:"noComment"` // want "field StructForInlineField.NoComment is missing godoc comment"
 }
 
 type A struct {
-	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+	NoComment string `json:"noComment"` // want "field A.NoComment is missing godoc comment"
 }
 
 type unexportedStruct struct {
-	NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+	NoComment string `json:"noComment"` // want "field unexportedStruct.NoComment is missing godoc comment"
 }
 
 type (
 	MultipleTypeDeclaration1 struct {
-		NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+		NoComment string `json:"noComment"` // want "field MultipleTypeDeclaration1.NoComment is missing godoc comment"
 	}
 	MultipleTypeDeclaration2 struct {
-		NoComment string `json:"noComment"` // want "field NoComment is missing godoc comment"
+		NoComment string `json:"noComment"` // want "field MultipleTypeDeclaration2.NoComment is missing godoc comment"
 	}
 )
 

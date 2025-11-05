@@ -1,13 +1,13 @@
 package c
 
 type OptionalOrRequiredTestStruct struct {
-	RequiredEnumField RequiredEnum // want "field RequiredEnumField must be marked as optional or required"
+	RequiredEnumField RequiredEnum // want "field OptionalOrRequiredTestStruct.RequiredEnumField must be marked as optional or required"
 
-	KubebuilderRequiredEnumField KubeBuilderRequiredEnum // want "field KubebuilderRequiredEnumField must be marked as optional or required"
+	KubebuilderRequiredEnumField KubeBuilderRequiredEnum // want "field OptionalOrRequiredTestStruct.KubebuilderRequiredEnumField must be marked as optional or required"
 
-	OptionalEnumField OptionalEnum // want "field OptionalEnumField must be marked as optional or required"
+	OptionalEnumField OptionalEnum // want "field OptionalOrRequiredTestStruct.OptionalEnumField must be marked as optional or required"
 
-	KubebuilderOptionalEnumField KubeBuilderOptionalEnum // want "field KubebuilderOptionalEnumField must be marked as optional or required"
+	KubebuilderOptionalEnumField KubeBuilderOptionalEnum // want "field OptionalOrRequiredTestStruct.KubebuilderOptionalEnumField must be marked as optional or required"
 }
 
 // +required

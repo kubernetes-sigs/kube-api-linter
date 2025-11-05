@@ -61,8 +61,8 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, _ string) {
-		checkField(pass, field, markersAccess, a.forbiddenMarkers)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, a.forbiddenMarkers, qualifiedFieldName)
 	})
 
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
@@ -72,13 +72,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, forbiddenMarkers []Marker) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, forbiddenMarkers []Marker, qualifiedFieldName string) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
 
 	markers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
-	check(markers, forbiddenMarkers, reportField(pass, field))
+	check(markers, forbiddenMarkers, reportField(pass, field, qualifiedFieldName))
 }
 
 func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, forbiddenMarkers []Marker) {
@@ -126,11 +126,11 @@ func markerMatchesAttributeRules(marker markers.Marker, attrRules ...MarkerAttri
 	return true
 }
 
-func reportField(pass *analysis.Pass, field *ast.Field) func(marker markers.Marker) {
+func reportField(pass *analysis.Pass, field *ast.Field, qualifiedFieldName string) func(marker markers.Marker) {
 	return func(marker markers.Marker) {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("field %s has forbidden marker %q", field.Names[0].Name, marker.String()),
+			Message: fmt.Sprintf("field %s has forbidden marker %q", qualifiedFieldName, marker.String()),
 			SuggestedFixes: []analysis.SuggestedFix{
 				{
 					Message: fmt.Sprintf("remove forbidden marker %q", marker.String()),

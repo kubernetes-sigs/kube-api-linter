@@ -52,29 +52,29 @@ type AllowedMarkerWithMultipleRuleSetsType string
 
 type Test struct {
 	// +custom:forbidden
-	ForbiddenMarkerField string `json:"forbiddenMarkerField"` // want `field ForbiddenMarkerField has forbidden marker "custom:forbidden"`
+	ForbiddenMarkerField string `json:"forbiddenMarkerField"` // want `field Test.ForbiddenMarkerField has forbidden marker "custom:forbidden"`
 
-	ForbiddenMarkerFieldTypeAlias ForbiddenMarkerType `json:"forbiddenMarkerFieldTypeAlias"` // want `field ForbiddenMarkerFieldTypeAlias has forbidden marker "custom:forbidden"`
+	ForbiddenMarkerFieldTypeAlias ForbiddenMarkerType `json:"forbiddenMarkerFieldTypeAlias"` // want `field Test.ForbiddenMarkerFieldTypeAlias has forbidden marker "custom:forbidden"`
 
 	// +custom:AttrNoValues:fruit=apple
-	ForbiddenMarkerWithAttrField string `json:"forbiddenMarkerWithAttrField"` // want `field ForbiddenMarkerWithAttrField has forbidden marker "custom:AttrNoValues:fruit=apple"`
+	ForbiddenMarkerWithAttrField string `json:"forbiddenMarkerWithAttrField"` // want `field Test.ForbiddenMarkerWithAttrField has forbidden marker "custom:AttrNoValues:fruit=apple"`
 
-	ForbiddenMarkerWithAttrFieldTypeAlias ForbiddenMarkerWithAttrType `json:"forbiddenMarkerWithAttrFieldTypeAlias"` // want `field ForbiddenMarkerWithAttrFieldTypeAlias has forbidden marker "custom:AttrNoValues:fruit=apple"`
+	ForbiddenMarkerWithAttrFieldTypeAlias ForbiddenMarkerWithAttrType `json:"forbiddenMarkerWithAttrFieldTypeAlias"` // want `field Test.ForbiddenMarkerWithAttrFieldTypeAlias has forbidden marker "custom:AttrNoValues:fruit=apple"`
 
 	// +custom:AttrsNoValues:fruit=apple,color=blue
-	ForbiddenMarkerWithMultipleAttrsField string `json:"forbiddenMarkerWithMultipleAttrsField"` // want `field ForbiddenMarkerWithMultipleAttrsField has forbidden marker "custom:AttrsNoValues:fruit=apple,color=blue"`
+	ForbiddenMarkerWithMultipleAttrsField string `json:"forbiddenMarkerWithMultipleAttrsField"` // want `field Test.ForbiddenMarkerWithMultipleAttrsField has forbidden marker "custom:AttrsNoValues:fruit=apple,color=blue"`
 
-	ForbiddenMarkerWithMutlipleAttrsFieldTypeAlias ForbiddenMarkerWithMultipleAttrsType `json:"forbiddenMarkerWithMultipleAttrsFieldTypeAlias"` // want `field ForbiddenMarkerWithMutlipleAttrsFieldTypeAlias has forbidden marker "custom:AttrsNoValues:fruit=apple,color=blue"`
+	ForbiddenMarkerWithMutlipleAttrsFieldTypeAlias ForbiddenMarkerWithMultipleAttrsType `json:"forbiddenMarkerWithMultipleAttrsFieldTypeAlias"` // want `field Test.ForbiddenMarkerWithMutlipleAttrsFieldTypeAlias has forbidden marker "custom:AttrsNoValues:fruit=apple,color=blue"`
 
 	// +custom:AttrValues:fruit=orange
-	ForbiddenMarkerWithAttrWithValueField string `json:"forbiddenMarkerWithAttrWithValueField"` // want `field ForbiddenMarkerWithAttrWithValueField has forbidden marker "custom:AttrValues:fruit=orange"`
+	ForbiddenMarkerWithAttrWithValueField string `json:"forbiddenMarkerWithAttrWithValueField"` // want `field Test.ForbiddenMarkerWithAttrWithValueField has forbidden marker "custom:AttrValues:fruit=orange"`
 
-	ForbiddenMarkerWithAttrWithValueFieldTypeAlias ForbiddenMarkerWithAttrWithValueType `json:"forbiddenMarkerWithAttrWithValueFieldTypeAlias"` // want `field ForbiddenMarkerWithAttrWithValueFieldTypeAlias has forbidden marker "custom:AttrValues:fruit=orange"`
+	ForbiddenMarkerWithAttrWithValueFieldTypeAlias ForbiddenMarkerWithAttrWithValueType `json:"forbiddenMarkerWithAttrWithValueFieldTypeAlias"` // want `field Test.ForbiddenMarkerWithAttrWithValueFieldTypeAlias has forbidden marker "custom:AttrValues:fruit=orange"`
 
 	// +custom:AttrsValues:fruit=orange,color=blue
-	ForbiddenMarkerWithAttrsWithValueField string `json:"forbiddenMarkerWithAttrsWithValueField"` // want `field ForbiddenMarkerWithAttrsWithValueField has forbidden marker "custom:AttrsValues:fruit=orange,color=blue"`
+	ForbiddenMarkerWithAttrsWithValueField string `json:"forbiddenMarkerWithAttrsWithValueField"` // want `field Test.ForbiddenMarkerWithAttrsWithValueField has forbidden marker "custom:AttrsValues:fruit=orange,color=blue"`
 
-	ForbiddenMarkerWithAttrsWithValueFieldTypeAlias ForbiddenMarkerWithAttrsWithValueType `json:"forbiddenMarkerWithAttrsWithValueFieldTypeAlias"` // want `field ForbiddenMarkerWithAttrsWithValueFieldTypeAlias has forbidden marker "custom:AttrsValues:fruit=orange,color=blue"`
+	ForbiddenMarkerWithAttrsWithValueFieldTypeAlias ForbiddenMarkerWithAttrsWithValueType `json:"forbiddenMarkerWithAttrsWithValueFieldTypeAlias"` // want `field Test.ForbiddenMarkerWithAttrsWithValueFieldTypeAlias has forbidden marker "custom:AttrsValues:fruit=orange,color=blue"`
 
 	// +allowed
 	AllowedMarkerField string `json:"allowedMarkerField"`

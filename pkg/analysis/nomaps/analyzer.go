@@ -26,7 +26,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
 const (
@@ -63,14 +62,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, _ markers.Markers, _ string) {
-		a.checkField(pass, field)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, _ markers.Markers, qualifiedFieldName string) {
+		a.checkField(pass, field, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, qualifiedFieldName string) {
 	underlyingType := pass.TypesInfo.TypeOf(field.Type).Underlying()
 
 	if ptr, ok := underlyingType.(*types.Pointer); ok {
@@ -83,7 +82,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field) {
 	}
 
 	if a.policy == NoMapsEnforce {
-		report(pass, field.Pos(), utils.FieldName(field))
+		report(pass, field.Pos(), qualifiedFieldName)
 		return
 	}
 
@@ -93,7 +92,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field) {
 			return
 		}
 
-		report(pass, field.Pos(), utils.FieldName(field))
+		report(pass, field.Pos(), qualifiedFieldName)
 	}
 
 	if a.policy == NoMapsIgnore {
@@ -107,7 +106,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field) {
 			return
 		}
 
-		report(pass, field.Pos(), utils.FieldName(field))
+		report(pass, field.Pos(), qualifiedFieldName)
 	}
 }
 

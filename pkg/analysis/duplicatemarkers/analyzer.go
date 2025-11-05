@@ -48,8 +48,8 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, _ string) {
-		checkField(pass, field, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, qualifiedFieldName)
 	})
 
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
@@ -59,7 +59,7 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, qualifiedFieldName string) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
@@ -74,7 +74,7 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Mar
 			continue
 		}
 
-		report(pass, field.Pos(), field.Names[0].Name, marker)
+		report(pass, field.Pos(), qualifiedFieldName, marker)
 	}
 }
 

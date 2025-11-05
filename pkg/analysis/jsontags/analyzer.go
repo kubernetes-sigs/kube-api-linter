@@ -20,13 +20,11 @@ import (
 	"go/ast"
 	"regexp"
 
+	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-
-	"golang.org/x/tools/go/analysis"
 )
 
 const (
@@ -71,20 +69,20 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFieldsIncludingListTypes(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, _ markers.Markers, _ string) {
-		a.checkField(pass, field, jsonTagInfo)
+	inspect.InspectFieldsIncludingListTypes(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, _ markers.Markers, qualifiedFieldName string) {
+		a.checkField(pass, field, jsonTagInfo, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string) {
 	prefix := "field %s"
 	if len(field.Names) == 0 || field.Names[0] == nil {
 		prefix = "embedded field %s"
 	}
 
-	prefix = fmt.Sprintf(prefix, utils.FieldName(field))
+	prefix = fmt.Sprintf(prefix, qualifiedFieldName)
 
 	if tagInfo.Missing {
 		pass.Reportf(field.Pos(), "%s is missing json tag", prefix)

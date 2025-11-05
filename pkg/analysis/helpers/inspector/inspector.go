@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"go/types"
 	"slices"
 
 	astinspector "golang.org/x/tools/go/ast/inspector"
@@ -94,6 +95,9 @@ func (i *inspector) inspectFields(inspectField func(field *ast.Field, jsonTagInf
 		var structName string
 
 		qualifiedFieldName := utils.FieldName(field)
+		if qualifiedFieldName == "" {
+			qualifiedFieldName = types.ExprString(field.Type)
+		}
 
 		// The 0th node in the stack is the *ast.File.
 		file, ok := stack[0].(*ast.File)

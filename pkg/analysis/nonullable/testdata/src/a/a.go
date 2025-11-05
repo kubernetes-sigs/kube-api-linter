@@ -8,13 +8,12 @@ type AllowedMarkerType string
 
 type Test struct {
 	// +nullable
-	NullableMarkerField string `json:"nullableMarkerField"`// want `field NullableMarkerField has forbidden marker "nullable"`
+	NullableMarkerField string `json:"nullableMarkerField"` // want `field Test.NullableMarkerField has forbidden marker "nullable"`
 
-	NullableMarkerFieldTypeAlias NullableMarkerType `json:"nullableMarkerFieldTypeAlias"` // want `field NullableMarkerFieldTypeAlias has forbidden marker "nullable"`
+	NullableMarkerFieldTypeAlias NullableMarkerType `json:"nullableMarkerFieldTypeAlias"` // want `field Test.NullableMarkerFieldTypeAlias has forbidden marker "nullable"`
 
 	// +allowed
 	AllowedMarkerField string `json:"allowedMarkerField"`
 
 	AllowedMarkerFieldTypeAlias AllowedMarkerType `json:"AllowedMarkerFieldTypeAlias"`
 }
-

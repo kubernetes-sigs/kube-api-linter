@@ -6,33 +6,33 @@ type B struct {
 
 	// +custom:SomeCustomMarker:=value
 	// +custom:SomeCustomMarker:=diffvalue
-	NonUniqueCustomMarker string // want "field NonUniqueCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
+	NonUniqueCustomMarker string // want "field B.NonUniqueCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
 
 	// +custom:SomeCustomMarker:=value
-	NonUniqueCustomMarkerFromAliasWithCustomMarker UniqueCustomMarkerAlias // want "field NonUniqueCustomMarkerFromAliasWithCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
+	NonUniqueCustomMarkerFromAliasWithCustomMarker UniqueCustomMarkerAlias // want "field B.NonUniqueCustomMarkerFromAliasWithCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
 
-	NonUniqueCustomMarkerOnlyFromAliasWithCustomMarker NonUniqueCustomMarkerAlias // want "field NonUniqueCustomMarkerOnlyFromAliasWithCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
+	NonUniqueCustomMarkerOnlyFromAliasWithCustomMarker NonUniqueCustomMarkerAlias // want "field B.NonUniqueCustomMarkerOnlyFromAliasWithCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
 
 	// +custom:SomeCustomMarker:=value
 	// +custom:SomeCustomMarker:=value
-	NonUniqueSameValueCustomMarker string // want "field NonUniqueSameValueCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
+	NonUniqueSameValueCustomMarker string // want "field B.NonUniqueSameValueCustomMarker has multiple definitions of marker custom:SomeCustomMarker when only a single definition should exist"
 
 	// +custom:OtherMarker:attribute=apple,otherAttribute=orange
 	UniqueCustomMarkerWithAttribute string
 
 	// +custom:OtherMarker:attribute=apple,otherAttribute=orange
 	// +custom:OtherMarker:attribute=apple,otherAttribute=banana
-	NonUniqueCustomMarkerWithAttribute string // want "field NonUniqueCustomMarkerWithAttribute has multiple definitions of marker custom:OtherMarker:attribute=apple when only a single definition should exist"
+	NonUniqueCustomMarkerWithAttribute string // want "field B.NonUniqueCustomMarkerWithAttribute has multiple definitions of marker custom:OtherMarker:attribute=apple when only a single definition should exist"
 
 	// +custom:OtherMarker:attribute=apple,otherAttribute=orange
-	NonUniqueCustomMarkerWithAttributeFromAliasWithCustomMarkerWithAttribute UniqueCustomMarkerWithAttributeAlias // want "field NonUniqueCustomMarkerWithAttributeFromAliasWithCustomMarkerWithAttribute has multiple definitions of marker custom:OtherMarker:attribute=apple when only a single definition should exist"
+	NonUniqueCustomMarkerWithAttributeFromAliasWithCustomMarkerWithAttribute UniqueCustomMarkerWithAttributeAlias // want "field B.NonUniqueCustomMarkerWithAttributeFromAliasWithCustomMarkerWithAttribute has multiple definitions of marker custom:OtherMarker:attribute=apple when only a single definition should exist"
 
-	NonUniqueCustomMarkerWithAttributeOnlyFromAliasWithCustomMarkerWithAttribute NonUniqueCustomMarkerWithAttributeAlias // want "field NonUniqueCustomMarkerWithAttributeOnlyFromAliasWithCustomMarkerWithAttribute has multiple definitions of marker custom:OtherMarker:attribute=apple when only a single definition should exist"
+	NonUniqueCustomMarkerWithAttributeOnlyFromAliasWithCustomMarkerWithAttribute NonUniqueCustomMarkerWithAttributeAlias // want "field B.NonUniqueCustomMarkerWithAttributeOnlyFromAliasWithCustomMarkerWithAttribute has multiple definitions of marker custom:OtherMarker:attribute=apple when only a single definition should exist"
 
 	// +custom:OtherMarker:attribute=apple,otherAttribute=orange
 	// +custom:OtherMarker:attribute=orange,otherAttribute=apple
 	MultipleUniqueCustomMarkerWithAttribute string
-	
+
 	// +custom:MultiMarker:fruit=apple,color=blue,country='US'
 	// +custom:MultiMarker:fruit=apple,color=blue,country='UK'
 	// +custom:MultiMarker:fruit=apple,color=green,country='US'
@@ -43,7 +43,7 @@ type B struct {
 
 	// +custom:MultiMarker:fruit=apple,color=blue,country='US',state="NY"
 	// +custom:MultiMarker:fruit=apple,color=blue,country='US',state="NC"
-	NonUniqueMultiAttributeMarker string // want "field NonUniqueMultiAttributeMarker has multiple definitions of marker custom:MultiMarker:fruit=apple,color=blue,country='US' when only a single definition should exist"
+	NonUniqueMultiAttributeMarker string // want "field B.NonUniqueMultiAttributeMarker has multiple definitions of marker custom:MultiMarker:fruit=apple,color=blue,country='US' when only a single definition should exist"
 
 	// +custom:MultiMarker:fruit=apple,color=blue
 	// +custom:MultiMarker:fruit=apple,color=blue,country="UK"
@@ -53,7 +53,7 @@ type B struct {
 
 	// +custom:MultiMarker:fruit=apple,color=blue
 	// +custom:MultiMarker:fruit=apple,color=blue
-	NonUniqueMultiAttributeMarkerFromMissingAttribute string // want "field NonUniqueMultiAttributeMarkerFromMissingAttribute has multiple definitions of marker custom:MultiMarker:fruit=apple,color=blue,country= when only a single definition should exist"
+	NonUniqueMultiAttributeMarkerFromMissingAttribute string // want "field B.NonUniqueMultiAttributeMarkerFromMissingAttribute has multiple definitions of marker custom:MultiMarker:fruit=apple,color=blue,country= when only a single definition should exist"
 
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=10
 	// +k8s:uniqueMarkerArguments(fruit: "blueberry")=10
@@ -61,7 +61,7 @@ type B struct {
 
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=10
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=20
-	NonUniqueDeclarativeValidationMarkerWithArgumentsSimplePayload string // want "field NonUniqueDeclarativeValidationMarkerWithArgumentsSimplePayload has multiple definitions of marker k8s:uniqueMarkerArguments\\(fruit\\: apple\\) when only a single definition should exist"
+	NonUniqueDeclarativeValidationMarkerWithArgumentsSimplePayload string // want "field B.NonUniqueDeclarativeValidationMarkerWithArgumentsSimplePayload has multiple definitions of marker k8s:uniqueMarkerArguments\\(fruit\\: apple\\) when only a single definition should exist"
 
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:maxLength=10
 	// +k8s:uniqueMarkerArguments(fruit: "blueberry")=+k8s:maxLength=10
@@ -69,7 +69,7 @@ type B struct {
 
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:maxLength=10
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:maxLength=20
-	NonUniqueDeclarativeValidationMarkerWithArgumentsTagPayload string // want "field NonUniqueDeclarativeValidationMarkerWithArgumentsTagPayload has multiple definitions of marker k8s:uniqueMarkerArguments\\(fruit\\: apple\\) when only a single definition should exist"
+	NonUniqueDeclarativeValidationMarkerWithArgumentsTagPayload string // want "field B.NonUniqueDeclarativeValidationMarkerWithArgumentsTagPayload has multiple definitions of marker k8s:uniqueMarkerArguments\\(fruit\\: apple\\) when only a single definition should exist"
 
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:ifEnabled("thingy")=+k8s:maxLength=10
 	// +k8s:uniqueMarkerArguments(fruit: "blueberry")=+k8s:ifEnabled("thingy")=+k8s:maxLength=10
@@ -77,7 +77,7 @@ type B struct {
 
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:ifEnabled("thingy")=+k8s:maxLength=10
 	// +k8s:uniqueMarkerArguments(fruit: "apple")=+k8s:ifEnabled("otherthingy")=+k8s:maxLength=20
-	NonUniqueDeclarativeValidationMarkerWithArgumentsComplexPayload string // want "field NonUniqueDeclarativeValidationMarkerWithArgumentsComplexPayload has multiple definitions of marker k8s:uniqueMarkerArguments\\(fruit\\: apple\\) when only a single definition should exist"
+	NonUniqueDeclarativeValidationMarkerWithArgumentsComplexPayload string // want "field B.NonUniqueDeclarativeValidationMarkerWithArgumentsComplexPayload has multiple definitions of marker k8s:uniqueMarkerArguments\\(fruit\\: apple\\) when only a single definition should exist"
 
 	// +k8s:uniqueMarkerUnnamedArguments("apple")=10
 	// +k8s:uniqueMarkerUnnamedArguments("blueberry")=10
@@ -85,7 +85,7 @@ type B struct {
 
 	// +k8s:uniqueMarkerUnnamedArguments("apple")=10
 	// +k8s:uniqueMarkerUnnamedArguments("apple")=20
-	NonUniqueDeclarativeValidationMarkerWithUnnamedArgument string // want "field NonUniqueDeclarativeValidationMarkerWithUnnamedArgument has multiple definitions of marker k8s:uniqueMarkerUnnamedArguments\\(apple\\) when only a single definition should exist"
+	NonUniqueDeclarativeValidationMarkerWithUnnamedArgument string // want "field B.NonUniqueDeclarativeValidationMarkerWithUnnamedArgument has multiple definitions of marker k8s:uniqueMarkerUnnamedArguments\\(apple\\) when only a single definition should exist"
 }
 
 // +custom:SomeCustomMarker:=diffvalue
