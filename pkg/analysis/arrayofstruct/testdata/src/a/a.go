@@ -156,9 +156,8 @@ type ValidWithExactlyOneOf struct {
 	Items []ValidExactlyOneOfItem
 }
 
+// +kubebuilder:validation:ExactlyOneOf=FieldA;FieldB
 type ValidExactlyOneOfItem struct {
-	// +kubebuilder:validation:ExactlyOneOf=FieldA;FieldB
-	// No required fields, but the marker enforces exactly one is set
 	FieldA *string `json:"fieldA,omitempty"`
 	FieldB *string `json:"fieldB,omitempty"`
 }
