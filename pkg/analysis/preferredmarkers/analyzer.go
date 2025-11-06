@@ -74,8 +74,8 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		checkField(pass, field, markersAccess, a.equivalentToPreferred)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, a.equivalentToPreferred, qualifiedFieldName)
 	})
 
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
@@ -88,14 +88,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 // checkField validates a single struct field for marker usage.
 // Only checks markers directly on the field, not inherited from type aliases,
 // since inherited markers are already reported at the type level.
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, equivalentToPreferred map[string]string) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, equivalentToPreferred map[string]string, qualifiedFieldName string) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
 
 	markerSet := markersAccess.FieldMarkers(field)
 	check(markerSet, equivalentToPreferred, func(marks []markers.Marker, preferredIdentifier string, preferredExists bool) {
-		reportMarkers(pass, marks, preferredIdentifier, field.Names[0].Name, field.Pos(), "field", preferredExists)
+		reportMarkers(pass, marks, preferredIdentifier, qualifiedFieldName, field.Pos(), "field", preferredExists)
 	})
 }
 
