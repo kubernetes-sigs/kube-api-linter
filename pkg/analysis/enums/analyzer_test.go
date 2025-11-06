@@ -28,6 +28,7 @@ func TestAnalyzer(t *testing.T) {
 	// Test without allowlist
 	config := &enums.Config{}
 	analyzer, err := enums.Initializer().Init(config)
+
 	if err != nil {
 		t.Fatalf("initializing enums linter: %v", err)
 	}

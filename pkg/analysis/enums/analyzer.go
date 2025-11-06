@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -41,6 +42,7 @@ type analyzer struct {
 
 func newAnalyzer(cfg *Config) *analysis.Analyzer {
 	a := &analyzer{config: cfg}
+
 	return &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Enforces that enumerated fields use type aliases with +enum marker and have PascalCase values",
@@ -56,7 +58,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	}
 
 	// Check struct fields for proper enum usage
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
 		a.checkField(pass, field, markersAccess)
 	})
 
@@ -64,7 +66,8 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
 		a.checkTypeSpec(pass, typeSpec, markersAccess)
 	})
-	a.checkConstValues(pass, inspect)
+	a.checkConstValues(pass)
+
 	return nil, nil //nolint:nilnil
 }
 
@@ -75,15 +78,21 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	}
 	// Get the underlying type, unwrapping pointers and arrays
 	fieldType, isArray := unwrapTypeWithArrayTracking(field.Type)
+
 	ident, ok := fieldType.(*ast.Ident)
+
 	if !ok {
 		return
 	}
+
 	prefix := buildFieldPrefix(fieldName, isArray)
+
 	if ident.Name == "string" && utils.IsBasicType(pass, ident) {
 		a.checkPlainStringField(pass, field, markersAccess, prefix)
+
 		return
 	}
+
 	a.checkTypeAliasField(pass, field, ident, markersAccess, prefix)
 }
 
@@ -91,6 +100,7 @@ func buildFieldPrefix(fieldName string, isArray bool) string {
 	if isArray {
 		return fmt.Sprintf("field %s array element", fieldName)
 	}
+
 	return fmt.Sprintf("field %s", fieldName)
 }
 
@@ -106,10 +116,13 @@ func (a *analyzer) checkTypeAliasField(pass *analysis.Pass, field *ast.Field, id
 	if utils.IsBasicType(pass, ident) {
 		return
 	}
+
 	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
+
 	if !ok || !isStringTypeAlias(pass, typeSpec) {
 		return
 	}
+
 	if !hasEnumMarker(markersAccess.TypeMarkers(typeSpec)) {
 		pass.Reportf(field.Pos(),
 			"%s uses type %s which appears to be an enum but is missing +enum marker (kubebuilder:validation:Enum)",
@@ -121,10 +134,13 @@ func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, ma
 	if typeSpec.Name == nil {
 		return
 	}
+
 	typeMarkers := markersAccess.TypeMarkers(typeSpec)
+
 	if !hasEnumMarker(typeMarkers) {
 		return
 	}
+
 	if !isStringTypeAlias(pass, typeSpec) {
 		pass.Reportf(typeSpec.Pos(),
 			"type %s has +enum marker but underlying type is not string",
@@ -132,13 +148,14 @@ func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, ma
 	}
 }
 
-func (a *analyzer) checkConstValues(pass *analysis.Pass, inspect inspector.Inspector) {
+func (a *analyzer) checkConstValues(pass *analysis.Pass) {
 	for _, file := range pass.Files {
 		for _, decl := range file.Decls {
 			genDecl, ok := decl.(*ast.GenDecl)
 			if !ok || genDecl.Tok.String() != "const" {
 				continue
 			}
+
 			for _, spec := range genDecl.Specs {
 				if valueSpec, ok := spec.(*ast.ValueSpec); ok {
 					a.checkConstSpec(pass, valueSpec)
@@ -158,16 +175,20 @@ func (a *analyzer) validateEnumConstant(pass *analysis.Pass, name *ast.Ident, va
 	if name == nil || index >= len(valueSpec.Values) {
 		return
 	}
+
 	typeSpec := a.getEnumTypeSpec(pass, name)
 	if typeSpec == nil {
 		return
 	}
+
 	// Extract and validate the enum value
 	basicLit, ok := valueSpec.Values[index].(*ast.BasicLit)
 	if !ok {
 		return
 	}
+
 	strValue := strings.Trim(basicLit.Value, `"`)
+
 	if !a.isInAllowlist(strValue) && !isPascalCase(strValue) {
 		pass.Reportf(basicLit.Pos(),
 			"enum value %q should be PascalCase (e.g., \"PhasePending\", \"StateRunning\")",
@@ -180,18 +201,22 @@ func (a *analyzer) getEnumTypeSpec(pass *analysis.Pass, name *ast.Ident) *ast.Ty
 	if !ok {
 		return nil
 	}
+
 	namedType, ok := constObj.Type().(*types.Named)
 	if !ok || namedType.Obj().Pkg() == nil || namedType.Obj().Pkg() != pass.Pkg {
 		return nil
 	}
+
 	typeSpec := findTypeSpecByName(pass, namedType.Obj().Name())
+
 	if typeSpec == nil || !hasEnumMarkerOnTypeSpec(pass, typeSpec) {
 		return nil
 	}
+
 	return typeSpec
 }
 
-// unwrapType removes pointer and array wrappers to get the underlying type
+// unwrapType removes pointer and array wrappers to get the underlying type.
 func unwrapType(expr ast.Expr) ast.Expr {
 	switch t := expr.(type) {
 	case *ast.StarExpr:
@@ -207,6 +232,7 @@ func unwrapType(expr ast.Expr) ast.Expr {
 // and tracks whether an array was encountered during unwrapping.
 func unwrapTypeWithArrayTracking(expr ast.Expr) (ast.Expr, bool) {
 	isArray := false
+
 	for {
 		switch t := expr.(type) {
 		case *ast.StarExpr:
@@ -222,10 +248,13 @@ func unwrapTypeWithArrayTracking(expr ast.Expr) (ast.Expr, bool) {
 
 func isStringTypeAlias(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	underlyingType := unwrapType(typeSpec.Type)
+
 	ident, ok := underlyingType.(*ast.Ident)
+
 	if !ok {
 		return false
 	}
+
 	return ident.Name == "string" && utils.IsBasicType(pass, ident)
 }
 
@@ -239,6 +268,7 @@ func hasEnumMarkerOnTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 			return hasEnumMarkerInDoc(genDecl.Doc)
 		}
 	}
+
 	return false
 }
 
@@ -248,12 +278,14 @@ func findGenDeclForSpec(file *ast.File, typeSpec *ast.TypeSpec) *ast.GenDecl {
 		if !ok {
 			continue
 		}
+
 		for _, spec := range genDecl.Specs {
 			if spec == typeSpec {
 				return genDecl
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -261,26 +293,24 @@ func hasEnumMarkerInDoc(doc *ast.CommentGroup) bool {
 	if doc == nil {
 		return false
 	}
+
 	for _, comment := range doc.List {
 		text := comment.Text
 		if strings.Contains(text, markers.KubebuilderEnumMarker) || strings.Contains(text, markers.K8sEnumMarker) {
 			return true
 		}
 	}
+
 	return false
 }
 
-// isInAllowlist checks if a value is in the configured allowlist
+// isInAllowlist checks if a value is in the configured allowlist.
 func (a *analyzer) isInAllowlist(value string) bool {
 	if a.config == nil {
 		return false
 	}
-	for _, allowed := range a.config.Allowlist {
-		if value == allowed {
-			return true
-		}
-	}
-	return false
+
+	return slices.Contains(a.config.Allowlist, value)
 }
 
 func findTypeSpecByName(pass *analysis.Pass, typeName string) *ast.TypeSpec {
@@ -290,17 +320,20 @@ func findTypeSpecByName(pass *analysis.Pass, typeName string) *ast.TypeSpec {
 			if !ok {
 				continue
 			}
+
 			for _, spec := range genDecl.Specs {
 				typeSpec, ok := spec.(*ast.TypeSpec)
 				if !ok {
 					continue
 				}
+
 				if typeSpec.Name != nil && typeSpec.Name.Name == typeName {
 					return typeSpec
 				}
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -308,20 +341,26 @@ func isPascalCase(s string) bool {
 	if len(s) == 0 {
 		return false
 	}
+
 	if !unicode.IsUpper(rune(s[0])) {
 		return false
 	}
+
 	hasLower := false
+
 	for _, r := range s {
 		if r == '_' || r == '-' {
 			return false
 		}
+
 		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
 			return false
 		}
+
 		if unicode.IsLower(r) {
 			hasLower = true
 		}
 	}
+
 	return len(s) == 1 || hasLower
 }
