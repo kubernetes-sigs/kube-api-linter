@@ -43,6 +43,7 @@ func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
 	if cfg == nil {
 		cfg = &Config{}
 	}
+
 	return newAnalyzer(cfg), nil
 }
 
