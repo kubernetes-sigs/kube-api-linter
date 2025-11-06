@@ -44,35 +44,35 @@ type MultipleEquivalentMarkersType string // want `type MultipleEquivalentMarker
 type Test struct {
 	// Field with kubebuilder optional marker (should be k8s:optional)
 	// +kubebuilder:validation:Optional
-	OptionalFieldKubebuilder string `json:"optionalFieldKubebuilder"` // want `field OptionalFieldKubebuilder uses marker "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
+	OptionalFieldKubebuilder string `json:"optionalFieldKubebuilder"` // want `field Test.OptionalFieldKubebuilder uses marker "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
 
 	// Inherited from type alias (not reported since type is already checked)
 	OptionalFieldKubebuilderTypeAlias OptionalTypeKubebuilder `json:"optionalFieldKubebuilderTypeAlias"`
 
 	// Field with custom optional marker (should be k8s:optional)
 	// +custom:optional
-	OptionalFieldCustom string `json:"optionalFieldCustom"` // want `field OptionalFieldCustom uses marker "custom:optional", should use preferred marker "k8s:optional" instead`
+	OptionalFieldCustom string `json:"optionalFieldCustom"` // want `field Test.OptionalFieldCustom uses marker "custom:optional", should use preferred marker "k8s:optional" instead`
 
 	// Inherited from type alias (not reported since type is already checked)
 	OptionalFieldCustomTypeAlias OptionalTypeCustom `json:"optionalFieldCustomTypeAlias"`
 
 	// Field with kubebuilder required marker (should be k8s:required)
 	// +kubebuilder:validation:Required
-	RequiredFieldKubebuilder string `json:"requiredFieldKubebuilder"` // want `field RequiredFieldKubebuilder uses marker "kubebuilder:validation:Required", should use preferred marker "k8s:required" instead`
+	RequiredFieldKubebuilder string `json:"requiredFieldKubebuilder"` // want `field Test.RequiredFieldKubebuilder uses marker "kubebuilder:validation:Required", should use preferred marker "k8s:required" instead`
 
 	// Inherited from type alias (not reported since type is already checked)
 	RequiredFieldKubebuilderTypeAlias RequiredTypeKubebuilder `json:"requiredFieldKubebuilderTypeAlias"`
 
 	// Field with custom old marker (should be custom:preferred)
 	// +custom:old
-	CustomOldField string `json:"customOldField"` // want `field CustomOldField uses marker "custom:old", should use preferred marker "custom:preferred" instead`
+	CustomOldField string `json:"customOldField"` // want `field Test.CustomOldField uses marker "custom:old", should use preferred marker "custom:preferred" instead`
 
 	// Inherited from type alias (not reported since type is already checked)
 	CustomOldFieldTypeAlias CustomOldType `json:"customOldFieldTypeAlias"`
 
 	// Field with custom deprecated marker (should be custom:preferred)
 	// +custom:deprecated
-	CustomDeprecatedField string `json:"customDeprecatedField"` // want `field CustomDeprecatedField uses marker "custom:deprecated", should use preferred marker "custom:preferred" instead`
+	CustomDeprecatedField string `json:"customDeprecatedField"` // want `field Test.CustomDeprecatedField uses marker "custom:deprecated", should use preferred marker "custom:preferred" instead`
 
 	// Inherited from type alias (not reported since type is already checked)
 	CustomDeprecatedFieldTypeAlias CustomDeprecatedType `json:"customDeprecatedFieldTypeAlias"`
@@ -108,18 +108,18 @@ type Test struct {
 	// Field with multiple equivalent markers (both should be reported)
 	// +kubebuilder:validation:Optional
 	// +custom:optional
-	MultipleEquivalentMarkersField string `json:"multipleEquivalentMarkersField"` // want `field MultipleEquivalentMarkersField uses markers "custom:optional", "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
+	MultipleEquivalentMarkersField string `json:"multipleEquivalentMarkersField"` // want `field Test.MultipleEquivalentMarkersField uses markers "custom:optional", "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
 
 	// Inherited from type alias with multiple markers (not reported since type is already checked)
 	MultipleEquivalentMarkersFieldTypeAlias MultipleEquivalentMarkersType `json:"multipleEquivalentMarkersFieldTypeAlias"`
 
 	// Test marker with unnamed expression (should preserve expression)
 	// +kubebuilder:validation:Optional:=someValue
-	OptionalWithUnnamedExpression string `json:"optionalWithUnnamedExpression"` // want `field OptionalWithUnnamedExpression uses marker "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
+	OptionalWithUnnamedExpression string `json:"optionalWithUnnamedExpression"` // want `field Test.OptionalWithUnnamedExpression uses marker "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
 
 	// Test marker with named expressions (should preserve expressions)
 	// +custom:old:key1=val1,key2=val2
-	CustomWithNamedExpressions string `json:"customWithNamedExpressions"` // want `field CustomWithNamedExpressions uses marker "custom:old", should use preferred marker "custom:preferred" instead`
+	CustomWithNamedExpressions string `json:"customWithNamedExpressions"` // want `field Test.CustomWithNamedExpressions uses marker "custom:old", should use preferred marker "custom:preferred" instead`
 }
 
 // Type with unnamed expression (should preserve expression)
@@ -145,10 +145,10 @@ type EdgeCaseTest struct {
 	// Field with both preferred and equivalent markers (should only remove equivalent)
 	// +k8s:optional
 	// +kubebuilder:validation:Optional
-	FieldWithBothPreferredAndEquivalent string `json:"fieldWithBothPreferredAndEquivalent"` // want `field FieldWithBothPreferredAndEquivalent uses marker "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
+	FieldWithBothPreferredAndEquivalent string `json:"fieldWithBothPreferredAndEquivalent"` // want `field EdgeCaseTest.FieldWithBothPreferredAndEquivalent uses marker "kubebuilder:validation:Optional", should use preferred marker "k8s:optional" instead`
 
 	// Field with both preferred and multiple equivalent markers (should remove all equivalents)
 	// +k8s:required
 	// +kubebuilder:validation:Required
-	FieldWithPreferredAndMultipleEquivalents string `json:"fieldWithPreferredAndMultipleEquivalents"` // want `field FieldWithPreferredAndMultipleEquivalents uses marker "kubebuilder:validation:Required", should use preferred marker "k8s:required" instead`
+	FieldWithPreferredAndMultipleEquivalents string `json:"fieldWithPreferredAndMultipleEquivalents"` // want `field EdgeCaseTest.FieldWithPreferredAndMultipleEquivalents uses marker "kubebuilder:validation:Required", should use preferred marker "k8s:required" instead`
 }
