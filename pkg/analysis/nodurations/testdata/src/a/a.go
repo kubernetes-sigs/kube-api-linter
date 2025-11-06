@@ -15,33 +15,33 @@ type Durations struct {
 
 	ValidInt64 int64
 
-	InvalidDuration time.Duration // want "field InvalidDuration should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDuration time.Duration // want "field Durations.InvalidDuration should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtr *time.Duration // want "field InvalidDurationPtr pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtr *time.Duration // want "field Durations.InvalidDurationPtr pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationSlice []time.Duration // want "field InvalidDurationSlice array element should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationSlice []time.Duration // want "field Durations.InvalidDurationSlice array element should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrSlice []*time.Duration // want "field InvalidDurationPtrSlice array element pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrSlice []*time.Duration // want "field Durations.InvalidDurationPtrSlice array element pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationAlias DurationAlias // want "field InvalidDurationAlias type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationAlias DurationAlias // want "field Durations.InvalidDurationAlias type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrAlias *DurationAlias // want "field InvalidDurationPtrAlias pointer type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrAlias *DurationAlias // want "field Durations.InvalidDurationPtrAlias pointer type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationSliceAlias []DurationAlias // want "field InvalidDurationSliceAlias array element type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationSliceAlias []DurationAlias // want "field Durations.InvalidDurationSliceAlias array element type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrSliceAlias []*DurationAlias // want "field InvalidDurationPtrSliceAlias array element pointer type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrSliceAlias []*DurationAlias // want "field Durations.InvalidDurationPtrSliceAlias array element pointer type DurationAlias should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapStringToDuration map[string]time.Duration // want "field InvalidMapStringToDuration map value should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapStringToDuration map[string]time.Duration // want "field Durations.InvalidMapStringToDuration map value should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapStringToDurationPtr map[string]*time.Duration // want "field InvalidMapStringToDurationPtr map value pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapStringToDurationPtr map[string]*time.Duration // want "field Durations.InvalidMapStringToDurationPtr map value pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapDurationToString map[time.Duration]string // want "field InvalidMapDurationToString map key should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapDurationToString map[time.Duration]string // want "field Durations.InvalidMapDurationToString map key should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapDurationPtrToString map[*time.Duration]string // want "field InvalidMapDurationPtrToString map key pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapDurationPtrToString map[*time.Duration]string // want "field Durations.InvalidMapDurationPtrToString map key pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationAliasFromAnotherFile DurationAliasB // want "field InvalidDurationAliasFromAnotherFile type DurationAliasB should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationAliasFromAnotherFile DurationAliasB // want "field Durations.InvalidDurationAliasFromAnotherFile type DurationAliasB should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrAliasFromAnotherFile *DurationAliasB // want "field InvalidDurationPtrAliasFromAnotherFile pointer type DurationAliasB should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrAliasFromAnotherFile *DurationAliasB // want "field Durations.InvalidDurationPtrAliasFromAnotherFile pointer type DurationAliasB should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 }
 
 // DoNothing is used to check that the analyser doesn't report on methods.
@@ -70,31 +70,31 @@ type DurationsWithMetaV1Package struct {
 
 	ValidInt64 int64
 
-	InvalidDuration metav1.Duration // want "field InvalidDuration should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDuration metav1.Duration // want "field DurationsWithMetaV1Package.InvalidDuration should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtr *metav1.Duration // want "field InvalidDurationPtr pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtr *metav1.Duration // want "field DurationsWithMetaV1Package.InvalidDurationPtr pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationSlice []metav1.Duration // want "field InvalidDurationSlice array element should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationSlice []metav1.Duration // want "field DurationsWithMetaV1Package.InvalidDurationSlice array element should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrSlice []*metav1.Duration // want "field InvalidDurationPtrSlice array element pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrSlice []*metav1.Duration // want "field DurationsWithMetaV1Package.InvalidDurationPtrSlice array element pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationAlias DurationAliasWithMetaV1 // want "field InvalidDurationAlias type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationAlias DurationAliasWithMetaV1 // want "field DurationsWithMetaV1Package.InvalidDurationAlias type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrAlias *DurationAliasWithMetaV1 // want "field InvalidDurationPtrAlias pointer type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrAlias *DurationAliasWithMetaV1 // want "field DurationsWithMetaV1Package.InvalidDurationPtrAlias pointer type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationSliceAlias []DurationAliasWithMetaV1 // want "field InvalidDurationSliceAlias array element type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationSliceAlias []DurationAliasWithMetaV1 // want "field DurationsWithMetaV1Package.InvalidDurationSliceAlias array element type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationPtrSliceAlias []*DurationAliasWithMetaV1 // want "field InvalidDurationPtrSliceAlias array element pointer type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationPtrSliceAlias []*DurationAliasWithMetaV1 // want "field DurationsWithMetaV1Package.InvalidDurationPtrSliceAlias array element pointer type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapStringToDuration map[string]metav1.Duration // want "field InvalidMapStringToDuration map value should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapStringToDuration map[string]metav1.Duration // want "field DurationsWithMetaV1Package.InvalidMapStringToDuration map value should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapStringToDurationPtr map[string]*metav1.Duration // want "field InvalidMapStringToDurationPtr map value pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapStringToDurationPtr map[string]*metav1.Duration // want "field DurationsWithMetaV1Package.InvalidMapStringToDurationPtr map value pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapDurationToString map[metav1.Duration]string // want "field InvalidMapDurationToString map key should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapDurationToString map[metav1.Duration]string // want "field DurationsWithMetaV1Package.InvalidMapDurationToString map key should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidMapDurationPtrToString map[*metav1.Duration]string // want "field InvalidMapDurationPtrToString map key pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidMapDurationPtrToString map[*metav1.Duration]string // want "field DurationsWithMetaV1Package.InvalidMapDurationPtrToString map key pointer should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 
-	InvalidDurationAliasFromAnotherFile DurationAliasBWithMetaV1 // want "field InvalidDurationAliasFromAnotherFile type DurationAliasBWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
+	InvalidDurationAliasFromAnotherFile DurationAliasBWithMetaV1 // want "field DurationsWithMetaV1Package.InvalidDurationAliasFromAnotherFile type DurationAliasBWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."
 }
 
 type DurationAliasWithMetaV1 metav1.Duration // want "type DurationAliasWithMetaV1 should not use a Duration. Use an integer type with units in the name to avoid the need for clients to implement Go style duration parsing."

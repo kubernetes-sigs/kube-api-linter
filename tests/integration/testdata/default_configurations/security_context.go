@@ -4,7 +4,7 @@ package defaultconfigurations
 // Some fields are also present in container.securityContext.  Field values of
 // container.securityContext take precedence over field values of PodSecurityContext.
 type PodSecurityContext struct {
-	// The SELinux context to be applied to all containers. // want "commentstart: godoc for field SELinuxOptions should start with 'seLinuxOptions ...'"
+	// The SELinux context to be applied to all containers. // want "commentstart: godoc for field PodSecurityContext.SELinuxOptions should start with 'seLinuxOptions ...'"
 	// If unspecified, the container runtime will allocate a random SELinux context for each
 	// container.  May also be set in SecurityContext.  If set in
 	// both SecurityContext and PodSecurityContext, the value specified in SecurityContext
@@ -12,13 +12,13 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	SELinuxOptions *SELinuxOptions `json:"seLinuxOptions,omitempty" protobuf:"bytes,1,opt,name=seLinuxOptions"`
-	// The Windows specific settings applied to all containers. // want "commentstart: godoc for field WindowsOptions should start with 'windowsOptions ...'"
+	// The Windows specific settings applied to all containers. // want "commentstart: godoc for field PodSecurityContext.WindowsOptions should start with 'windowsOptions ...'"
 	// If unspecified, the options within a container's SecurityContext will be used.
 	// If set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.
 	// Note that this field cannot be set when spec.os.name is linux.
 	// +optional
 	WindowsOptions *WindowsSecurityContextOptions `json:"windowsOptions,omitempty" protobuf:"bytes,8,opt,name=windowsOptions"`
-	// The UID to run the entrypoint of the container process. // want "commentstart: godoc for field RunAsUser should start with 'runAsUser ...'"
+	// The UID to run the entrypoint of the container process. // want "commentstart: godoc for field PodSecurityContext.RunAsUser should start with 'runAsUser ...'"
 	// Defaults to user specified in image metadata if unspecified.
 	// May also be set in SecurityContext.  If set in both SecurityContext and
 	// PodSecurityContext, the value specified in SecurityContext takes precedence
@@ -26,7 +26,7 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsUser *int64 `json:"runAsUser,omitempty" protobuf:"varint,2,opt,name=runAsUser"`
-	// The GID to run the entrypoint of the container process. // want "commentstart: godoc for field RunAsGroup should start with 'runAsGroup ...'"
+	// The GID to run the entrypoint of the container process. // want "commentstart: godoc for field PodSecurityContext.RunAsGroup should start with 'runAsGroup ...'"
 	// Uses runtime default if unset.
 	// May also be set in SecurityContext.  If set in both SecurityContext and
 	// PodSecurityContext, the value specified in SecurityContext takes precedence
@@ -34,7 +34,7 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	RunAsGroup *int64 `json:"runAsGroup,omitempty" protobuf:"varint,6,opt,name=runAsGroup"`
-	// Indicates that the container must run as a non-root user. // want "commentstart: godoc for field RunAsNonRoot should start with 'runAsNonRoot ...'"
+	// Indicates that the container must run as a non-root user. // want "commentstart: godoc for field PodSecurityContext.RunAsNonRoot should start with 'runAsNonRoot ...'"
 	// If true, the Kubelet will validate the image at runtime to ensure that it
 	// does not run as UID 0 (root) and fail to start the container if it does.
 	// If unset or false, no such validation will be performed.
@@ -42,7 +42,7 @@ type PodSecurityContext struct {
 	// PodSecurityContext, the value specified in SecurityContext takes precedence.
 	// +optional
 	RunAsNonRoot *bool `json:"runAsNonRoot,omitempty" protobuf:"varint,3,opt,name=runAsNonRoot"`
-	// A list of groups applied to the first process run in each container, in // want "commentstart: godoc for field SupplementalGroups should start with 'supplementalGroups ...'"
+	// A list of groups applied to the first process run in each container, in // want "commentstart: godoc for field PodSecurityContext.SupplementalGroups should start with 'supplementalGroups ...'"
 	// addition to the container's primary GID and fsGroup (if specified).  If
 	// the SupplementalGroupsPolicy feature is enabled, the
 	// supplementalGroupsPolicy field determines whether these are in addition
@@ -54,7 +54,7 @@ type PodSecurityContext struct {
 	// +optional
 	// +listType=atomic
 	SupplementalGroups []int64 `json:"supplementalGroups,omitempty" protobuf:"varint,4,rep,name=supplementalGroups"`
-	// Defines how supplemental groups of the first container processes are calculated. // want "commentstart: godoc for field SupplementalGroupsPolicy should start with 'supplementalGroupsPolicy ...'"
+	// Defines how supplemental groups of the first container processes are calculated. // want "commentstart: godoc for field PodSecurityContext.SupplementalGroupsPolicy should start with 'supplementalGroupsPolicy ...'"
 	// Valid values are "Merge" and "Strict". If not specified, "Merge" is used.
 	// (Alpha) Using the field requires the SupplementalGroupsPolicy feature gate to be enabled
 	// and the container runtime must implement support for this feature.
@@ -63,7 +63,7 @@ type PodSecurityContext struct {
 	// +featureGate=SupplementalGroupsPolicy
 	// +optional
 	SupplementalGroupsPolicy *SupplementalGroupsPolicy `json:"supplementalGroupsPolicy,omitempty" protobuf:"bytes,12,opt,name=supplementalGroupsPolicy"`
-	// A special supplemental group that applies to all containers in a pod. // want "commentstart: godoc for field FSGroup should start with 'fsGroup ...'"
+	// A special supplemental group that applies to all containers in a pod. // want "commentstart: godoc for field PodSecurityContext.FSGroup should start with 'fsGroup ...'"
 	// Some volume types allow the Kubelet to change the ownership of that volume
 	// to be owned by the pod:
 	//
@@ -75,7 +75,7 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	FSGroup *int64 `json:"fsGroup,omitempty" protobuf:"varint,5,opt,name=fsGroup"`
-	// Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported // want "commentstart: godoc for field Sysctls should start with 'sysctls ...'"
+	// Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported // want "commentstart: godoc for field PodSecurityContext.Sysctls should start with 'sysctls ...'"
 	// sysctls (by the container runtime) might fail to launch.
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
@@ -90,7 +90,7 @@ type PodSecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	FSGroupChangePolicy *PodFSGroupChangePolicy `json:"fsGroupChangePolicy,omitempty" protobuf:"bytes,9,opt,name=fsGroupChangePolicy"`
-	// The seccomp options to use by the containers in this pod. // want "commentstart: godoc for field SeccompProfile should start with 'seccompProfile ...'"
+	// The seccomp options to use by the containers in this pod. // want "commentstart: godoc for field PodSecurityContext.SeccompProfile should start with 'seccompProfile ...'"
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	SeccompProfile *SeccompProfile `json:"seccompProfile,omitempty" protobuf:"bytes,10,opt,name=seccompProfile"`
@@ -145,10 +145,10 @@ const (
 
 // Sysctl defines a kernel parameter to be set
 type Sysctl struct {
-	// Name of a property to set // want "commentstart: godoc for field Name should start with 'name ...'"
-	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field Name must be marked as optional or required"
-	// Value of a property to set // want "commentstart: godoc for field Value should start with 'value ...'"
-	Value string `json:"value" protobuf:"bytes,2,opt,name=value"` // want "optionalorrequired: field Value must be marked as optional or required"
+	// Name of a property to set // want "commentstart: godoc for field Sysctl.Name should start with 'name ...'"
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"` // want "optionalorrequired: field Sysctl.Name must be marked as optional or required"
+	// Value of a property to set // want "commentstart: godoc for field Sysctl.Value should start with 'value ...'"
+	Value string `json:"value" protobuf:"bytes,2,opt,name=value"` // want "optionalorrequired: field Sysctl.Value must be marked as optional or required"
 }
 
 // PodFSGroupChangePolicy holds policies that will be used for applying fsGroup to a volume

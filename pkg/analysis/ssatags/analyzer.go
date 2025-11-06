@@ -66,14 +66,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		a.checkField(pass, field, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
+		a.checkField(pass, field, markersAccess, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, qualifiedFieldName string) {
 	if !utils.IsArrayTypeOrAlias(pass, field) {
 		return
 	}
@@ -89,10 +89,10 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		for _, marker := range listTypeMarkers {
 			pass.Report(analysis.Diagnostic{
 				Pos:     field.Pos(),
-				Message: fmt.Sprintf("%s is a byte array, which does not support the listType marker. Remove the listType marker", utils.FieldName(field)),
+				Message: fmt.Sprintf("%s is a byte array, which does not support the listType marker. Remove the listType marker", qualifiedFieldName),
 				SuggestedFixes: []analysis.SuggestedFix{
 					{
-						Message: fmt.Sprintf("Remove listType marker from %s", utils.FieldName(field)),
+						Message: fmt.Sprintf("Remove listType marker from %s", qualifiedFieldName),
 						TextEdits: []analysis.TextEdit{
 							{
 								Pos:     marker.Pos,
@@ -108,13 +108,12 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		return
 	}
 
-	fieldName := utils.FieldName(field)
 	listTypeMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListTypeMarker)
 
 	if len(listTypeMarkers) == 0 {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("%s should have a listType marker for proper Server-Side Apply behavior (atomic, set, or map)", fieldName),
+			Message: fmt.Sprintf("%s should have a listType marker for proper Server-Side Apply behavior (atomic, set, or map)", qualifiedFieldName),
 		})
 
 		return
@@ -123,41 +122,38 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	for _, marker := range listTypeMarkers {
 		listType := marker.Payload.Value
 
-		a.checkListTypeMarker(pass, listType, field)
+		a.checkListTypeMarker(pass, listType, field, qualifiedFieldName)
 
 		if listType == listTypeMap {
-			a.checkListTypeMap(pass, fieldMarkers, field)
+			a.checkListTypeMap(pass, fieldMarkers, field, qualifiedFieldName)
 		}
 
 		if listType == listTypeSet {
-			a.checkListTypeSet(pass, field)
+			a.checkListTypeSet(pass, field, qualifiedFieldName)
 		}
 	}
 }
 
-func (a *analyzer) checkListTypeMarker(pass *analysis.Pass, listType string, field *ast.Field) {
-	fieldName := utils.FieldName(field)
-
+func (a *analyzer) checkListTypeMarker(pass *analysis.Pass, listType string, field *ast.Field, qualifiedFieldName string) {
 	if !validListType(listType) {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("%s has invalid listType %q, must be one of: atomic, set, map", fieldName, listType),
+			Message: fmt.Sprintf("%s has invalid listType %q, must be one of: atomic, set, map", qualifiedFieldName, listType),
 		})
 
 		return
 	}
 }
 
-func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.MarkerSet, field *ast.Field) {
+func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.MarkerSet, field *ast.Field, qualifiedFieldName string) {
 	listMapKeyMarkers := fieldMarkers.Get(kubebuildermarkers.KubebuilderListMapKeyMarker)
-	fieldName := utils.FieldName(field)
 
 	isObjectList := utils.IsObjectList(pass, field)
 
 	if !isObjectList {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("%s with listType=map can only be used for object lists, not primitive lists", fieldName),
+			Message: fmt.Sprintf("%s with listType=map can only be used for object lists, not primitive lists", qualifiedFieldName),
 		})
 
 		return
@@ -166,16 +162,16 @@ func (a *analyzer) checkListTypeMap(pass *analysis.Pass, fieldMarkers markers.Ma
 	if len(listMapKeyMarkers) == 0 {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("%s with listType=map must have at least one listMapKey marker", fieldName),
+			Message: fmt.Sprintf("%s with listType=map must have at least one listMapKey marker", qualifiedFieldName),
 		})
 
 		return
 	}
 
-	a.validateListMapKeys(pass, field, listMapKeyMarkers)
+	a.validateListMapKeys(pass, field, listMapKeyMarkers, qualifiedFieldName)
 }
 
-func (a *analyzer) checkListTypeSet(pass *analysis.Pass, field *ast.Field) {
+func (a *analyzer) checkListTypeSet(pass *analysis.Pass, field *ast.Field, qualifiedFieldName string) {
 	if a.listTypeSetUsage == SSATagsListTypeSetUsageIgnore {
 		return
 	}
@@ -185,16 +181,15 @@ func (a *analyzer) checkListTypeSet(pass *analysis.Pass, field *ast.Field) {
 		return
 	}
 
-	fieldName := utils.FieldName(field)
 	diagnostic := analysis.Diagnostic{
 		Pos:     field.Pos(),
-		Message: fmt.Sprintf("%s with listType=set is not recommended due to Server-Side Apply compatibility issues. Consider using listType=%s or listType=%s instead", fieldName, listTypeAtomic, listTypeMap),
+		Message: fmt.Sprintf("%s with listType=set is not recommended due to Server-Side Apply compatibility issues. Consider using listType=%s or listType=%s instead", qualifiedFieldName, listTypeAtomic, listTypeMap),
 	}
 
 	pass.Report(diagnostic)
 }
 
-func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, listMapKeyMarkers []markers.Marker) {
+func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, listMapKeyMarkers []markers.Marker, qualifiedFieldName string) {
 	jsonTags, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
 	if !ok {
 		return
@@ -205,8 +200,6 @@ func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, li
 		return
 	}
 
-	fieldName := utils.FieldName(field)
-
 	for _, marker := range listMapKeyMarkers {
 		keyName := marker.Payload.Value
 		if keyName == "" {
@@ -216,7 +209,7 @@ func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, li
 		if !a.hasFieldWithJSONTag(structFields, jsonTags, keyName) {
 			pass.Report(analysis.Diagnostic{
 				Pos:     field.Pos(),
-				Message: fmt.Sprintf("%s listMapKey %q does not exist as a field in the struct", fieldName, keyName),
+				Message: fmt.Sprintf("%s listMapKey %q does not exist as a field in the struct", qualifiedFieldName, keyName),
 			})
 		}
 	}

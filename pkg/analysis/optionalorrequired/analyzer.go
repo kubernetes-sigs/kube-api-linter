@@ -24,7 +24,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -93,8 +92,8 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
-		a.checkField(pass, field, markersAccess.FieldMarkers(field), jsonTagInfo)
+	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
+		a.checkField(pass, field, markersAccess.FieldMarkers(field), jsonTagInfo, qualifiedFieldName)
 	})
 
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
@@ -105,7 +104,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 //nolint:cyclop
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, fieldTagInfo extractjsontags.FieldTagInfo) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, fieldTagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string) {
 	if fieldTagInfo.Inline {
 		// Inline fields would have no effect if they were marked as optional/required.
 		return
@@ -116,7 +115,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, fieldMarker
 		prefix = "embedded field %s"
 	}
 
-	prefix = fmt.Sprintf(prefix, utils.FieldName(field))
+	prefix = fmt.Sprintf(prefix, qualifiedFieldName)
 
 	hasPrimaryOptional := fieldMarkers.Has(a.primaryOptionalMarker)
 	hasPrimaryRequired := fieldMarkers.Has(a.primaryRequiredMarker)

@@ -65,8 +65,8 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers) {
-		checkField(pass, field, markersAccess, a.uniqueMarkers)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
+		checkField(pass, field, markersAccess, a.uniqueMarkers, qualifiedFieldName)
 	})
 
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
@@ -76,13 +76,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, uniqueMarkers []UniqueMarker) {
+func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markers.Markers, uniqueMarkers []UniqueMarker, qualifiedFieldName string) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
 
 	markers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
-	check(markers, uniqueMarkers, reportField(pass, field))
+	check(markers, uniqueMarkers, reportField(pass, field, qualifiedFieldName))
 }
 
 func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markers.Markers, uniqueMarkers []UniqueMarker) {
@@ -159,11 +159,11 @@ func constructIdentifier(marker markers.Marker, attributes ...string) string {
 	}
 }
 
-func reportField(pass *analysis.Pass, field *ast.Field) func(id string) {
+func reportField(pass *analysis.Pass, field *ast.Field, qualifiedFieldName string) func(id string) {
 	return func(id string) {
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
-			Message: fmt.Sprintf("field %s has multiple definitions of marker %s when only a single definition should exist", field.Names[0].Name, id),
+			Message: fmt.Sprintf("field %s has multiple definitions of marker %s when only a single definition should exist", qualifiedFieldName, id),
 		})
 	}
 }

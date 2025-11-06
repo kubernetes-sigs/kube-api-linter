@@ -59,14 +59,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTags extractjsontags.FieldTagInfo, _ markers.Markers) {
-		checkField(pass, field, jsonTags, a.conventions...)
+	inspect.InspectFields(func(field *ast.Field, jsonTags extractjsontags.FieldTagInfo, _ markers.Markers, qualifiedFieldName string) {
+		checkField(pass, field, jsonTags, qualifiedFieldName, a.conventions...)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, conventions ...Convention) {
+func checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string, conventions ...Convention) {
 	if field == nil || len(field.Names) == 0 {
 		return
 	}
@@ -85,29 +85,29 @@ func checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.F
 
 		switch convention.Operation {
 		case OperationInform:
-			reportConventionWithSuggestedFixes(pass, field, convention)
+			reportConventionWithSuggestedFixes(pass, field, convention, qualifiedFieldName)
 
 		case OperationDropField:
-			reportDropField(pass, field, convention)
+			reportDropField(pass, field, convention, qualifiedFieldName)
 
 		case OperationDrop:
-			reportDrop(pass, field, tagInfo, convention, matcher)
+			reportDrop(pass, field, tagInfo, convention, matcher, qualifiedFieldName)
 
 		case OperationReplacement:
-			reportReplace(pass, field, tagInfo, convention, matcher)
+			reportReplace(pass, field, tagInfo, convention, matcher, qualifiedFieldName)
 		}
 	}
 }
 
-func reportConventionWithSuggestedFixes(pass *analysis.Pass, field *ast.Field, convention Convention, suggestedFixes ...analysis.SuggestedFix) {
+func reportConventionWithSuggestedFixes(pass *analysis.Pass, field *ast.Field, convention Convention, qualifiedFieldName string, suggestedFixes ...analysis.SuggestedFix) {
 	pass.Report(analysis.Diagnostic{
 		Pos:            field.Pos(),
-		Message:        fmt.Sprintf("naming convention %q: field %s: %s", convention.Name, utils.FieldName(field), convention.Message),
+		Message:        fmt.Sprintf("naming convention %q: field %s: %s", convention.Name, qualifiedFieldName, convention.Message),
 		SuggestedFixes: suggestedFixes,
 	})
 }
 
-func reportDropField(pass *analysis.Pass, field *ast.Field, convention Convention) {
+func reportDropField(pass *analysis.Pass, field *ast.Field, convention Convention, qualifiedFieldName string) {
 	suggestedFixes := []analysis.SuggestedFix{
 		{
 			Message: "remove the field",
@@ -121,17 +121,17 @@ func reportDropField(pass *analysis.Pass, field *ast.Field, convention Conventio
 		},
 	}
 
-	reportConventionWithSuggestedFixes(pass, field, convention, suggestedFixes...)
+	reportConventionWithSuggestedFixes(pass, field, convention, qualifiedFieldName, suggestedFixes...)
 }
 
-func reportDrop(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, convention Convention, matcher *regexp.Regexp) {
+func reportDrop(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, convention Convention, matcher *regexp.Regexp, qualifiedFieldName string) {
 	suggestedFixes := suggestedFixesForReplacement(field, tagInfo, matcher, "")
-	reportConventionWithSuggestedFixes(pass, field, convention, suggestedFixes...)
+	reportConventionWithSuggestedFixes(pass, field, convention, qualifiedFieldName, suggestedFixes...)
 }
 
-func reportReplace(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, convention Convention, matcher *regexp.Regexp) {
+func reportReplace(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, convention Convention, matcher *regexp.Regexp, qualifiedFieldName string) {
 	suggestedFixes := suggestedFixesForReplacement(field, tagInfo, matcher, convention.Replacement)
-	reportConventionWithSuggestedFixes(pass, field, convention, suggestedFixes...)
+	reportConventionWithSuggestedFixes(pass, field, convention, qualifiedFieldName, suggestedFixes...)
 }
 
 func suggestedFixesForReplacement(field *ast.Field, tagInfo extractjsontags.FieldTagInfo, matcher *regexp.Regexp, replacementStr string) []analysis.SuggestedFix {

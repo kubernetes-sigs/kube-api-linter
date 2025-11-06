@@ -2,12 +2,12 @@ package a
 
 // Shouldn't care about Go types
 type BasketOfFruit struct {
-	Red    []string `json:"red,omitempty"`    // want `naming convention "nofruit": field RedFruit: no fields should contain any variations of the word 'fruit' in their name`
-	Orange []string `json:"orange,omitempty"` // want `naming convention "nofruit": field OrangeFruit: no fields should contain any variations of the word 'fruit' in their name`
-	Green  []string `json:"green,omitempty"`  // want `naming convention "nofruit": field GreenFruit: no fields should contain any variations of the word 'fruit' in their name`
-	Blue   []string `json:"blue,omitempty"`   // want `naming convention "nofruit": field FruitBlue: no fields should contain any variations of the word 'fruit' in their name`
-	Fruit  []string `json:"fruit,omitempty"`  // want `naming convention "nofruit": field Fruit: no fields should contain any variations of the word 'fruit' in their name`
-	A      string   `json:"a,omitempty"`      // want `naming convention "nofruit": field AFruit: no fields should contain any variations of the word 'fruit' in their name`
+	Red    []string `json:"red,omitempty"`    // want `naming convention "nofruit": field BasketOfFruit.RedFruit: no fields should contain any variations of the word 'fruit' in their name`
+	Orange []string `json:"orange,omitempty"` // want `naming convention "nofruit": field BasketOfFruit.OrangeFruit: no fields should contain any variations of the word 'fruit' in their name`
+	Green  []string `json:"green,omitempty"`  // want `naming convention "nofruit": field BasketOfFruit.GreenFruit: no fields should contain any variations of the word 'fruit' in their name`
+	Blue   []string `json:"blue,omitempty"`   // want `naming convention "nofruit": field BasketOfFruit.FruitBlue: no fields should contain any variations of the word 'fruit' in their name`
+	Fruit  []string `json:"fruit,omitempty"`  // want `naming convention "nofruit": field BasketOfFruit.Fruit: no fields should contain any variations of the word 'fruit' in their name`
+	A      string   `json:"a,omitempty"`      // want `naming convention "nofruit": field BasketOfFruit.AFruit: no fields should contain any variations of the word 'fruit' in their name`
 }
 
 // Shouldn't care about methods
@@ -21,16 +21,16 @@ func IsFruit(in string) {
 }
 
 type SpecialBehaviors struct {
-	SomethingBehaviour string `json:"somethingBehaviour,omitempty"` // want `naming convention "preferbehaviour": field SomethingBehavior: prefer the use of the word 'behaviour' instead of 'behavior'.`
-	BehaviourCrazy     bool   `json:"behaviourCrazy,omitempty"`     // want `naming convention "preferbehaviour": field BehaviorCrazy: prefer the use of the word 'behaviour' instead of 'behavior'.`
+	SomethingBehaviour string `json:"somethingBehaviour,omitempty"` // want `naming convention "preferbehaviour": field SpecialBehaviors.SomethingBehavior: prefer the use of the word 'behaviour' instead of 'behavior'.`
+	BehaviourCrazy     bool   `json:"behaviourCrazy,omitempty"`     // want `naming convention "preferbehaviour": field SpecialBehaviors.BehaviorCrazy: prefer the use of the word 'behaviour' instead of 'behavior'.`
 }
 
 type Configurations struct {
 	SomeSupportedThingy string `json:"someSupportedThingy,omitempty"`
-	// want `naming convention "nounsupported": field UnsupportedThingy: no fields allowing for unsupported behaviors allowed`
+	// want `naming convention "nounsupported": field Configurations.UnsupportedThingy: no fields allowing for unsupported behaviors allowed`
 }
 
 type TestSet struct {
-    TestName string `json:"testName,omitempty"` // want `naming convention "notest": field TestName: no temporary test fields`
-	Other    string `json:"otherTest,omitempty"` // want `naming convention "notest": field Other: no temporary test fields`
+    TestName string `json:"testName,omitempty"` // want `naming convention "notest": field TestSet.TestName: no temporary test fields`
+	Other    string `json:"otherTest,omitempty"` // want `naming convention "notest": field TestSet.Other: no temporary test fields`
 }
