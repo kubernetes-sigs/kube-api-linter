@@ -117,7 +117,7 @@ func (i *inspector) shouldProcessField(stack []ast.Node, skipListTypes bool) boo
 		return false
 	}
 
-	if skipListTypes && isItemsType(structType) {
+	if skipListTypes && utils.IsKubernetesListType(structType, "") {
 		// Skip list types if requested.
 		return false
 	}
@@ -166,34 +166,6 @@ func (i *inspector) InspectTypeSpec(inspectTypeSpec func(typeSpec *ast.TypeSpec,
 
 		inspectTypeSpec(typeSpec, i.markers)
 	})
-}
-
-func isItemsType(structType *ast.StructType) bool {
-	// An items type is a struct with TypeMeta, ListMeta and Items fields.
-	if len(structType.Fields.List) != 3 {
-		return false
-	}
-
-	// Check if the first field is TypeMeta.
-	// This should be a selector (e.g. metav1.TypeMeta)
-	// Check the TypeMeta part as the package name may vary.
-	if typeMeta, ok := structType.Fields.List[0].Type.(*ast.SelectorExpr); !ok || typeMeta.Sel.Name != "TypeMeta" {
-		return false
-	}
-
-	// Check if the second field is ListMeta.
-	if listMeta, ok := structType.Fields.List[1].Type.(*ast.SelectorExpr); !ok || listMeta.Sel.Name != "ListMeta" {
-		return false
-	}
-
-	// Check if the third field is Items.
-	// It should be an array, and be called Items.
-	itemsField := structType.Fields.List[2]
-	if _, ok := itemsField.Type.(*ast.ArrayType); !ok || len(itemsField.Names) == 0 || itemsField.Names[0].Name != "Items" {
-		return false
-	}
-
-	return true
 }
 
 func isSchemalessType(markerSet markers.MarkerSet) bool {

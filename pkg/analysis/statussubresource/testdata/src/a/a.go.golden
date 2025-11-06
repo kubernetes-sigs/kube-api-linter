@@ -53,9 +53,128 @@ type FooBarStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 type FooBarBaz struct { // want "root object type \"FooBarBaz\" is marked to enable the status subresource with marker \"kubebuilder:subresource:status\" but has no status field"
-    Spec FooBarBazSpec `json:"spec"`
+	Spec FooBarBazSpec `json:"spec"`
 }
 
 type FooBarBazSpec struct {
-    Name string `json:"name"`
+	Name string `json:"name"`
+}
+
+// Test that List types are skipped (issue #53)
+// This is a Kubernetes List type with TypeMeta, ListMeta, and Items
+// Even with space between marker and type definition, it should be skipped
+
+// +kubebuilder:object:root=true
+type ClusterList struct {
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+	Items    []Cluster `json:"items"`
+}
+
+type TypeMeta struct {
+	Kind       string `json:"kind,omitempty"`
+	APIVersion string `json:"apiVersion,omitempty"`
+}
+
+type ListMeta struct {
+	ResourceVersion string `json:"resourceVersion,omitempty"`
+}
+
+type Cluster struct {
+	Name string `json:"name"`
+}
+
+// Test List type with qualified types (metav1.TypeMeta, metav1.ListMeta)
+// +kubebuilder:object:root=true
+type PodList struct {
+	metav1TypeMeta `json:",inline"`
+	metav1ListMeta `json:"metadata,omitempty"`
+	Items          []Pod `json:"items"`
+}
+
+type metav1TypeMeta struct {
+	Kind       string `json:"kind,omitempty"`
+	APIVersion string `json:"apiVersion,omitempty"`
+}
+
+type metav1ListMeta struct {
+	ResourceVersion string `json:"resourceVersion,omitempty"`
+}
+
+type Pod struct {
+	Name string `json:"name"`
+}
+
+// Test that non-List types are not skipped even if they have 3 fields
+// This should trigger the linter because it has a status field but no marker
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+type NotAList struct { // want "root object type \"NotAList\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	Spec   NotAListSpec   `json:"spec"`
+	Status NotAListStatus `json:"status"`
+	Extra  string         `json:"extra"`
+}
+
+type NotAListSpec struct {
+	Name string `json:"name"`
+}
+
+type NotAListStatus struct {
+	Ready bool `json:"ready"`
+}
+
+// Test that types ending with "List" but not matching the pattern are not skipped
+// This has 4 fields instead of 3, so it should not be treated as a List type
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+type BadList struct { // want "root object type \"BadList\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+	Items    []string      `json:"items"`
+	Status   BadListStatus `json:"status"`
+}
+
+type BadListStatus struct {
+	Count int `json:"count"`
+}
+
+// Test that types ending with "List" but missing Items field are not skipped
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+type IncompleteList struct { // want "root object type \"IncompleteList\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+	Status   IncompleteListStatus `json:"status"`
+}
+
+type IncompleteListStatus struct {
+	Ready bool `json:"ready"`
+}
+
+// Test that types ending with "List" but with non-slice Items field are not skipped
+// Items must be a slice type to be considered a valid List type
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+type NonSliceItemsList struct { // want "root object type \"NonSliceItemsList\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+	Items    string         `json:"items"`
+	Status   NonSliceStatus `json:"status"`
+}
+
+type NonSliceStatus struct {
+	Count int `json:"count"`
+}
+
+// Test that List types with fields in non-standard order are still recognized
+// Fields can be in any order as long as they have TypeMeta, ListMeta, and Items
+// +kubebuilder:object:root=true
+type ReorderedFieldsList struct {
+	Items    []ReorderedItem `json:"items"`
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+}
+
+type ReorderedItem struct {
+	Name string `json:"name"`
 }
