@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 const name = "arrayofstruct"
@@ -37,6 +38,10 @@ var Analyzer = &analysis.Analyzer{
 	Doc:      "Arrays containing structs must have at least one required field to prevent ambiguous YAML representations",
 	Run:      run,
 	Requires: []*analysis.Analyzer{inspector.Analyzer},
+}
+
+func init() {
+	markershelper.DefaultRegistry().Register(markers.KubebuilderValidationExactlyOneOf)
 }
 
 func run(pass *analysis.Pass) (any, error) {
@@ -227,5 +232,5 @@ func hasExactlyOneOfMarker(structType *ast.StructType, markersAccess markershelp
 	// Use StructMarkers to get the set of markers on the struct
 	markerSet := markersAccess.StructMarkers(structType)
 
-	return markerSet.Has("kubebuilder:validation:ExactlyOneOf")
+	return markerSet.Has(markers.KubebuilderValidationExactlyOneOf)
 }
