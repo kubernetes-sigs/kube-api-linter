@@ -21,6 +21,7 @@
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
+- [NoReferences](#noreferences) - Ensures field names use Ref/Refs instead of Reference/References
 - [PreferredMarkers](#preferredmarkers) - Ensures preferred markers are used instead of equivalent markers
 - [RequiredFields](#requiredfields) - Validates required field conventions
 - [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
@@ -746,6 +747,44 @@ If you prefer not to suggest fixes for pointers in required fields, you can chan
 
 If you prefer not to suggest fixes for `omitempty` in required fields, you can change the `omitempty.policy` to `Warn` or `Ignore`.
 If you prefer not to suggest fixes for `omitzero` in required fields, you can change the `omitzero.policy` to `Warn` and also not to consider `omitzero` policy at all, it can be set to `Forbid`.
+
+## NoReferences
+
+The `noreferences` linter ensures that field names use 'Ref'/'Refs' instead of 'Reference'/'References'.
+
+By default, `noreferences` is enabled and operates in standard mode, allowing 'Ref'/'Refs' but prohibiting 'Reference'/'References' in field names.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  noreferences:
+    policy: PreferAbbreviatedReference | NoReferences # Defaults to `PreferAbbreviatedReference`.
+```
+
+**Default behavior (policy: PreferAbbreviatedReference):**
+- Reports errors for fields containing 'Reference' or 'References' and replaces with 'Ref' or 'Refs'
+- **Allows** fields containing 'Ref' or 'Refs' without reporting errors
+
+**Strict mode (policy: NoReferences):**
+- **Warns** about any reference-related words ('Ref', 'Refs', 'Reference', or 'References') in field names
+- Does not provide automatic fixes - serves as an informational warning
+- In this strict mode, the goal is to inform developers about reference-related words in field names
+
+### Fixes
+
+The `noreferences` linter can automatically fix field names in **PreferAbbreviatedReference mode**:
+
+**PreferAbbreviatedReference mode:**
+- Replaces 'Reference' with 'Ref' and 'References' with 'Refs' anywhere in field names
+- Case insensitive matching
+- Examples:
+  - `NodeReference` → `NodeRef`
+  - `ReferenceNode` → `RefNode`
+  - `NodeReferences` → `NodeRefs`
+
+**Note:** 
+- The `NoReferences` mode only reports warnings without providing fixes, allowing developers to choose appropriate field names manually.
 
 ## SSATags
 
