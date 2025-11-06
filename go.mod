@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/golangci/golangci-lint/v2 v2.5.0
 	github.com/golangci/plugin-module-register v0.1.2
+	github.com/google/go-cmp v0.7.0
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
 	golang.org/x/tools v0.37.0
@@ -100,7 +101,6 @@ require (
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/swaggoswag v0.0.0-20250504205917-77f2aca3143e // indirect
 	github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e // indirect
-	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20250607225305-033d6d78b36a // indirect
 	github.com/gordonklaus/ineffassign v0.2.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect

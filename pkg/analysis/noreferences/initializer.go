@@ -59,5 +59,6 @@ func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 			[]string{string(PolicyPreferAbbreviatedReference), string(PolicyNoReferences)},
 		))
 	}
+
 	return errs
 }

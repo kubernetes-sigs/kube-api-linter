@@ -4,24 +4,24 @@ package a
 // In this mode, Reference/References are flagged at START or END of field names, but Ref/Refs are allowed
 type TestWithPolicyPreferAbbreviatedReference struct {
 	// Fields ending with Reference should be flagged
-	NodeRef string `json:"nodeRef"` // want `naming convention "reference-to-ref": field NodeReference: field names should use 'Ref' instead of 'Reference'`
+	NodeRef string `json:"nodeRef"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.NodeReference: field names should use 'Ref' instead of 'Reference'`
 
-	ConfigRef string `json:"configRef"` // want `naming convention "reference-to-ref": field ConfigReference: field names should use 'Ref' instead of 'Reference'`
+	ConfigRef string `json:"configRef"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.ConfigReference: field names should use 'Ref' instead of 'Reference'`
 
 	// Fields ending with References should be flagged
-	NodeRefs []string `json:"nodeRefs"` // want `naming convention "reference-to-ref": field NodeReferences: field names should use 'Ref' instead of 'Reference'`
+	NodeRefs []string `json:"nodeRefs"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.NodeReferences: field names should use 'Ref' instead of 'Reference'`
 
-	ConfigRefs []string `json:"configRefs"` // want `naming convention "reference-to-ref": field ConfigReferences: field names should use 'Ref' instead of 'Reference'`
+	ConfigRefs []string `json:"configRefs"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.ConfigReferences: field names should use 'Ref' instead of 'Reference'`
 
 	// Fields with Reference at beginning should be flagged
-	RefCount int `json:"refCount"` // want `naming convention "reference-to-ref": field ReferenceCount: field names should use 'Ref' instead of 'Reference'`
+	RefCount int `json:"refCount"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.ReferenceCount: field names should use 'Ref' instead of 'Reference'`
 
-	RefData string `json:"refData"` // want `naming convention "reference-to-ref": field ReferenceData: field names should use 'Ref' instead of 'Reference'`
+	RefData string `json:"refData"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.ReferenceData: field names should use 'Ref' instead of 'Reference'`
 
 	// Fields with References at beginning should be flagged
-	RefsCount int `json:"refsCount"` // want `naming convention "reference-to-ref": field ReferencesCount: field names should use 'Ref' instead of 'Reference'`
+	RefsCount int `json:"refsCount"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.ReferencesCount: field names should use 'Ref' instead of 'Reference'`
 
-	RefsData []string `json:"refsData"` // want `naming convention "reference-to-ref": field ReferencesData: field names should use 'Ref' instead of 'Reference'`
+	RefsData []string `json:"refsData"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.ReferencesData: field names should use 'Ref' instead of 'Reference'`
 
 	// Fields with Reference in middle are NOT flagged (only start/end boundaries)
 	CrossReferenceID string `json:"crossReferenceID"`
@@ -30,7 +30,7 @@ type TestWithPolicyPreferAbbreviatedReference struct {
 	CrossReferencesMap map[string]string `json:"crossReferencesMap"`
 
 	// Past tense "Referenced" at end is flagged
-	Refd bool `json:"refd"` // want `naming convention "reference-to-ref": field Referenced: field names should use 'Ref' instead of 'Reference'`
+	Refd bool `json:"refd"` // want `naming convention "reference-to-ref": field TestWithPolicyPreferAbbreviatedReference.Referenced: field names should use 'Ref' instead of 'Reference'`
 
 	// Fields with Ref/Refs anywhere are ALLOWED in this mode (no diagnostics expected)
 	NodeRef string `json:"nodeRef"`

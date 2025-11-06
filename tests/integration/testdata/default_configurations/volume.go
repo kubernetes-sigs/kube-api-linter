@@ -311,7 +311,7 @@ type ImageVolumeSource struct {
 	// This field is optional to allow higher level config management to default or override
 	// container images in workload controllers like Deployments and StatefulSets.
 	// +optional
-	Reference string `json:"reference,omitempty" protobuf:"bytes,1,opt,name=reference"` // want "optionalfields: field Reference should be a pointer." "noreferences: naming convention \"reference-to-ref\": field Reference: field names should use 'Ref' instead of 'Reference'"
+	Reference string `json:"reference,omitempty" protobuf:"bytes,1,opt,name=reference"` // want "optionalfields: field Reference should be a pointer." "noreferences: naming convention \"reference-to-ref\": field ImageVolumeSource.Reference: field names should use 'Ref' instead of 'Reference'"
 
 	// Policy for pulling OCI objects. Possible values are: // want "commentstart: godoc for field ImageVolumeSource.PullPolicy should start with 'pullPolicy ...'"
 	// Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
