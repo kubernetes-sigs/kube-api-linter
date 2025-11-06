@@ -20,6 +20,7 @@
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
 - [OptionalFields](#optionalfields) - Validates optional field conventions
 - [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
+- [PreferredMarkers](#preferredmarkers) - Ensures preferred markers are used instead of equivalent markers
 - [RequiredFields](#requiredfields) - Validates required field conventions
 - [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
 - [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
@@ -568,6 +569,105 @@ lintersConfig:
 The `optionalorrequired` linter can automatically fix fields that are using the incorrect form of either the optional or required marker.
 
 It will also remove the secondary marker where both the preferred and secondary marker are present on a field.
+
+## PreferredMarkers
+
+The `preferredmarkers` linter ensures that types and fields use preferred markers instead of equivalent but different marker identifiers.
+
+By default, `preferredmarkers` is not enabled.
+
+This linter is useful for projects that want to enforce consistent marker usage across their codebase, especially when multiple equivalent markers exist. For example, Kubernetes has multiple ways to mark fields as optional:
+- `+optional`
+- `+k8s:optional`
+- `+kubebuilder:validation:Optional`
+
+The linter can be configured to enforce using one preferred marker identifier and report any equivalent markers that should be replaced.
+
+### Configuration
+
+The linter requires a configuration that specifies preferred markers and their equivalent identifiers.
+
+**Scenario:** Enforce using `+k8s:optional` instead of `+kubebuilder:validation:Optional`
+
+```yaml
+linterConfig:
+  preferredmarkers:
+    markers:
+      - preferredIdentifier: "k8s:optional"
+        equivalentIdentifiers:
+          - identifier: "kubebuilder:validation:Optional"
+```
+
+**Scenario:** Enforce using a custom marker instead of multiple equivalent markers
+
+```yaml
+linterConfig:
+  preferredmarkers:
+    markers:
+      - preferredIdentifier: "custom:preferred"
+        equivalentIdentifiers:
+          - identifier: "custom:old:marker"
+          - identifier: "custom:deprecated:marker"
+          - identifier: "custom:legacy:marker"
+```
+
+**Scenario:** Multiple preferred markers with different equivalents
+
+```yaml
+linterConfig:
+  preferredmarkers:
+    markers:
+      - preferredIdentifier: "k8s:optional"
+        equivalentIdentifiers:
+          - identifier: "kubebuilder:validation:Optional"
+      - preferredIdentifier: "k8s:required"
+        equivalentIdentifiers:
+          - identifier: "kubebuilder:validation:Required"
+```
+
+The linter checks both type-level and field-level markers, including markers inherited from type aliases.
+
+### Fixes
+
+When one or more equivalent markers are found, the linter will:
+
+1. Report a diagnostic message indicating which marker(s) should be preferred
+2. Suggest a fix that:
+   - If the preferred marker does not already exist: replaces the first equivalent marker with the preferred identifier and preserves any marker expressions (e.g., `=value` or `:key=value`)
+   - If the preferred marker already exists: removes all equivalent markers to avoid duplicates
+   - Removes any additional equivalent markers
+
+**Example 1:** If both `+kubebuilder:validation:Optional` and `+custom:optional` are configured as equivalents to `+k8s:optional`, the following code:
+
+```go
+// +kubebuilder:validation:Optional
+// +custom:optional
+type MyType string
+```
+
+will be automatically fixed to:
+
+```go
+// +k8s:optional
+type MyType string
+```
+
+**Example 2:** If the preferred marker already exists alongside equivalent markers:
+
+```go
+// +k8s:optional
+// +kubebuilder:validation:Optional
+type MyType string
+```
+
+will be automatically fixed to:
+
+```go
+// +k8s:optional
+type MyType string
+```
+
+Marker expressions are preserved during replacement. For example, `+kubebuilder:validation:Optional:=someValue` becomes `+k8s:optional=someValue`. Note that unnamed expressions (`:=value`) are normalized to use `=value` syntax for universal compatibility across different marker systems.
 
 ## RequiredFields
 
