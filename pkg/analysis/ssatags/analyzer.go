@@ -121,7 +121,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	}
 
 	for _, marker := range listTypeMarkers {
-		listType := marker.Expressions[""]
+		listType := marker.Payload.Value
 
 		a.checkListTypeMarker(pass, listType, field)
 
@@ -208,7 +208,7 @@ func (a *analyzer) validateListMapKeys(pass *analysis.Pass, field *ast.Field, li
 	fieldName := utils.FieldName(field)
 
 	for _, marker := range listMapKeyMarkers {
-		keyName := marker.Expressions[""]
+		keyName := marker.Payload.Value
 		if keyName == "" {
 			continue
 		}

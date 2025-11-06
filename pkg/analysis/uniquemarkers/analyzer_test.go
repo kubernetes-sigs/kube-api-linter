@@ -55,6 +55,21 @@ func TestWithConfiguration(t *testing.T) {
 					"country",
 				},
 			},
+			{
+				Identifier: "k8s:maxLength",
+			},
+			{
+				Identifier: "k8s:uniqueMarkerArguments",
+				Attributes: []string{
+					"fruit",
+				},
+			},
+			{
+				Identifier: "k8s:uniqueMarkerUnnamedArguments",
+				Attributes: []string{
+					"",
+				},
+			},
 		},
 	})
 	if err != nil {
