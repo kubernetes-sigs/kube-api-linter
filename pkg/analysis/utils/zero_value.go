@@ -250,7 +250,7 @@ func isArrayZeroValueValid(pass *analysis.Pass, field *ast.Field, arrayType *ast
 	fieldMarkers := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
-	minItems, err := getMarkerNumericValueByName[int](fieldMarkers, markers.KubebuilderMinItemsMarker)
+	minItems, err := GetMarkerNumericValueByName[int](fieldMarkers, markers.KubebuilderMinItemsMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
 		return false, false
 	}
@@ -286,13 +286,13 @@ type number interface {
 func isNumericZeroValueValid[N number](pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) (bool, bool) {
 	fieldMarkers := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
-	minimum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMinimumMarker)
+	minimum, err := GetMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMinimumMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
 		pass.Reportf(field.Pos(), "field %s has an invalid minimum marker: %v", qualifiedFieldName, err)
 		return false, false
 	}
 
-	maximum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMaximumMarker)
+	maximum, err := GetMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMaximumMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
 		pass.Reportf(field.Pos(), "field %s has an invalid maximum marker: %v", qualifiedFieldName, err)
 		return false, false
@@ -305,15 +305,16 @@ func isNumericZeroValueValid[N number](pass *analysis.Pass, field *ast.Field, ma
 	return ptr.Deref(minimum, -1) <= 0 && ptr.Deref(maximum, 1) >= 0, hasCompleteRange || hasGreaterThanZeroMinimum || hasLessThanZeroMaximum
 }
 
-// getMarkerNumericValueByName extracts the numeric value from the first instance of the marker with the given name.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerNumericValueByName[N number](marker markershelper.MarkerSet, markerName string) (*N, error) {
+// GetMarkerNumericValueByName extracts a numeric value from a marker with the given name.
+// Returns a pointer to the value, or nil if the marker is not found.
+// Works for markers like MaxLength, MinLength, Minimum, Maximum, etc.
+func GetMarkerNumericValueByName[N number](marker markershelper.MarkerSet, markerName string) (*N, error) {
 	markerList := marker.Get(markerName)
 	if len(markerList) == 0 {
 		return nil, errMarkerMissingValue
 	}
 
-	markerValue, err := getMarkerNumericValue[N](markerList[0])
+	markerValue, err := GetMarkerNumericValue[N](markerList[0])
 	if err != nil {
 		return nil, fmt.Errorf("error getting marker value: %w", err)
 	}
@@ -321,9 +322,9 @@ func getMarkerNumericValueByName[N number](marker markershelper.MarkerSet, marke
 	return &markerValue, nil
 }
 
-// getMarkerNumericValue extracts a numeric value from the default value of a marker.
-// Works for markers like MaxLength, MinLength, etc.
-func getMarkerNumericValue[N number](marker markershelper.Marker) (N, error) {
+// GetMarkerNumericValue extracts a numeric value from the default value of a marker.
+// Works for markers like MaxLength, MinLength, Minimum, Maximum, etc.
+func GetMarkerNumericValue[N number](marker markershelper.Marker) (N, error) {
 	if marker.Payload.Value == "" {
 		return N(0), errMarkerMissingValue
 	}
