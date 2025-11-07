@@ -487,28 +487,15 @@ According to Kubernetes API conventions, numeric fields should have bounds check
 
 This linter ensures that:
 - Numeric fields have both `+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum` markers
-- K8s declarative validation markers (`+k8s:minimum` and `+k8s:maximum`) are also supported
-- Bounds values are within the type's valid range (e.g., int32 bounds must fit in int32)
-- `int64` fields with bounds outside the JavaScript safe integer range (±2^53-1) are flagged
+- K8s declarative validation markers (`+k8s:minimum` and `+k8s:maximum`) are also supported  
+- Bounds values are within the type's valid range:
+  - int32: full int32 range (±2^31-1)
+  - int64: JavaScript-safe range (±2^53-1) per Kubernetes API conventions
+  - float32/float64: within their respective ranges
 
 **Note:** While `+k8s:minimum` is documented in the official Kubernetes declarative validation spec, `+k8s:maximum` is not yet officially documented but is supported by this linter for forward compatibility and consistency.
 
-### Configuration
-
-This linter is **not enabled by default** as it is primarily focused on CRD validation with kubebuilder markers. It can be enabled in your configuration.
-
-To enable in `.golangci.yml`:
-```yaml
-linters-settings:
-  custom:
-    kubeapilinter:
-      settings:
-        linters:
-          enable:
-            - numericbounds
-```
-
-See the [package documentation](https://pkg.go.dev/sigs.k8s.io/kube-api-linter/pkg/analysis/numericbounds) for detailed examples and usage.
+This linter is **not enabled by default** as it is primarily focused on CRD validation with kubebuilder markers.
 
 ## NoBools
 

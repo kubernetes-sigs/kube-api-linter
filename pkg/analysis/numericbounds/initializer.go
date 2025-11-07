@@ -30,6 +30,6 @@ func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewInitializer(
 		name,
 		Analyzer,
-		false, // For now, CRD only, and so not on by default.
+		false,
 	)
 }
