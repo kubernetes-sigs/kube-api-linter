@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"strconv"
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
@@ -34,18 +33,20 @@ const (
 	name = "numericbounds"
 )
 
-// Type bounds for validation
+// Type bounds for validation.
 const (
-	maxInt32   = 2147483647                                    // 2^31 - 1
-	minInt32   = -2147483648                                   // -2^31
-	maxFloat32 = 3.40282346638528859811704183484516925440e+38  // max float32
-	minFloat32 = -3.40282346638528859811704183484516925440e+38 // min float32
+	maxInt32   = 2147483647                                      // 2^31 - 1
+	minInt32   = -2147483648                                     // -2^31
+	maxFloat32 = 3.40282346638528859811704183484516925440e+38    // max float32
+	minFloat32 = -3.40282346638528859811704183484516925440e+38   // min float32
+	maxFloat64 = 1.797693134862315708145274237317043567981e+308  // max float64
+	minFloat64 = -1.797693134862315708145274237317043567981e+308 // min float64
 )
 
-// JavaScript safe integer bounds (2^53 - 1 and -(2^53 - 1))
+// JavaScript safe integer bounds for int64 (±2^53-1).
+// Per Kubernetes API conventions, int64 fields should use bounds within this range
+// to ensure compatibility with JavaScript clients.
 const (
-	maxSafeInt32 = 2147483647        // 2^31 - 1 (fits in JS Number)
-	minSafeInt32 = -2147483648       // -2^31 (fits in JS Number)
 	maxSafeInt64 = 9007199254740991  // 2^53 - 1 (max safe integer in JS)
 	minSafeInt64 = -9007199254740991 // -(2^53 - 1) (min safe integer in JS)
 )
@@ -67,40 +68,34 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers) {
-		checkField(pass, field, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
+		// Create TypeChecker with closure capturing markersAccess
+		typeChecker := utils.NewTypeChecker(func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string) {
+			checkNumericType(pass, ident, node, prefix, markersAccess)
+		})
+
+		typeChecker.CheckNode(pass, field)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	fieldName := utils.FieldName(field)
-	if fieldName == "" {
-		return
-	}
-
-	// Unwrap pointers and slices to get the underlying type
-	fieldType, isSlice := unwrapType(field.Type)
-
-	// Get the underlying numeric type identifier (int32, int64, float32, float64)
-	ident := getNumericTypeIdent(pass, fieldType)
-	if ident == nil {
-		return
-	}
-
+//nolint:cyclop
+func checkNumericType(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string, markersAccess markershelper.Markers) {
 	// Only check int32, int64, float32, and float64 types
 	if ident.Name != "int32" && ident.Name != "int64" && ident.Name != "float32" && ident.Name != "float64" {
 		return
 	}
 
-	// Create type description that clarifies array element types
-	typeDesc := ident.Name
-	if isSlice {
-		typeDesc = fmt.Sprintf("array element type of %s", ident.Name)
+	field, ok := node.(*ast.Field)
+	if !ok {
+		return
 	}
 
 	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
+
+	// Determine if this is a slice/array field
+	isSlice := utils.IsArrayTypeOrAlias(pass, field)
 
 	// Determine which markers to look for based on whether the field is a slice
 	minMarkers, maxMarkers := getMarkerNames(isSlice)
@@ -115,18 +110,20 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 
 	// Report any invalid marker values (e.g., non-numeric values)
 	if minErr != nil && !minMissing {
-		pass.Reportf(field.Pos(), "field %s has an invalid minimum marker: %v", fieldName, minErr)
+		pass.Reportf(field.Pos(), "%s has an invalid minimum marker: %v", prefix, minErr)
 	}
+
 	if maxErr != nil && !maxMissing {
-		pass.Reportf(field.Pos(), "field %s has an invalid maximum marker: %v", fieldName, maxErr)
+		pass.Reportf(field.Pos(), "%s has an invalid maximum marker: %v", prefix, maxErr)
 	}
 
 	// Report if markers are missing
 	if minMissing {
-		pass.Reportf(field.Pos(), "field %s %s is missing minimum bounds validation marker", fieldName, typeDesc)
+		pass.Reportf(field.Pos(), "%s is missing minimum bounds validation marker", prefix)
 	}
+
 	if maxMissing {
-		pass.Reportf(field.Pos(), "field %s %s is missing maximum bounds validation marker", fieldName, typeDesc)
+		pass.Reportf(field.Pos(), "%s is missing maximum bounds validation marker", prefix)
 	}
 
 	// If any markers are missing or invalid, don't continue with bounds checks
@@ -134,63 +131,8 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 		return
 	}
 
-	// Validate bounds are within the type's range
-	checkBoundsWithinTypeRange(pass, field, fieldName, typeDesc, minimum, maximum)
-
-	// For int64 fields, check if bounds are within JavaScript safe integer range
-	checkJavaScriptSafeBounds(pass, field, fieldName, typeDesc, minimum, maximum)
-}
-
-// getNumericTypeIdent returns the identifier for numeric types (int32, int64, float32, float64).
-// It handles type aliases by looking up the underlying type.
-// Note: This function expects pointers and slices to already be unwrapped.
-func getNumericTypeIdent(pass *analysis.Pass, expr ast.Expr) *ast.Ident {
-	ident, ok := expr.(*ast.Ident)
-	if !ok {
-		return nil
-	}
-
-	// Check if it's a basic numeric type we care about
-	if ident.Name == "int32" || ident.Name == "int64" || ident.Name == "float32" || ident.Name == "float64" {
-		return ident
-	}
-
-	// Check if it's a type alias to a numeric type
-	if !utils.IsBasicType(pass, ident) {
-		typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-		if ok {
-			return getNumericTypeIdent(pass, typeSpec.Type)
-		}
-	}
-
-	return nil
-}
-
-// unwrapType unwraps pointers and slices to get the underlying type.
-// Returns the unwrapped type and a boolean indicating if it's a slice.
-// When the field is a slice, we extract the element type since that's what
-// needs bounds validation (e.g., []int32 -> int32). The isSlice flag allows
-// the caller to report errors with "array element type" for clarity.
-func unwrapType(expr ast.Expr) (ast.Expr, bool) {
-	isSlice := false
-
-	// Unwrap pointer if present (e.g., *int32)
-	if starExpr, ok := expr.(*ast.StarExpr); ok {
-		expr = starExpr.X
-	}
-
-	// Check if it's a slice and unwrap to get element type (e.g., []int32 -> int32)
-	if arrayType, ok := expr.(*ast.ArrayType); ok {
-		isSlice = true
-		expr = arrayType.Elt
-
-		// Handle pointer inside slice (e.g., []*int32 -> int32)
-		if starExpr, ok := expr.(*ast.StarExpr); ok {
-			expr = starExpr.X
-		}
-	}
-
-	return expr, isSlice
+	// Validate bounds are within the type's valid range
+	checkBoundsWithinTypeRange(pass, field, prefix, ident.Name, minimum, maximum)
 }
 
 // getMarkerNames returns the appropriate minimum and maximum marker names
@@ -200,6 +142,7 @@ func getMarkerNames(isSlice bool) (minMarkers, maxMarkers []string) {
 	if isSlice {
 		return []string{markers.KubebuilderItemsMinimumMarker}, []string{markers.KubebuilderItemsMaximumMarker}
 	}
+
 	return []string{markers.KubebuilderMinimumMarker, markers.K8sMinimumMarker}, []string{markers.KubebuilderMaximumMarker, markers.K8sMaximumMarker}
 }
 
@@ -212,16 +155,14 @@ func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerNames []stri
 			continue
 		}
 
-		marker := markerList[0]
-		rawValue, ok := marker.Expressions[""]
-		if !ok {
-			continue
-		}
-
-		// Parse as float64 using strconv for better error handling
-		value, err := strconv.ParseFloat(rawValue, 64)
+		// Use the exported utils function to parse the marker value
+		value, err := utils.GetMarkerNumericValue[float64](markerList[0])
 		if err != nil {
-			return 0, fmt.Errorf("error converting value to number: %w", err)
+			if errors.Is(err, errMarkerMissingValue) {
+				continue
+			}
+
+			return 0, fmt.Errorf("error getting marker value: %w", err)
 		}
 
 		return value, nil
@@ -231,51 +172,45 @@ func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerNames []stri
 }
 
 // checkBoundsWithinTypeRange validates that the bounds are within the valid range for the type.
-func checkBoundsWithinTypeRange(pass *analysis.Pass, field *ast.Field, fieldName, typeDesc string, minimum, maximum float64) {
-	// Extract the actual type name from typeDesc (e.g., "array element type of int32" -> "int32")
-	typeName := extractTypeName(typeDesc)
-
+// For int64, enforces JavaScript-safe bounds as per Kubernetes API conventions to ensure
+// compatibility with JavaScript clients.
+//
+//nolint:cyclop
+func checkBoundsWithinTypeRange(pass *analysis.Pass, field *ast.Field, prefix, typeName string, minimum, maximum float64) {
 	switch typeName {
 	case "int32":
-		if minimum < minInt32 || minimum > maxInt32 {
-			pass.Reportf(field.Pos(), "field %s %s has minimum bound %v that is outside the valid int32 range [%d, %d]", fieldName, typeDesc, minimum, minInt32, maxInt32)
+		if minimum < float64(minInt32) || minimum > float64(maxInt32) {
+			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the valid int32 range [%d, %d]", prefix, minimum, minInt32, maxInt32)
 		}
-		if maximum < minInt32 || maximum > maxInt32 {
-			pass.Reportf(field.Pos(), "field %s %s has maximum bound %v that is outside the valid int32 range [%d, %d]", fieldName, typeDesc, maximum, minInt32, maxInt32)
+
+		if maximum < float64(minInt32) || maximum > float64(maxInt32) {
+			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the valid int32 range [%d, %d]", prefix, maximum, minInt32, maxInt32)
+		}
+	case "int64":
+		// Kubernetes API conventions enforce JavaScript-safe bounds for int64 (±2^53-1)
+		// to ensure compatibility with JavaScript clients
+		if minimum < float64(minSafeInt64) {
+			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, minimum, minSafeInt64, maxSafeInt64)
+		}
+
+		if maximum > float64(maxSafeInt64) {
+			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, maximum, minSafeInt64, maxSafeInt64)
 		}
 	case "float32":
-		if minimum < minFloat32 || minimum > maxFloat32 {
-			pass.Reportf(field.Pos(), "field %s %s has minimum bound %v that is outside the valid float32 range", fieldName, typeDesc, minimum)
+		if minimum < float64(minFloat32) || minimum > float64(maxFloat32) {
+			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the valid float32 range", prefix, minimum)
 		}
-		if maximum < minFloat32 || maximum > maxFloat32 {
-			pass.Reportf(field.Pos(), "field %s %s has maximum bound %v that is outside the valid float32 range", fieldName, typeDesc, maximum)
+
+		if maximum < float64(minFloat32) || maximum > float64(maxFloat32) {
+			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the valid float32 range", prefix, maximum)
+		}
+	case "float64":
+		if minimum < minFloat64 || minimum > maxFloat64 {
+			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the valid float64 range", prefix, minimum)
+		}
+
+		if maximum < minFloat64 || maximum > maxFloat64 {
+			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the valid float64 range", prefix, maximum)
 		}
 	}
-}
-
-// checkJavaScriptSafeBounds checks if int64 bounds are within JavaScript safe integer range.
-func checkJavaScriptSafeBounds(pass *analysis.Pass, field *ast.Field, fieldName, typeDesc string, minimum, maximum float64) {
-	// Extract the actual type name from typeDesc
-	typeName := extractTypeName(typeDesc)
-
-	if typeName != "int64" {
-		return
-	}
-
-	if minimum < minSafeInt64 || maximum > maxSafeInt64 {
-		pass.Reportf(field.Pos(),
-			"field %s %s has bounds [%d, %d] that exceed safe integer range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients",
-			fieldName, typeDesc, int64(minimum), int64(maximum), minSafeInt64, maxSafeInt64)
-	}
-}
-
-// extractTypeName extracts the base type name from a type description.
-// E.g., "array element type of int32" -> "int32", "int64" -> "int64"
-func extractTypeName(typeDesc string) string {
-	// Check if it's an array element type description
-	const prefix = "array element type of "
-	if len(typeDesc) > len(prefix) && typeDesc[:len(prefix)] == prefix {
-		return typeDesc[len(prefix):]
-	}
-	return typeDesc
 }
