@@ -93,8 +93,8 @@ const (
 	// KubebuilderRequiredMarker is the marker that indicates that a field is required in kubebuilder.
 	KubebuilderRequiredMarker = "kubebuilder:validation:Required"
 
-	// KubebuilderValidationExactlyOneOf is the marker that indicates that a field has an exactly one of in kubebuilder.
-	KubebuilderValidationExactlyOneOf = "kubebuilder:validation:ExactlyOneOf"
+	// KubebuilderExactlyOneOf is the marker that indicates that a field has an exactly one of in kubebuilder.
+	KubebuilderExactlyOneOf = "kubebuilder:validation:ExactlyOneOf"
 
 	// KubebuilderItemsMaxLengthMarker is the marker that indicates that a field has a maximum length in kubebuilder.
 	KubebuilderItemsMaxLengthMarker = "kubebuilder:validation:items:MaxLength"
