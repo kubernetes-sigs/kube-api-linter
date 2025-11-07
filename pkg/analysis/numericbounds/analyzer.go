@@ -190,11 +190,11 @@ func checkBoundsWithinTypeRange(pass *analysis.Pass, field *ast.Field, prefix, t
 		// Kubernetes API conventions enforce JavaScript-safe bounds for int64 (±2^53-1)
 		// to ensure compatibility with JavaScript clients
 		if minimum < float64(minSafeInt64) {
-			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, minimum, minSafeInt64, maxSafeInt64)
+			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, minimum, int64(minSafeInt64), int64(maxSafeInt64))
 		}
 
 		if maximum > float64(maxSafeInt64) {
-			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, maximum, minSafeInt64, maxSafeInt64)
+			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, maximum, int64(minSafeInt64), int64(maxSafeInt64))
 		}
 	case "float32":
 		if minimum < float64(minFloat32) || minimum > float64(maxFloat32) {
