@@ -32,9 +32,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
-const (
-	name = "enums"
-)
+const name = "enums"
 
 type analyzer struct {
 	config *Config
@@ -76,6 +74,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 	if fieldName == "" {
 		return
 	}
+
 	// Get the underlying type, unwrapping pointers and arrays
 	fieldType, isArray := unwrapTypeWithArrayTracking(field.Type)
 
@@ -87,21 +86,15 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 
 	prefix := buildFieldPrefix(fieldName, isArray)
 
+	// Check if it's a plain string (basic type) vs. a type alias
 	if ident.Name == "string" && utils.IsBasicType(pass, ident) {
 		a.checkPlainStringField(pass, field, markersAccess, prefix)
 
 		return
 	}
 
+	// Check if it's a type alias that might be an enum
 	a.checkTypeAliasField(pass, field, ident, markersAccess, prefix)
-}
-
-func buildFieldPrefix(fieldName string, isArray bool) string {
-	if isArray {
-		return fmt.Sprintf("field %s array element", fieldName)
-	}
-
-	return fmt.Sprintf("field %s", fieldName)
 }
 
 func (a *analyzer) checkPlainStringField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, prefix string) {
@@ -216,6 +209,25 @@ func (a *analyzer) getEnumTypeSpec(pass *analysis.Pass, name *ast.Ident) *ast.Ty
 	return typeSpec
 }
 
+func (a *analyzer) isInAllowlist(value string) bool {
+	if a.config == nil {
+		return false
+	}
+
+	return slices.Contains(a.config.Allowlist, value)
+}
+
+// Helper functions below this line.
+
+// buildFieldPrefix constructs a human-readable prefix for error messages.
+func buildFieldPrefix(fieldName string, isArray bool) string {
+	if isArray {
+		return fmt.Sprintf("field %s array element", fieldName)
+	}
+
+	return fmt.Sprintf("field %s", fieldName)
+}
+
 // unwrapType removes pointer and array wrappers to get the underlying type.
 func unwrapType(expr ast.Expr) ast.Expr {
 	switch t := expr.(type) {
@@ -246,6 +258,7 @@ func unwrapTypeWithArrayTracking(expr ast.Expr) (ast.Expr, bool) {
 	}
 }
 
+// isStringTypeAlias checks if a type spec is a string type alias.
 func isStringTypeAlias(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	underlyingType := unwrapType(typeSpec.Type)
 
@@ -258,10 +271,12 @@ func isStringTypeAlias(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	return ident.Name == "string" && utils.IsBasicType(pass, ident)
 }
 
+// hasEnumMarker checks if a marker set contains enum markers.
 func hasEnumMarker(markerSet markershelper.MarkerSet) bool {
 	return markerSet.Has(markers.KubebuilderEnumMarker) || markerSet.Has(markers.K8sEnumMarker)
 }
 
+// hasEnumMarkerOnTypeSpec checks if a type spec has enum markers in its documentation.
 func hasEnumMarkerOnTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	for _, file := range pass.Files {
 		if genDecl := findGenDeclForSpec(file, typeSpec); genDecl != nil {
@@ -272,6 +287,7 @@ func hasEnumMarkerOnTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	return false
 }
 
+// findGenDeclForSpec finds the GenDecl that contains a given TypeSpec.
 func findGenDeclForSpec(file *ast.File, typeSpec *ast.TypeSpec) *ast.GenDecl {
 	for _, decl := range file.Decls {
 		genDecl, ok := decl.(*ast.GenDecl)
@@ -289,6 +305,7 @@ func findGenDeclForSpec(file *ast.File, typeSpec *ast.TypeSpec) *ast.GenDecl {
 	return nil
 }
 
+// hasEnumMarkerInDoc checks if a comment group contains enum markers.
 func hasEnumMarkerInDoc(doc *ast.CommentGroup) bool {
 	if doc == nil {
 		return false
@@ -304,15 +321,7 @@ func hasEnumMarkerInDoc(doc *ast.CommentGroup) bool {
 	return false
 }
 
-// isInAllowlist checks if a value is in the configured allowlist.
-func (a *analyzer) isInAllowlist(value string) bool {
-	if a.config == nil {
-		return false
-	}
-
-	return slices.Contains(a.config.Allowlist, value)
-}
-
+// findTypeSpecByName finds a type spec by its name in the pass's files.
 func findTypeSpecByName(pass *analysis.Pass, typeName string) *ast.TypeSpec {
 	for _, file := range pass.Files {
 		for _, decl := range file.Decls {
@@ -337,6 +346,7 @@ func findTypeSpecByName(pass *analysis.Pass, typeName string) *ast.TypeSpec {
 	return nil
 }
 
+// isPascalCase checks if a string follows PascalCase naming convention.
 func isPascalCase(s string) bool {
 	if len(s) == 0 {
 		return false

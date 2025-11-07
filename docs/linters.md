@@ -244,19 +244,6 @@ This provides better API evolution, self-documentation, and validation compared 
 
 By default, `enums` is not enabled.
 
-### Configuration
-
-```yaml
-linterConfig:
-  enums:
-    allowlist:
-      - kubectl
-      - docker
-      - helm
-```
-
-The `allowlist` field contains enum values that should be exempt from PascalCase validation, such as command-line executable names.
-
 ## ForbiddenMarkers
 
 The `forbiddenmarkers` linter ensures that types and fields do not contain any markers that are forbidden.
