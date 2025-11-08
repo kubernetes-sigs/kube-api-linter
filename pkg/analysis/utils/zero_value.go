@@ -122,6 +122,7 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 		fieldRequired := IsFieldRequired(field, markersAccess)
 		fieldTagInfo := jsonTagInfo.FieldTags(field)
 		isStruct := IsStructType(pass, field.Type)
+		isPointer := IsPointer(field.Type)
 
 		// Assume the field has omitempty.
 		// Then the zero value (omitted) for a required field is not valid, and for an optional field it is valid.
@@ -141,6 +142,10 @@ func areStructFieldZeroValuesValid(pass *analysis.Pass, structType *ast.StructTy
 		// When the field is not omitted, we need to check if the zero value is valid (required or not).
 		switch {
 		case isStruct && considerOmitzero && fieldTagInfo.OmitZero:
+		case isPointer:
+			// A field that is a pointer and does not have an omitempty would marshal as null.
+			// This is silently dropped by the API server, or is accepted as a valid value with +nullable.
+			// If the field does have omitempty, then the zero value is valid based on the requiredness of the field.
 		case !fieldTagInfo.OmitEmpty:
 			validValue, _ = IsZeroValueValid(pass, field, field.Type, markersAccess, considerOmitzero)
 		}
