@@ -41,7 +41,7 @@ var Analyzer = &analysis.Analyzer{
 }
 
 func init() {
-	markershelper.DefaultRegistry().Register(markers.KubebuilderValidationExactlyOneOf)
+	markershelper.DefaultRegistry().Register(markers.KubebuilderExactlyOneOf)
 }
 
 func run(pass *analysis.Pass) (any, error) {
@@ -232,5 +232,5 @@ func hasExactlyOneOfMarker(structType *ast.StructType, markersAccess markershelp
 	// Use StructMarkers to get the set of markers on the struct
 	markerSet := markersAccess.StructMarkers(structType)
 
-	return markerSet.Has(markers.KubebuilderValidationExactlyOneOf)
+	return markerSet.Has(markers.KubebuilderExactlyOneOf)
 }
