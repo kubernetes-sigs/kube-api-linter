@@ -23,6 +23,7 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
@@ -105,8 +106,7 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		return
 	}
 
-	fieldMarkers := markersAccess.FieldMarkers(field)
-	if !isFieldOptional(fieldMarkers) {
+	if !utils.IsFieldOptional(field, markersAccess) {
 		// The field is not marked optional, so we don't need to check it.
 		return
 	}
@@ -135,9 +135,4 @@ func defaultConfig(cfg *OptionalFieldsConfig) {
 	if cfg.OmitZero.Policy == "" {
 		cfg.OmitZero.Policy = OptionalFieldsOmitZeroPolicySuggestFix
 	}
-}
-
-// isFieldOptional checks if a field has an optional marker.
-func isFieldOptional(fieldMarkers markershelper.MarkerSet) bool {
-	return fieldMarkers.Has(markers.OptionalMarker) || fieldMarkers.Has(markers.KubebuilderOptionalMarker)
 }
