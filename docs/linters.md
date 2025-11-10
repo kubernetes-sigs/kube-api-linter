@@ -16,6 +16,7 @@
 - [NoDurations](#nodurations) - Prevents usage of duration types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
 - [Nomaps](#nomaps) - Restricts usage of map types
+- [NonPointerStructs](#nonpointerstructs) - Ensures non-pointer structs are marked correctly with required/optional markers
 - [NoNullable](#nonullable) - Prevents usage of the nullable marker
 - [Nophase](#nophase) - Prevents usage of 'Phase' fields
 - [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
@@ -513,6 +514,20 @@ lintersConfig:
   nomaps:
     policy: Enforce | AllowStringToStringMaps | Ignore # Determines how the linter should handle maps of simple types. Defaults to AllowStringToStringMaps.
 ```
+
+## NonPointerStructs
+
+The `nonpointerstructs` linter checks that non-pointer structs that contain required fields are marked as required.
+Non-pointer structs that contain no required fields are marked as optional.
+
+This linter is important for types validated in Go as there is no way to validate the optionality of the fields at runtime,
+aside from checking the fields within them.
+
+If a struct is marked required, this can only be validated by having a required field within it.
+If there are no required fields, the struct is implicitly optional and must be marked as so.
+
+To have an optional struct field that includes required fields, the struct must be a pointer.
+To have a required struct field that includes no required fields, the struct must be a pointer.
 
 ## NoNullable
 
