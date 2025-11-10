@@ -71,6 +71,20 @@ type ClusterList struct {
 	Items    []Cluster `json:"items"`
 }
 
+// Test marker detection with blank line (second level comment bug - issue #53)
+// +kubebuilder:object:root=true
+
+// ServiceList contains a list of Service.
+type ServiceList struct {
+	TypeMeta `json:",inline"`
+	ListMeta `json:"metadata,omitempty"`
+	Items    []Service `json:"items"`
+}
+
+type Service struct {
+	Name string `json:"name"`
+}
+
 type TypeMeta struct {
 	Kind       string `json:"kind,omitempty"`
 	APIVersion string `json:"apiVersion,omitempty"`
@@ -176,5 +190,100 @@ type ReorderedFieldsList struct {
 }
 
 type ReorderedItem struct {
+	Name string `json:"name"`
+}
+
+// Test marker detection with blank line for non-List type (second level comment bug - issue #53)
+// This should trigger the linter because it has a status field but no status marker
+// +kubebuilder:object:root=true
+
+// BlankLineTest demonstrates marker detection across blank lines.
+// +kubebuilder:subresource:status
+type BlankLineTest struct { // want "root object type \"BlankLineTest\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	Spec   BlankLineTestSpec   `json:"spec"`
+	Status BlankLineTestStatus `json:"status"`
+}
+
+type BlankLineTestSpec struct {
+	Name string `json:"name"`
+}
+
+type BlankLineTestStatus struct {
+	Ready bool `json:"ready"`
+}
+
+// Test case: Single-line marker separated by blank line should be detected as orphaned.
+// This verifies that single-line markers with blank lines are properly detected.
+
+// +kubebuilder:object:root=true
+
+// SingleLineMarkerTest demonstrates that single-line markers separated by blank lines
+// are detected as orphaned markers.
+// This type has a status field but no status marker, so it should trigger a diagnostic.
+// +kubebuilder:subresource:status
+type SingleLineMarkerTest struct { // want "root object type \"SingleLineMarkerTest\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	Spec   SingleLineMarkerTestSpec   `json:"spec"`
+	Status SingleLineMarkerTestStatus `json:"status"`
+}
+
+type SingleLineMarkerTestSpec struct {
+	Name string `json:"name"`
+}
+
+type SingleLineMarkerTestStatus struct {
+	Ready bool `json:"ready"`
+}
+
+// Test case: Marker too far away (more than 3 lines) should NOT be detected.
+// The orphaned markers below should be ignored because they're too far from the type declaration.
+
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+
+
+
+
+
+
+// +kubebuilder:object:root=true
+//
+// TooFarAwayTest demonstrates that markers too far away are not detected.
+// Since the orphaned markers above are not detected, this type only has +kubebuilder:object:root=true
+// from its Doc comment group. It has a status field but no status marker, so it should trigger the linter.
+// +kubebuilder:subresource:status
+type TooFarAwayTest struct { // want "root object type \"TooFarAwayTest\" has a status field but does not have the marker \"kubebuilder:subresource:status\" to enable the status subresource"
+	Spec   TooFarAwayTestSpec   `json:"spec"`
+	Status TooFarAwayTestStatus `json:"status"`
+}
+
+type TooFarAwayTestSpec struct {
+	Name string `json:"name"`
+}
+
+type TooFarAwayTestStatus struct {
+	Ready bool `json:"ready"`
+}
+
+// Test case: Commented-out code should NOT be treated as markers.
+
+// +kubebuilder:object:root=true
+// func DoSomething() error {
+//     return nil
+// }
+
+// CommentedCodeTest should not pick up the commented code above.
+type CommentedCodeTest struct {
+	Name string `json:"name"`
+}
+
+// Test case: Marker that's a Doc comment for another declaration should NOT be orphaned.
+
+// +kubebuilder:object:root=true
+type PreviousType struct {
+	Name string `json:"name"`
+}
+
+// NotOrphanedTest should not get markers from PreviousType.
+type NotOrphanedTest struct {
 	Name string `json:"name"`
 }
