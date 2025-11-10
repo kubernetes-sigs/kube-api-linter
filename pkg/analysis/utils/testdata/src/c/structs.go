@@ -8,6 +8,24 @@ type ZeroValueTestStructs struct {
 	StructWithOmitZeroFieldsAndMinProperties StructWithOmitZeroFieldsAndMinProperties `json:"structWithOmitZeroFieldsAndMinProperties,omitempty"` // want "zero value is not valid" "validation is complete"
 
 	StructWithOmitZeroAndRequiredFieldsAndMinProperties StructWithOmitZeroAndRequiredFieldsAndMinProperties `json:"structWithOmitZeroAndRequiredFieldsAndMinProperties,omitempty"` // want "zero value is valid" "validation is complete"
+
+	// RecursiveStructs demonstrates that the zero value checker stops when it finds recursive structs
+
+	RecursiveStruct RecursiveStructA `json:"recursiveStruct` // want "zero value is valid" "validation is complete"
+
+	RecursiveStructWithOmitEmpty RecursiveStructA `json:"recursiveStructWithOmitEmpty,omitempty"` // want "zero value is valid" "validation is complete"
+
+	RecursiveStructPointer *RecursiveStructA `json:"recursiveStructPointer` // want "zero value is valid" "validation is complete"
+
+	RecursiveStructPointerWithOmitEmpty *RecursiveStructA `json:"recursiveStructPointerWithOmitEmpty,omitempty"` // want "zero value is valid" "validation is complete"
+
+	SelfRecursiveStruct SelfRecursiveStruct `json:"selfRecursiveStruct` // want "zero value is valid" "validation is complete"
+
+	SelfRecursiveStructWithOmitEmpty SelfRecursiveStruct `json:"selfRecursiveStructWithOmitEmpty,omitempty"` // want "zero value is valid" "validation is complete"
+
+	SelfRecursiveStructPointer *SelfRecursiveStruct `json:"selfRecursiveStructPointer` // want "zero value is valid" "validation is complete"
+
+	SelfRecursiveStructPointerWithOmitEmpty *SelfRecursiveStruct `json:"selfRecursiveStructPointerWithOmitEmpty,omitempty"` // want "zero value is valid" "validation is complete"
 }
 
 // StructWithOmittedRequiredField
@@ -57,4 +75,31 @@ type StructWithOmitZeroAndRequiredFieldsAndMinProperties struct {
 
 	// +required
 	RequiredStructWithAllOptionalFields StructWithAllOptionalFields `json:"requiredStructWithAllOptionalFields"` // want "zero value is valid" "validation is not complete"
+}
+
+// RecursiveStructA is paired with RecursiveStructB to demonstrate a recursive relationship for zero value checking.
+type RecursiveStructA struct {
+	// +optional
+	String string `json:"string,omitempty"` // want "zero value is valid" "validation is not complete"
+
+	RecursiveStructB *RecursiveStructB `json:"recursiveStructB,omitempty` // want "zero value is valid" "validation is complete"
+}
+
+// RecursiveStructB is paired with RecursiveStructA to demonstrate a recursive relationship for zero value checking.
+type RecursiveStructB struct {
+	// +optional
+	String string `json:"string,omitempty"` // want "zero value is valid" "validation is not complete"
+
+	RecursiveStructA *RecursiveStructA `json:"recursiveStructB` // want "zero value is valid" "validation is complete"
+
+	RecursiveStructAWithOmitEmpty *RecursiveStructA `json:"recursiveStructAWithOmitEmpty,omitempty"` // want "zero value is valid" "validation is complete"
+}
+
+type SelfRecursiveStruct struct {
+	// +optional
+	String string `json:"string,omitempty"` // want "zero value is valid" "validation is not complete"
+
+	SelfRecursiveStruct *SelfRecursiveStruct `json:"selfRecursiveStruct` // want "zero value is valid" "validation is complete"
+
+	SelfRecursiveStructWithOmitEmpty *SelfRecursiveStruct `json:"selfRecursiveStructWithOmitEmpty,omitempty"` // want "zero value is valid" "validation is complete"
 }

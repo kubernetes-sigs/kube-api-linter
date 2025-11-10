@@ -66,6 +66,12 @@ func IsStarExpr(expr ast.Expr) (bool, ast.Expr) {
 	return false, expr
 }
 
+// IsPointer checks if the expression is a pointer.
+func IsPointer(expr ast.Expr) bool {
+	_, ok := expr.(*ast.StarExpr)
+	return ok
+}
+
 // IsPointerType checks if the expression is a pointer type.
 // This is for types that are always implemented as pointers and therefore should
 // not be the underlying type of a star expr.
