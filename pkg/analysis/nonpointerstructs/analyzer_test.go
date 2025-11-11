@@ -25,10 +25,10 @@ import (
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	analyzer, err := nonpointerstructs.Initializer().Init(nil)
+	analyzer, err := nonpointerstructs.Initializer().Init(&nonpointerstructs.Config{})
 	if err != nil {
 		t.Fatalf("initializing nonpointerstructs linter: %v", err)
 	}
 
-	analysistest.Run(t, testdata, analyzer, "a")
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }

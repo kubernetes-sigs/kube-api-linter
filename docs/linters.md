@@ -529,6 +529,21 @@ If there are no required fields, the struct is implicitly optional and must be m
 To have an optional struct field that includes required fields, the struct must be a pointer.
 To have a required struct field that includes no required fields, the struct must be a pointer.
 
+### Configuration
+
+```yaml
+lintersConfig:
+  nonpointerstructs:
+    preferredRequiredMarker: required | kubebuilder:validation:Required | k8s:required # The preferred required marker to use for required fields when providing fixes. Defaults to `required`.
+    preferredOptionalMarker: optional | kubebuilder:validation:Optional | k8s:optional # The preferred optional marker to use for optional fields when providing fixes. Defaults to `optional`.
+```
+
+### Fixes
+
+The `nonpointerstructs` linter can automatically fix non-pointer struct fields that are not marked as required or optional.
+
+It will suggest to mark the field as required or optional, depending on the fields within the non-pointer struct.
+
 ## NoNullable
 
 The `nonullable` linter ensures that types and fields do not have the `nullable` marker.
