@@ -1,0 +1,75 @@
+package a
+
+type A struct {
+	// +required
+	WithRequired WithRequiredField `json:"withRequired"` // want "field A.WithRequired is a non-pointer struct with required fields. It must be marked as required."
+	// +optional
+	WithOptional WithOptionalField `json:"withOptional"` // want "field A.WithOptional is a non-pointer struct with no required fields. It must be marked as optional."
+	// +required
+	WithRequiredAndOptional WithRequiredAndOptionalField `json:"withRequiredAndOptional"` // want "field A.WithRequiredAndOptional is a non-pointer struct with required fields. It must be marked as required."
+	// +required
+	WithOptionalAndMinProperties WithOptionalFieldsAndMinProperties `json:"withOptionalAndMinProperties"` // want "field A.WithOptionalAndMinProperties is a non-pointer struct with required fields. It must be marked as required."
+
+	// No diagnostic with correct markers
+
+	// +required
+	WithRequiredFieldCorrect WithRequiredField `json:"withRequiredFieldCorrect"`
+
+	// +optional
+	WithOptionalFieldCorrect WithOptionalField `json:"withOptionalFieldCorrect"`
+
+	// +kubebuilder:validation:Required
+	WithRequiredAndOptionalFieldCorrect WithRequiredAndOptionalField `json:"withRequiredAndOptionalFieldCorrect"`
+
+	// +k8s:required
+	WithOptionalFieldsAndMinPropertiesCorrect WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesCorrect"`
+
+	// Diagnostic with incorrect markers
+
+	// +required
+	WithRequiredFieldIncorrect WithRequiredField `json:"withRequiredFieldIncorrect"` // want "field A.WithRequiredFieldIncorrect is a non-pointer struct with required fields. It must be marked as required."
+
+	// +optional
+	WithOptionalFieldIncorrect WithOptionalField `json:"withOptionalFieldIncorrect"` // want "field A.WithOptionalFieldIncorrect is a non-pointer struct with no required fields. It must be marked as optional."
+
+	// +required
+	WithRequiredAndOptionalFieldIncorrect WithRequiredAndOptionalField `json:"withRequiredAndOptionalFieldIncorrect"` // want "field A.WithRequiredAndOptionalFieldIncorrect is a non-pointer struct with required fields. It must be marked as required."
+
+	// +required
+	WithOptionalFieldsAndMinPropertiesIncorrect WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesIncorrect"` // want "field A.WithOptionalFieldsAndMinPropertiesIncorrect is a non-pointer struct with required fields. It must be marked as required."
+
+	// Pointers are ignored in this linter.
+	WithRequiredFieldAndPointer                  *WithRequiredField                  `json:"withRequiredFieldAndPointer"`
+	WithOptionalFieldAndPointer                  *WithOptionalField                  `json:"withOptionalFieldAndPointer"`
+	WithRequiredAndOptionalFieldAndPointer       *WithRequiredAndOptionalField       `json:"withRequiredAndOptionalFieldAndPointer"`
+	WithOptionalFieldsAndMinPropertiesAndPointer *WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesAndPointer"`
+
+	// Inline structs are ignored in this linter.
+	WithRequiredField                  `json:",inline"`
+	WithOptionalField                  `json:",inline"`
+	WithRequiredAndOptionalField       `json:",inline"`
+	WithOptionalFieldsAndMinProperties `json:",inline"`
+}
+
+type WithRequiredField struct {
+	// +required
+	RequiredField string `json:"requiredField"`
+}
+
+type WithOptionalField struct {
+	// +optional
+	OptionalField string `json:"optionalField"`
+}
+
+type WithRequiredAndOptionalField struct {
+	// +k8s:required
+	RequiredField string `json:"requiredField"`
+	// +k8s:optional
+	OptionalField string `json:"optionalField"`
+}
+
+// +kubebuilder:validation:MinProperties=1
+type WithOptionalFieldsAndMinProperties struct {
+	// +k8s:optional
+	OptionalField string `json:"optionalField"`
+}

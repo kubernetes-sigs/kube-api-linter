@@ -30,29 +30,45 @@ import (
 
 const name = "nonpointerstructs"
 
-func newAnalyzer() *analysis.Analyzer {
+func newAnalyzer(cfg *Config) *analysis.Analyzer {
+	if cfg == nil {
+		cfg = &Config{}
+	}
+
+	defaultConfig(cfg)
+
+	a := &analyzer{
+		preferredRequiredMarker: cfg.PreferredRequiredMarker,
+		preferredOptionalMarker: cfg.PreferredOptionalMarker,
+	}
+
 	return &analysis.Analyzer{
 		Name:     name,
 		Doc:      "Checks that non-pointer structs that contain required fields are marked as required. Non-pointer structs that contain no required fields are marked as optional.",
-		Run:      run,
+		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
 }
 
-func run(pass *analysis.Pass) (any, error) {
+type analyzer struct {
+	preferredRequiredMarker string
+	preferredOptionalMarker string
+}
+
+func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
 	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
-		checkField(pass, field, markersAccess, jsonTagInfo, qualifiedFieldName)
+		a.checkField(pass, field, markersAccess, jsonTagInfo, qualifiedFieldName)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
-func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, jsonTagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string) {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, jsonTagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string) {
 	if field.Type == nil {
 		return
 	}
@@ -74,9 +90,9 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 	case hasRequiredField && isRequired, !hasRequiredField && isOptional:
 		// This is the desired case.
 	case hasRequiredField:
-		pass.Reportf(field.Pos(), "field %s is a non-pointer struct with required fields. It must be marked as required.", qualifiedFieldName)
+		a.handleShouldBeRequired(pass, field, markersAccess, qualifiedFieldName)
 	case !hasRequiredField:
-		pass.Reportf(field.Pos(), "field %s is a non-pointer struct with no required fields. It must be marked as optional.", qualifiedFieldName)
+		a.handleShouldBeOptional(pass, field, markersAccess, qualifiedFieldName)
 	}
 }
 
@@ -112,4 +128,81 @@ func hasRequiredField(structType *ast.StructType, markersAccess markershelper.Ma
 	}
 
 	return false
+}
+
+func defaultConfig(cfg *Config) {
+	if cfg.PreferredRequiredMarker == "" {
+		cfg.PreferredRequiredMarker = markers.RequiredMarker
+	}
+
+	if cfg.PreferredOptionalMarker == "" {
+		cfg.PreferredOptionalMarker = markers.OptionalMarker
+	}
+}
+
+func (a *analyzer) handleShouldBeRequired(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) {
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	textEdits := []analysis.TextEdit{}
+
+	for _, marker := range []string{markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker} {
+		for _, m := range fieldMarkers.Get(marker) {
+			textEdits = append(textEdits, analysis.TextEdit{
+				Pos:     m.Pos,
+				End:     m.End + 1, // Add 1 to include the newline character
+				NewText: nil,
+			})
+		}
+	}
+
+	textEdits = append(textEdits, analysis.TextEdit{
+		Pos:     field.Pos(),
+		End:     field.Pos(),
+		NewText: fmt.Appendf(nil, "// +%s\n", a.preferredRequiredMarker),
+	})
+
+	pass.Report(analysis.Diagnostic{
+		Pos:     field.Pos(),
+		End:     field.Pos(),
+		Message: fmt.Sprintf("field %s is a non-pointer struct with required fields. It must be marked as required.", qualifiedFieldName),
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message:   "should mark the field as required",
+				TextEdits: textEdits,
+			},
+		},
+	})
+}
+
+func (a *analyzer) handleShouldBeOptional(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) {
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	textEdits := []analysis.TextEdit{}
+
+	for _, marker := range []string{markers.RequiredMarker, markers.KubebuilderRequiredMarker, markers.K8sRequiredMarker} {
+		for _, m := range fieldMarkers.Get(marker) {
+			textEdits = append(textEdits, analysis.TextEdit{
+				Pos:     m.Pos,
+				End:     m.End + 1, // Add 1 to include the newline character
+				NewText: nil,
+			})
+		}
+	}
+
+	textEdits = append(textEdits, analysis.TextEdit{
+		Pos:     field.Pos(),
+		End:     field.Pos(),
+		NewText: fmt.Appendf(nil, "// +%s\n", a.preferredOptionalMarker),
+	})
+
+	pass.Report(analysis.Diagnostic{
+		Pos:     field.Pos(),
+		Message: fmt.Sprintf("field %s is a non-pointer struct with no required fields. It must be marked as optional.", qualifiedFieldName),
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message:   "should mark the field as optional",
+				TextEdits: textEdits,
+			},
+		},
+	})
 }

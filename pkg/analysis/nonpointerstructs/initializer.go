@@ -16,8 +16,13 @@ limitations under the License.
 package nonpointerstructs
 
 import (
+	"fmt"
+
+	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 func init() {
@@ -27,9 +32,36 @@ func init() {
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
 func Initializer() initializer.AnalyzerInitializer {
-	return initializer.NewInitializer(
+	return initializer.NewConfigurableInitializer(
 		name,
-		newAnalyzer(),
+		initAnalyzer,
 		true,
+		validateConfig,
 	)
+}
+
+func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
+	return newAnalyzer(cfg), nil
+}
+
+func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
+	if cfg == nil {
+		return field.ErrorList{}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	switch cfg.PreferredRequiredMarker {
+	case "", markers.RequiredMarker, markers.KubebuilderRequiredMarker, markers.K8sRequiredMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), cfg.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.RequiredMarker, markers.KubebuilderRequiredMarker, markers.K8sRequiredMarker)))
+	}
+
+	switch cfg.PreferredOptionalMarker {
+	case "", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredOptionalMarker"), cfg.PreferredOptionalMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.OptionalMarker, markers.KubebuilderOptionalMarker, markers.K8sOptionalMarker)))
+	}
+
+	return fieldErrors
 }
