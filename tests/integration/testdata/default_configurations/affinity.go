@@ -93,7 +93,7 @@ type WeightedPodAffinityTerm struct {
 	// in the range 1-100.
 	Weight int32 `json:"weight" protobuf:"varint,1,opt,name=weight"` // want "optionalorrequired: field WeightedPodAffinityTerm.Weight must be marked as optional or required"
 	// Required. A pod affinity term, associated with the corresponding weight. // want "commentstart: godoc for field WeightedPodAffinityTerm.PodAffinityTerm should start with 'podAffinityTerm ...'"
-	PodAffinityTerm PodAffinityTerm `json:"podAffinityTerm" protobuf:"bytes,2,opt,name=podAffinityTerm"` // want "optionalorrequired: field WeightedPodAffinityTerm.PodAffinityTerm must be marked as optional or required"
+	PodAffinityTerm PodAffinityTerm `json:"podAffinityTerm" protobuf:"bytes,2,opt,name=podAffinityTerm"` // want "optionalorrequired: field WeightedPodAffinityTerm.PodAffinityTerm must be marked as optional or required" "nonpointerstructs: field WeightedPodAffinityTerm.PodAffinityTerm is a non-pointer struct with no required fields. It must be marked as optional."
 }
 
 // Defines a set of pods (namely those matching the labelSelector
@@ -193,7 +193,7 @@ type PreferredSchedulingTerm struct {
 	// Weight associated with matching the corresponding nodeSelectorTerm, in the range 1-100. // want "commentstart: godoc for field PreferredSchedulingTerm.Weight should start with 'weight ...'"
 	Weight int32 `json:"weight" protobuf:"varint,1,opt,name=weight"` // want "optionalorrequired: field PreferredSchedulingTerm.Weight must be marked as optional or required"
 	// A node selector term, associated with the corresponding weight. // want "commentstart: godoc for field PreferredSchedulingTerm.Preference should start with 'preference ...'"
-	Preference NodeSelectorTerm `json:"preference" protobuf:"bytes,2,opt,name=preference"` // want "optionalorrequired: field PreferredSchedulingTerm.Preference must be marked as optional or required"
+	Preference NodeSelectorTerm `json:"preference" protobuf:"bytes,2,opt,name=preference"` // want "optionalorrequired: field PreferredSchedulingTerm.Preference must be marked as optional or required" "nonpointerstructs: field PreferredSchedulingTerm.Preference is a non-pointer struct with no required fields. It must be marked as optional."
 }
 
 // The node this Taint is attached to has the "effect" on

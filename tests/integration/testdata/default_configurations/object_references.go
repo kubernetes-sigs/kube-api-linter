@@ -1,7 +1,5 @@
 package defaultconfigurations
 
-import "k8s.io/apimachinery/pkg/types"
-
 // ObjectReference contains enough information to let you inspect or modify the referred object.
 // ---
 // New uses of this type are discouraged because of difficulty describing its usage when embedded in APIs.
@@ -33,10 +31,11 @@ type ObjectReference struct {
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	// +optional
 	Name string `json:"name,omitempty" protobuf:"bytes,3,opt,name=name"` // want "optionalfields: field ObjectReference.Name should be a pointer."
-	// UID of the referent. // want "commentstart: godoc for field ObjectReference.UID should start with 'uid ...'"
+	// UID of the referent.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
 	// +optional
-	UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uid,casttype=k8s.io/apimachinery/pkg/types.UID"` // want "optionalfields: field ObjectReference.UID should be a pointer."
+	// UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uid,casttype=k8s.io/apimachinery/pkg/types.UID"`
+
 	// API version of the referent. // want "commentstart: godoc for field ObjectReference.APIVersion should start with 'apiVersion ...'"
 	// +optional
 	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,5,opt,name=apiVersion"` // want "optionalfields: field ObjectReference.APIVersion should be a pointer."
