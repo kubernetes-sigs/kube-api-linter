@@ -25,8 +25,10 @@ import (
 func TestAnalyzer(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	// Test without allowlist
-	config := &enums.Config{}
+	// Test with default config (plain strings allowed)
+	config := &enums.Config{
+		RequireTypeAliasForEnums: false,
+	}
 	analyzer, err := enums.Initializer().Init(config)
 
 	if err != nil {

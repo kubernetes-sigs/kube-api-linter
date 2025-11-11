@@ -20,4 +20,9 @@ type Config struct {
 	// Allowlist contains values that are exempt from PascalCase validation.
 	// This is useful for command-line executable names like "kubectl", "docker", etc.
 	Allowlist []string `yaml:"allowlist" json:"allowlist"`
+
+	// RequireTypeAliasForEnums when true, enforces that string fields representing enums
+	// must use type aliases instead of plain string types.
+	// Default: false (plain strings are allowed)
+	RequireTypeAliasForEnums bool `yaml:"requireTypeAliasForEnums" json:"requireTypeAliasForEnums"`
 }

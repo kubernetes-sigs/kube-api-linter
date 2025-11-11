@@ -34,6 +34,14 @@ import (
 
 const name = "enums"
 
+func init() {
+	// Register enum markers so they can be parsed
+	markershelper.DefaultRegistry().Register(
+		markers.KubebuilderEnumMarker,
+		markers.K8sEnumMarker,
+	)
+}
+
 type analyzer struct {
 	config *Config
 }
@@ -43,7 +51,7 @@ func newAnalyzer(cfg *Config) *analysis.Analyzer {
 
 	return &analysis.Analyzer{
 		Name:     name,
-		Doc:      "Enforces that enumerated fields use type aliases with +enum marker and have PascalCase values",
+		Doc:      "Enforces that string type aliases with constants have enum markers (+kubebuilder:validation:Enum for CRDs, +k8s:enum for core APIs) and that enum values follow PascalCase conventions",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
@@ -56,51 +64,49 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	}
 
 	// Check struct fields for proper enum usage
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
-		a.checkField(pass, field, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
+		a.checkField(pass, field, markersAccess, qualifiedFieldName)
 	})
 
-	// Check type declarations for +enum markers
+	// Check type declarations for enum markers
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
 		a.checkTypeSpec(pass, typeSpec, markersAccess)
 	})
+
 	a.checkConstValues(pass)
 
 	return nil, nil //nolint:nilnil
 }
 
-func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	fieldName := utils.FieldName(field)
-	if fieldName == "" {
+func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) {
+	if qualifiedFieldName == "" {
 		return
 	}
 
-	// Get the underlying type, unwrapping pointers and arrays
 	fieldType, isArray := unwrapTypeWithArrayTracking(field.Type)
-
 	ident, ok := fieldType.(*ast.Ident)
 
 	if !ok {
 		return
 	}
 
-	prefix := buildFieldPrefix(fieldName, isArray)
+	prefix := buildFieldPrefix(qualifiedFieldName, isArray)
 
-	// Check if it's a plain string (basic type) vs. a type alias
 	if ident.Name == "string" && utils.IsBasicType(pass, ident) {
-		a.checkPlainStringField(pass, field, markersAccess, prefix)
+		if a.config != nil && a.config.RequireTypeAliasForEnums {
+			a.checkPlainStringField(pass, field, markersAccess, prefix)
+		}
 
 		return
 	}
 
-	// Check if it's a type alias that might be an enum
 	a.checkTypeAliasField(pass, field, ident, markersAccess, prefix)
 }
 
 func (a *analyzer) checkPlainStringField(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, prefix string) {
 	if !hasEnumMarker(markersAccess.FieldMarkers(field)) {
 		pass.Reportf(field.Pos(),
-			"%s uses plain string without +enum marker. Enumerated fields should use a type alias with +enum marker",
+			"%s uses plain string type. Consider using a type alias with an enum marker (+kubebuilder:validation:Enum or +k8s:enum)",
 			prefix)
 	}
 }
@@ -111,14 +117,17 @@ func (a *analyzer) checkTypeAliasField(pass *analysis.Pass, field *ast.Field, id
 	}
 
 	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
-
 	if !ok || !isStringTypeAlias(pass, typeSpec) {
 		return
 	}
-
+	// Only check if this type has constants (indicating enum usage)
+	if !typeHasConstants(pass, typeSpec.Name.Name) {
+		return
+	}
+	// Check for enum markers (CRD validation or declarative validation)
 	if !hasEnumMarker(markersAccess.TypeMarkers(typeSpec)) {
 		pass.Reportf(field.Pos(),
-			"%s uses type %s which appears to be an enum but is missing +enum marker (kubebuilder:validation:Enum)",
+			"%s uses type %s which appears to be an enum but is missing an enum marker (+kubebuilder:validation:Enum or +k8s:enum)",
 			prefix, typeSpec.Name.Name)
 	}
 }
@@ -136,7 +145,7 @@ func (a *analyzer) checkTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec, ma
 
 	if !isStringTypeAlias(pass, typeSpec) {
 		pass.Reportf(typeSpec.Pos(),
-			"type %s has +enum marker but underlying type is not string",
+			"type %s has enum marker but underlying type is not string",
 			typeSpec.Name.Name)
 	}
 }
@@ -196,13 +205,13 @@ func (a *analyzer) getEnumTypeSpec(pass *analysis.Pass, name *ast.Ident) *ast.Ty
 	}
 
 	namedType, ok := constObj.Type().(*types.Named)
+
 	if !ok || namedType.Obj().Pkg() == nil || namedType.Obj().Pkg() != pass.Pkg {
 		return nil
 	}
 
 	typeSpec := findTypeSpecByName(pass, namedType.Obj().Name())
-
-	if typeSpec == nil || !hasEnumMarkerOnTypeSpec(pass, typeSpec) {
+	if typeSpec == nil || !usesAutoDiscovery(pass, typeSpec) {
 		return nil
 	}
 
@@ -261,33 +270,70 @@ func unwrapTypeWithArrayTracking(expr ast.Expr) (ast.Expr, bool) {
 // isStringTypeAlias checks if a type spec is a string type alias.
 func isStringTypeAlias(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	underlyingType := unwrapType(typeSpec.Type)
-
 	ident, ok := underlyingType.(*ast.Ident)
 
 	if !ok {
 		return false
 	}
 
+	// Both checks are needed: name check is fast, IsBasicType handles edge cases
+	// where 'string' might be redefined (rare but possible)
 	return ident.Name == "string" && utils.IsBasicType(pass, ident)
 }
 
-// hasEnumMarker checks if a marker set contains enum markers.
+// hasEnumMarker checks if a marker set contains enum markers
+// (either CRD validation marker or declarative validation marker).
 func hasEnumMarker(markerSet markershelper.MarkerSet) bool {
-	return markerSet.Has(markers.KubebuilderEnumMarker) || markerSet.Has(markers.K8sEnumMarker)
+	return markerSet.Has(markers.KubebuilderEnumMarker) ||
+		markerSet.Has(markers.K8sEnumMarker)
 }
 
-// hasEnumMarkerOnTypeSpec checks if a type spec has enum markers in its documentation.
-func hasEnumMarkerOnTypeSpec(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
+// usesAutoDiscovery checks if a type uses auto-discovery mode for enum values.
+// Auto-discovery mode validates that constants follow PascalCase conventions.
+//
+// Returns true for:
+//   - +k8s:enum (declarative validation marker, always auto-discovers)
+//   - +kubebuilder:validation:Enum without explicit values (CRD validation marker in auto-discovery mode)
+//
+// Returns false for:
+//   - +kubebuilder:validation:Enum=value1;value2 (CRD validation marker with explicit values)
+func usesAutoDiscovery(pass *analysis.Pass, typeSpec *ast.TypeSpec) bool {
 	for _, file := range pass.Files {
-		if genDecl := findGenDeclForSpec(file, typeSpec); genDecl != nil {
-			return hasEnumMarkerInDoc(genDecl.Doc)
+		genDecl := findGenDeclForSpec(file, typeSpec)
+		if genDecl == nil || genDecl.Doc == nil {
+			continue
+		}
+
+		for _, comment := range genDecl.Doc.List {
+			text := comment.Text
+			// Must be an actual marker (starts with "// +")
+			if !strings.HasPrefix(text, "// +") {
+				continue
+			}
+
+			markerContent := strings.TrimPrefix(text, "// +")
+
+			// +k8s:enum always uses auto-discovery
+			if strings.HasPrefix(markerContent, markers.K8sEnumMarker) {
+				return true
+			}
+			// +kubebuilder:validation:Enum without explicit values uses auto-discovery
+			if strings.HasPrefix(markerContent, markers.KubebuilderEnumMarker) {
+				afterMarker := markerContent[len(markers.KubebuilderEnumMarker):]
+				// If there's an "=" or ":=" immediately after, it has explicit values
+				trimmed := strings.TrimSpace(afterMarker)
+				if strings.HasPrefix(trimmed, "=") || strings.HasPrefix(trimmed, ":=") {
+					return false // Explicit values mode
+				}
+
+				return true // Auto-discovery mode
+			}
 		}
 	}
 
 	return false
 }
 
-// findGenDeclForSpec finds the GenDecl that contains a given TypeSpec.
 func findGenDeclForSpec(file *ast.File, typeSpec *ast.TypeSpec) *ast.GenDecl {
 	for _, decl := range file.Decls {
 		genDecl, ok := decl.(*ast.GenDecl)
@@ -303,22 +349,6 @@ func findGenDeclForSpec(file *ast.File, typeSpec *ast.TypeSpec) *ast.GenDecl {
 	}
 
 	return nil
-}
-
-// hasEnumMarkerInDoc checks if a comment group contains enum markers.
-func hasEnumMarkerInDoc(doc *ast.CommentGroup) bool {
-	if doc == nil {
-		return false
-	}
-
-	for _, comment := range doc.List {
-		text := comment.Text
-		if strings.Contains(text, markers.KubebuilderEnumMarker) || strings.Contains(text, markers.K8sEnumMarker) {
-			return true
-		}
-	}
-
-	return false
 }
 
 // findTypeSpecByName finds a type spec by its name in the pass's files.
@@ -346,31 +376,55 @@ func findTypeSpecByName(pass *analysis.Pass, typeName string) *ast.TypeSpec {
 	return nil
 }
 
+// typeHasConstants checks if any constants are defined for the given type name.
+func typeHasConstants(pass *analysis.Pass, typeName string) bool {
+	for _, file := range pass.Files {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+
+			if !ok || genDecl.Tok.String() != "const" {
+				continue
+			}
+
+			for _, spec := range genDecl.Specs {
+				valueSpec, ok := spec.(*ast.ValueSpec)
+				if !ok || valueSpec.Type == nil {
+					continue
+				}
+				// Check if the const has this type
+				if ident, ok := valueSpec.Type.(*ast.Ident); ok && ident.Name == typeName {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
 // isPascalCase checks if a string follows PascalCase naming convention.
+// Allows: PascalCase (Running), all-uppercase acronyms (HTTP, API), single letters (A).
+// Rejects: lowercase start (running), snake_case (phase_pending), kebab-case (phase-pending).
 func isPascalCase(s string) bool {
 	if len(s) == 0 {
 		return false
 	}
-
+	// Must start with uppercase
 	if !unicode.IsUpper(rune(s[0])) {
 		return false
 	}
 
-	hasLower := false
-
+	// No underscores or hyphens allowed (these indicate snake_case/kebab-case)
 	for _, r := range s {
 		if r == '_' || r == '-' {
 			return false
 		}
-
-		if !unicode.IsLetter(r) && !unicode.IsDigit(r) {
+		// Allow letters, digits, and "+" (for signal names like SIGRTMIN+1)
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '+' {
 			return false
 		}
-
-		if unicode.IsLower(r) {
-			hasLower = true
-		}
 	}
-
-	return len(s) == 1 || hasLower
+	// Valid: starts with uppercase, no underscores/hyphens
+	// Accepts: PascalCase, HTTP, HTTPS, SIGRTMIN+1, etc.
+	return true
 }

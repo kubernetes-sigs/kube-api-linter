@@ -128,7 +128,7 @@ type PodSecurityContext struct {
 
 // SupplementalGroupsPolicy defines how supplemental groups
 // of the first container processes are calculated.
-// +enum
+// +kubebuilder:validation:Enum=Merge;Strict
 type SupplementalGroupsPolicy string
 
 const (
@@ -153,7 +153,7 @@ type Sysctl struct {
 
 // PodFSGroupChangePolicy holds policies that will be used for applying fsGroup to a volume
 // when volume is mounted.
-// +enum
+// +kubebuilder:validation:Enum=OnRootMismatch;Always
 type PodFSGroupChangePolicy string
 
 const (
@@ -168,6 +168,7 @@ const (
 	FSGroupChangeAlways PodFSGroupChangePolicy = "Always"
 )
 
+// +kubebuilder:validation:Enum
 // PodSELinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod.
 type PodSELinuxChangePolicy string
 

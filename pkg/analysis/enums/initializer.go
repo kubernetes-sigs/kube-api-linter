@@ -32,9 +32,8 @@ func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewConfigurableInitializer(
 		name,
 		initAnalyzer,
-		// The enums linter is opt-in as enum usage is not strictly
-		// required for all Kubernetes APIs, though it is recommended.
-		false,
+		// Enabled by default: validates string type aliases with constants have enum markers
+		true,
 		validateConfig,
 	)
 }
