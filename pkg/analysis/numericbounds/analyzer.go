@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"go/ast"
 
+	"golang.org/x/exp/constraints"
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
@@ -68,10 +69,10 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
-		// Create TypeChecker with closure capturing markersAccess
-		typeChecker := utils.NewTypeChecker(func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string) {
-			checkNumericType(pass, ident, node, prefix, markersAccess)
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
+		// Create TypeChecker with closure capturing markersAccess and qualifiedFieldName
+		typeChecker := utils.NewTypeChecker(func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, _ string) {
+			checkNumericType(pass, ident, node, markersAccess, qualifiedFieldName)
 		})
 
 		typeChecker.CheckNode(pass, field)
@@ -81,7 +82,7 @@ func run(pass *analysis.Pass) (any, error) {
 }
 
 //nolint:cyclop
-func checkNumericType(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string, markersAccess markershelper.Markers) {
+func checkNumericType(pass *analysis.Pass, ident *ast.Ident, node ast.Node, markersAccess markershelper.Markers, qualifiedFieldName string) {
 	// Only check int32, int64, float32, and float64 types
 	if ident.Name != "int32" && ident.Name != "int64" && ident.Name != "float32" && ident.Name != "float64" {
 		return
@@ -94,7 +95,7 @@ func checkNumericType(pass *analysis.Pass, ident *ast.Ident, node ast.Node, pref
 
 	fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
-	// Determine if this is a slice/array field
+	// Check if this is an array/slice field
 	isSlice := utils.IsArrayTypeOrAlias(pass, field)
 
 	// Determine which markers to look for based on whether the field is a slice
@@ -110,20 +111,20 @@ func checkNumericType(pass *analysis.Pass, ident *ast.Ident, node ast.Node, pref
 
 	// Report any invalid marker values (e.g., non-numeric values)
 	if minErr != nil && !minMissing {
-		pass.Reportf(field.Pos(), "%s has an invalid minimum marker: %v", prefix, minErr)
+		pass.Reportf(field.Pos(), "%s has an invalid minimum marker: %v", qualifiedFieldName, minErr)
 	}
 
 	if maxErr != nil && !maxMissing {
-		pass.Reportf(field.Pos(), "%s has an invalid maximum marker: %v", prefix, maxErr)
+		pass.Reportf(field.Pos(), "%s has an invalid maximum marker: %v", qualifiedFieldName, maxErr)
 	}
 
 	// Report if markers are missing
 	if minMissing {
-		pass.Reportf(field.Pos(), "%s is missing minimum bounds validation marker", prefix)
+		pass.Reportf(field.Pos(), "%s is missing minimum bound validation marker", qualifiedFieldName)
 	}
 
 	if maxMissing {
-		pass.Reportf(field.Pos(), "%s is missing maximum bounds validation marker", prefix)
+		pass.Reportf(field.Pos(), "%s is missing maximum bound validation marker", qualifiedFieldName)
 	}
 
 	// If any markers are missing or invalid, don't continue with bounds checks
@@ -132,7 +133,7 @@ func checkNumericType(pass *analysis.Pass, ident *ast.Ident, node ast.Node, pref
 	}
 
 	// Validate bounds are within the type's valid range
-	checkBoundsWithinTypeRange(pass, field, prefix, ident.Name, minimum, maximum)
+	checkBoundsWithinTypeRange(pass, field, qualifiedFieldName, ident.Name, minimum, maximum)
 }
 
 // getMarkerNames returns the appropriate minimum and maximum marker names
@@ -148,6 +149,8 @@ func getMarkerNames(isSlice bool) (minMarkers, maxMarkers []string) {
 
 // getMarkerNumericValue extracts the numeric value from the first instance of any of the given marker names.
 // Checks multiple marker names to support both kubebuilder and k8s declarative validation markers.
+// Precedence: Markers checked in the order provided and first valid value found is returned.
+// We require a valid numeric value (not just marker presence) for both minimum and maximum markers.
 func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerNames []string) (float64, error) {
 	for _, markerName := range markerNames {
 		markerList := markerSet.Get(markerName)
@@ -155,7 +158,7 @@ func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerNames []stri
 			continue
 		}
 
-		// Use the exported utils function to parse the marker value
+		// Use the exported utils.GetMarkerNumericValue function to parse the marker value
 		value, err := utils.GetMarkerNumericValue[float64](markerList[0])
 		if err != nil {
 			if errors.Is(err, errMarkerMissingValue) {
@@ -174,43 +177,42 @@ func getMarkerNumericValue(markerSet markershelper.MarkerSet, markerNames []stri
 // checkBoundsWithinTypeRange validates that the bounds are within the valid range for the type.
 // For int64, enforces JavaScript-safe bounds as per Kubernetes API conventions to ensure
 // compatibility with JavaScript clients.
-//
-//nolint:cyclop
 func checkBoundsWithinTypeRange(pass *analysis.Pass, field *ast.Field, prefix, typeName string, minimum, maximum float64) {
 	switch typeName {
 	case "int32":
-		if minimum < float64(minInt32) || minimum > float64(maxInt32) {
-			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the valid int32 range [%d, %d]", prefix, minimum, minInt32, maxInt32)
-		}
-
-		if maximum < float64(minInt32) || maximum > float64(maxInt32) {
-			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the valid int32 range [%d, %d]", prefix, maximum, minInt32, maxInt32)
-		}
+		checkBoundInRange(pass, field, prefix, minimum, minInt32, maxInt32, "minimum", "int32")
+		checkBoundInRange(pass, field, prefix, maximum, minInt32, maxInt32, "maximum", "int32")
 	case "int64":
-		// Kubernetes API conventions enforce JavaScript-safe bounds for int64 (±2^53-1)
-		// to ensure compatibility with JavaScript clients
-		if minimum < float64(minSafeInt64) {
-			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, minimum, int64(minSafeInt64), int64(maxSafeInt64))
-		}
-
-		if maximum > float64(maxSafeInt64) {
-			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the JavaScript-safe int64 range [%d, %d]. Consider using a string type to avoid precision loss in JavaScript clients", prefix, maximum, int64(minSafeInt64), int64(maxSafeInt64))
-		}
+		// K8s API conventions enforce JavaScript-safe bounds for int64 (±2^53-1)
+		checkBoundInRange(pass, field, prefix, minimum, int64(minSafeInt64), int64(maxSafeInt64), "minimum", "JavaScript-safe int64",
+			"Consider using a string type to avoid precision loss in JavaScript clients")
+		checkBoundInRange(pass, field, prefix, maximum, int64(minSafeInt64), int64(maxSafeInt64), "maximum", "JavaScript-safe int64",
+			"Consider using a string type to avoid precision loss in JavaScript clients")
 	case "float32":
-		if minimum < float64(minFloat32) || minimum > float64(maxFloat32) {
-			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the valid float32 range", prefix, minimum)
-		}
-
-		if maximum < float64(minFloat32) || maximum > float64(maxFloat32) {
-			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the valid float32 range", prefix, maximum)
-		}
+		checkFloatBoundInRange(pass, field, prefix, minimum, minFloat32, maxFloat32, "minimum", "float32")
+		checkFloatBoundInRange(pass, field, prefix, maximum, minFloat32, maxFloat32, "maximum", "float32")
 	case "float64":
-		if minimum < minFloat64 || minimum > maxFloat64 {
-			pass.Reportf(field.Pos(), "%s has minimum bound %v that is outside the valid float64 range", prefix, minimum)
+		checkFloatBoundInRange(pass, field, prefix, minimum, minFloat64, maxFloat64, "minimum", "float64")
+		checkFloatBoundInRange(pass, field, prefix, maximum, minFloat64, maxFloat64, "maximum", "float64")
+	}
+}
+
+// checkBoundInRange checks if an integer bound value is within the valid range.
+// Uses generics to avoid type conversions.
+func checkBoundInRange[T constraints.Integer](pass *analysis.Pass, field *ast.Field, prefix string, value float64, minBound, maxBound T, boundType, typeName string, extraMsg ...string) {
+	if value < float64(minBound) || value > float64(maxBound) {
+		msg := fmt.Sprintf("%s has %s bound %%v that is outside the %s range [%%d, %%d]", prefix, boundType, typeName)
+		if len(extraMsg) > 0 {
+			msg += ". " + extraMsg[0]
 		}
 
-		if maximum < minFloat64 || maximum > maxFloat64 {
-			pass.Reportf(field.Pos(), "%s has maximum bound %v that is outside the valid float64 range", prefix, maximum)
-		}
+		pass.Reportf(field.Pos(), msg, value, minBound, maxBound)
+	}
+}
+
+// checkFloatBoundInRange checks if a float bound value is within the valid range.
+func checkFloatBoundInRange[T constraints.Float](pass *analysis.Pass, field *ast.Field, prefix string, value float64, minBound, maxBound T, boundType, typeName string) {
+	if value < float64(minBound) || value > float64(maxBound) {
+		pass.Reportf(field.Pos(), "%s has %s bound %v that is outside the valid %s range", prefix, boundType, value, typeName)
 	}
 }
