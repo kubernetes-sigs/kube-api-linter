@@ -486,12 +486,12 @@ The `numericbounds` linter checks that numeric fields (`int32`, `int64`, `float3
 According to Kubernetes API conventions, numeric fields should have bounds checking to prevent values that are too small, negative (when not intended), or too large.
 
 This linter ensures that:
-- Numeric fields have both `+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum` markers
-- K8s declarative validation markers (`+k8s:minimum` and `+k8s:maximum`) are also supported  
-- Bounds values are within the type's valid range:
-  - int32: full int32 range (±2^31-1)
-  - int64: JavaScript-safe range (±2^53-1) per Kubernetes API conventions
-  - float32/float64: within their respective ranges
+- Numeric fields have both `+k8s:minimum` and `+k8s:maximum` markers
+- Kubebuilder validation markers (`+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum`) are also supported
+- Bounds values are validated:
+  - int32: within int32 range (±2^31-1)
+  - int64: within JavaScript-safe range (±2^53-1) per K8s API conventions for JSON compatibility
+  - float32/float64: marker values are valid (within type ranges)
 
 **Note:** While `+k8s:minimum` is documented in the official Kubernetes declarative validation spec, `+k8s:maximum` is not yet officially documented but is supported by this linter for forward compatibility and consistency.
 
