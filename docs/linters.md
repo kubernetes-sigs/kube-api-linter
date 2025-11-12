@@ -6,6 +6,7 @@
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [Enums](#enums) - Enforces proper usage of enumerated fields with type aliases and +enum marker
 - [DependentTags](#dependenttags) - Enforces dependencies between markers
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
@@ -235,13 +236,45 @@ will not.
 The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
 If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
 
+## Enums
+
+The `enums` linter enforces that string type aliases used for enumerated values have proper enum markers.
+
+**Enum Marker Types:**
+- **CRD Validation Marker** (`+kubebuilder:validation:Enum`): Used for CRD validation in projects with CustomResourceDefinitions. Processed by controller-gen to generate OpenAPI schema validation.
+- **Declarative Validation Marker** (`+k8s:enum`): Used in Kubernetes core API types for declarative validation.
+
+**Enum Marker Modes:**
+- **Auto-discovery** (`+k8s:enum` or `+kubebuilder:validation:Enum`): Validates that constants follow PascalCase
+- **Explicit values** (`+kubebuilder:validation:Enum=Value1;Value2`): Skips constant validation
+
+**PascalCase allows:** "Pending", "PhaseRunning", "HTTP", "IPv4" (acronyms and digits).  
+**PascalCase rejects:** "pending", "phase_pending", "Phase-Failed".
+
+**Note:** The linter only flags string type aliases that have associated constants (indicating enum usage), avoiding false positives for generic string types.
+
+By default, `enums` is enabled.
+
+### Configuration
+
+```yaml
+linterConfig:
+  enums:
+    # Values exempt from PascalCase validation
+    allowlist:
+      - kubectl
+      - docker
+    # When true, flags plain string fields (default: false)
+    requireTypeAliasForEnums: false
+```
+
 ## ForbiddenMarkers
 
 The `forbiddenmarkers` linter ensures that types and fields do not contain any markers that are forbidden.
 
 By default, `forbiddenmarkers` is not enabled.
 
-### Configuation
+### Configuration
 
 It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden.
 
