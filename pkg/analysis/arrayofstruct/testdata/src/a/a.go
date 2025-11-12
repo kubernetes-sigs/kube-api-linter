@@ -150,3 +150,14 @@ type ValidStructWithCustomBasicType struct {
 	// This should not trigger the linter because CustomString is based on string, a basic type
 	Items []CustomString
 }
+
+// Valid case - struct with ExactlyOneOf marker
+type ValidWithExactlyOneOf struct {
+	Items []ValidExactlyOneOfItem
+}
+
+// +kubebuilder:validation:ExactlyOneOf=FieldA;FieldB
+type ValidExactlyOneOfItem struct {
+	FieldA *string `json:"fieldA,omitempty"`
+	FieldB *string `json:"fieldB,omitempty"`
+}
