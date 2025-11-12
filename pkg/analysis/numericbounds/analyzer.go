@@ -189,30 +189,23 @@ func checkBoundsWithinTypeRange(pass *analysis.Pass, field *ast.Field, prefix, t
 		checkBoundInRange(pass, field, prefix, maximum, int64(minSafeInt64), int64(maxSafeInt64), "maximum", "JavaScript-safe int64",
 			"Consider using a string type to avoid precision loss in JavaScript clients")
 	case "float32":
-		checkFloatBoundInRange(pass, field, prefix, minimum, minFloat32, maxFloat32, "minimum", "float32")
-		checkFloatBoundInRange(pass, field, prefix, maximum, minFloat32, maxFloat32, "maximum", "float32")
+		checkBoundInRange(pass, field, prefix, minimum, minFloat32, maxFloat32, "minimum", "float32")
+		checkBoundInRange(pass, field, prefix, maximum, minFloat32, maxFloat32, "maximum", "float32")
 	case "float64":
-		checkFloatBoundInRange(pass, field, prefix, minimum, minFloat64, maxFloat64, "minimum", "float64")
-		checkFloatBoundInRange(pass, field, prefix, maximum, minFloat64, maxFloat64, "maximum", "float64")
+		checkBoundInRange(pass, field, prefix, minimum, minFloat64, maxFloat64, "minimum", "float64")
+		checkBoundInRange(pass, field, prefix, maximum, minFloat64, maxFloat64, "maximum", "float64")
 	}
 }
 
-// checkBoundInRange checks if an integer bound value is within the valid range.
-// Uses generics to avoid type conversions.
-func checkBoundInRange[T constraints.Integer](pass *analysis.Pass, field *ast.Field, prefix string, value float64, minBound, maxBound T, boundType, typeName string, extraMsg ...string) {
+// checkBoundInRange checks if a bound value is within the valid range.
+// Uses generics to work with both integer and float types.
+func checkBoundInRange[T constraints.Integer | constraints.Float](pass *analysis.Pass, field *ast.Field, prefix string, value float64, minBound, maxBound T, boundType, typeName string, extraMsg ...string) {
 	if value < float64(minBound) || value > float64(maxBound) {
-		msg := fmt.Sprintf("%s has %s bound %%v that is outside the %s range [%%d, %%d]", prefix, boundType, typeName)
+		msg := fmt.Sprintf("%s has %s bound %%v that is outside the %s range [%%v, %%v]", prefix, boundType, typeName)
 		if len(extraMsg) > 0 {
 			msg += ". " + extraMsg[0]
 		}
 
 		pass.Reportf(field.Pos(), msg, value, minBound, maxBound)
-	}
-}
-
-// checkFloatBoundInRange checks if a float bound value is within the valid range.
-func checkFloatBoundInRange[T constraints.Float](pass *analysis.Pass, field *ast.Field, prefix string, value float64, minBound, maxBound T, boundType, typeName string) {
-	if value < float64(minBound) || value > float64(maxBound) {
-		pass.Reportf(field.Pos(), "%s has %s bound %v that is outside the valid %s range", prefix, boundType, value, typeName)
 	}
 }
