@@ -13,39 +13,39 @@ type Integers struct {
 
 	ValidInt64Ptr *int64
 
-	InvalidInt int // want "field InvalidInt should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidInt int // want "field Integers.InvalidInt should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidIntPtr *int // want "field InvalidIntPtr pointer should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidIntPtr *int // want "field Integers.InvalidIntPtr pointer should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidInt8 int8 // want "field InvalidInt8 should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidInt8 int8 // want "field Integers.InvalidInt8 should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidInt16 int16 // want "field InvalidInt16 should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidInt16 int16 // want "field Integers.InvalidInt16 should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidUInt uint // want "field InvalidUInt should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUInt uint // want "field Integers.InvalidUInt should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidUIntPtr uint // want "field InvalidUIntPtr should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUIntPtr uint // want "field Integers.InvalidUIntPtr should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidUInt8 uint8 // want "field InvalidUInt8 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUInt8 uint8 // want "field Integers.InvalidUInt8 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidUInt16 uint16 // want "field InvalidUInt16 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUInt16 uint16 // want "field Integers.InvalidUInt16 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidUInt32 uint32 // want "field InvalidUInt32 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUInt32 uint32 // want "field Integers.InvalidUInt32 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidUInt64 uint64 // want "field InvalidUInt64 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUInt64 uint64 // want "field Integers.InvalidUInt64 should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
 	ValidInt32Alias ValidInt32Alias
 
 	ValidInt32AliasPtr *ValidInt32Alias
 
-	InvalidIntAlias InvalidIntAlias // want "field InvalidIntAlias type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidIntAlias InvalidIntAlias // want "field Integers.InvalidIntAlias type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidIntAliasPtr *InvalidIntAlias // want "field InvalidIntAliasPtr pointer type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidIntAliasPtr *InvalidIntAlias // want "field Integers.InvalidIntAliasPtr pointer type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidUIntAlias InvalidUIntAlias // want "field InvalidUIntAlias type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUIntAlias InvalidUIntAlias // want "field Integers.InvalidUIntAlias type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidUIntAliasPtr *InvalidUIntAlias // want "field InvalidUIntAliasPtr pointer type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidUIntAliasPtr *InvalidUIntAlias // want "field Integers.InvalidUIntAliasPtr pointer type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidIntAliasAlias InvalidIntAliasAlias // want "field InvalidIntAliasAlias type InvalidIntAliasAlias type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidIntAliasAlias InvalidIntAliasAlias // want "field Integers.InvalidIntAliasAlias type InvalidIntAliasAlias type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
 	ValidSliceInt32 []int32
 
@@ -55,41 +55,41 @@ type Integers struct {
 
 	ValidSliceInt64Ptr []*int64
 
-	InvalidSliceInt []int // want "field InvalidSliceInt array element should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidSliceInt []int // want "field Integers.InvalidSliceInt array element should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidSliceIntPtr []*int // want "field InvalidSliceIntPtr array element pointer should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidSliceIntPtr []*int // want "field Integers.InvalidSliceIntPtr array element pointer should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidSliceUInt []uint // want "field InvalidSliceUInt array element should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidSliceUInt []uint // want "field Integers.InvalidSliceUInt array element should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidSliceUIntPtr []*uint // want "field InvalidSliceUIntPtr array element pointer should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidSliceUIntPtr []*uint // want "field Integers.InvalidSliceUIntPtr array element pointer should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidSliceIntAlias []InvalidIntAlias // want "field InvalidSliceIntAlias array element type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidSliceIntAlias []InvalidIntAlias // want "field Integers.InvalidSliceIntAlias array element type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidSliceIntAliasPtr []*InvalidIntAlias // want "field InvalidSliceIntAliasPtr array element pointer type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidSliceIntAliasPtr []*InvalidIntAlias // want "field Integers.InvalidSliceIntAliasPtr array element pointer type InvalidIntAlias should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidSliceUIntAlias []InvalidUIntAlias // want "field InvalidSliceUIntAlias array element type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidSliceUIntAlias []InvalidUIntAlias // want "field Integers.InvalidSliceUIntAlias array element type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidSliceUIntAliasPtr []*InvalidUIntAlias // want "field InvalidSliceUIntAliasPtr array element pointer type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidSliceUIntAliasPtr []*InvalidUIntAlias // want "field Integers.InvalidSliceUIntAliasPtr array element pointer type InvalidUIntAlias should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
 	ValidMapStringToInt32 map[string]int32
 
 	ValidMapStringToInt64 map[string]int64
 
-	InvalidMapStringToInt map[string]int // want "field InvalidMapStringToInt map value should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidMapStringToInt map[string]int // want "field Integers.InvalidMapStringToInt map value should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidMapStringToUInt map[string]uint // want "field InvalidMapStringToUInt map value should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidMapStringToUInt map[string]uint // want "field Integers.InvalidMapStringToUInt map value should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
 	ValidMapInt32ToString map[int32]string
 
 	ValidMapInt64ToString map[int64]string
 
-	InvalidMapIntToString map[int]string // want "field InvalidMapIntToString map key should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidMapIntToString map[int]string // want "field Integers.InvalidMapIntToString map key should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidMapUIntToString map[uint]string // want "field InvalidMapUIntToString map key should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
+	InvalidMapUIntToString map[uint]string // want "field Integers.InvalidMapUIntToString map key should not use unsigned integers, use only int32 or int64 and apply validation to ensure the value is positive"
 
-	InvalidIntFromAnotherFile IntB // want "field InvalidIntFromAnotherFile type IntB should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidIntFromAnotherFile IntB // want "field Integers.InvalidIntFromAnotherFile type IntB should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 
-	InvalidSliceIntAliasFromAnotherFile InvalidSliceIntAliasB // want "field InvalidSliceIntAliasFromAnotherFile type InvalidSliceIntAliasB array element should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
+	InvalidSliceIntAliasFromAnotherFile InvalidSliceIntAliasB // want "field Integers.InvalidSliceIntAliasFromAnotherFile type InvalidSliceIntAliasB array element should not use an int, int8 or int16. Use int32 or int64 depending on bounding requirements"
 }
 
 // DoNothing is used to check that the analyser doesn't report on methods.

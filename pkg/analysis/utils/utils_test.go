@@ -17,9 +17,14 @@ package utils_test
 
 import (
 	"go/ast"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"golang.org/x/tools/go/analysis"
+	"golang.org/x/tools/go/analysis/analysistest"
+	"golang.org/x/tools/go/analysis/passes/inspect"
+	"golang.org/x/tools/go/ast/inspector"
 
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
@@ -73,3 +78,41 @@ var _ = Describe("FieldName", func() {
 		}),
 	)
 })
+
+func TestGetStructName(t *testing.T) {
+	testdata := analysistest.TestData()
+	analysistest.Run(t, testdata, structNameAnalyzer(), "getstructname")
+}
+
+func structNameAnalyzer() *analysis.Analyzer {
+	return &analysis.Analyzer{
+		Name:     "test",
+		Doc:      "test",
+		Requires: []*analysis.Analyzer{inspect.Analyzer},
+		Run: func(pass *analysis.Pass) (any, error) {
+			inspect, ok := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
+			if !ok {
+				return nil, errCouldNotGetInspector
+			}
+
+			// Filter to structs so that we can iterate over fields in a struct.
+			nodeFilter := []ast.Node{
+				(*ast.Field)(nil),
+			}
+
+			inspect.Preorder(nodeFilter, func(n ast.Node) {
+				field, ok := n.(*ast.Field)
+				if !ok {
+					return
+				}
+
+				fieldName := utils.FieldName(field)
+				structName := utils.GetStructName(pass, field)
+
+				pass.Reportf(field.Pos(), "field %s is in struct %s", fieldName, structName)
+			})
+
+			return nil, nil
+		},
+	}
+}
