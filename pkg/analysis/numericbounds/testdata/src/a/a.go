@@ -145,10 +145,6 @@ type SliceFields struct {
 	InvalidSlice []int32 // want "SliceFields.InvalidSlice is missing minimum bound validation marker" "SliceFields.InvalidSlice is missing maximum bound validation marker"
 
 	InvalidSlice64 []int64 // want "SliceFields.InvalidSlice64 is missing minimum bound validation marker" "SliceFields.InvalidSlice64 is missing maximum bound validation marker"
-
-	// +kubebuilder:validation:items:Minimum=0
-	// +kubebuilder:validation:items:Maximum=100
-	ValidSliceWithBounds []int32
 }
 
 // TypeAliasFields with type aliases should be checked

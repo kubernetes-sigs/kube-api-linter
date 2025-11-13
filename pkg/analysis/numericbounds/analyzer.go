@@ -71,6 +71,7 @@ func run(pass *analysis.Pass) (any, error) {
 
 	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
 		// Create TypeChecker with closure capturing markersAccess and qualifiedFieldName
+		// Ignore TypeChecker's prefix since we use qualifiedFieldName from inspector
 		typeChecker := utils.NewTypeChecker(func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, _ string) {
 			checkNumericType(pass, ident, node, markersAccess, qualifiedFieldName)
 		})

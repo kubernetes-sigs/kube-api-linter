@@ -31,16 +31,14 @@ type TypeChecker interface {
 }
 
 // NewTypeChecker returns a new TypeChecker with the provided checkFunc.
-func NewTypeChecker(isTypeFunc func(pass *analysis.Pass, ident ast.Expr) bool, checkFunc func(pass *analysis.Pass, expr ast.Expr, node ast.Node, prefix string)) TypeChecker {
+func NewTypeChecker(checkFunc func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, qualifiedFieldName string)) TypeChecker {
 	return &typeChecker{
-		isTypeFunc: isTypeFunc,
-		checkFunc:  checkFunc,
+		checkFunc: checkFunc,
 	}
 }
 
 type typeChecker struct {
-	isTypeFunc func(pass *analysis.Pass, expr ast.Expr) bool
-	checkFunc  func(pass *analysis.Pass, expr ast.Expr, node ast.Node, prefix string)
+	checkFunc func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, qualifiedFieldName string)
 }
 
 // CheckNode checks the provided node for built-in types.
@@ -86,11 +84,6 @@ func (t *typeChecker) checkTypeSpec(pass *analysis.Pass, tSpec *ast.TypeSpec, no
 }
 
 func (t *typeChecker) checkTypeExpr(pass *analysis.Pass, typeExpr ast.Expr, node ast.Node, prefix string) {
-	if t.isTypeFunc(pass, typeExpr) {
-		t.checkFunc(pass, typeExpr, node, prefix)
-		return
-	}
-
 	switch typ := typeExpr.(type) {
 	case *ast.Ident:
 		t.checkIdent(pass, typ, node, prefix)
@@ -109,6 +102,12 @@ func (t *typeChecker) checkTypeExpr(pass *analysis.Pass, typeExpr ast.Expr, node
 // checkIdent calls the checkFunc with the ident, when we have hit a built-in type.
 // If the ident is not a built in, we look at the underlying type until we hit a built-in type.
 func (t *typeChecker) checkIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string) {
+	if IsBasicType(pass, ident) {
+		// We've hit a built-in type, no need to check further.
+		t.checkFunc(pass, ident, node, prefix)
+		return
+	}
+
 	tSpec, ok := LookupTypeSpec(pass, ident)
 	if !ok {
 		return
