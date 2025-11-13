@@ -31,14 +31,14 @@ type TypeChecker interface {
 }
 
 // NewTypeChecker returns a new TypeChecker with the provided checkFunc.
-func NewTypeChecker(checkFunc func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string)) TypeChecker {
+func NewTypeChecker(checkFunc func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, qualifiedFieldName string)) TypeChecker {
 	return &typeChecker{
 		checkFunc: checkFunc,
 	}
 }
 
 type typeChecker struct {
-	checkFunc func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string)
+	checkFunc func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, qualifiedFieldName string)
 }
 
 // CheckNode checks the provided node for built-in types.
