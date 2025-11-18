@@ -203,7 +203,7 @@ type Taint struct {
 	Key string `json:"key" protobuf:"bytes,1,opt,name=key"` // want "optionalorrequired: field Taint.Key must be marked as optional or required"
 	// The taint value corresponding to the taint key. // want "commentstart: godoc for field Taint.Value should start with 'value ...'"
 	// +optional
-	Value string `json:"value,omitempty" protobuf:"bytes,2,opt,name=value"` // want "optionalfields: field Value should be a pointer."
+	Value string `json:"value,omitempty" protobuf:"bytes,2,opt,name=value"` // want "optionalfields: field Taint.Value should be a pointer."
 	// Required. The effect of the taint on pods // want "commentstart: godoc for field Taint.Effect should start with 'effect ...'"
 	// that do not tolerate the taint.
 	// Valid effects are NoSchedule, PreferNoSchedule and NoExecute.
@@ -245,21 +245,21 @@ type Toleration struct {
 	// Key is the taint key that the toleration applies to. Empty means match all taint keys. // want "commentstart: godoc for field Toleration.Key should start with 'key ...'"
 	// If the key is empty, operator must be Exists; this combination means to match all values and all keys.
 	// +optional
-	Key string `json:"key,omitempty" protobuf:"bytes,1,opt,name=key"` // want "optionalfields: field Key should be a pointer."
+	Key string `json:"key,omitempty" protobuf:"bytes,1,opt,name=key"` // want "optionalfields: field Toleration.Key should be a pointer."
 	// Operator represents a key's relationship to the value. // want "commentstart: godoc for field Toleration.Operator should start with 'operator ...'"
 	// Valid operators are Exists and Equal. Defaults to Equal.
 	// Exists is equivalent to wildcard for value, so that a pod can
 	// tolerate all taints of a particular category.
 	// +optional
-	Operator TolerationOperator `json:"operator,omitempty" protobuf:"bytes,2,opt,name=operator,casttype=TolerationOperator"` // want "optionalfields: field Operator should be a pointer."
+	Operator TolerationOperator `json:"operator,omitempty" protobuf:"bytes,2,opt,name=operator,casttype=TolerationOperator"` // want "optionalfields: field Toleration.Operator should be a pointer."
 	// Value is the taint value the toleration matches to. // want "commentstart: godoc for field Toleration.Value should start with 'value ...'"
 	// If the operator is Exists, the value should be empty, otherwise just a regular string.
 	// +optional
-	Value string `json:"value,omitempty" protobuf:"bytes,3,opt,name=value"` // want "optionalfields: field Value should be a pointer."
+	Value string `json:"value,omitempty" protobuf:"bytes,3,opt,name=value"` // want "optionalfields: field Toleration.Value should be a pointer."
 	// Effect indicates the taint effect to match. Empty means match all taint effects. // want "commentstart: godoc for field Toleration.Effect should start with 'effect ...'"
 	// When specified, allowed values are NoSchedule, PreferNoSchedule and NoExecute.
 	// +optional
-	Effect TaintEffect `json:"effect,omitempty" protobuf:"bytes,4,opt,name=effect,casttype=TaintEffect"` // want "optionalfields: field Effect should be a pointer."
+	Effect TaintEffect `json:"effect,omitempty" protobuf:"bytes,4,opt,name=effect,casttype=TaintEffect"` // want "optionalfields: field Toleration.Effect should be a pointer."
 	// TolerationSeconds represents the period of time the toleration (which must be // want "commentstart: godoc for field Toleration.TolerationSeconds should start with 'tolerationSeconds ...'"
 	// of effect NoExecute, otherwise this field is ignored) tolerates the taint. By default,
 	// it is not set, which means tolerate the taint forever (do not evict). Zero and

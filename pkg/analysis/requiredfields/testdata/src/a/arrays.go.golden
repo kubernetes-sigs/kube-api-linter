@@ -2,13 +2,13 @@ package a
 
 type TestArrays struct {
 	// +required
-	Array []string `json:"array,omitempty"` // want "field Array should have the omitempty tag."
+	Array []string `json:"array,omitempty"` // want "field TestArrays.Array should have the omitempty tag."
 
 	// +required
 	ArrayWithOmitEmpty []string `json:"arrayWithOmitEmpty,omitempty"`
 
 	// +required
-	ArrayPtr []*string `json:"arrayPtr,omitempty"` // want "field ArrayPtr should have the omitempty tag."
+	ArrayPtr []*string `json:"arrayPtr,omitempty"` // want "field TestArrays.ArrayPtr should have the omitempty tag."
 
 	// +required
 	ArrayWithOmitEmptyPtr []*string `json:"arrayWithOmitEmptyPtr,omitempty"`
@@ -16,7 +16,7 @@ type TestArrays struct {
     // This is not picked up as the field is marked as optional.
 	// +kubebuilder:validation:MinItems=1
 	// +required
-	ArrayWithPositiveMinItems []string `json:"arrayWithPositiveMinItems,omitempty"` // want "field ArrayWithPositiveMinItems should have the omitempty tag."
+	ArrayWithPositiveMinItems []string `json:"arrayWithPositiveMinItems,omitempty"` // want "field TestArrays.ArrayWithPositiveMinItems should have the omitempty tag."
 
 	// This is not picked up as the field is marked as optional.
 	// +kubebuilder:validation:MinItems=1
@@ -29,7 +29,7 @@ type TestArrays struct {
 
 	// +kubebuilder:validation:MinItems=0
 	// +required
-	ArrayWithZeroMinItems []string `json:"arrayWithZeroMinItems,omitempty"` // want "field ArrayWithZeroMinItems should have the omitempty tag."
+	ArrayWithZeroMinItems []string `json:"arrayWithZeroMinItems,omitempty"` // want "field TestArrays.ArrayWithZeroMinItems should have the omitempty tag."
 
 	// +kubebuilder:validation:MinItems=0
 	// +optional
@@ -42,7 +42,7 @@ type TestArrays struct {
 
 	// +kubebuilder:validation:MinLength=1
 	// +required
-	ByteArrayWithMinLength []byte `json:"byteArrayWithMinLength,omitempty"` // want "field ByteArrayWithMinLength should have the omitempty tag."
+	ByteArrayWithMinLength []byte `json:"byteArrayWithMinLength,omitempty"` // want "field TestArrays.ByteArrayWithMinLength should have the omitempty tag."
 
 	// +kubebuilder:validation:MinLength=1
 	// +required
@@ -56,8 +56,8 @@ type TestArrays struct {
 	ByteArrayWithMinLength0WithOmitEmpty []byte `json:"byteArrayWithMinLength0WithOmitEmpty,omitempty"`
 
 	// +required
-	PtrArray []string `json:"ptrArray,omitempty"` // want "field PtrArray should have the omitempty tag." "field PtrArray underlying type does not need to be a pointer. The pointer should be removed."
+	PtrArray []string `json:"ptrArray,omitempty"` // want "field TestArrays.PtrArray should have the omitempty tag." "field TestArrays.PtrArray underlying type does not need to be a pointer. The pointer should be removed."
 
 	// +required
-	PtrArrayWithOmitEmpty []string `json:"ptrArrayWithOmitEmpty,omitempty"` // want "field PtrArrayWithOmitEmpty underlying type does not need to be a pointer. The pointer should be removed."
+	PtrArrayWithOmitEmpty []string `json:"ptrArrayWithOmitEmpty,omitempty"` // want "field TestArrays.PtrArrayWithOmitEmpty underlying type does not need to be a pointer. The pointer should be removed."
 }

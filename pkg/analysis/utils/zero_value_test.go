@@ -70,7 +70,8 @@ func testZeroValueAnalyzer(considerOmitZero bool) *analysis.Analyzer {
 					return
 				}
 
-				zeroValueValid, complete := utils.IsZeroValueValid(pass, field, field.Type, markers, considerOmitZero)
+				// TODO: will fix it post merge of https://github.com/kubernetes-sigs/kube-api-linter/pull/191 to use utils.GetQualifiedFieldName()
+				zeroValueValid, complete := utils.IsZeroValueValid(pass, field, field.Type, markers, considerOmitZero, "")
 				if !zeroValueValid {
 					pass.Reportf(field.Pos(), "zero value is not valid")
 				} else {
