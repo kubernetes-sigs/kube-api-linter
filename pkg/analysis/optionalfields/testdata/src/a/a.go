@@ -19,36 +19,36 @@ type A struct {
 
 	// string is a string field.
 	// +optional
-	String string `json:"string,omitempty"` // want "field String should be a pointer."
+	String string `json:"string,omitempty"` // want "field A.String should be a pointer."
 
 	// NonOmittedString is a string field without omitempty
 	// +optional
-	NonOmittedString string `json:"nonOmittedString"` // want "field NonOmittedString should be a pointer." "field NonOmittedString should have the omitempty tag."
+	NonOmittedString string `json:"nonOmittedString"` // want "field A.NonOmittedString should be a pointer." "field A.NonOmittedString should have the omitempty tag."
 
 	// int is an int field.
 	// +optional
-	Int int `json:"int,omitempty"` // want "field Int should be a pointer."
+	Int int `json:"int,omitempty"` // want "field A.Int should be a pointer."
 
 	// nonOmittedInt is an int field without omitempty
 	// +optional
-	NonOmittedInt int `json:"nonOmittedInt"` // want "field NonOmittedInt should be a pointer." "field NonOmittedInt should have the omitempty tag."
+	NonOmittedInt int `json:"nonOmittedInt"` // want "field A.NonOmittedInt should be a pointer." "field A.NonOmittedInt should have the omitempty tag."
 
 	// struct is a struct field.
 	// +optional
-	Struct B `json:"struct,omitempty"` // want "field Struct should be a pointer."
+	Struct B `json:"struct,omitempty"` // want "field A.Struct should be a pointer."
 
 	// nonOmittedStruct is a struct field without omitempty.
 	// +optional
-	NonOmittedStruct B `json:"nonOmittedStruct"` // want "field NonOmittedStruct should be a pointer." "field NonOmittedStruct should have the omitempty tag."
+	NonOmittedStruct B `json:"nonOmittedStruct"` // want "field A.NonOmittedStruct should be a pointer." "field A.NonOmittedStruct should have the omitempty tag."
 
 	// structWithMinProperties is a struct field with a minimum number of properties.
 	// +kubebuilder:validation:MinProperties=1
 	// +optional
-	StructWithMinProperties B `json:"structWithMinProperties,omitempty"` // want "field StructWithMinProperties should be a pointer."
+	StructWithMinProperties B `json:"structWithMinProperties,omitempty"` // want "field A.StructWithMinProperties should be a pointer."
 
 	// structWithMinPropertiesOnStruct is a struct field with a minimum number of properties on the struct.
 	// +optional
-	StructWithMinPropertiesOnStruct D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field StructWithMinPropertiesOnStruct should be a pointer."
+	StructWithMinPropertiesOnStruct D `json:"structWithMinPropertiesOnStruct,omitempty"` // want "field A.StructWithMinPropertiesOnStruct should be a pointer."
 
 	// slice is a slice field.
 	// +optional
@@ -60,15 +60,15 @@ type A struct {
 
 	// PointerSlice is a pointer slice field.
 	// +optional
-	PointerSlice *[]string `json:"pointerSlice,omitempty"` // want "field PointerSlice underlying type does not need to be a pointer. The pointer should be removed."
+	PointerSlice *[]string `json:"pointerSlice,omitempty"` // want "field A.PointerSlice underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerMap is a pointer map field.
 	// +optional
-	PointerMap *map[string]string `json:"pointerMap,omitempty"` // want "field PointerMap underlying type does not need to be a pointer. The pointer should be removed."
+	PointerMap *map[string]string `json:"pointerMap,omitempty"` // want "field A.PointerMap underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerPointerString is a double pointer string field.
 	// +optional
-	DoublePointerString **string `json:"doublePointerString,omitempty"` // want "field DoublePointerString underlying type does not need to be a pointer. The pointer should be removed."
+	DoublePointerString **string `json:"doublePointerString,omitempty"` // want "field A.DoublePointerString underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerStringAlias is a pointer string alias field.
 	// +optional
@@ -93,16 +93,16 @@ type A struct {
 
 	// PointerSliceAlias is a pointer slice alias field.
 	// +optional
-	PointerSliceAlias *SliceAlias `json:"pointerSliceAlias,omitempty"` // want "field PointerSliceAlias underlying type does not need to be a pointer. The pointer should be removed."
+	PointerSliceAlias *SliceAlias `json:"pointerSliceAlias,omitempty"` // want "field A.PointerSliceAlias underlying type does not need to be a pointer. The pointer should be removed."
 
 	// PointerMapAlias is a pointer map alias field.
 	// +optional
-	PointerMapAlias *MapAlias `json:"pointerMapAlias,omitempty"` // want "field PointerMapAlias underlying type does not need to be a pointer. The pointer should be removed."
+	PointerMapAlias *MapAlias `json:"pointerMapAlias,omitempty"` // want "field A.PointerMapAlias underlying type does not need to be a pointer. The pointer should be removed."
 
 	// StringAliasWithEnum is a string alias field with enum validation.
 	// With the "Always" pointer preference, optional fields should be pointers regardless of zero value validity.
 	// +optional
-	StringAliasWithEnum StringAliasWithEnum `json:"stringAliasWithEnum,omitempty"` // want "field StringAliasWithEnum should be a pointer."
+	StringAliasWithEnum StringAliasWithEnum `json:"stringAliasWithEnum,omitempty"` // want "field A.StringAliasWithEnum should be a pointer."
 
 	// StringAliasWithEnumPointer is a pointer string alias field with enum validation.
 	// This is correctly a pointer since the zero value is not valid.
@@ -111,7 +111,7 @@ type A struct {
 
 	// StringAliasWithEnumNoOmitEmpty is a string alias field with enum validation and no omitempty.
 	// +optional
-	StringAliasWithEnumNoOmitEmpty *StringAliasWithEnum `json:"stringAliasWithEnumNoOmitEmpty"` // want "field StringAliasWithEnumNoOmitEmpty should have the omitempty tag."
+	StringAliasWithEnumNoOmitEmpty *StringAliasWithEnum `json:"stringAliasWithEnumNoOmitEmpty"` // want "field A.StringAliasWithEnumNoOmitEmpty should have the omitempty tag."
 }
 
 type B struct {

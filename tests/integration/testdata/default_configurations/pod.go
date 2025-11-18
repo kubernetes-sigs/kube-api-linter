@@ -52,7 +52,7 @@ type PodSpec struct {
 	// Default to Always.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
 	// +optional
-	RestartPolicy RestartPolicy `json:"restartPolicy,omitempty" protobuf:"bytes,3,opt,name=restartPolicy,casttype=RestartPolicy"` // want "optionalfields: field RestartPolicy should be a pointer."
+	RestartPolicy RestartPolicy `json:"restartPolicy,omitempty" protobuf:"bytes,3,opt,name=restartPolicy,casttype=RestartPolicy"` // want "optionalfields: field PodSpec.RestartPolicy should be a pointer."
 	// Optional duration in seconds the pod needs to terminate gracefully. May be decreased in delete request. // want "commentstart: godoc for field PodSpec.TerminationGracePeriodSeconds should start with 'terminationGracePeriodSeconds ...'"
 	// Value must be non-negative integer. The value zero indicates stop immediately via
 	// the kill signal (no opportunity to shut down).
@@ -75,7 +75,7 @@ type PodSpec struct {
 	// To have DNS options set along with hostNetwork, you have to specify DNS policy
 	// explicitly to 'ClusterFirstWithHostNet'.
 	// +optional
-	DNSPolicy DNSPolicy `json:"dnsPolicy,omitempty" protobuf:"bytes,6,opt,name=dnsPolicy,casttype=DNSPolicy"` // want "optionalfields: field DNSPolicy should be a pointer."
+	DNSPolicy DNSPolicy `json:"dnsPolicy,omitempty" protobuf:"bytes,6,opt,name=dnsPolicy,casttype=DNSPolicy"` // want "optionalfields: field PodSpec.DNSPolicy should be a pointer."
 	// NodeSelector is a selector which must be true for the pod to fit on a node. // want "commentstart: godoc for field PodSpec.NodeSelector should start with 'nodeSelector ...'"
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
@@ -86,12 +86,12 @@ type PodSpec struct {
 	// ServiceAccountName is the name of the ServiceAccount to use to run this pod. // want "commentstart: godoc for field PodSpec.ServiceAccountName should start with 'serviceAccountName ...'"
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 	// +optional
-	ServiceAccountName string `json:"serviceAccountName,omitempty" protobuf:"bytes,8,opt,name=serviceAccountName"` // want "optionalfields: field ServiceAccountName should be a pointer."
+	ServiceAccountName string `json:"serviceAccountName,omitempty" protobuf:"bytes,8,opt,name=serviceAccountName"` // want "optionalfields: field PodSpec.ServiceAccountName should be a pointer."
 	// DeprecatedServiceAccount is a deprecated alias for ServiceAccountName. // want "commentstart: godoc for field PodSpec.DeprecatedServiceAccount should start with 'serviceAccount ...'"
 	// Deprecated: Use serviceAccountName instead.
 	// +k8s:conversion-gen=false
 	// +optional
-	DeprecatedServiceAccount string `json:"serviceAccount,omitempty" protobuf:"bytes,9,opt,name=serviceAccount"` // want "optionalfields: field DeprecatedServiceAccount should be a pointer."
+	DeprecatedServiceAccount string `json:"serviceAccount,omitempty" protobuf:"bytes,9,opt,name=serviceAccount"` // want "optionalfields: field PodSpec.DeprecatedServiceAccount should be a pointer."
 	// AutomountServiceAccountToken indicates whether a service account token should be automatically mounted. // want "commentstart: godoc for field PodSpec.AutomountServiceAccountToken should start with 'automountServiceAccountToken ...'"
 	// +optional
 	AutomountServiceAccountToken *bool `json:"automountServiceAccountToken,omitempty" protobuf:"varint,21,opt,name=automountServiceAccountToken"`
@@ -102,7 +102,7 @@ type PodSpec struct {
 	// This field should not be used to express a desire for the pod to be scheduled on a specific node.
 	// https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodename
 	// +optional
-	NodeName string `json:"nodeName,omitempty" protobuf:"bytes,10,opt,name=nodeName"` // want "optionalfields: field NodeName should be a pointer."
+	NodeName string `json:"nodeName,omitempty" protobuf:"bytes,10,opt,name=nodeName"` // want "optionalfields: field PodSpec.NodeName should be a pointer."
 	// Host networking requested for this pod. Use the host's network namespace. // want "commentstart: godoc for field PodSpec.HostNetwork should start with 'hostNetwork ...'"
 	// When using HostNetwork you should specify ports so the scheduler is aware.
 	// When `hostNetwork` is true, specified `hostPort` fields in port definitions must match `containerPort`,
@@ -110,17 +110,17 @@ type PodSpec struct {
 	// Default to false.
 	// +k8s:conversion-gen=false
 	// +optional
-	HostNetwork bool `json:"hostNetwork,omitempty" protobuf:"varint,11,opt,name=hostNetwork"` // want "optionalfields: field HostNetwork should be a pointer."
+	HostNetwork bool `json:"hostNetwork,omitempty" protobuf:"varint,11,opt,name=hostNetwork"` // want "optionalfields: field PodSpec.HostNetwork should be a pointer."
 	// Use the host's pid namespace. // want "commentstart: godoc for field PodSpec.HostPID should start with 'hostPID ...'"
 	// Optional: Default to false.
 	// +k8s:conversion-gen=false
 	// +optional
-	HostPID bool `json:"hostPID,omitempty" protobuf:"varint,12,opt,name=hostPID"` // want "optionalfields: field HostPID should be a pointer."
+	HostPID bool `json:"hostPID,omitempty" protobuf:"varint,12,opt,name=hostPID"` // want "optionalfields: field PodSpec.HostPID should be a pointer."
 	// Use the host's ipc namespace. // want "commentstart: godoc for field PodSpec.HostIPC should start with 'hostIPC ...'"
 	// Optional: Default to false.
 	// +k8s:conversion-gen=false
 	// +optional
-	HostIPC bool `json:"hostIPC,omitempty" protobuf:"varint,13,opt,name=hostIPC"` // want "optionalfields: field HostIPC should be a pointer."
+	HostIPC bool `json:"hostIPC,omitempty" protobuf:"varint,13,opt,name=hostIPC"` // want "optionalfields: field PodSpec.HostIPC should be a pointer."
 	// Share a single process namespace between all of the containers in a pod. // want "commentstart: godoc for field PodSpec.ShareProcessNamespace should start with 'shareProcessNamespace ...'"
 	// When this is set containers will be able to view and signal processes from other containers
 	// in the same pod, and the first process in each container will not be assigned PID 1.
@@ -145,18 +145,18 @@ type PodSpec struct {
 	// Specifies the hostname of the Pod // want "commentstart: godoc for field PodSpec.Hostname should start with 'hostname ...'"
 	// If not specified, the pod's hostname will be set to a system-defined value.
 	// +optional
-	Hostname string `json:"hostname,omitempty" protobuf:"bytes,16,opt,name=hostname"` // want "optionalfields: field Hostname should be a pointer."
+	Hostname string `json:"hostname,omitempty" protobuf:"bytes,16,opt,name=hostname"` // want "optionalfields: field PodSpec.Hostname should be a pointer."
 	// If specified, the fully qualified Pod hostname will be "<hostname>.<subdomain>.<pod namespace>.svc.<cluster domain>". // want "commentstart: godoc for field PodSpec.Subdomain should start with 'subdomain ...'"
 	// If not specified, the pod will not have a domainname at all.
 	// +optional
-	Subdomain string `json:"subdomain,omitempty" protobuf:"bytes,17,opt,name=subdomain"` // want "optionalfields: field Subdomain should be a pointer."
+	Subdomain string `json:"subdomain,omitempty" protobuf:"bytes,17,opt,name=subdomain"` // want "optionalfields: field PodSpec.Subdomain should be a pointer."
 	// If specified, the pod's scheduling constraints // want "commentstart: godoc for field PodSpec.Affinity should start with 'affinity ...'"
 	// +optional
 	Affinity *Affinity `json:"affinity,omitempty" protobuf:"bytes,18,opt,name=affinity"`
 	// If specified, the pod will be dispatched by specified scheduler. // want "commentstart: godoc for field PodSpec.SchedulerName should start with 'schedulerName ...'"
 	// If not specified, the pod will be dispatched by default scheduler.
 	// +optional
-	SchedulerName string `json:"schedulerName,omitempty" protobuf:"bytes,19,opt,name=schedulerName"` // want "optionalfields: field SchedulerName should be a pointer."
+	SchedulerName string `json:"schedulerName,omitempty" protobuf:"bytes,19,opt,name=schedulerName"` // want "optionalfields: field PodSpec.SchedulerName should be a pointer."
 	// If specified, the pod's tolerations. // want "commentstart: godoc for field PodSpec.Tolerations should start with 'tolerations ...'"
 	// +optional
 	// +listType=atomic
@@ -176,7 +176,7 @@ type PodSpec struct {
 	// If not specified, the pod priority will be default or zero if there is no
 	// default.
 	// +optional
-	PriorityClassName string `json:"priorityClassName,omitempty" protobuf:"bytes,24,opt,name=priorityClassName"` // want "optionalfields: field PriorityClassName should be a pointer."
+	PriorityClassName string `json:"priorityClassName,omitempty" protobuf:"bytes,24,opt,name=priorityClassName"` // want "optionalfields: field PodSpec.PriorityClassName should be a pointer."
 	// The priority value. Various system components use this field to find the // want "commentstart: godoc for field PodSpec.Priority should start with 'priority ...'"
 	// priority of the pod. When Priority Admission Controller is enabled, it
 	// prevents users from setting this field. The admission controller populates

@@ -7,7 +7,7 @@ type VolumeMount struct {
 	// Mounted read-only if true, read-write otherwise (false or unspecified). // want "commentstart: godoc for field VolumeMount.ReadOnly should start with 'readOnly ...'"
 	// Defaults to false.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"` // want "optionalfields: field VolumeMount.ReadOnly should be a pointer."
 	// RecursiveReadOnly specifies whether read-only mounts should be handled // want "commentstart: godoc for field VolumeMount.RecursiveReadOnly should start with 'recursiveReadOnly ...'"
 	// recursively.
 	//
@@ -32,7 +32,7 @@ type VolumeMount struct {
 	// Path within the volume from which the container's volume should be mounted. // want "commentstart: godoc for field VolumeMount.SubPath should start with 'subPath ...'"
 	// Defaults to "" (volume's root).
 	// +optional
-	SubPath string `json:"subPath,omitempty" protobuf:"bytes,4,opt,name=subPath"` // want "optionalfields: field SubPath should be a pointer."
+	SubPath string `json:"subPath,omitempty" protobuf:"bytes,4,opt,name=subPath"` // want "optionalfields: field VolumeMount.SubPath should be a pointer."
 	// mountPropagation determines how mounts are propagated from the host
 	// to container and the other way around.
 	// When not set, MountPropagationNone is used.
@@ -46,7 +46,7 @@ type VolumeMount struct {
 	// Defaults to "" (volume's root).
 	// SubPathExpr and SubPath are mutually exclusive.
 	// +optional
-	SubPathExpr string `json:"subPathExpr,omitempty" protobuf:"bytes,6,opt,name=subPathExpr"` // want "optionalfields: field SubPathExpr should be a pointer."
+	SubPathExpr string `json:"subPathExpr,omitempty" protobuf:"bytes,6,opt,name=subPathExpr"` // want "optionalfields: field VolumeMount.SubPathExpr should be a pointer."
 }
 
 // MountPropagationMode describes mount propagation.
@@ -291,7 +291,7 @@ type ProjectedVolumeSource struct {
 	// handles one source.
 	// +optional
 	// +listType=atomic
-	Sources []VolumeProjection `json:"sources" protobuf:"bytes,1,rep,name=sources"` // want "optionalfields: field Sources should have the omitempty tag." "arrayofstruct: ProjectedVolumeSource.Sources is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
+	Sources []VolumeProjection `json:"sources" protobuf:"bytes,1,rep,name=sources"` // want "optionalfields: field ProjectedVolumeSource.Sources should have the omitempty tag." "arrayofstruct: ProjectedVolumeSource.Sources is an array of structs, but the struct has no required fields. At least one field should be marked as required to prevent ambiguous YAML configurations"
 	// defaultMode are the mode bits used to set permissions on created files by default.
 	// Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511.
 	// YAML accepts both octal and decimal values, JSON requires decimal values for mode bits.
@@ -311,7 +311,7 @@ type ImageVolumeSource struct {
 	// This field is optional to allow higher level config management to default or override
 	// container images in workload controllers like Deployments and StatefulSets.
 	// +optional
-	Reference string `json:"reference,omitempty" protobuf:"bytes,1,opt,name=reference"` // want "optionalfields: field Reference should be a pointer." "noreferences: naming convention \"reference-to-ref\": field ImageVolumeSource.Reference: field names should use 'Ref' instead of 'Reference'"
+	Reference string `json:"reference,omitempty" protobuf:"bytes,1,opt,name=reference"` // want "optionalfields: field ImageVolumeSource.Reference should be a pointer." "noreferences: naming convention \"reference-to-ref\": field ImageVolumeSource.Reference: field names should use 'Ref' instead of 'Reference'"
 
 	// Policy for pulling OCI objects. Possible values are: // want "commentstart: godoc for field ImageVolumeSource.PullPolicy should start with 'pullPolicy ...'"
 	// Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.
@@ -319,7 +319,7 @@ type ImageVolumeSource struct {
 	// IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.
 	// Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
 	// +optional
-	PullPolicy PullPolicy `json:"pullPolicy,omitempty" protobuf:"bytes,2,opt,name=pullPolicy,casttype=PullPolicy"` // want "optionalfields: field PullPolicy should be a pointer."
+	PullPolicy PullPolicy `json:"pullPolicy,omitempty" protobuf:"bytes,2,opt,name=pullPolicy,casttype=PullPolicy"` // want "optionalfields: field ImageVolumeSource.PullPolicy should be a pointer."
 }
 
 // PersistentVolumeClaimVolumeSource references the user's PVC in the same namespace.
@@ -333,7 +333,7 @@ type PersistentVolumeClaimVolumeSource struct {
 	// readOnly Will force the ReadOnly setting in VolumeMounts.
 	// Default false.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,2,opt,name=readOnly"` // want "optionalfields: field PersistentVolumeClaimVolumeSource.ReadOnly should be a pointer."
 }
 
 // PersistentVolumeSource is similar to VolumeSource but meant for the
@@ -492,7 +492,7 @@ type EmptyDirVolumeSource struct {
 	// Must be an empty string (default) or Memory.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
 	// +optional
-	Medium StorageMedium `json:"medium,omitempty" protobuf:"bytes,1,opt,name=medium,casttype=StorageMedium"` // want "optionalfields: field Medium should be a pointer."
+	Medium StorageMedium `json:"medium,omitempty" protobuf:"bytes,1,opt,name=medium,casttype=StorageMedium"` // want "optionalfields: field EmptyDirVolumeSource.Medium should be a pointer."
 	// sizeLimit is the total amount of local storage required for this EmptyDir volume.
 	// The size limit is also applicable for memory medium.
 	// The maximum usage on memory medium EmptyDir would be the minimum value between
@@ -517,7 +517,7 @@ type GlusterfsVolumeSource struct {
 	// Defaults to false.
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field GlusterfsVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a Glusterfs mount that lasts the lifetime of a pod.
@@ -535,7 +535,7 @@ type GlusterfsPersistentVolumeSource struct {
 	// Defaults to false.
 	// More info: https://examples.k8s.io/volumes/glusterfs/README.md#create-a-pod
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field GlusterfsPersistentVolumeSource.ReadOnly should be a pointer."
 
 	// endpointsNamespace is the namespace that contains Glusterfs endpoint.
 	// If this field is empty, the EndpointNamespace defaults to the same namespace as the bound PVC.
@@ -560,25 +560,25 @@ type RBDVolumeSource struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field RBDVolumeSource.FSType should be a pointer."
 	// pool is the rados pool name.
 	// Default is rbd.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
 	// +default="rbd"
-	RBDPool string `json:"pool,omitempty" protobuf:"bytes,4,opt,name=pool"` // want "optionalfields: field RBDPool should be a pointer."
+	RBDPool string `json:"pool,omitempty" protobuf:"bytes,4,opt,name=pool"` // want "optionalfields: field RBDVolumeSource.RBDPool should be a pointer."
 	// user is the rados user name.
 	// Default is admin.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
 	// +default="admin"
-	RadosUser string `json:"user,omitempty" protobuf:"bytes,5,opt,name=user"` // want "optionalfields: field RadosUser should be a pointer."
+	RadosUser string `json:"user,omitempty" protobuf:"bytes,5,opt,name=user"` // want "optionalfields: field RBDVolumeSource.RadosUser should be a pointer."
 	// keyring is the path to key ring for RBDUser.
 	// Default is /etc/ceph/keyring.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
 	// +default="/etc/ceph/keyring"
-	Keyring string `json:"keyring,omitempty" protobuf:"bytes,6,opt,name=keyring"` // want "optionalfields: field Keyring should be a pointer."
+	Keyring string `json:"keyring,omitempty" protobuf:"bytes,6,opt,name=keyring"` // want "optionalfields: field RBDVolumeSource.Keyring should be a pointer."
 	// secretRef is name of the authentication secret for RBDUser. If provided
 	// overrides keyring.
 	// Default is nil.
@@ -589,7 +589,7 @@ type RBDVolumeSource struct {
 	// Defaults to false.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,8,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,8,opt,name=readOnly"` // want "optionalfields: field RBDVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a Rados Block Device mount that lasts the lifetime of a pod.
@@ -608,25 +608,25 @@ type RBDPersistentVolumeSource struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#rbd
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field RBDPersistentVolumeSource.FSType should be a pointer."
 	// pool is the rados pool name.
 	// Default is rbd.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
 	// +default="rbd"
-	RBDPool string `json:"pool,omitempty" protobuf:"bytes,4,opt,name=pool"` // want "optionalfields: field RBDPool should be a pointer."
+	RBDPool string `json:"pool,omitempty" protobuf:"bytes,4,opt,name=pool"` // want "optionalfields: field RBDPersistentVolumeSource.RBDPool should be a pointer."
 	// user is the rados user name.
 	// Default is admin.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
 	// +default="admin"
-	RadosUser string `json:"user,omitempty" protobuf:"bytes,5,opt,name=user"` // want "optionalfields: field RadosUser should be a pointer."
+	RadosUser string `json:"user,omitempty" protobuf:"bytes,5,opt,name=user"` // want "optionalfields: field RBDPersistentVolumeSource.RadosUser should be a pointer."
 	// keyring is the path to key ring for RBDUser.
 	// Default is /etc/ceph/keyring.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
 	// +default="/etc/ceph/keyring"
-	Keyring string `json:"keyring,omitempty" protobuf:"bytes,6,opt,name=keyring"` // want "optionalfields: field Keyring should be a pointer."
+	Keyring string `json:"keyring,omitempty" protobuf:"bytes,6,opt,name=keyring"` // want "optionalfields: field RBDPersistentVolumeSource.Keyring should be a pointer."
 	// secretRef is name of the authentication secret for RBDUser. If provided
 	// overrides keyring.
 	// Default is nil.
@@ -637,7 +637,7 @@ type RBDPersistentVolumeSource struct {
 	// Defaults to false.
 	// More info: https://examples.k8s.io/volumes/rbd/README.md#how-to-use-it
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,8,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,8,opt,name=readOnly"` // want "optionalfields: field RBDPersistentVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a cinder volume resource in Openstack.
@@ -653,12 +653,12 @@ type CinderVolumeSource struct {
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field CinderVolumeSource.FSType should be a pointer."
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field CinderVolumeSource.ReadOnly should be a pointer."
 	// secretRef is optional: points to a secret object containing parameters used to connect
 	// to OpenStack.
 	// +optional
@@ -678,12 +678,12 @@ type CinderPersistentVolumeSource struct {
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field CinderPersistentVolumeSource.FSType should be a pointer."
 	// readOnly is Optional: Defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// More info: https://examples.k8s.io/mysql-cinder-pd/README.md
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field CinderPersistentVolumeSource.ReadOnly should be a pointer."
 	// secretRef is Optional: points to a secret object containing parameters used to connect
 	// to OpenStack.
 	// +optional
@@ -699,15 +699,15 @@ type CephFSVolumeSource struct {
 	Monitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field CephFSVolumeSource.Monitors must be marked as optional or required"
 	// path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
 	// +optional
-	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"` // want "optionalfields: field Path should be a pointer."
+	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"` // want "optionalfields: field CephFSVolumeSource.Path should be a pointer."
 	// user is optional: User is the rados user name, default is admin
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
-	User string `json:"user,omitempty" protobuf:"bytes,3,opt,name=user"` // want "optionalfields: field User should be a pointer."
+	User string `json:"user,omitempty" protobuf:"bytes,3,opt,name=user"` // want "optionalfields: field CephFSVolumeSource.User should be a pointer."
 	// secretFile is Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
-	SecretFile string `json:"secretFile,omitempty" protobuf:"bytes,4,opt,name=secretFile"` // want "optionalfields: field SecretFile should be a pointer."
+	SecretFile string `json:"secretFile,omitempty" protobuf:"bytes,4,opt,name=secretFile"` // want "optionalfields: field CephFSVolumeSource.SecretFile should be a pointer."
 	// secretRef is Optional: SecretRef is reference to the authentication secret for User, default is empty.
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
@@ -716,7 +716,7 @@ type CephFSVolumeSource struct {
 	// the ReadOnly setting in VolumeMounts.
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field CephFSVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a Ceph Filesystem mount that lasts the lifetime of a pod
@@ -728,15 +728,15 @@ type CephFSPersistentVolumeSource struct {
 	Monitors []string `json:"monitors" protobuf:"bytes,1,rep,name=monitors"` // want "optionalorrequired: field CephFSPersistentVolumeSource.Monitors must be marked as optional or required"
 	// path is Optional: Used as the mounted root, rather than the full Ceph tree, default is /
 	// +optional
-	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"` // want "optionalfields: field Path should be a pointer."
+	Path string `json:"path,omitempty" protobuf:"bytes,2,opt,name=path"` // want "optionalfields: field CephFSPersistentVolumeSource.Path should be a pointer."
 	// user is Optional: User is the rados user name, default is admin
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
-	User string `json:"user,omitempty" protobuf:"bytes,3,opt,name=user"` // want "optionalfields: field User should be a pointer."
+	User string `json:"user,omitempty" protobuf:"bytes,3,opt,name=user"` // want "optionalfields: field CephFSPersistentVolumeSource.User should be a pointer."
 	// secretFile is Optional: SecretFile is the path to key ring for User, default is /etc/ceph/user.secret
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
-	SecretFile string `json:"secretFile,omitempty" protobuf:"bytes,4,opt,name=secretFile"` // want "optionalfields: field SecretFile should be a pointer."
+	SecretFile string `json:"secretFile,omitempty" protobuf:"bytes,4,opt,name=secretFile"` // want "optionalfields: field CephFSPersistentVolumeSource.SecretFile should be a pointer."
 	// secretRef is Optional: SecretRef is reference to the authentication secret for User, default is empty.
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
@@ -745,7 +745,7 @@ type CephFSPersistentVolumeSource struct {
 	// the ReadOnly setting in VolumeMounts.
 	// More info: https://examples.k8s.io/volumes/cephfs/README.md#how-to-use-it
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field CephFSPersistentVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a Flocker volume mounted by the Flocker agent.
@@ -755,10 +755,10 @@ type FlockerVolumeSource struct {
 	// datasetName is Name of the dataset stored as metadata -> name on the dataset for Flocker
 	// should be considered as deprecated
 	// +optional
-	DatasetName string `json:"datasetName,omitempty" protobuf:"bytes,1,opt,name=datasetName"` // want "optionalfields: field DatasetName should be a pointer."
+	DatasetName string `json:"datasetName,omitempty" protobuf:"bytes,1,opt,name=datasetName"` // want "optionalfields: field FlockerVolumeSource.DatasetName should be a pointer."
 	// datasetUUID is the UUID of the dataset. This is unique identifier of a Flocker dataset
 	// +optional
-	DatasetUUID string `json:"datasetUUID,omitempty" protobuf:"bytes,2,opt,name=datasetUUID"` // want "optionalfields: field DatasetUUID should be a pointer."
+	DatasetUUID string `json:"datasetUUID,omitempty" protobuf:"bytes,2,opt,name=datasetUUID"` // want "optionalfields: field FlockerVolumeSource.DatasetUUID should be a pointer."
 }
 
 // StorageMedium defines ways that storage can be allocated to a volume.
@@ -787,19 +787,19 @@ type GCEPersistentDiskVolumeSource struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field GCEPersistentDiskVolumeSource.FSType should be a pointer."
 	// partition is the partition in the volume that you want to mount.
 	// If omitted, the default is to mount by volume name.
 	// Examples: For volume /dev/sda1, you specify the partition as "1".
 	// Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 	// +optional
-	Partition int32 `json:"partition,omitempty" protobuf:"varint,3,opt,name=partition"` // want "optionalfields: field Partition should be a pointer."
+	Partition int32 `json:"partition,omitempty" protobuf:"varint,3,opt,name=partition"` // want "optionalfields: field GCEPersistentDiskVolumeSource.Partition should be a pointer."
 	// readOnly here will force the ReadOnly setting in VolumeMounts.
 	// Defaults to false.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#gcepersistentdisk
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field GCEPersistentDiskVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a Quobyte mount that lasts the lifetime of a pod.
@@ -816,22 +816,22 @@ type QuobyteVolumeSource struct {
 	// readOnly here will force the Quobyte volume to be mounted with read-only permissions.
 	// Defaults to false.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field QuobyteVolumeSource.ReadOnly should be a pointer."
 
 	// user to map volume access to
 	// Defaults to serivceaccount user
 	// +optional
-	User string `json:"user,omitempty" protobuf:"bytes,4,opt,name=user"` // want "optionalfields: field User should be a pointer."
+	User string `json:"user,omitempty" protobuf:"bytes,4,opt,name=user"` // want "optionalfields: field QuobyteVolumeSource.User should be a pointer."
 
 	// group to map volume access to
 	// Default is no group
 	// +optional
-	Group string `json:"group,omitempty" protobuf:"bytes,5,opt,name=group"` // want "optionalfields: field Group should be a pointer."
+	Group string `json:"group,omitempty" protobuf:"bytes,5,opt,name=group"` // want "optionalfields: field QuobyteVolumeSource.Group should be a pointer."
 
 	// tenant owning the given Quobyte volume in the Backend
 	// Used with dynamically provisioned Quobyte volumes, value is set by the plugin
 	// +optional
-	Tenant string `json:"tenant,omitempty" protobuf:"bytes,6,opt,name=tenant"` // want "optionalfields: field Tenant should be a pointer."
+	Tenant string `json:"tenant,omitempty" protobuf:"bytes,6,opt,name=tenant"` // want "optionalfields: field QuobyteVolumeSource.Tenant should be a pointer."
 }
 
 // FlexPersistentVolumeSource represents a generic persistent volume resource that is
@@ -843,7 +843,7 @@ type FlexPersistentVolumeSource struct {
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FlexPersistentVolumeSource.FSType should be a pointer."
 	// secretRef is Optional: SecretRef is reference to the secret object containing
 	// sensitive information to pass to the plugin scripts. This may be
 	// empty if no secret object is specified. If the secret object
@@ -854,7 +854,7 @@ type FlexPersistentVolumeSource struct {
 	// readOnly is Optional: defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field FlexPersistentVolumeSource.ReadOnly should be a pointer."
 	// options is Optional: this field holds extra command options if any.
 	// +optional
 	Options map[string]string `json:"options,omitempty" protobuf:"bytes,5,rep,name=options"`
@@ -869,7 +869,7 @@ type FlexVolumeSource struct {
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". The default filesystem depends on FlexVolume script.
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FlexVolumeSource.FSType should be a pointer."
 	// secretRef is Optional: secretRef is reference to the secret object containing
 	// sensitive information to pass to the plugin scripts. This may be
 	// empty if no secret object is specified. If the secret object
@@ -880,7 +880,7 @@ type FlexVolumeSource struct {
 	// readOnly is Optional: defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field FlexVolumeSource.ReadOnly should be a pointer."
 	// options is Optional: this field holds extra command options if any.
 	// +optional
 	Options map[string]string `json:"options,omitempty" protobuf:"bytes,5,rep,name=options"`
@@ -902,17 +902,17 @@ type AWSElasticBlockStoreVolumeSource struct {
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field AWSElasticBlockStoreVolumeSource.FSType should be a pointer."
 	// partition is the partition in the volume that you want to mount.
 	// If omitted, the default is to mount by volume name.
 	// Examples: For volume /dev/sda1, you specify the partition as "1".
 	// Similarly, the volume partition for /dev/sda is "0" (or you can leave the property empty).
 	// +optional
-	Partition int32 `json:"partition,omitempty" protobuf:"varint,3,opt,name=partition"` // want "optionalfields: field Partition should be a pointer."
+	Partition int32 `json:"partition,omitempty" protobuf:"varint,3,opt,name=partition"` // want "optionalfields: field AWSElasticBlockStoreVolumeSource.Partition should be a pointer."
 	// readOnly value true will force the readOnly setting in VolumeMounts.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#awselasticblockstore
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field AWSElasticBlockStoreVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a volume that is populated with the contents of a git repository.
@@ -927,13 +927,13 @@ type GitRepoVolumeSource struct {
 	Repository string `json:"repository" protobuf:"bytes,1,opt,name=repository"` // want "optionalorrequired: field GitRepoVolumeSource.Repository must be marked as optional or required"
 	// revision is the commit hash for the specified revision.
 	// +optional
-	Revision string `json:"revision,omitempty" protobuf:"bytes,2,opt,name=revision"` // want "optionalfields: field Revision should be a pointer."
+	Revision string `json:"revision,omitempty" protobuf:"bytes,2,opt,name=revision"` // want "optionalfields: field GitRepoVolumeSource.Revision should be a pointer."
 	// directory is the target directory name.
 	// Must not contain or start with '..'.  If '.' is supplied, the volume directory will be the
 	// git repository.  Otherwise, if specified, the volume will contain the git repository in
 	// the subdirectory with the given name.
 	// +optional
-	Directory string `json:"directory,omitempty" protobuf:"bytes,3,opt,name=directory"` // want "optionalfields: field Directory should be a pointer."
+	Directory string `json:"directory,omitempty" protobuf:"bytes,3,opt,name=directory"` // want "optionalfields: field GitRepoVolumeSource.Directory should be a pointer."
 }
 
 // Adapts a Secret into a volume.
@@ -945,7 +945,7 @@ type SecretVolumeSource struct {
 	// secretName is the name of the secret in the pod's namespace to use.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
 	// +optional
-	SecretName string `json:"secretName,omitempty" protobuf:"bytes,1,opt,name=secretName"` // want "optionalfields: field SecretName should be a pointer."
+	SecretName string `json:"secretName,omitempty" protobuf:"bytes,1,opt,name=secretName"` // want "optionalfields: field SecretVolumeSource.SecretName should be a pointer."
 	// items If unspecified, each key-value pair in the Data field of the referenced
 	// Secret will be projected into the volume as a file whose name is the
 	// key and content is the value. If specified, the listed keys will be
@@ -1012,7 +1012,7 @@ type NFSVolumeSource struct {
 	// Defaults to false.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#nfs
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field NFSVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents an ISCSI disk.
@@ -1030,18 +1030,18 @@ type ISCSIVolumeSource struct {
 	// Defaults to 'default' (tcp).
 	// +optional
 	// +default="default"
-	ISCSIInterface string `json:"iscsiInterface,omitempty" protobuf:"bytes,4,opt,name=iscsiInterface"` // want "optionalfields: field ISCSIInterface should be a pointer."
+	ISCSIInterface string `json:"iscsiInterface,omitempty" protobuf:"bytes,4,opt,name=iscsiInterface"` // want "optionalfields: field ISCSIVolumeSource.ISCSIInterface should be a pointer."
 	// fsType is the filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,5,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,5,opt,name=fsType"` // want "optionalfields: field ISCSIVolumeSource.FSType should be a pointer."
 	// readOnly here will force the ReadOnly setting in VolumeMounts.
 	// Defaults to false.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field ISCSIVolumeSource.ReadOnly should be a pointer."
 	// portals is the iSCSI Target Portal List. The portal is either an IP or ip_addr:port if the port
 	// is other than default (typically TCP ports 860 and 3260).
 	// +optional
@@ -1049,10 +1049,10 @@ type ISCSIVolumeSource struct {
 	Portals []string `json:"portals,omitempty" protobuf:"bytes,7,opt,name=portals"`
 	// chapAuthDiscovery defines whether support iSCSI Discovery CHAP authentication
 	// +optional
-	DiscoveryCHAPAuth bool `json:"chapAuthDiscovery,omitempty" protobuf:"varint,8,opt,name=chapAuthDiscovery"` // want "optionalfields: field DiscoveryCHAPAuth should be a pointer."
+	DiscoveryCHAPAuth bool `json:"chapAuthDiscovery,omitempty" protobuf:"varint,8,opt,name=chapAuthDiscovery"` // want "optionalfields: field ISCSIVolumeSource.DiscoveryCHAPAuth should be a pointer."
 	// chapAuthSession defines whether support iSCSI Session CHAP authentication
 	// +optional
-	SessionCHAPAuth bool `json:"chapAuthSession,omitempty" protobuf:"varint,11,opt,name=chapAuthSession"` // want "optionalfields: field SessionCHAPAuth should be a pointer."
+	SessionCHAPAuth bool `json:"chapAuthSession,omitempty" protobuf:"varint,11,opt,name=chapAuthSession"` // want "optionalfields: field ISCSIVolumeSource.SessionCHAPAuth should be a pointer."
 	// secretRef is the CHAP Secret for iSCSI target and initiator authentication
 	// +optional
 	SecretRef *LocalObjectReference `json:"secretRef,omitempty" protobuf:"bytes,10,opt,name=secretRef"`
@@ -1078,18 +1078,18 @@ type ISCSIPersistentVolumeSource struct {
 	// Defaults to 'default' (tcp).
 	// +optional
 	// +default="default"
-	ISCSIInterface string `json:"iscsiInterface,omitempty" protobuf:"bytes,4,opt,name=iscsiInterface"` // want "optionalfields: field ISCSIInterface should be a pointer."
+	ISCSIInterface string `json:"iscsiInterface,omitempty" protobuf:"bytes,4,opt,name=iscsiInterface"` // want "optionalfields: field ISCSIPersistentVolumeSource.ISCSIInterface should be a pointer."
 	// fsType is the filesystem type of the volume that you want to mount.
 	// Tip: Ensure that the filesystem type is supported by the host operating system.
 	// Examples: "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// More info: https://kubernetes.io/docs/concepts/storage/volumes#iscsi
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,5,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,5,opt,name=fsType"` // want "optionalfields: field ISCSIPersistentVolumeSource.FSType should be a pointer."
 	// readOnly here will force the ReadOnly setting in VolumeMounts.
 	// Defaults to false.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,6,opt,name=readOnly"` // want "optionalfields: field ISCSIPersistentVolumeSource.ReadOnly should be a pointer."
 	// portals is the iSCSI Target Portal List. The Portal is either an IP or ip_addr:port if the port
 	// is other than default (typically TCP ports 860 and 3260).
 	// +optional
@@ -1097,10 +1097,10 @@ type ISCSIPersistentVolumeSource struct {
 	Portals []string `json:"portals,omitempty" protobuf:"bytes,7,opt,name=portals"`
 	// chapAuthDiscovery defines whether support iSCSI Discovery CHAP authentication
 	// +optional
-	DiscoveryCHAPAuth bool `json:"chapAuthDiscovery,omitempty" protobuf:"varint,8,opt,name=chapAuthDiscovery"` // want "optionalfields: field DiscoveryCHAPAuth should be a pointer."
+	DiscoveryCHAPAuth bool `json:"chapAuthDiscovery,omitempty" protobuf:"varint,8,opt,name=chapAuthDiscovery"` // want "optionalfields: field ISCSIPersistentVolumeSource.DiscoveryCHAPAuth should be a pointer."
 	// chapAuthSession defines whether support iSCSI Session CHAP authentication
 	// +optional
-	SessionCHAPAuth bool `json:"chapAuthSession,omitempty" protobuf:"varint,11,opt,name=chapAuthSession"` // want "optionalfields: field SessionCHAPAuth should be a pointer."
+	SessionCHAPAuth bool `json:"chapAuthSession,omitempty" protobuf:"varint,11,opt,name=chapAuthSession"` // want "optionalfields: field ISCSIPersistentVolumeSource.SessionCHAPAuth should be a pointer."
 	// secretRef is the CHAP Secret for iSCSI target and initiator authentication
 	// +optional
 	SecretRef *SecretReference `json:"secretRef,omitempty" protobuf:"bytes,10,opt,name=secretRef"`
@@ -1127,11 +1127,11 @@ type FCVolumeSource struct {
 	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// TODO: how do we prevent errors in the filesystem from compromising the machine
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field FCVolumeSource.FSType should be a pointer."
 	// readOnly is Optional: Defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field FCVolumeSource.ReadOnly should be a pointer."
 	// wwids Optional: FC volume world wide identifiers (wwids)
 	// Either wwids or combination of targetWWNs and lun must be set, but not both simultaneously.
 	// +optional
@@ -1148,7 +1148,7 @@ type AzureFileVolumeSource struct {
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field AzureFileVolumeSource.ReadOnly should be a pointer."
 }
 
 // AzureFile represents an Azure File Service mount on the host and bind mount to the pod.
@@ -1160,11 +1160,11 @@ type AzureFilePersistentVolumeSource struct {
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field AzureFilePersistentVolumeSource.ReadOnly should be a pointer."
 	// secretNamespace is the namespace of the secret that contains Azure Storage Account Name and Key
 	// default is the same as the Pod
 	// +optional
-	SecretNamespace *string `json:"secretNamespace" protobuf:"bytes,4,opt,name=secretNamespace"` // want "optionalfields: field SecretNamespace should have the omitempty tag."
+	SecretNamespace *string `json:"secretNamespace" protobuf:"bytes,4,opt,name=secretNamespace"` // want "optionalfields: field AzureFilePersistentVolumeSource.SecretNamespace should have the omitempty tag."
 }
 
 // Represents a vSphere volume resource.
@@ -1175,13 +1175,13 @@ type VsphereVirtualDiskVolumeSource struct {
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalfields: field VsphereVirtualDiskVolumeSource.FSType should be a pointer."
 	// storagePolicyName is the storage Policy Based Management (SPBM) profile name.
 	// +optional
-	StoragePolicyName string `json:"storagePolicyName,omitempty" protobuf:"bytes,3,opt,name=storagePolicyName"` // want "optionalfields: field StoragePolicyName should be a pointer."
+	StoragePolicyName string `json:"storagePolicyName,omitempty" protobuf:"bytes,3,opt,name=storagePolicyName"` // want "optionalfields: field VsphereVirtualDiskVolumeSource.StoragePolicyName should be a pointer."
 	// storagePolicyID is the storage Policy Based Management (SPBM) profile ID associated with the StoragePolicyName.
 	// +optional
-	StoragePolicyID string `json:"storagePolicyID,omitempty" protobuf:"bytes,4,opt,name=storagePolicyID"` // want "optionalfields: field StoragePolicyID should be a pointer."
+	StoragePolicyID string `json:"storagePolicyID,omitempty" protobuf:"bytes,4,opt,name=storagePolicyID"` // want "optionalfields: field VsphereVirtualDiskVolumeSource.StoragePolicyID should be a pointer."
 }
 
 // Represents a Photon Controller persistent disk resource.
@@ -1247,7 +1247,7 @@ type PortworxVolumeSource struct {
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field PortworxVolumeSource.ReadOnly should be a pointer."
 }
 
 // ScaleIOVolumeSource represents a persistent ScaleIO volume
@@ -1261,18 +1261,18 @@ type ScaleIOVolumeSource struct {
 	SecretRef *LocalObjectReference `json:"secretRef" protobuf:"bytes,3,opt,name=secretRef"` // want "optionalorrequired: field ScaleIOVolumeSource.SecretRef must be marked as optional or required"
 	// sslEnabled Flag enable/disable SSL communication with Gateway, default false
 	// +optional
-	SSLEnabled bool `json:"sslEnabled,omitempty" protobuf:"varint,4,opt,name=sslEnabled"` // want "optionalfields: field SSLEnabled should be a pointer."
+	SSLEnabled bool `json:"sslEnabled,omitempty" protobuf:"varint,4,opt,name=sslEnabled"` // want "optionalfields: field ScaleIOVolumeSource.SSLEnabled should be a pointer."
 	// protectionDomain is the name of the ScaleIO Protection Domain for the configured storage.
 	// +optional
-	ProtectionDomain string `json:"protectionDomain,omitempty" protobuf:"bytes,5,opt,name=protectionDomain"` // want "optionalfields: field ProtectionDomain should be a pointer."
+	ProtectionDomain string `json:"protectionDomain,omitempty" protobuf:"bytes,5,opt,name=protectionDomain"` // want "optionalfields: field ScaleIOVolumeSource.ProtectionDomain should be a pointer."
 	// storagePool is the ScaleIO Storage Pool associated with the protection domain.
 	// +optional
-	StoragePool string `json:"storagePool,omitempty" protobuf:"bytes,6,opt,name=storagePool"` // want "optionalfields: field StoragePool should be a pointer."
+	StoragePool string `json:"storagePool,omitempty" protobuf:"bytes,6,opt,name=storagePool"` // want "optionalfields: field ScaleIOVolumeSource.StoragePool should be a pointer."
 	// storageMode indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned.
 	// Default is ThinProvisioned.
 	// +optional
 	// +default="ThinProvisioned"
-	StorageMode string `json:"storageMode,omitempty" protobuf:"bytes,7,opt,name=storageMode"` // want "optionalfields: field StorageMode should be a pointer."
+	StorageMode string `json:"storageMode,omitempty" protobuf:"bytes,7,opt,name=storageMode"` // want "optionalfields: field ScaleIOVolumeSource.StorageMode should be a pointer."
 	// volumeName is the name of a volume already created in the ScaleIO system
 	// that is associated with this volume source.
 	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,8,opt,name=volumeName"` // want "optionalorrequired: field ScaleIOVolumeSource.VolumeName must be marked as optional or required"
@@ -1282,11 +1282,11 @@ type ScaleIOVolumeSource struct {
 	// Default is "xfs".
 	// +optional
 	// +default="xfs"
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,9,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,9,opt,name=fsType"` // want "optionalfields: field ScaleIOVolumeSource.FSType should be a pointer."
 	// readOnly Defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,10,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,10,opt,name=readOnly"` // want "optionalfields: field ScaleIOVolumeSource.ReadOnly should be a pointer."
 }
 
 // ScaleIOPersistentVolumeSource represents a persistent ScaleIO volume
@@ -1300,18 +1300,18 @@ type ScaleIOPersistentVolumeSource struct {
 	SecretRef *SecretReference `json:"secretRef" protobuf:"bytes,3,opt,name=secretRef"` // want "optionalorrequired: field ScaleIOPersistentVolumeSource.SecretRef must be marked as optional or required"
 	// sslEnabled is the flag to enable/disable SSL communication with Gateway, default false
 	// +optional
-	SSLEnabled bool `json:"sslEnabled,omitempty" protobuf:"varint,4,opt,name=sslEnabled"` // want "optionalfields: field SSLEnabled should be a pointer."
+	SSLEnabled bool `json:"sslEnabled,omitempty" protobuf:"varint,4,opt,name=sslEnabled"` // want "optionalfields: field ScaleIOPersistentVolumeSource.SSLEnabled should be a pointer."
 	// protectionDomain is the name of the ScaleIO Protection Domain for the configured storage.
 	// +optional
-	ProtectionDomain string `json:"protectionDomain,omitempty" protobuf:"bytes,5,opt,name=protectionDomain"` // want "optionalfields: field ProtectionDomain should be a pointer."
+	ProtectionDomain string `json:"protectionDomain,omitempty" protobuf:"bytes,5,opt,name=protectionDomain"` // want "optionalfields: field ScaleIOPersistentVolumeSource.ProtectionDomain should be a pointer."
 	// storagePool is the ScaleIO Storage Pool associated with the protection domain.
 	// +optional
-	StoragePool string `json:"storagePool,omitempty" protobuf:"bytes,6,opt,name=storagePool"` // want "optionalfields: field StoragePool should be a pointer."
+	StoragePool string `json:"storagePool,omitempty" protobuf:"bytes,6,opt,name=storagePool"` // want "optionalfields: field ScaleIOPersistentVolumeSource.StoragePool should be a pointer."
 	// storageMode indicates whether the storage for a volume should be ThickProvisioned or ThinProvisioned.
 	// Default is ThinProvisioned.
 	// +optional
 	// +default="ThinProvisioned"
-	StorageMode string `json:"storageMode,omitempty" protobuf:"bytes,7,opt,name=storageMode"` // want "optionalfields: field StorageMode should be a pointer."
+	StorageMode string `json:"storageMode,omitempty" protobuf:"bytes,7,opt,name=storageMode"` // want "optionalfields: field ScaleIOPersistentVolumeSource.StorageMode should be a pointer."
 	// volumeName is the name of a volume already created in the ScaleIO system
 	// that is associated with this volume source.
 	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,8,opt,name=volumeName"` // want "optionalorrequired: field ScaleIOPersistentVolumeSource.VolumeName must be marked as optional or required"
@@ -1321,11 +1321,11 @@ type ScaleIOPersistentVolumeSource struct {
 	// Default is "xfs"
 	// +optional
 	// +default="xfs"
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,9,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,9,opt,name=fsType"` // want "optionalfields: field ScaleIOPersistentVolumeSource.FSType should be a pointer."
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,10,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,10,opt,name=readOnly"` // want "optionalfields: field ScaleIOPersistentVolumeSource.ReadOnly should be a pointer."
 }
 
 // Represents a StorageOS persistent volume resource.
@@ -1340,16 +1340,16 @@ type StorageOSVolumeSource struct {
 	// Set to "default" if you are not using namespaces within StorageOS.
 	// Namespaces that do not pre-exist within StorageOS will be created.
 	// +optional
-	VolumeNamespace string `json:"volumeNamespace,omitempty" protobuf:"bytes,2,opt,name=volumeNamespace"` // want "optionalfields: field VolumeNamespace should be a pointer."
+	VolumeNamespace string `json:"volumeNamespace,omitempty" protobuf:"bytes,2,opt,name=volumeNamespace"` // want "optionalfields: field StorageOSVolumeSource.VolumeNamespace should be a pointer."
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field StorageOSVolumeSource.FSType should be a pointer."
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field StorageOSVolumeSource.ReadOnly should be a pointer."
 	// secretRef specifies the secret to use for obtaining the StorageOS API
 	// credentials.  If not specified, default values will be attempted.
 	// +optional
@@ -1368,16 +1368,16 @@ type StorageOSPersistentVolumeSource struct {
 	// Set to "default" if you are not using namespaces within StorageOS.
 	// Namespaces that do not pre-exist within StorageOS will be created.
 	// +optional
-	VolumeNamespace string `json:"volumeNamespace,omitempty" protobuf:"bytes,2,opt,name=volumeNamespace"` // want "optionalfields: field VolumeNamespace should be a pointer."
+	VolumeNamespace string `json:"volumeNamespace,omitempty" protobuf:"bytes,2,opt,name=volumeNamespace"` // want "optionalfields: field StorageOSPersistentVolumeSource.VolumeNamespace should be a pointer."
 	// fsType is the filesystem type to mount.
 	// Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs". Implicitly inferred to be "ext4" if unspecified.
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,3,opt,name=fsType"` // want "optionalfields: field StorageOSPersistentVolumeSource.FSType should be a pointer."
 	// readOnly defaults to false (read/write). ReadOnly here will force
 	// the ReadOnly setting in VolumeMounts.
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,4,opt,name=readOnly"` // want "optionalfields: field StorageOSPersistentVolumeSource.ReadOnly should be a pointer."
 	// secretRef specifies the secret to use for obtaining the StorageOS API
 	// credentials.  If not specified, default values will be attempted.
 	// +optional
@@ -1671,7 +1671,7 @@ type ServiceAccountTokenProjection struct {
 	// token, and otherwise should reject the token. The audience defaults to the
 	// identifier of the apiserver.
 	// +optional
-	Audience string `json:"audience,omitempty" protobuf:"bytes,1,rep,name=audience"` // want "optionalfields: field Audience should be a pointer."
+	Audience string `json:"audience,omitempty" protobuf:"bytes,1,rep,name=audience"` // want "optionalfields: field ServiceAccountTokenProjection.Audience should be a pointer."
 	// expirationSeconds is the requested duration of validity of the service
 	// account token. As the token approaches expiration, the kubelet volume
 	// plugin will proactively rotate the service account token. The kubelet will
@@ -1725,7 +1725,7 @@ type PodCertificateProjection struct {
 	// Kubelet's generated CSRs will be addressed to this signer. // want "commentstart: godoc for field PodCertificateProjection.SignerName should start with 'signerName ...'"
 	//
 	// +required
-	SignerName string `json:"signerName,omitempty" protobuf:"bytes,1,rep,name=signerName"` // want "requiredfields: field SignerName has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	SignerName string `json:"signerName,omitempty" protobuf:"bytes,1,rep,name=signerName"` // want "requiredfields: field PodCertificateProjection.SignerName has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// The type of keypair Kubelet will generate for the pod. // want "commentstart: godoc for field PodCertificateProjection.KeyType should start with 'keyType ...'"
 	//
@@ -1733,7 +1733,7 @@ type PodCertificateProjection struct {
 	// "ECDSAP521", and "ED25519".
 	//
 	// +required
-	KeyType string `json:"keyType,omitempty" protobuf:"bytes,2,rep,name=keyType"` // want "requiredfields: field KeyType has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	KeyType string `json:"keyType,omitempty" protobuf:"bytes,2,rep,name=keyType"` // want "requiredfields: field PodCertificateProjection.KeyType has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// maxExpirationSeconds is the maximum lifetime permitted for the
 	// certificate.
@@ -1769,7 +1769,7 @@ type PodCertificateProjection struct {
 	// additionally check that the leaf certificate was issued to the key.
 	//
 	// +optional
-	CredentialBundlePath string `json:"credentialBundlePath,omitempty" protobuf:"bytes,4,rep,name=credentialBundlePath"` // want "optionalfields: field CredentialBundlePath should be a pointer."
+	CredentialBundlePath string `json:"credentialBundlePath,omitempty" protobuf:"bytes,4,rep,name=credentialBundlePath"` // want "optionalfields: field PodCertificateProjection.CredentialBundlePath should be a pointer."
 
 	// Write the key at this path in the projected volume. // want "commentstart: godoc for field PodCertificateProjection.KeyPath should start with 'keyPath ...'"
 	//
@@ -1779,7 +1779,7 @@ type PodCertificateProjection struct {
 	// files mid-rotation.
 	//
 	// +optional
-	KeyPath string `json:"keyPath,omitempty" protobuf:"bytes,5,rep,name=keyPath"` // want "optionalfields: field KeyPath should be a pointer."
+	KeyPath string `json:"keyPath,omitempty" protobuf:"bytes,5,rep,name=keyPath"` // want "optionalfields: field PodCertificateProjection.KeyPath should be a pointer."
 
 	// Write the certificate chain at this path in the projected volume. // want "commentstart: godoc for field PodCertificateProjection.CertificateChainPath should start with 'certificateChainPath ...'"
 	//
@@ -1789,7 +1789,7 @@ type PodCertificateProjection struct {
 	// files mid-rotation.
 	//
 	// +optional
-	CertificateChainPath string `json:"certificateChainPath,omitempty" protobuf:"bytes,6,rep,name=certificateChainPath"` // want "optionalfields: field CertificateChainPath should be a pointer."
+	CertificateChainPath string `json:"certificateChainPath,omitempty" protobuf:"bytes,6,rep,name=certificateChainPath"` // want "optionalfields: field PodCertificateProjection.CertificateChainPath should be a pointer."
 }
 
 // PersistentVolumeClaimSpec describes the common attributes of storage devices
@@ -1810,10 +1810,10 @@ type PersistentVolumeClaimSpec struct {
 	// status field of the claim.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources
 	// +optional
-	Resources VolumeResourceRequirements `json:"resources,omitempty" protobuf:"bytes,2,opt,name=resources"` // want "optionalfields: field Resources should be a pointer."
+	Resources VolumeResourceRequirements `json:"resources,omitempty" protobuf:"bytes,2,opt,name=resources"` // want "optionalfields: field PersistentVolumeClaimSpec.Resources should be a pointer."
 	// volumeName is the binding reference to the PersistentVolume backing this claim.
 	// +optional
-	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,3,opt,name=volumeName"` // want "optionalfields: field VolumeName should be a pointer."
+	VolumeName string `json:"volumeName,omitempty" protobuf:"bytes,3,opt,name=volumeName"` // want "optionalfields: field PersistentVolumeClaimSpec.VolumeName should be a pointer."
 	// storageClassName is the name of the StorageClass required by the claim.
 	// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#class-1
 	// +optional
@@ -1948,12 +1948,12 @@ type CSIPersistentVolumeSource struct {
 	// readOnly value to pass to ControllerPublishVolumeRequest.
 	// Defaults to false (read/write).
 	// +optional
-	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field ReadOnly should be a pointer."
+	ReadOnly bool `json:"readOnly,omitempty" protobuf:"varint,3,opt,name=readOnly"` // want "optionalfields: field CSIPersistentVolumeSource.ReadOnly should be a pointer."
 
 	// fsType to mount. Must be a filesystem type supported by the host operating system.
 	// Ex. "ext4", "xfs", "ntfs".
 	// +optional
-	FSType string `json:"fsType,omitempty" protobuf:"bytes,4,opt,name=fsType"` // want "optionalfields: field FSType should be a pointer."
+	FSType string `json:"fsType,omitempty" protobuf:"bytes,4,opt,name=fsType"` // want "optionalfields: field CSIPersistentVolumeSource.FSType should be a pointer."
 
 	// volumeAttributes of the volume to publish.
 	// +optional
