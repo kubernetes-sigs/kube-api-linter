@@ -21,7 +21,7 @@ go build -o ./bin ./cmd/golangci-lint-kube-api-linter
 
 The binary builds a custom version of `golangci-lint` with Kube API Linter included as a module.
 See [Golangci-lint Moduule](#golangci-lint-module) for details on configuration of the module
-under `linter-settings`.
+under `settings`.
 
 ### Golangci-lint Module
 
@@ -59,53 +59,57 @@ If you wish to only use the Kube API Linter rules, you can configure your `.gola
 
 ```yaml
 version: "2"
-linters-settings:
-  custom:
-    kubeapilinter:
-      type: "module"
-      description: Kube API Linter lints Kube like APIs based on API conventions and best practices.
-      settings:
-        linters: {}
-        lintersConfig: {}
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - kubeapilinter
 
-# To only run Kube API Linter on specific path
-issues:
-  exclude-rules:
-    - path-except: "api/*"
-      linters:
-        - kubeapilinter
+  settings:
+    custom:
+      kubeapilinter:
+        type: module
+        description: Kube API Linter lints Kube like APIs based on API conventions and best practices.
+        settings:
+          linters: {}
+          lintersConfig: {}
+
+  # To only run Kube API Linter on specific path
+  exclusions:
+    rules:
+      - linters:
+          - kubeapilinter
+        path-except: api/*
+
 ```
 
 If you wish to only run selected linters you can do so by specifying the linters you want to enable in the `linters` section:
 
 ```yaml
 version: "2"
-linters-settings:
-  custom:
-    kubeapilinter:
-      type: "module"
-      settings:
-        linters:
-          disable:
-            - "*"
-          enable:
-            - requiredfields
-            - statusoptional
-            - statussubresource
+
 linters:
   enable:
     - kubeapilinter
+
+  settings:
+    custom:
+      kubeapilinter:
+        type: "module"
+        settings:
+          linters:
+            disable:
+              - "*"
+            enable:
+              - requiredfields
+              - statusoptional
+              - statussubresource
 ```
 
 The settings for Kube API Linter are based on the [GolangCIConfig][golangci-config-struct] struct and allow for finer control over the linter rules.
 
 If you wish to use the Kube API Linter in conjunction with other linters, you can enable the Kube API Linter in the `.golangci.yml` file by ensuring that `kubeapilinter` is in the `linters.enabled` list.
-To provide further configuration, add the `custom.kubeapilinter` section to your `linter-settings` as per the example above.
+To provide further configuration, add the `custom.kubeapilinter` section to your `settings` as per the example above.
 
 [golangci-config-struct]: https://pkg.go.dev/sigs.k8s.io/kube-api-linter/pkg/config#GolangCIConfig
 
@@ -142,18 +146,20 @@ The `golangci-lint` configuration is similar to the module configuration, howeve
 
 ```yaml
 version: "2"
-linters-settings:
-  custom:
-    kubeapilinter:
-      path: "bin/kube-api-linter.so"
-      description: Kube API Linter lints Kube like APIs based on API conventions and best practices.
-      original-url: sigs.k8s.io/kube-api-linter
-      settings:
-        linters: {}
-        lintersConfig: {}
+
 linters:
   enable:
     - kubeapilinter
+
+  settings:
+    custom:
+      kubeapilinter:
+        path: "bin/kube-api-linter.so"
+        description: Kube API Linter lints Kube like APIs based on API conventions and best practices.
+        original-url: sigs.k8s.io/kube-api-linter
+        settings:
+          linters: {}
+          lintersConfig: {}
 ```
 
 The rest of the configuration is the same as the module configuration, except the standard `golangci-lint` binary is invoked, rather than a custom binary.
