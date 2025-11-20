@@ -8,7 +8,7 @@ type TestPointerToSliceWithMinZero struct {
 	PtrArrayWithZeroMinItems *[]string `json:"ptrArrayWithZeroMinItems,omitempty"`
 
 	// +kubebuilder:validation:MinItems=0
-	PtrArrayWithZeroMinItemsNoOmitEmpty *[]string `json:"ptrArrayWithZeroMinItemsNoOmitEmpty"` // want "field PtrArrayWithZeroMinItemsNoOmitEmpty should have the omitempty tag."
+	PtrArrayWithZeroMinItemsNoOmitEmpty *[]string `json:"ptrArrayWithZeroMinItemsNoOmitEmpty"` // want "field TestPointerToSliceWithMinZero.PtrArrayWithZeroMinItemsNoOmitEmpty should have the omitempty tag."
 }
 
 type TestPointerToMapWithMinZero struct {
@@ -19,22 +19,22 @@ type TestPointerToMapWithMinZero struct {
 	MapPtrWithZeroMinProperties *map[string]string `json:"mapPtrWithZeroMinProperties,omitempty"`
 
 	// +kubebuilder:validation:MinProperties=0
-	MapPtrWithZeroMinPropertiesNoOmitEmpty *map[string]string `json:"mapPtrWithZeroMinPropertiesNoOmitEmpty"` // want "field MapPtrWithZeroMinPropertiesNoOmitEmpty should have the omitempty tag."
+	MapPtrWithZeroMinPropertiesNoOmitEmpty *map[string]string `json:"mapPtrWithZeroMinPropertiesNoOmitEmpty"` // want "field TestPointerToMapWithMinZero.MapPtrWithZeroMinPropertiesNoOmitEmpty should have the omitempty tag."
 }
 
 // Test that pointers ARE still flagged when MinItems/MinProperties is NOT zero
 type TestPointerToSliceWithNonZeroMin struct {
 	// +kubebuilder:validation:MinItems=1
-	PtrArrayWithNonZeroMinItems *[]string `json:"ptrArrayWithNonZeroMinItems,omitempty"` // want "field PtrArrayWithNonZeroMinItems does not allow the zero value. The field does not need to be a pointer."
+	PtrArrayWithNonZeroMinItems *[]string `json:"ptrArrayWithNonZeroMinItems,omitempty"` // want "field TestPointerToSliceWithNonZeroMin.PtrArrayWithNonZeroMinItems does not allow the zero value. The field does not need to be a pointer."
 
 	// No MinItems validation
-	PtrArrayWithoutMinItems *[]string `json:"ptrArrayWithoutMinItems,omitempty"` // want "field PtrArrayWithoutMinItems underlying type does not need to be a pointer. The pointer should be removed."
+	PtrArrayWithoutMinItems *[]string `json:"ptrArrayWithoutMinItems,omitempty"` // want "field TestPointerToSliceWithNonZeroMin.PtrArrayWithoutMinItems underlying type does not need to be a pointer. The pointer should be removed."
 }
 
 type TestPointerToMapWithNonZeroMin struct {
 	// +kubebuilder:validation:MinProperties=1
-	MapPtrWithNonZeroMinProperties *map[string]string `json:"mapPtrWithNonZeroMinProperties,omitempty"` // want "field MapPtrWithNonZeroMinProperties does not allow the zero value. The field does not need to be a pointer."
+	MapPtrWithNonZeroMinProperties *map[string]string `json:"mapPtrWithNonZeroMinProperties,omitempty"` // want "field TestPointerToMapWithNonZeroMin.MapPtrWithNonZeroMinProperties does not allow the zero value. The field does not need to be a pointer."
 
 	// No MinProperties validation
-	MapPtrWithoutMinProperties *map[string]string `json:"mapPtrWithoutMinProperties,omitempty"` // want "field MapPtrWithoutMinProperties underlying type does not need to be a pointer. The pointer should be removed."
+	MapPtrWithoutMinProperties *map[string]string `json:"mapPtrWithoutMinProperties,omitempty"` // want "field TestPointerToMapWithNonZeroMin.MapPtrWithoutMinProperties underlying type does not need to be a pointer. The pointer should be removed."
 }

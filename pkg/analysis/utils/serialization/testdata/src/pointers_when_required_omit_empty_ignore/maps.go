@@ -5,12 +5,12 @@ type TestMaps struct {
 
 	MapWithOmitEmpty map[string]string `json:"mapWithOmitEmpty,omitempty"`
 
-	MapPtr *map[string]string `json:"mapPtr"` // want "field MapPtr does not have omitempty and allows the zero value. The field does not need to be a pointer."
+	MapPtr *map[string]string `json:"mapPtr"` // want "field TestMaps.MapPtr does not have omitempty and allows the zero value. The field does not need to be a pointer."
 
-	MapPtrWithOmitEmpty *map[string]string `json:"mapPtrWithOmitEmpty,omitempty"` // want "field MapPtrWithOmitEmpty underlying type does not need to be a pointer. The pointer should be removed."
+	MapPtrWithOmitEmpty *map[string]string `json:"mapPtrWithOmitEmpty,omitempty"` // want "field TestMaps.MapPtrWithOmitEmpty underlying type does not need to be a pointer. The pointer should be removed."
 
 	// +kubebuilder:validation:MinProperties=1
-	MapWithPositiveMinProperties map[string]string `json:"mapWithPositiveMinProperties"` // want "field MapWithPositiveMinProperties does not allow the zero value. It must have the omitempty tag."
+	MapWithPositiveMinProperties map[string]string `json:"mapWithPositiveMinProperties"` // want "field TestMaps.MapWithPositiveMinProperties does not allow the zero value. It must have the omitempty tag."
 
 	// +kubebuilder:validation:MinProperties=1
 	MapWithPositiveMinPropertiesWithOmitEmpty map[string]string `json:"mapWithPositiveMinPropertiesWithOmitEmpty,omitempty"`
