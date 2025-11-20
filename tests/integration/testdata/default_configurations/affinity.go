@@ -215,7 +215,7 @@ type Taint struct {
 
 }
 
-// +enum
+// +kubebuilder:validation:Enum
 type TaintEffect string
 
 const (
@@ -269,7 +269,7 @@ type Toleration struct {
 }
 
 // A toleration operator is the set of operators that can be used in a toleration.
-// +enum
+// +kubebuilder:validation:Enum
 type TolerationOperator string
 
 const (
@@ -322,7 +322,7 @@ type NodeSelectorRequirement struct {
 
 // A node selector operator is the set of operators that can be used in
 // a node selector requirement.
-// +enum
+// +kubebuilder:validation:Enum
 type NodeSelectorOperator string
 
 const (
@@ -454,7 +454,7 @@ type TopologySpreadConstraint struct {
 	MatchLabelKeys []string `json:"matchLabelKeys,omitempty" protobuf:"bytes,8,opt,name=matchLabelKeys"`
 }
 
-// +enum
+// +kubebuilder:validation:Enum
 type UnsatisfiableConstraintAction string
 
 const (
@@ -467,7 +467,7 @@ const (
 )
 
 // NodeInclusionPolicy defines the type of node inclusion policy
-// +enum
+// +kubebuilder:validation:Enum
 type NodeInclusionPolicy string
 
 const (
@@ -478,7 +478,7 @@ const (
 )
 
 // PreemptionPolicy describes a policy for if/when to preempt a pod.
-// +enum
+// +kubebuilder:validation:Enum
 type PreemptionPolicy string
 
 const (
