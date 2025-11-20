@@ -1,11 +1,11 @@
 package a
 
 type Integers struct {
-	String string // want "field String is a string"
+	String string // want "field Integers.String is a string"
 
-	Map map[string]string // want "field Map map key is a string" "field Map map value is a string"
+	Map map[string]string // want "field Integers.Map map key is a string" "field Integers.Map map value is a string"
 
-	MapStringToStringAlias map[string]StringAlias // want "field MapStringToStringAlias map key is a string" "field MapStringToStringAlias map value type StringAlias is a string"
+	MapStringToStringAlias map[string]StringAlias // want "field Integers.MapStringToStringAlias map key is a string" "field Integers.MapStringToStringAlias map value type StringAlias is a string"
 
 	Int32 int32
 
@@ -13,21 +13,21 @@ type Integers struct {
 
 	Bool bool
 
-	StringPtr *string // want "field StringPtr pointer is a string"
+	StringPtr *string // want "field Integers.StringPtr pointer is a string"
 
-	StringSlice []string // want "field StringSlice array element is a string"
+	StringSlice []string // want "field Integers.StringSlice array element is a string"
 
-	StringPtrSlice []*string // want "field StringPtrSlice array element pointer is a string"
+	StringPtrSlice []*string // want "field Integers.StringPtrSlice array element pointer is a string"
 
-	StringAlias StringAlias // want "field StringAlias type StringAlias is a string"
+	StringAlias StringAlias // want "field Integers.StringAlias type StringAlias is a string"
 
-	StringAliasPtr *StringAlias // want "field StringAliasPtr pointer type StringAlias is a string"
+	StringAliasPtr *StringAlias // want "field Integers.StringAliasPtr pointer type StringAlias is a string"
 
-	StringAliasSlice []StringAlias // want "field StringAliasSlice array element type StringAlias is a string"
+	StringAliasSlice []StringAlias // want "field Integers.StringAliasSlice array element type StringAlias is a string"
 
-	StringAliasPtrSlice []*StringAlias // want "field StringAliasPtrSlice array element pointer type StringAlias is a string"
+	StringAliasPtrSlice []*StringAlias // want "field Integers.StringAliasPtrSlice array element pointer type StringAlias is a string"
 
-	StringAliasFromAnotherFile StringAliasB // want "field StringAliasFromAnotherFile type StringAliasB is a string"
+	StringAliasFromAnotherFile StringAliasB // want "field Integers.StringAliasFromAnotherFile type StringAliasB is a string"
 }
 
 type StringAlias string // want "type StringAlias is a string"
