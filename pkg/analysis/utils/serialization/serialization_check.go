@@ -96,6 +96,19 @@ func (s *serializationCheck) Check(pass *analysis.Pass, field *ast.Field, marker
 	isPointer, underlying := utils.IsStarExpr(field.Type)
 	isStruct := utils.IsStructType(pass, field.Type)
 
+	// Check if this struct should be treated as a non-struct type (e.g., Type=string marker).
+	// This handles structs with custom marshalling that serialize as other types.
+	if isStruct {
+		typeValue := utils.GetTypeMarkerValue(pass, field, markersAccess)
+		// If the type marker indicates this is not a struct, treat it accordingly.
+		// Type "object" means it's still a struct/object type in the OpenAPI sense.
+		// Other types (string, number, integer, boolean, array) indicate custom marshalling
+		// that changes the serialization format from a struct to that type.
+		if typeValue != "" && typeValue != "object" {
+			isStruct = false
+		}
+	}
+
 	switch s.pointerPreference {
 	case PointersPreferenceAlways:
 		// The field must always be a pointer, pointers require omitempty, so enforce that too.
