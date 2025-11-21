@@ -449,3 +449,13 @@ func IsFieldRequired(field *ast.Field, markersAccess markershelper.Markers) bool
 		fieldMarkers.Has(markers.KubebuilderRequiredMarker) ||
 		fieldMarkers.Has(markers.K8sRequiredMarker)
 }
+
+// IsFieldOptional checks if the field is optional.
+// It checks for the presence of the optional marker, the kubebuilder optional marker, or the k8s optional marker.
+func IsFieldOptional(field *ast.Field, markersAccess markershelper.Markers) bool {
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	return fieldMarkers.Has(markers.OptionalMarker) ||
+		fieldMarkers.Has(markers.KubebuilderOptionalMarker) ||
+		fieldMarkers.Has(markers.K8sOptionalMarker)
+}
