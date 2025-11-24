@@ -49,7 +49,7 @@ func run(pass *analysis.Pass) (any, error) {
 		(*ast.TypeSpec)(nil),
 	}
 
-	typeChecker := utils.NewTypeChecker(checkFloat)
+	typeChecker := utils.NewTypeChecker(utils.IsBasicType, checkFloat)
 
 	// Preorder visits all the nodes of the AST in depth-first order. It calls
 	// f(n) for each node n before it visits n's children.
@@ -62,7 +62,12 @@ func run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-func checkFloat(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string) {
+func checkFloat(pass *analysis.Pass, expr ast.Expr, node ast.Node, prefix string) {
+	ident, ok := expr.(*ast.Ident)
+	if !ok {
+		return
+	}
+
 	if ident.Name == "float32" || ident.Name == "float64" {
 		pass.Reportf(node.Pos(), "%s should not use a float value because they cannot be reliably round-tripped.", prefix)
 	}

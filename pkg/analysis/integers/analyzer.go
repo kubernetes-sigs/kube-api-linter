@@ -49,7 +49,7 @@ func run(pass *analysis.Pass) (any, error) {
 		(*ast.TypeSpec)(nil),
 	}
 
-	typeChecker := utils.NewTypeChecker(checkIntegers)
+	typeChecker := utils.NewTypeChecker(utils.IsBasicType, checkIntegers)
 
 	// Preorder visits all the nodes of the AST in depth-first order. It calls
 	// f(n) for each node n before it visits n's children.
@@ -63,7 +63,12 @@ func run(pass *analysis.Pass) (any, error) {
 }
 
 // checkIntegers looks for known type of integers that do not match the allowed `int32` or `int64` requirements.
-func checkIntegers(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string) {
+func checkIntegers(pass *analysis.Pass, expr ast.Expr, node ast.Node, prefix string) {
+	ident, ok := expr.(*ast.Ident)
+	if !ok {
+		return
+	}
+
 	switch ident.Name {
 	case "int32", "int64":
 		// Valid cases

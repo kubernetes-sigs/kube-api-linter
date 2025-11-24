@@ -31,8 +31,8 @@ import (
 
 // IsBasicType checks if the type of the given identifier is a basic type.
 // Basic types are types like int, string, bool, etc.
-func IsBasicType(pass *analysis.Pass, ident *ast.Ident) bool {
-	_, ok := pass.TypesInfo.TypeOf(ident).(*types.Basic)
+func IsBasicType(pass *analysis.Pass, expr ast.Expr) bool {
+	_, ok := pass.TypesInfo.TypeOf(expr).(*types.Basic)
 	return ok
 }
 
