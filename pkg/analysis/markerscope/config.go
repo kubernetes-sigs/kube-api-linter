@@ -15,6 +15,8 @@ limitations under the License.
 */
 package markerscope
 
+import "slices"
+
 // ScopeConstraint defines where a marker is allowed to be placed.
 type ScopeConstraint string
 
@@ -23,17 +25,11 @@ const (
 	FieldScope ScopeConstraint = "Field"
 	// TypeScope indicates the marker can be placed on type definitions.
 	TypeScope ScopeConstraint = "Type"
-	// AnyScope indicates the marker can be placed on either fields or types.
-	AnyScope ScopeConstraint = "Any"
 )
 
-// Allows checks if the given scope is allowed by this constraint.
-func (s ScopeConstraint) Allows(scope ScopeConstraint) bool {
-	if s == AnyScope {
-		return true
-	}
-
-	return s == scope
+// AllowsScope checks if the given scope is allowed by this rule.
+func (r MarkerScopeRule) AllowsScope(scope ScopeConstraint) bool {
+	return slices.Contains(r.Scopes, scope)
 }
 
 // TypeConstraint defines what types a marker can be applied to.
@@ -68,8 +64,9 @@ type MarkerScopeRule struct {
 	// Identifier is the marker identifier (e.g., "optional", "kubebuilder:validation:Minimum").
 	Identifier string `json:"identifier,omitempty"`
 
-	// Scope specifies where the marker can be placed (field vs type).
-	Scope ScopeConstraint
+	// Scopes specifies where the marker can be placed (field, type, or both).
+	// Can contain FieldScope, TypeScope, or both for markers that can be placed anywhere.
+	Scopes []ScopeConstraint `json:"scopes,omitempty"`
 
 	// NamedTypeConstraint specifies how markers should be applied to named types.
 	// When a field uses a named type (e.g., type CustomInt int32), this determines

@@ -81,7 +81,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:marker",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 						},
 					},
 				},
@@ -93,7 +93,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:marker",
-							Scope:      "",
+							Scopes:     []markerscope.ScopeConstraint{},
 						},
 					},
 				},
@@ -105,7 +105,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:marker",
-							Scope:      "invalid",
+							Scopes:     []markerscope.ScopeConstraint{"invalid"},
 						},
 					},
 				},
@@ -117,7 +117,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:marker",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{"invalid-type"},
 							},
@@ -132,7 +132,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:string-marker",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeString},
 							},
@@ -147,7 +147,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:integer-marker",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeInteger},
 							},
@@ -162,7 +162,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:numeric-marker",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{
 									markerscope.SchemaTypeInteger,
@@ -179,7 +179,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:string-array",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeArray},
 								ElementConstraint: &markerscope.TypeConstraint{
@@ -197,7 +197,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:invalid-array",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeArray},
 								ElementConstraint: &markerscope.TypeConstraint{
@@ -215,7 +215,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:flexible-marker",
-							Scope:      markerscope.AnyScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 						},
 					},
 				},
@@ -227,7 +227,7 @@ var _ = Describe("markerscope initializer", func() {
 					OverrideMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "optional",
-							Scope:      markerscope.AnyScope, // Override default FieldScope
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope}, // Override default [FieldScope]
 						},
 					},
 				},
@@ -239,7 +239,7 @@ var _ = Describe("markerscope initializer", func() {
 					OverrideMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:nonexistent",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 						},
 					},
 				},
@@ -251,7 +251,7 @@ var _ = Describe("markerscope initializer", func() {
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "optional", // Built-in marker
-							Scope:      markerscope.AnyScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 						},
 					},
 				},
@@ -263,13 +263,13 @@ var _ = Describe("markerscope initializer", func() {
 					OverrideMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "optional",
-							Scope:      markerscope.AnyScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 						},
 					},
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:marker",
-							Scope:      markerscope.FieldScope,
+							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 						},
 					},
 				},
@@ -299,7 +299,7 @@ var _ = Describe("markerscope initializer", func() {
 				CustomMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "custom:marker",
-						Scope:      markerscope.FieldScope,
+						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 					},
 				},
 			}
@@ -314,7 +314,7 @@ var _ = Describe("markerscope initializer", func() {
 				OverrideMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "optional",
-						Scope:      markerscope.AnyScope, // Override default FieldScope
+						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope}, // Override default [FieldScope]
 					},
 				},
 			}
@@ -329,13 +329,13 @@ var _ = Describe("markerscope initializer", func() {
 				OverrideMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "optional",
-						Scope:      markerscope.AnyScope,
+						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 					},
 				},
 				CustomMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "custom:validation:MyMarker",
-						Scope:      markerscope.FieldScope,
+						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 						TypeConstraint: &markerscope.TypeConstraint{
 							AllowedSchemaTypes: []markerscope.SchemaType{markerscope.SchemaTypeString},
 						},
