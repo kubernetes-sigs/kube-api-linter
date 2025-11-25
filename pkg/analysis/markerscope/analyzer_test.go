@@ -58,29 +58,29 @@ func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 			// Override built-in "optional" to allow on types (default is FieldScope only)
 			{
 				Identifier: "optional",
-				Scope:      markerscope.AnyScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 			},
 			// Override built-in "required" to allow on types (default is FieldScope only)
 			{
 				Identifier: "required",
-				Scope:      markerscope.AnyScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 			},
 		},
 		CustomMarkers: []markerscope.MarkerScopeRule{
 			// Custom field-only marker
 			{
 				Identifier: "custom:field-only",
-				Scope:      markerscope.FieldScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 			},
 			// Custom type-only marker
 			{
 				Identifier: "custom:type-only",
-				Scope:      markerscope.TypeScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.TypeScope},
 			},
 			// Custom marker with string type constraint
 			{
 				Identifier: "custom:string-only",
-				Scope:      markerscope.FieldScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 				TypeConstraint: &markerscope.TypeConstraint{
 					AllowedSchemaTypes: []markerscope.SchemaType{
 						markerscope.SchemaTypeString,
@@ -90,7 +90,7 @@ func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 			// Custom marker with integer type constraint
 			{
 				Identifier: "custom:integer-only",
-				Scope:      markerscope.FieldScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 				TypeConstraint: &markerscope.TypeConstraint{
 					AllowedSchemaTypes: []markerscope.SchemaType{
 						markerscope.SchemaTypeInteger,
@@ -100,7 +100,7 @@ func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 			// Custom marker with array of strings constraint
 			{
 				Identifier: "custom:string-array",
-				Scope:      markerscope.FieldScope,
+				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 				TypeConstraint: &markerscope.TypeConstraint{
 					AllowedSchemaTypes: []markerscope.SchemaType{
 						markerscope.SchemaTypeArray,

@@ -440,13 +440,13 @@ The linter defines different scope types for markers:
 
 - **FieldScope**: Can only be applied to struct fields (e.g., `optional`, `required`, `nullable`)
 - **TypeScope**: Can only be applied to type definitions (e.g., `kubebuilder:validation:items:ExactlyOneOf`)
-- **AnyScope**: Can be applied to either fields or type definitions (e.g., `kubebuilder:validation:Minimum`, `kubebuilder:validation:Pattern`)
+- **Field and Type**: Markers that can be applied to both fields and type definitions (e.g., `kubebuilder:validation:Minimum`, `kubebuilder:validation:Pattern`)
 
 ### Type Constraints
 
 The linter validates that markers are applied to compatible OpenAPI schema types:
 
-- **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` or `number` types
+- **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` types
 - **String markers** (`Pattern`, `MinLength`, `MaxLength`): Only for `string` types
 - **Array markers** (`MinItems`, `MaxItems`, `UniqueItems`): Only for `array` types
 - **Object markers** (`MinProperties`, `MaxProperties`): Only for `object` types (struct/map)
@@ -454,7 +454,6 @@ The linter validates that markers are applied to compatible OpenAPI schema types
 
 OpenAPI schema types map to Go types as follows:
 - `integer`: int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64
-- `number`: float32, float64
 - `string`: string
 - `boolean`: bool
 - `array`: []T, [N]T (slices and arrays)
@@ -462,7 +461,7 @@ OpenAPI schema types map to Go types as follows:
 
 #### Strict Type Constraints
 
-For markers with `AnyScope` and type constraints, the `strictTypeConstraint` flag controls where the marker should be declared when used with named types:
+For markers that can be applied to both fields and types with type constraints, the `strictTypeConstraint` flag controls where the marker should be declared when used with named types:
 
 - When `strictTypeConstraint` is `false` (default): The marker can be declared on either the field or the type definition.
 - When `strictTypeConstraint` is `true`: The marker must be declared on the type definition, not on fields using that type.
@@ -502,13 +501,13 @@ The linter includes built-in rules for all standard kubebuilder markers and k8s 
 - `kubebuilder:validation:items:AtMostOneOf`
 - `kubebuilder:validation:items:AtLeastOneOf`
 
-**AnyScope markers with type constraints:**
-- `kubebuilder:validation:Minimum` (integer/number types only)
+**Field and Type markers with type constraints:**
+- `kubebuilder:validation:Minimum` (integer types only)
 - `kubebuilder:validation:Pattern` (string types only)
 - `kubebuilder:validation:MinItems` (array types only)
 - `kubebuilder:validation:MinProperties` (object types only)
 
-**AnyScope markers without type constraints:**
+**Field and Type markers without type constraints:**
 - `kubebuilder:validation:Enum`, `kubebuilder:validation:Format`
 - `kubebuilder:pruning:PreserveUnknownFields`, `kubebuilder:title`
 
@@ -517,18 +516,20 @@ The linter includes built-in rules for all standard kubebuilder markers and k8s 
 You can customize marker rules or add support for custom markers.
 
 **Scope values:**
-- `Field`: Marker can only be applied to struct fields
-- `Type`: Marker can only be applied to type definitions
-- `Any`: Marker can be applied to either fields or type definitions
+
+The `scopes` field accepts an array of scope constraints:
+- `[Field]`: Marker can only be applied to struct fields
+- `[Type]`: Marker can only be applied to type definitions
+- `[Field, Type]`: Marker can be applied to both fields and type definitions
 
 **Type constraints:**
 
-The `typeConstraint` field allows you to restrict which Go types a marker can be applied to. This ensures that markers are only used with compatible data types (e.g., numeric markers like `Minimum` are only applied to integer/number types).
+The `typeConstraint` field allows you to restrict which Go types a marker can be applied to. This ensures that markers are only used with compatible data types (e.g., numeric markers like `Minimum` are only applied to integer types).
 
 **Type constraint fields:**
-- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
+- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `string`, `boolean`, `array`, `object`)
 - `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
-- `strictTypeConstraint`: When `true`, markers with `AnyScope` and type constraints applied to fields using named types must be declared on the type definition instead of the field. Defaults to `false`.
+- `strictTypeConstraint`: When `true`, markers that can be applied to both fields and types with type constraints applied to fields using named types must be declared on the type definition instead of the field. Defaults to `false`.
 
 **Configuration example:**
 
@@ -536,31 +537,29 @@ The `typeConstraint` field allows you to restrict which Go types a marker can be
 lintersConfig:
   markerscope:
     policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `Warn`.
-    allowDangerousTypes: false # Allow dangerous number types (float32, float64). Defaults to `false`.
 
     # Override default rules for built-in markers
     overrideMarkers:
       - identifier: "optional"
-        scope: Field  # or: Type, Any
+        scopes: [Field]  # Can specify [Field], [Type], or [Field, Type]
 
     # Add rules for custom markers
     customMarkers:
       # Custom marker with scope constraint only
       - identifier: "mycompany:validation:CustomMarker"
-        scope: Any
+        scopes: [Field, Type]
 
       # Custom marker with scope and type constraints
       - identifier: "mycompany:validation:NumericLimit"
-        scope: Any
+        scopes: [Field, Type]
         strictTypeConstraint: true # Require declaration on type definition for named types
         typeConstraint:
           allowedSchemaTypes:
             - integer
-            - number
 
       # Custom array items marker with element type constraint
       - identifier: "mycompany:validation:items:StringFormat"
-        scope: Any
+        scopes: [Field, Type]
         typeConstraint:
           allowedSchemaTypes:
             - array
@@ -582,7 +581,7 @@ When the `policy` is set to `SuggestFix`, the `markerscope` linter provides auto
 
 2. **Type constraint violations**: For markers applied to incompatible types, the linter suggests removing the invalid marker.
 
-3. **Named type violations**: For AnyScope markers with type constraints applied to fields using named types, the linter suggests moving the marker to the type definition if the underlying type is compatible with the marker's type constraints.
+3. **Named type violations**: For markers that can be applied to both fields and types with type constraints applied to fields using named types, the linter suggests moving the marker to the type definition if the underlying type is compatible with the marker's type constraints.
 
 When the `policy` is set to `Warn`, violations are reported as warnings without suggesting fixes.
 

@@ -137,16 +137,18 @@ func validateCustomMarkers(rules []MarkerScopeRule, defaultRules map[string]Mark
 
 func validateMarkerRule(rule MarkerScopeRule) error {
 	// Validate scope constraint
-	if rule.Scope == "" {
+	if len(rule.Scopes) == 0 {
 		return errScopeRequired
 	}
 
-	// Validate that scope is a valid value
-	switch rule.Scope {
-	case FieldScope, TypeScope, AnyScope:
-		// Valid scope
-	default:
-		return &invalidScopeConstraintError{scope: string(rule.Scope)}
+	// Validate that each scope is a valid value
+	for _, scope := range rule.Scopes {
+		switch scope {
+		case FieldScope, TypeScope:
+			// Valid scope
+		default:
+			return &invalidScopeConstraintError{scope: string(scope)}
+		}
 	}
 
 	// Validate named type constraint if present
