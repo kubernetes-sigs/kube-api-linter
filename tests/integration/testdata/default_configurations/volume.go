@@ -50,7 +50,7 @@ type VolumeMount struct {
 }
 
 // MountPropagationMode describes mount propagation.
-// +enum
+// +kubebuilder:validation:Enum=None;HostToContainer;Bidirectional
 type MountPropagationMode string
 
 const (
@@ -75,6 +75,7 @@ const (
 	MountPropagationBidirectional MountPropagationMode = "Bidirectional"
 )
 
+// +kubebuilder:validation:Enum
 // RecursiveReadOnlyMode describes recursive-readonly mode.
 type RecursiveReadOnlyMode string
 
@@ -460,7 +461,7 @@ type HostPathVolumeSource struct {
 	Type *HostPathType `json:"type,omitempty" protobuf:"bytes,2,opt,name=type"`
 }
 
-// +enum
+// +kubebuilder:validation:Enum="";DirectoryOrCreate;Directory;FileOrCreate;File;Socket;CharDevice;BlockDevice
 type HostPathType string
 
 const (
@@ -762,6 +763,7 @@ type FlockerVolumeSource struct {
 }
 
 // StorageMedium defines ways that storage can be allocated to a volume.
+// +kubebuilder:validation:Enum=Memory;HugePages;HugePages-<size>
 type StorageMedium string
 
 const (
@@ -1194,10 +1196,10 @@ type PhotonPersistentDiskVolumeSource struct {
 	FSType string `json:"fsType,omitempty" protobuf:"bytes,2,opt,name=fsType"` // want "optionalorrequired: field PhotonPersistentDiskVolumeSource.FSType must be marked as optional or required"
 }
 
-// +enum
+// +kubebuilder:validation:Enum=None;ReadOnly;ReadWrite
 type AzureDataDiskCachingMode string
 
-// +enum
+// +kubebuilder:validation:Enum=Shared;Dedicated;Managed
 type AzureDataDiskKind string
 
 const (
@@ -1872,7 +1874,7 @@ type PersistentVolumeClaimSpec struct {
 	VolumeAttributesClassName *string `json:"volumeAttributesClassName,omitempty" protobuf:"bytes,9,opt,name=volumeAttributesClassName"`
 }
 
-// +enum
+// +kubebuilder:validation:Enum
 type PersistentVolumeAccessMode string
 
 const (
@@ -1888,7 +1890,7 @@ const (
 )
 
 // PersistentVolumeMode describes how a volume is intended to be consumed, either Block or Filesystem.
-// +enum
+// +kubebuilder:validation:Enum=Block;Filesystem
 type PersistentVolumeMode string
 
 const (

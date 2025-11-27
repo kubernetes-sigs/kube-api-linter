@@ -209,7 +209,7 @@ type Container struct {
 }
 
 // Protocol defines network protocols supported for things like container ports.
-// +enum
+// +kubebuilder:validation:Enum
 type Protocol string
 
 const (
@@ -453,6 +453,7 @@ type ResourceClaim struct {
 }
 
 // ResourceResizeRestartPolicy specifies how to handle container resource resize.
+// +kubebuilder:validation:Enum=NotRequired;RestartContainer
 type ResourceResizeRestartPolicy string
 
 // These are the valid resource resize restart policy values:
@@ -484,6 +485,7 @@ type ContainerResizePolicy struct {
 
 // ContainerRestartPolicy is the restart policy for a single container.
 // The only allowed values are "Always", "Never", and "OnFailure".
+// +kubebuilder:validation:Enum=Always;Never;OnFailure
 type ContainerRestartPolicy string
 
 const (
@@ -498,7 +500,7 @@ type ContainerRestartRule struct {
 	// are satisfied. The only possible value is "Restart" to restart the
 	// container.
 	// +required
-	Action ContainerRestartRuleAction `json:"action,omitempty" proto:"bytes,1,opt,name=action" protobuf:"bytes,1,opt,name=action,casttype=ContainerRestartRuleAction"` // want "requiredfields: field Action has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	Action ContainerRestartRuleAction `json:"action,omitempty" proto:"bytes,1,opt,name=action" protobuf:"bytes,1,opt,name=action,casttype=ContainerRestartRuleAction"`
 
 	// Represents the exit codes to check on container exits. // want "commentstart: godoc for field ContainerRestartRule.ExitCodes should start with 'exitCodes ...'"
 	// +optional
@@ -508,6 +510,7 @@ type ContainerRestartRule struct {
 
 // ContainerRestartRuleAction describes the action to take when the
 // container exits.
+// +kubebuilder:validation:Enum=Restart
 type ContainerRestartRuleAction string
 
 // The only valid action is Restart.
@@ -525,7 +528,7 @@ type ContainerRestartRuleOnExitCodes struct {
 	// - NotIn: the requirement is satisfied if the container exit code is
 	//   not in the set of specified values.
 	// +required
-	Operator ContainerRestartRuleOnExitCodesOperator `json:"operator,omitempty" proto:"bytes,1,opt,name=operator" protobuf:"bytes,1,opt,name=operator,casttype=ContainerRestartRuleOnExitCodesOperator"` // want "requiredfields: field Operator has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	Operator ContainerRestartRuleOnExitCodesOperator `json:"operator,omitempty" proto:"bytes,1,opt,name=operator" protobuf:"bytes,1,opt,name=operator,casttype=ContainerRestartRuleOnExitCodesOperator"`
 
 	// Specifies the set of values to check for container exit codes. // want "commentstart: godoc for field ContainerRestartRuleOnExitCodes.Values should start with 'values ...'"
 	// At most 255 elements are allowed.
@@ -536,6 +539,7 @@ type ContainerRestartRuleOnExitCodes struct {
 
 // ContainerRestartRuleOnExitCodesOperator describes the operator
 // to take for the exit codes.
+// +kubebuilder:validation:Enum
 type ContainerRestartRuleOnExitCodesOperator string
 
 const (
@@ -634,7 +638,7 @@ type HTTPHeader struct {
 }
 
 // URIScheme identifies the scheme used for connection to a host for Get actions
-// +enum
+// +kubebuilder:validation:Enum
 type URIScheme string
 
 const (
@@ -689,7 +693,7 @@ type SleepAction struct {
 }
 
 // Signal defines the stop signal of containers
-// +enum
+// +kubebuilder:validation:Enum=SIGABRT;SIGALRM;SIGBUS;SIGCHLD;SIGCLD;SIGCONT;SIGFPE;SIGHUP;SIGILL;SIGINT;SIGIO;SIGIOT;SIGKILL;SIGPIPE;SIGPOLL;SIGPROF;SIGPWR;SIGQUIT;SIGSEGV;SIGSTKFLT;SIGSTOP;SIGSYS;SIGTERM;SIGTRAP;SIGTSTP;SIGTTIN;SIGTTOU;SIGURG;SIGUSR1;SIGUSR2;SIGVTALRM;SIGWINCH;SIGXCPU;SIGXFSZ;SIGRTMIN;SIGRTMIN+1;SIGRTMIN+2;SIGRTMIN+3;SIGRTMIN+4;SIGRTMIN+5;SIGRTMIN+6;SIGRTMIN+7;SIGRTMIN+8;SIGRTMIN+9;SIGRTMIN+10;SIGRTMIN+11;SIGRTMIN+12;SIGRTMIN+13;SIGRTMIN+14;SIGRTMIN+15;SIGRTMAX-14;SIGRTMAX-13;SIGRTMAX-12;SIGRTMAX-11;SIGRTMAX-10;SIGRTMAX-9;SIGRTMAX-8;SIGRTMAX-7;SIGRTMAX-6;SIGRTMAX-5;SIGRTMAX-4;SIGRTMAX-3;SIGRTMAX-2;SIGRTMAX-1;SIGRTMAX
 type Signal string
 
 const (
@@ -808,7 +812,7 @@ type LifecycleHandler struct {
 }
 
 // TerminationMessagePolicy describes how termination messages are retrieved from a container.
-// +enum
+// +kubebuilder:validation:Enum
 type TerminationMessagePolicy string
 
 const (
@@ -822,7 +826,7 @@ const (
 )
 
 // PullPolicy describes a policy for if/when to pull a container image
-// +enum
+// +kubebuilder:validation:Enum
 type PullPolicy string
 
 const (
@@ -918,7 +922,7 @@ type SecurityContext struct {
 	AppArmorProfile *AppArmorProfile `json:"appArmorProfile,omitempty" protobuf:"bytes,12,opt,name=appArmorProfile"`
 }
 
-// +enum
+// +kubebuilder:validation:Enum
 type ProcMountType string
 
 const (
@@ -1012,7 +1016,7 @@ type SeccompProfile struct {
 }
 
 // SeccompProfileType defines the supported seccomp profile types.
-// +enum
+// +kubebuilder:validation:Enum
 type SeccompProfileType string
 
 const (
@@ -1044,7 +1048,7 @@ type AppArmorProfile struct {
 	LocalhostProfile *string `json:"localhostProfile,omitempty" protobuf:"bytes,2,opt,name=localhostProfile"`
 }
 
-// +enum
+// +kubebuilder:validation:Enum
 type AppArmorProfileType string
 
 const (
@@ -1072,7 +1076,7 @@ type HostAlias struct {
 // Only one of the following restart policies may be specified.
 // If none of the following policies is specified, the default one
 // is RestartPolicyAlways.
-// +enum
+// +kubebuilder:validation:Enum
 type RestartPolicy string
 
 const (
@@ -1082,7 +1086,7 @@ const (
 )
 
 // DNSPolicy defines how a pod's DNS will be configured.
-// +enum
+// +kubebuilder:validation:Enum
 type DNSPolicy string
 
 const (

@@ -30,6 +30,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/defaultorrequired"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/dependenttags"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/enums"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
