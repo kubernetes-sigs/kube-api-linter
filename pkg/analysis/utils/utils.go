@@ -36,6 +36,30 @@ func IsBasicType(pass *analysis.Pass, expr ast.Expr) bool {
 	return ok
 }
 
+// IsStringType checks if the type of the given expression is a string type..
+func IsStringType(pass *analysis.Pass, expr ast.Expr) bool {
+	// In case the expr is a pointer.
+	underlying := getUnderlyingType(expr)
+
+	ident, ok := underlying.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	if ident.Name == "string" {
+		return true
+	}
+
+	// Is either an alias or another basic type, try to look up the alias.
+	tSpec, ok := LookupTypeSpec(pass, ident)
+	if !ok {
+		// Basic type and not a string.
+		return false
+	}
+
+	return IsStringType(pass, tSpec.Type)
+}
+
 // IsStructType checks if the given expression is a struct type.
 func IsStructType(pass *analysis.Pass, expr ast.Expr) bool {
 	underlying := getUnderlyingType(expr)

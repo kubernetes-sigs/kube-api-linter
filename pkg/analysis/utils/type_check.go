@@ -101,6 +101,8 @@ func (t *typeChecker) checkTypeExpr(pass *analysis.Pass, typeExpr ast.Expr, node
 	case *ast.MapType:
 		t.checkTypeExpr(pass, typ.Key, node, fmt.Sprintf("%s map key", prefix))
 		t.checkTypeExpr(pass, typ.Value, node, fmt.Sprintf("%s map value", prefix))
+	case *ast.IndexExpr:
+		t.checkTypeExpr(pass, typ.X, node, prefix)
 	}
 }
 
