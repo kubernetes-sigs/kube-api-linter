@@ -24,26 +24,26 @@ type ObjectReference struct {
 	// Kind of the referent. // want "commentstart: godoc for field ObjectReference.Kind should start with 'kind ...'"
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 	// +optional
-	Kind string `json:"kind,omitempty" protobuf:"bytes,1,opt,name=kind"` // want "optionalfields: field Kind should be a pointer."
+	Kind string `json:"kind,omitempty" protobuf:"bytes,1,opt,name=kind"` // want "optionalfields: field ObjectReference.Kind should be a pointer."
 	// Namespace of the referent. // want "commentstart: godoc for field ObjectReference.Namespace should start with 'namespace ...'"
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 	// +optional
-	Namespace string `json:"namespace,omitempty" protobuf:"bytes,2,opt,name=namespace"` // want "optionalfields: field Namespace should be a pointer."
+	Namespace string `json:"namespace,omitempty" protobuf:"bytes,2,opt,name=namespace"` // want "optionalfields: field ObjectReference.Namespace should be a pointer."
 	// Name of the referent. // want "commentstart: godoc for field ObjectReference.Name should start with 'name ...'"
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	// +optional
-	Name string `json:"name,omitempty" protobuf:"bytes,3,opt,name=name"` // want "optionalfields: field Name should be a pointer."
+	Name string `json:"name,omitempty" protobuf:"bytes,3,opt,name=name"` // want "optionalfields: field ObjectReference.Name should be a pointer."
 	// UID of the referent. // want "commentstart: godoc for field ObjectReference.UID should start with 'uid ...'"
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
 	// +optional
-	UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uid,casttype=k8s.io/apimachinery/pkg/types.UID"` // want "optionalfields: field UID should be a pointer."
+	UID types.UID `json:"uid,omitempty" protobuf:"bytes,4,opt,name=uid,casttype=k8s.io/apimachinery/pkg/types.UID"` // want "optionalfields: field ObjectReference.UID should be a pointer."
 	// API version of the referent. // want "commentstart: godoc for field ObjectReference.APIVersion should start with 'apiVersion ...'"
 	// +optional
-	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,5,opt,name=apiVersion"` // want "optionalfields: field APIVersion should be a pointer."
+	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,5,opt,name=apiVersion"` // want "optionalfields: field ObjectReference.APIVersion should be a pointer."
 	// Specific resourceVersion to which this reference is made, if any. // want "commentstart: godoc for field ObjectReference.ResourceVersion should start with 'resourceVersion ...'"
 	// More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
 	// +optional
-	ResourceVersion string `json:"resourceVersion,omitempty" protobuf:"bytes,6,opt,name=resourceVersion"` // want "optionalfields: field ResourceVersion should be a pointer."
+	ResourceVersion string `json:"resourceVersion,omitempty" protobuf:"bytes,6,opt,name=resourceVersion"` // want "optionalfields: field ObjectReference.ResourceVersion should be a pointer."
 
 	// If referring to a piece of an object instead of an entire object, this string // want "commentstart: godoc for field ObjectReference.FieldPath should start with 'fieldPath ...'"
 	// should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
@@ -54,7 +54,7 @@ type ObjectReference struct {
 	// referencing a part of an object.
 	// TODO: this design is not final and this field is subject to change in the future.
 	// +optional
-	FieldPath string `json:"fieldPath,omitempty" protobuf:"bytes,7,opt,name=fieldPath"` // want "optionalfields: field FieldPath should be a pointer."
+	FieldPath string `json:"fieldPath,omitempty" protobuf:"bytes,7,opt,name=fieldPath"` // want "optionalfields: field ObjectReference.FieldPath should be a pointer."
 }
 
 // LocalObjectReference contains enough information to let you locate the
@@ -81,7 +81,7 @@ type LocalObjectReference struct {
 	// +default=""
 	// +kubebuilder:default=""
 	// TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field Name should be a pointer."
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field LocalObjectReference.Name should be a pointer."
 }
 
 // TypedLocalObjectReference contains enough information to let you locate the
@@ -106,7 +106,7 @@ type TypedLocalObjectReference struct {
 	// If APIGroup is not specified, the specified Kind must be in the core API group.
 	// For any other third-party types, APIGroup is required.
 	// +optional
-	APIGroup *string `json:"apiGroup" protobuf:"bytes,1,opt,name=apiGroup"` // want "optionalfields: field APIGroup should have the omitempty tag."
+	APIGroup *string `json:"apiGroup" protobuf:"bytes,1,opt,name=apiGroup"` // want "optionalfields: field TypedLocalObjectReference.APIGroup should have the omitempty tag."
 	// Kind is the type of resource being referenced // want "commentstart: godoc for field TypedLocalObjectReference.Kind should start with 'kind ...'"
 	Kind string `json:"kind" protobuf:"bytes,2,opt,name=kind"` // want "optionalorrequired: field TypedLocalObjectReference.Kind must be marked as optional or required"
 	// Name is the name of resource being referenced // want "commentstart: godoc for field TypedLocalObjectReference.Name should start with 'name ...'"
@@ -119,10 +119,10 @@ type TypedLocalObjectReference struct {
 type SecretReference struct {
 	// name is unique within a namespace to reference a secret resource.
 	// +optional
-	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field Name should be a pointer."
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field SecretReference.Name should be a pointer."
 	// namespace defines the space within which the secret name must be unique.
 	// +optional
-	Namespace string `json:"namespace,omitempty" protobuf:"bytes,2,opt,name=namespace"` // want "optionalfields: field Namespace should be a pointer."
+	Namespace string `json:"namespace,omitempty" protobuf:"bytes,2,opt,name=namespace"` // want "optionalfields: field SecretReference.Namespace should be a pointer."
 }
 
 // TypedObjectReference contains enough information to let you locate the typed referenced object
@@ -131,7 +131,7 @@ type TypedObjectReference struct {
 	// If APIGroup is not specified, the specified Kind must be in the core API group.
 	// For any other third-party types, APIGroup is required.
 	// +optional
-	APIGroup *string `json:"apiGroup" protobuf:"bytes,1,opt,name=apiGroup"` // want "optionalfields: field APIGroup should have the omitempty tag."
+	APIGroup *string `json:"apiGroup" protobuf:"bytes,1,opt,name=apiGroup"` // want "optionalfields: field TypedObjectReference.APIGroup should have the omitempty tag."
 	// Kind is the type of resource being referenced // want "commentstart: godoc for field TypedObjectReference.Kind should start with 'kind ...'"
 	Kind string `json:"kind" protobuf:"bytes,2,opt,name=kind"` // want "optionalorrequired: field TypedObjectReference.Kind must be marked as optional or required"
 	// Name is the name of resource being referenced // want "commentstart: godoc for field TypedObjectReference.Name should start with 'name ...'"

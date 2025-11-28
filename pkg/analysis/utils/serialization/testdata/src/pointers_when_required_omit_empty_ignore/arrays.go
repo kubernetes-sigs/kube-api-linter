@@ -10,7 +10,7 @@ type TestArrays struct {
 	ArrayWithOmitEmptyPtr []*string `json:"arrayWithOmitEmptyPtr,omitempty"`
 
 	// +kubebuilder:validation:MinItems=1
-	ArrayWithPositiveMinItems []string `json:"arrayWithPositiveMinItems"` // want "field ArrayWithPositiveMinItems does not allow the zero value. It must have the omitempty tag."
+	ArrayWithPositiveMinItems []string `json:"arrayWithPositiveMinItems"` // want "field TestArrays.ArrayWithPositiveMinItems does not allow the zero value. It must have the omitempty tag."
 
 	// +kubebuilder:validation:MinItems=1
 	ArrayWithPositiveMinItemsWithOmitEmpty []string `json:"arrayWithPositiveMinItemsWithOmitEmpty,omitempty"`
@@ -26,7 +26,7 @@ type TestArrays struct {
 	ByteArrayWithOmitEmpty []byte `json:"byteArrayWithOmitEmpty,omitempty"`
 
 	// +kubebuilder:validation:MinLength=1
-	ByteArrayWithMinLength []byte `json:"byteArrayWithMinLength"` // want "field ByteArrayWithMinLength does not allow the zero value. It must have the omitempty tag."
+	ByteArrayWithMinLength []byte `json:"byteArrayWithMinLength"` // want "field TestArrays.ByteArrayWithMinLength does not allow the zero value. It must have the omitempty tag."
 
 	// +kubebuilder:validation:MinLength=1
 	ByteArrayWithMinLengthWithOmitEmpty []byte `json:"byteArrayWithMinLengthWithOmitEmpty,omitempty"`
@@ -37,7 +37,7 @@ type TestArrays struct {
 	// +kubebuilder:validation:MinLength=0
 	ByteArrayWithMinLength0WithOmitEmpty []byte `json:"byteArrayWithMinLength0WithOmitEmpty,omitempty"`
 
-	PtrArray *[]string `json:"ptrArray"` // want "field PtrArray does not have omitempty and allows the zero value. The field does not need to be a pointer."
+	PtrArray *[]string `json:"ptrArray"` // want "field TestArrays.PtrArray does not have omitempty and allows the zero value. The field does not need to be a pointer."
 
-	PtrArrayWithOmitEmpty *[]string `json:"ptrArrayWithOmitEmpty,omitempty"` // want "field PtrArrayWithOmitEmpty underlying type does not need to be a pointer. The pointer should be removed."
+	PtrArrayWithOmitEmpty *[]string `json:"ptrArrayWithOmitEmpty,omitempty"` // want "field TestArrays.PtrArrayWithOmitEmpty underlying type does not need to be a pointer. The pointer should be removed."
 }

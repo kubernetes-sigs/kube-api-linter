@@ -22,7 +22,7 @@ type EphemeralContainer struct {
 	// The container runtime must implement support for this feature. If the runtime does not
 	// support namespace targeting then the result of setting this field is undefined.
 	// +optional
-	TargetContainerName string `json:"targetContainerName,omitempty" protobuf:"bytes,2,opt,name=targetContainerName"` // want "optionalfields: field TargetContainerName should be a pointer."
+	TargetContainerName string `json:"targetContainerName,omitempty" protobuf:"bytes,2,opt,name=targetContainerName"` // want "optionalfields: field EphemeralContainer.TargetContainerName should be a pointer."
 }
 
 // EphemeralContainerCommon is a copy of all fields in Container to be inlined in
@@ -63,7 +63,7 @@ type EphemeralContainerCommon struct {
 	// might be configured in the container image.
 	// Cannot be updated.
 	// +optional
-	WorkingDir string `json:"workingDir,omitempty" protobuf:"bytes,5,opt,name=workingDir"` // want "optionalfields: field WorkingDir should be a pointer."
+	WorkingDir string `json:"workingDir,omitempty" protobuf:"bytes,5,opt,name=workingDir"` // want "optionalfields: field EphemeralContainerCommon.WorkingDir should be a pointer."
 	// Ports are not allowed for ephemeral containers. // want "commentstart: godoc for field EphemeralContainerCommon.Ports should start with 'ports ...'"
 	// +optional
 	// +patchMergeKey=containerPort
@@ -92,7 +92,7 @@ type EphemeralContainerCommon struct {
 	// Resources are not allowed for ephemeral containers. Ephemeral containers use spare resources // want "commentstart: godoc for field EphemeralContainerCommon.Resources should start with 'resources ...'"
 	// already allocated to the pod.
 	// +optional
-	Resources ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"` // want "optionalfields: field Resources should be a pointer."
+	Resources ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"` // want "optionalfields: field EphemeralContainerCommon.Resources should be a pointer."
 	// Resources resize policy for the container. // want "commentstart: godoc for field EphemeralContainerCommon.ResizePolicy should start with 'resizePolicy ...'"
 	// +featureGate=InPlacePodVerticalScaling
 	// +optional
@@ -145,7 +145,7 @@ type EphemeralContainerCommon struct {
 	// Defaults to /dev/termination-log.
 	// Cannot be updated.
 	// +optional
-	TerminationMessagePath string `json:"terminationMessagePath,omitempty" protobuf:"bytes,13,opt,name=terminationMessagePath"` // want "optionalfields: field TerminationMessagePath should be a pointer."
+	TerminationMessagePath string `json:"terminationMessagePath,omitempty" protobuf:"bytes,13,opt,name=terminationMessagePath"` // want "optionalfields: field EphemeralContainerCommon.TerminationMessagePath should be a pointer."
 	// Indicate how the termination message should be populated. File will use the contents of // want "commentstart: godoc for field EphemeralContainerCommon.TerminationMessagePolicy should start with 'terminationMessagePolicy ...'"
 	// terminationMessagePath to populate the container status message on both success and failure.
 	// FallbackToLogsOnError will use the last chunk of container log output if the termination
@@ -154,14 +154,14 @@ type EphemeralContainerCommon struct {
 	// Defaults to File.
 	// Cannot be updated.
 	// +optional
-	TerminationMessagePolicy TerminationMessagePolicy `json:"terminationMessagePolicy,omitempty" protobuf:"bytes,20,opt,name=terminationMessagePolicy,casttype=TerminationMessagePolicy"` // want "optionalfields: field TerminationMessagePolicy should be a pointer."
+	TerminationMessagePolicy TerminationMessagePolicy `json:"terminationMessagePolicy,omitempty" protobuf:"bytes,20,opt,name=terminationMessagePolicy,casttype=TerminationMessagePolicy"` // want "optionalfields: field EphemeralContainerCommon.TerminationMessagePolicy should be a pointer."
 	// Image pull policy. // want "commentstart: godoc for field EphemeralContainerCommon.ImagePullPolicy should start with 'imagePullPolicy ...'"
 	// One of Always, Never, IfNotPresent.
 	// Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
 	// +optional
-	ImagePullPolicy PullPolicy `json:"imagePullPolicy,omitempty" protobuf:"bytes,14,opt,name=imagePullPolicy,casttype=PullPolicy"` // want "optionalfields: field ImagePullPolicy should be a pointer."
+	ImagePullPolicy PullPolicy `json:"imagePullPolicy,omitempty" protobuf:"bytes,14,opt,name=imagePullPolicy,casttype=PullPolicy"` // want "optionalfields: field EphemeralContainerCommon.ImagePullPolicy should be a pointer."
 	// Optional: SecurityContext defines the security options the ephemeral container should be run with. // want "commentstart: godoc for field EphemeralContainerCommon.SecurityContext should start with 'securityContext ...'"
 	// If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
 	// +optional
@@ -174,7 +174,7 @@ type EphemeralContainerCommon struct {
 	// is not set, reads from stdin in the container will always result in EOF.
 	// Default is false.
 	// +optional
-	Stdin bool `json:"stdin,omitempty" protobuf:"varint,16,opt,name=stdin"` // want "optionalfields: field Stdin should be a pointer."
+	Stdin bool `json:"stdin,omitempty" protobuf:"varint,16,opt,name=stdin"` // want "optionalfields: field EphemeralContainerCommon.Stdin should be a pointer."
 	// Whether the container runtime should close the stdin channel after it has been opened by // want "commentstart: godoc for field EphemeralContainerCommon.StdinOnce should start with 'stdinOnce ...'"
 	// a single attach. When stdin is true the stdin stream will remain open across multiple attach
 	// sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
@@ -183,9 +183,9 @@ type EphemeralContainerCommon struct {
 	// flag is false, a container processes that reads from stdin will never receive an EOF.
 	// Default is false
 	// +optional
-	StdinOnce bool `json:"stdinOnce,omitempty" protobuf:"varint,17,opt,name=stdinOnce"` // want "optionalfields: field StdinOnce should be a pointer."
+	StdinOnce bool `json:"stdinOnce,omitempty" protobuf:"varint,17,opt,name=stdinOnce"` // want "optionalfields: field EphemeralContainerCommon.StdinOnce should be a pointer."
 	// Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. // want "commentstart: godoc for field EphemeralContainerCommon.TTY should start with 'tty ...'"
 	// Default is false.
 	// +optional
-	TTY bool `json:"tty,omitempty" protobuf:"varint,18,opt,name=tty"` // want "optionalfields: field TTY should be a pointer."
+	TTY bool `json:"tty,omitempty" protobuf:"varint,18,opt,name=tty"` // want "optionalfields: field EphemeralContainerCommon.TTY should be a pointer."
 }

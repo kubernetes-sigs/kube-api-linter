@@ -11,7 +11,7 @@ type Container struct {
 	// This field is optional to allow higher level config management to default or override
 	// container images in workload controllers like Deployments and StatefulSets.
 	// +optional
-	Image string `json:"image,omitempty" protobuf:"bytes,2,opt,name=image"` // want "optionalfields: field Image should be a pointer."
+	Image string `json:"image,omitempty" protobuf:"bytes,2,opt,name=image"` // want "optionalfields: field Container.Image should be a pointer."
 	// Entrypoint array. Not executed within a shell. // want "commentstart: godoc for field Container.Command should start with 'command ...'"
 	// The container image's ENTRYPOINT is used if this is not provided.
 	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
@@ -39,7 +39,7 @@ type Container struct {
 	// might be configured in the container image.
 	// Cannot be updated.
 	// +optional
-	WorkingDir string `json:"workingDir,omitempty" protobuf:"bytes,5,opt,name=workingDir"` // want "optionalfields: field WorkingDir should be a pointer."
+	WorkingDir string `json:"workingDir,omitempty" protobuf:"bytes,5,opt,name=workingDir"` // want "optionalfields: field Container.WorkingDir should be a pointer."
 	// List of ports to expose from the container. Not specifying a port here // want "commentstart: godoc for field Container.Ports should start with 'ports ...'"
 	// DOES NOT prevent that port from being exposed. Any port which is
 	// listening on the default "0.0.0.0" address inside a container will be
@@ -75,7 +75,7 @@ type Container struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	// +optional
-	Resources ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"` // want "optionalfields: field Resources should be a pointer."
+	Resources ResourceRequirements `json:"resources,omitempty" protobuf:"bytes,8,opt,name=resources"` // want "optionalfields: field Container.Resources should be a pointer."
 	// Resources resize policy for the container. // want "commentstart: godoc for field Container.ResizePolicy should start with 'resizePolicy ...'"
 	// This field cannot be set on ephemeral containers.
 	// +featureGate=InPlacePodVerticalScaling
@@ -162,7 +162,7 @@ type Container struct {
 	// Defaults to /dev/termination-log.
 	// Cannot be updated.
 	// +optional
-	TerminationMessagePath string `json:"terminationMessagePath,omitempty" protobuf:"bytes,13,opt,name=terminationMessagePath"` // want "optionalfields: field TerminationMessagePath should be a pointer."
+	TerminationMessagePath string `json:"terminationMessagePath,omitempty" protobuf:"bytes,13,opt,name=terminationMessagePath"` // want "optionalfields: field Container.TerminationMessagePath should be a pointer."
 	// Indicate how the termination message should be populated. File will use the contents of // want "commentstart: godoc for field Container.TerminationMessagePolicy should start with 'terminationMessagePolicy ...'"
 	// terminationMessagePath to populate the container status message on both success and failure.
 	// FallbackToLogsOnError will use the last chunk of container log output if the termination
@@ -171,14 +171,14 @@ type Container struct {
 	// Defaults to File.
 	// Cannot be updated.
 	// +optional
-	TerminationMessagePolicy TerminationMessagePolicy `json:"terminationMessagePolicy,omitempty" protobuf:"bytes,20,opt,name=terminationMessagePolicy,casttype=TerminationMessagePolicy"` // want "optionalfields: field TerminationMessagePolicy should be a pointer."
+	TerminationMessagePolicy TerminationMessagePolicy `json:"terminationMessagePolicy,omitempty" protobuf:"bytes,20,opt,name=terminationMessagePolicy,casttype=TerminationMessagePolicy"` // want "optionalfields: field Container.TerminationMessagePolicy should be a pointer."
 	// Image pull policy. // want "commentstart: godoc for field Container.ImagePullPolicy should start with 'imagePullPolicy ...'"
 	// One of Always, Never, IfNotPresent.
 	// Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
 	// +optional
-	ImagePullPolicy PullPolicy `json:"imagePullPolicy,omitempty" protobuf:"bytes,14,opt,name=imagePullPolicy,casttype=PullPolicy"` // want "optionalfields: field ImagePullPolicy should be a pointer."
+	ImagePullPolicy PullPolicy `json:"imagePullPolicy,omitempty" protobuf:"bytes,14,opt,name=imagePullPolicy,casttype=PullPolicy"` // want "optionalfields: field Container.ImagePullPolicy should be a pointer."
 	// SecurityContext defines the security options the container should be run with. // want "commentstart: godoc for field Container.SecurityContext should start with 'securityContext ...'"
 	// If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -192,7 +192,7 @@ type Container struct {
 	// is not set, reads from stdin in the container will always result in EOF.
 	// Default is false.
 	// +optional
-	Stdin bool `json:"stdin,omitempty" protobuf:"varint,16,opt,name=stdin"` // want "optionalfields: field Stdin should be a pointer."
+	Stdin bool `json:"stdin,omitempty" protobuf:"varint,16,opt,name=stdin"` // want "optionalfields: field Container.Stdin should be a pointer."
 	// Whether the container runtime should close the stdin channel after it has been opened by // want "commentstart: godoc for field Container.StdinOnce should start with 'stdinOnce ...'"
 	// a single attach. When stdin is true the stdin stream will remain open across multiple attach
 	// sessions. If stdinOnce is set to true, stdin is opened on container start, is empty until the
@@ -201,11 +201,11 @@ type Container struct {
 	// flag is false, a container processes that reads from stdin will never receive an EOF.
 	// Default is false
 	// +optional
-	StdinOnce bool `json:"stdinOnce,omitempty" protobuf:"varint,17,opt,name=stdinOnce"` // want "optionalfields: field StdinOnce should be a pointer."
+	StdinOnce bool `json:"stdinOnce,omitempty" protobuf:"varint,17,opt,name=stdinOnce"` // want "optionalfields: field Container.StdinOnce should be a pointer."
 	// Whether this container should allocate a TTY for itself, also requires 'stdin' to be true. // want "commentstart: godoc for field Container.TTY should start with 'tty ...'"
 	// Default is false.
 	// +optional
-	TTY bool `json:"tty,omitempty" protobuf:"varint,18,opt,name=tty"` // want "optionalfields: field TTY should be a pointer."
+	TTY bool `json:"tty,omitempty" protobuf:"varint,18,opt,name=tty"` // want "optionalfields: field Container.TTY should be a pointer."
 }
 
 // Protocol defines network protocols supported for things like container ports.
@@ -227,13 +227,13 @@ type ContainerPort struct {
 	// named port in a pod must have a unique name. Name for the port that can be
 	// referred to by services.
 	// +optional
-	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field Name should be a pointer."
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field ContainerPort.Name should be a pointer."
 	// Number of port to expose on the host. // want "commentstart: godoc for field ContainerPort.HostPort should start with 'hostPort ...'"
 	// If specified, this must be a valid port number, 0 < x < 65536.
 	// If HostNetwork is specified, this must match ContainerPort.
 	// Most containers do not need this.
 	// +optional
-	HostPort int32 `json:"hostPort,omitempty" protobuf:"varint,2,opt,name=hostPort"` // want "optionalfields: field HostPort should be a pointer."
+	HostPort int32 `json:"hostPort,omitempty" protobuf:"varint,2,opt,name=hostPort"` // want "optionalfields: field ContainerPort.HostPort should be a pointer."
 	// Number of port to expose on the pod's IP address. // want "commentstart: godoc for field ContainerPort.ContainerPort should start with 'containerPort ...'"
 	// This must be a valid port number, 0 < x < 65536.
 	ContainerPort int32 `json:"containerPort" protobuf:"varint,3,opt,name=containerPort"` // want "optionalorrequired: field ContainerPort.ContainerPort must be marked as optional or required"
@@ -241,10 +241,10 @@ type ContainerPort struct {
 	// Defaults to "TCP".
 	// +optional
 	// +default="TCP"
-	Protocol Protocol `json:"protocol,omitempty" protobuf:"bytes,4,opt,name=protocol,casttype=Protocol"` // want "optionalfields: field Protocol should be a pointer."
+	Protocol Protocol `json:"protocol,omitempty" protobuf:"bytes,4,opt,name=protocol,casttype=Protocol"` // want "optionalfields: field ContainerPort.Protocol should be a pointer."
 	// What host IP to bind the external port to. // want "commentstart: godoc for field ContainerPort.HostIP should start with 'hostIP ...'"
 	// +optional
-	HostIP string `json:"hostIP,omitempty" protobuf:"bytes,5,opt,name=hostIP"` // want "optionalfields: field HostIP should be a pointer."
+	HostIP string `json:"hostIP,omitempty" protobuf:"bytes,5,opt,name=hostIP"` // want "optionalfields: field ContainerPort.HostIP should be a pointer."
 }
 
 // EnvVar represents an environment variable present in a Container.
@@ -265,7 +265,7 @@ type EnvVar struct {
 	// exists or not.
 	// Defaults to "".
 	// +optional
-	Value string `json:"value,omitempty" protobuf:"bytes,2,opt,name=value"` // want "optionalfields: field Value should be a pointer."
+	Value string `json:"value,omitempty" protobuf:"bytes,2,opt,name=value"` // want "optionalfields: field EnvVar.Value should be a pointer."
 	// Source for the environment variable's value. Cannot be used if value is not empty. // want "commentstart: godoc for field EnvVar.ValueFrom should start with 'valueFrom ...'"
 	// +optional
 	ValueFrom *EnvVarSource `json:"valueFrom,omitempty" protobuf:"bytes,3,opt,name=valueFrom"`
@@ -300,16 +300,16 @@ type EnvVarSource struct {
 type FileKeySelector struct {
 	// The name of the volume mount containing the env file. // want "commentstart: godoc for field FileKeySelector.VolumeName should start with 'volumeName ...'"
 	// +required
-	VolumeName string `json:"volumeName" protobuf:"bytes,1,opt,name=volumeName"` // want "requiredfields: field VolumeName should have the omitempty tag." "requiredfields: field VolumeName has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	VolumeName string `json:"volumeName" protobuf:"bytes,1,opt,name=volumeName"` // want "requiredfields: field FileKeySelector.VolumeName should have the omitempty tag." "requiredfields: field FileKeySelector.VolumeName has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 	// The path within the volume from which to select the file. // want "commentstart: godoc for field FileKeySelector.Path should start with 'path ...'"
 	// Must be relative and may not contain the '..' path or start with '..'.
 	// +required
-	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "requiredfields: field Path should have the omitempty tag." "requiredfields: field Path has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	Path string `json:"path" protobuf:"bytes,2,opt,name=path"` // want "requiredfields: field FileKeySelector.Path should have the omitempty tag." "requiredfields: field FileKeySelector.Path has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 	// The key within the env file. An invalid key will prevent the pod from starting. // want "commentstart: godoc for field FileKeySelector.Key should start with 'key ...'"
 	// The keys defined within a source may consist of any printable ASCII characters except '='.
 	// During Alpha stage of the EnvFiles feature gate, the key size is limited to 128 characters.
 	// +required
-	Key string `json:"key" protobuf:"bytes,3,opt,name=key"` // want "requiredfields: field Key should have the omitempty tag." "requiredfields: field Key has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	Key string `json:"key" protobuf:"bytes,3,opt,name=key"` // want "requiredfields: field FileKeySelector.Key should have the omitempty tag." "requiredfields: field FileKeySelector.Key has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 	// Specify whether the file or its key must be defined. If the file or key // want "commentstart: godoc for field FileKeySelector.Optional should start with 'optional ...'"
 	// does not exist, then the env var is not published.
 	// If optional is set to true and the specified key does not exist,
@@ -327,7 +327,7 @@ type FileKeySelector struct {
 type ObjectFieldSelector struct {
 	// Version of the schema the FieldPath is written in terms of, defaults to "v1". // want "commentstart: godoc for field ObjectFieldSelector.APIVersion should start with 'apiVersion ...'"
 	// +optional
-	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,1,opt,name=apiVersion"` // want "optionalfields: field APIVersion should be a pointer."
+	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,1,opt,name=apiVersion"` // want "optionalfields: field ObjectFieldSelector.APIVersion should be a pointer."
 	// Path of the field to select in the specified API version. // want "commentstart: godoc for field ObjectFieldSelector.FieldPath should start with 'fieldPath ...'"
 	FieldPath string `json:"fieldPath" protobuf:"bytes,2,opt,name=fieldPath"` // want "optionalorrequired: field ObjectFieldSelector.FieldPath must be marked as optional or required"
 }
@@ -337,7 +337,7 @@ type ObjectFieldSelector struct {
 type ResourceFieldSelector struct {
 	// Container name: required for volumes, optional for env vars // want "commentstart: godoc for field ResourceFieldSelector.ContainerName should start with 'containerName ...'"
 	// +optional
-	ContainerName string `json:"containerName,omitempty" protobuf:"bytes,1,opt,name=containerName"` // want "optionalfields: field ContainerName should be a pointer."
+	ContainerName string `json:"containerName,omitempty" protobuf:"bytes,1,opt,name=containerName"` // want "optionalfields: field ResourceFieldSelector.ContainerName should be a pointer."
 	// Required: resource to select // want "commentstart: godoc for field ResourceFieldSelector.Resource should start with 'resource ...'"
 	Resource string `json:"resource" protobuf:"bytes,2,opt,name=resource"` // want "optionalorrequired: field ResourceFieldSelector.Resource must be marked as optional or required"
 	// Specifies the output format of the exposed resources, defaults to "1"
@@ -374,7 +374,7 @@ type EnvFromSource struct {
 	// Optional text to prepend to the name of each environment variable. // want "commentstart: godoc for field EnvFromSource.Prefix should start with 'prefix ...'"
 	// May consist of any printable ASCII characters except '='.
 	// +optional
-	Prefix string `json:"prefix,omitempty" protobuf:"bytes,1,opt,name=prefix"` // want "optionalfields: field Prefix should be a pointer."
+	Prefix string `json:"prefix,omitempty" protobuf:"bytes,1,opt,name=prefix"` // want "optionalfields: field EnvFromSource.Prefix should be a pointer."
 	// The ConfigMap to select from // want "commentstart: godoc for field EnvFromSource.ConfigMapRef should start with 'configMapRef ...'"
 	// +optional
 	ConfigMapRef *ConfigMapEnvSource `json:"configMapRef,omitempty" protobuf:"bytes,2,opt,name=configMapRef"`
@@ -449,7 +449,7 @@ type ResourceClaim struct {
 	// only the result of this request.
 	//
 	// +optional
-	Request string `json:"request,omitempty" protobuf:"bytes,2,opt,name=request"` // want "optionalfields: field Request should be a pointer."
+	Request string `json:"request,omitempty" protobuf:"bytes,2,opt,name=request"` // want "optionalfields: field ResourceClaim.Request should be a pointer."
 }
 
 // ResourceResizeRestartPolicy specifies how to handle container resource resize.
@@ -498,7 +498,7 @@ type ContainerRestartRule struct {
 	// are satisfied. The only possible value is "Restart" to restart the
 	// container.
 	// +required
-	Action ContainerRestartRuleAction `json:"action,omitempty" proto:"bytes,1,opt,name=action" protobuf:"bytes,1,opt,name=action,casttype=ContainerRestartRuleAction"` // want "requiredfields: field Action has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	Action ContainerRestartRuleAction `json:"action,omitempty" proto:"bytes,1,opt,name=action" protobuf:"bytes,1,opt,name=action,casttype=ContainerRestartRuleAction"` // want "requiredfields: field ContainerRestartRule.Action has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// Represents the exit codes to check on container exits. // want "commentstart: godoc for field ContainerRestartRule.ExitCodes should start with 'exitCodes ...'"
 	// +optional
@@ -525,7 +525,7 @@ type ContainerRestartRuleOnExitCodes struct {
 	// - NotIn: the requirement is satisfied if the container exit code is
 	//   not in the set of specified values.
 	// +required
-	Operator ContainerRestartRuleOnExitCodesOperator `json:"operator,omitempty" proto:"bytes,1,opt,name=operator" protobuf:"bytes,1,opt,name=operator,casttype=ContainerRestartRuleOnExitCodesOperator"` // want "requiredfields: field Operator has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	Operator ContainerRestartRuleOnExitCodesOperator `json:"operator,omitempty" proto:"bytes,1,opt,name=operator" protobuf:"bytes,1,opt,name=operator,casttype=ContainerRestartRuleOnExitCodesOperator"` // want "requiredfields: field ContainerRestartRuleOnExitCodes.Operator has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// Specifies the set of values to check for container exit codes. // want "commentstart: godoc for field ContainerRestartRuleOnExitCodes.Values should start with 'values ...'"
 	// At most 255 elements are allowed.
@@ -551,24 +551,24 @@ type Probe struct {
 	// Number of seconds after the container has started before liveness probes are initiated. // want "commentstart: godoc for field Probe.InitialDelaySeconds should start with 'initialDelaySeconds ...'"
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
-	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty" protobuf:"varint,2,opt,name=initialDelaySeconds"` // want "optionalfields: field InitialDelaySeconds should be a pointer."
+	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty" protobuf:"varint,2,opt,name=initialDelaySeconds"` // want "optionalfields: field Probe.InitialDelaySeconds should be a pointer."
 	// Number of seconds after which the probe times out. // want "commentstart: godoc for field Probe.TimeoutSeconds should start with 'timeoutSeconds ...'"
 	// Defaults to 1 second. Minimum value is 1.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
-	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"` // want "optionalfields: field TimeoutSeconds should be a pointer."
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" protobuf:"varint,3,opt,name=timeoutSeconds"` // want "optionalfields: field Probe.TimeoutSeconds should be a pointer."
 	// How often (in seconds) to perform the probe. // want "commentstart: godoc for field Probe.PeriodSeconds should start with 'periodSeconds ...'"
 	// Default to 10 seconds. Minimum value is 1.
 	// +optional
-	PeriodSeconds int32 `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"` // want "optionalfields: field PeriodSeconds should be a pointer."
+	PeriodSeconds int32 `json:"periodSeconds,omitempty" protobuf:"varint,4,opt,name=periodSeconds"` // want "optionalfields: field Probe.PeriodSeconds should be a pointer."
 	// Minimum consecutive successes for the probe to be considered successful after having failed. // want "commentstart: godoc for field Probe.SuccessThreshold should start with 'successThreshold ...'"
 	// Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
 	// +optional
-	SuccessThreshold int32 `json:"successThreshold,omitempty" protobuf:"varint,5,opt,name=successThreshold"` // want "optionalfields: field SuccessThreshold should be a pointer."
+	SuccessThreshold int32 `json:"successThreshold,omitempty" protobuf:"varint,5,opt,name=successThreshold"` // want "optionalfields: field Probe.SuccessThreshold should be a pointer."
 	// Minimum consecutive failures for the probe to be considered failed after having succeeded. // want "commentstart: godoc for field Probe.FailureThreshold should start with 'failureThreshold ...'"
 	// Defaults to 3. Minimum value is 1.
 	// +optional
-	FailureThreshold int32 `json:"failureThreshold,omitempty" protobuf:"varint,6,opt,name=failureThreshold"` // want "optionalfields: field FailureThreshold should be a pointer."
+	FailureThreshold int32 `json:"failureThreshold,omitempty" protobuf:"varint,6,opt,name=failureThreshold"` // want "optionalfields: field Probe.FailureThreshold should be a pointer."
 	// Optional duration in seconds the pod needs to terminate gracefully upon probe failure. // want "commentstart: godoc for field Probe.TerminationGracePeriodSeconds should start with 'terminationGracePeriodSeconds ...'"
 	// The grace period is the duration in seconds after the processes running in the pod are sent
 	// a termination signal and the time when the processes are forcibly halted with a kill signal.
@@ -604,7 +604,7 @@ type ProbeHandler struct {
 type HTTPGetAction struct {
 	// Path to access on the HTTP server. // want "commentstart: godoc for field HTTPGetAction.Path should start with 'path ...'"
 	// +optional
-	Path string `json:"path,omitempty" protobuf:"bytes,1,opt,name=path"` // want "optionalfields: field Path should be a pointer."
+	Path string `json:"path,omitempty" protobuf:"bytes,1,opt,name=path"` // want "optionalfields: field HTTPGetAction.Path should be a pointer."
 	// Name or number of the port to access on the container.
 	// Number must be in the range 1 to 65535.
 	// Name must be an IANA_SVC_NAME.
@@ -613,11 +613,11 @@ type HTTPGetAction struct {
 	// Host name to connect to, defaults to the pod IP. You probably want to set // want "commentstart: godoc for field HTTPGetAction.Host should start with 'host ...'"
 	// "Host" in httpHeaders instead.
 	// +optional
-	Host string `json:"host,omitempty" protobuf:"bytes,3,opt,name=host"` // want "optionalfields: field Host should be a pointer."
+	Host string `json:"host,omitempty" protobuf:"bytes,3,opt,name=host"` // want "optionalfields: field HTTPGetAction.Host should be a pointer."
 	// Scheme to use for connecting to the host. // want "commentstart: godoc for field HTTPGetAction.Scheme should start with 'scheme ...'"
 	// Defaults to HTTP.
 	// +optional
-	Scheme URIScheme `json:"scheme,omitempty" protobuf:"bytes,4,opt,name=scheme,casttype=URIScheme"` // want "optionalfields: field Scheme should be a pointer."
+	Scheme URIScheme `json:"scheme,omitempty" protobuf:"bytes,4,opt,name=scheme,casttype=URIScheme"` // want "optionalfields: field HTTPGetAction.Scheme should be a pointer."
 	// Custom headers to set in the request. HTTP allows repeated headers. // want "commentstart: godoc for field HTTPGetAction.HTTPHeaders should start with 'httpHeaders ...'"
 	// +optional
 	// +listType=atomic
@@ -653,7 +653,7 @@ type TCPSocketAction struct {
 
 	// Optional: Host name to connect to, defaults to the pod IP. // want "commentstart: godoc for field TCPSocketAction.Host should start with 'host ...'"
 	// +optional
-	Host string `json:"host,omitempty" protobuf:"bytes,2,opt,name=host"` // want "optionalfields: field Host should be a pointer."
+	Host string `json:"host,omitempty" protobuf:"bytes,2,opt,name=host"` // want "optionalfields: field TCPSocketAction.Host should be a pointer."
 }
 
 // GRPCAction specifies an action involving a GRPC service.
@@ -667,7 +667,7 @@ type GRPCAction struct {
 	// If this is not specified, the default behavior is defined by gRPC.
 	// +optional
 	// +default=""
-	Service *string `json:"service" protobuf:"bytes,2,opt,name=service"` // want "optionalfields: field Service should have the omitempty tag."
+	Service *string `json:"service" protobuf:"bytes,2,opt,name=service"` // want "optionalfields: field GRPCAction.Service should have the omitempty tag."
 }
 
 // ExecAction describes a "run in container" action.
@@ -952,16 +952,16 @@ type Capabilities struct {
 type SELinuxOptions struct {
 	// User is a SELinux user label that applies to the container. // want "commentstart: godoc for field SELinuxOptions.User should start with 'user ...'"
 	// +optional
-	User string `json:"user,omitempty" protobuf:"bytes,1,opt,name=user"` // want "optionalfields: field User should be a pointer."
+	User string `json:"user,omitempty" protobuf:"bytes,1,opt,name=user"` // want "optionalfields: field SELinuxOptions.User should be a pointer."
 	// Role is a SELinux role label that applies to the container. // want "commentstart: godoc for field SELinuxOptions.Role should start with 'role ...'"
 	// +optional
-	Role string `json:"role,omitempty" protobuf:"bytes,2,opt,name=role"` // want "optionalfields: field Role should be a pointer."
+	Role string `json:"role,omitempty" protobuf:"bytes,2,opt,name=role"` // want "optionalfields: field SELinuxOptions.Role should be a pointer."
 	// Type is a SELinux type label that applies to the container. // want "commentstart: godoc for field SELinuxOptions.Type should start with 'type ...'"
 	// +optional
-	Type string `json:"type,omitempty" protobuf:"bytes,3,opt,name=type"` // want "optionalfields: field Type should be a pointer."
+	Type string `json:"type,omitempty" protobuf:"bytes,3,opt,name=type"` // want "optionalfields: field SELinuxOptions.Type should be a pointer."
 	// Level is SELinux level label that applies to the container. // want "commentstart: godoc for field SELinuxOptions.Level should start with 'level ...'"
 	// +optional
-	Level string `json:"level,omitempty" protobuf:"bytes,4,opt,name=level"` // want "optionalfields: field Level should be a pointer."
+	Level string `json:"level,omitempty" protobuf:"bytes,4,opt,name=level"` // want "optionalfields: field SELinuxOptions.Level should be a pointer."
 }
 
 // WindowsSecurityContextOptions contain Windows-specific options and credentials.
@@ -1062,7 +1062,7 @@ const (
 type HostAlias struct {
 	// IP address of the host file entry. // want "commentstart: godoc for field HostAlias.IP should start with 'ip ...'"
 	// +required
-	IP string `json:"ip" protobuf:"bytes,1,opt,name=ip"` // want "requiredfields: field IP should have the omitempty tag." "requiredfields: field IP has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	IP string `json:"ip" protobuf:"bytes,1,opt,name=ip"` // want "requiredfields: field HostAlias.IP should have the omitempty tag." "requiredfields: field HostAlias.IP has a valid zero value \\(\\\"\\\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 	// Hostnames for the above IP address. // want "commentstart: godoc for field HostAlias.Hostnames should start with 'hostnames ...'"
 	// +listType=atomic
 	Hostnames []string `json:"hostnames,omitempty" protobuf:"bytes,2,rep,name=hostnames"` // want "optionalorrequired: field HostAlias.Hostnames must be marked as optional or required"

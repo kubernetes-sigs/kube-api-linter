@@ -4,13 +4,13 @@ type TestStructs struct {
 	// StructWithAllOptionalFields has a zero value of {}, which is valid because all fields are optional.
 
 	// +required
-	StructWithAllOptionalFields StructWithAllOptionalFields `json:"structWithAllOptionalFields"` // want "field StructWithAllOptionalFields should have the omitempty tag." "field StructWithAllOptionalFields has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	StructWithAllOptionalFields StructWithAllOptionalFields `json:"structWithAllOptionalFields"` // want "field TestStructs.StructWithAllOptionalFields should have the omitempty tag." "field TestStructs.StructWithAllOptionalFields has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// +required
-	StructWithAllOptionalFieldsWithOmitEmpty StructWithAllOptionalFields `json:"structWithAllOptionalFieldsWithOmitEmpty,omitempty"` // want "field StructWithAllOptionalFieldsWithOmitEmpty has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	StructWithAllOptionalFieldsWithOmitEmpty StructWithAllOptionalFields `json:"structWithAllOptionalFieldsWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithAllOptionalFieldsWithOmitEmpty has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	// +required
-	StructPtrWithAllOptionalFields *StructWithAllOptionalFields `json:"structPtrWithAllOptionalFields"` // want "field StructPtrWithAllOptionalFields should have the omitempty tag."
+	StructPtrWithAllOptionalFields *StructWithAllOptionalFields `json:"structPtrWithAllOptionalFields"` // want "field TestStructs.StructPtrWithAllOptionalFields should have the omitempty tag."
 
 	// +required
 	StructPtrWithAllOptionalFieldsWithOmitEmpty *StructWithAllOptionalFields `json:"structPtrWithAllOptionalFieldsWithOmitEmpty,omitempty"`
@@ -18,27 +18,27 @@ type TestStructs struct {
 	// StructWithMinProperties has a zero value of {}, which is not valid because the MinProperties marker is not satisfied.
 
 	// +required
-	StructWithMinProperties StructWithMinProperties `json:"structWithMinProperties"` // want "field StructWithMinProperties does not allow the zero value. It must have the omitzero tag."
+	StructWithMinProperties StructWithMinProperties `json:"structWithMinProperties"` // want "field TestStructs.StructWithMinProperties does not allow the zero value. It must have the omitzero tag."
 
 	// +required
-	StructWithMinPropertiesWithOmitEmpty StructWithMinProperties `json:"structWithMinPropertiesWithOmitEmpty,omitempty"` // want "field StructWithMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
+	StructWithMinPropertiesWithOmitEmpty StructWithMinProperties `json:"structWithMinPropertiesWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
 
 	// +required
-	StructPtrWithMinProperties *StructWithMinProperties `json:"structPtrWithMinProperties"` // want "field StructPtrWithMinProperties does not allow the zero value. It must have the omitzero tag." "field StructPtrWithMinProperties does not allow the zero value. The field does not need to be a pointer."
+	StructPtrWithMinProperties *StructWithMinProperties `json:"structPtrWithMinProperties"` // want "field TestStructs.StructPtrWithMinProperties does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithMinProperties does not allow the zero value. The field does not need to be a pointer."
 
 	// +required
-	StructPtrWithMinPropertiesWithOmitEmpty *StructWithMinProperties `json:"structPtrWithMinPropertiesWithOmitEmpty,omitempty"` // want "field StructPtrWithMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field StructPtrWithMinPropertiesWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+	StructPtrWithMinPropertiesWithOmitEmpty *StructWithMinProperties `json:"structPtrWithMinPropertiesWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithMinPropertiesWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
 
 	// StructWithNonOmittedFields has a zero value of {"string":"", "int":0}, which is valid because all fields are required.
 
 	// +required
-	StructWithNonOmittedFields StructWithNonOmittedFields `json:"structWithNonOmittedFields"` // want "field StructWithNonOmittedFields should have the omitempty tag." "field StructWithNonOmittedFields has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
+	StructWithNonOmittedFields StructWithNonOmittedFields `json:"structWithNonOmittedFields"` // want "field TestStructs.StructWithNonOmittedFields should have the omitempty tag." "field TestStructs.StructWithNonOmittedFields has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
 
 	// +required
-	StructWithNonOmittedFieldsWithOmitEmpty StructWithNonOmittedFields `json:"structWithNonOmittedFieldsWithOmitEmpty,omitempty"` // want "field StructWithNonOmittedFieldsWithOmitEmpty has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
+	StructWithNonOmittedFieldsWithOmitEmpty StructWithNonOmittedFields `json:"structWithNonOmittedFieldsWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithNonOmittedFieldsWithOmitEmpty has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
 
 	// +required
-	StructPtrWithNonOmittedFields *StructWithNonOmittedFields `json:"structPtrWithNonOmittedFields"` // want "field StructPtrWithNonOmittedFields should have the omitempty tag."
+	StructPtrWithNonOmittedFields *StructWithNonOmittedFields `json:"structPtrWithNonOmittedFields"` // want "field TestStructs.StructPtrWithNonOmittedFields should have the omitempty tag."
 
 	// +required
 	StructPtrWithNonOmittedFieldsWithOmitEmpty *StructWithNonOmittedFields `json:"structPtrWithNonOmittedFieldsWithOmitEmpty,omitempty"`
@@ -46,13 +46,13 @@ type TestStructs struct {
 	// StructWithNonOmittedFieldsAndMinProperties has a zero value of {"string":"", "int":0}, which is valid because the MinProperties marker is satisfied.
 
 	// +required
-	StructWithNonOmittedFieldsAndMinProperties StructWithNonOmittedFieldsAndMinProperties `json:"structWithOneNonOmittedFieldAndMinProperties"` // want "field StructWithNonOmittedFieldsAndMinProperties should have the omitempty tag." "field StructWithNonOmittedFieldsAndMinProperties has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
+	StructWithNonOmittedFieldsAndMinProperties StructWithNonOmittedFieldsAndMinProperties `json:"structWithOneNonOmittedFieldAndMinProperties"` // want "field TestStructs.StructWithNonOmittedFieldsAndMinProperties should have the omitempty tag." "field TestStructs.StructWithNonOmittedFieldsAndMinProperties has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
 
 	// +required
-	StructWithNonOmittedFieldsAndMinPropertiesWithOmitEmpty StructWithNonOmittedFieldsAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty,omitempty"` // want "field StructWithNonOmittedFieldsAndMinPropertiesWithOmitEmpty has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
+	StructWithNonOmittedFieldsAndMinPropertiesWithOmitEmpty StructWithNonOmittedFieldsAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty,omitempty"` // want "field TestStructs.StructWithNonOmittedFieldsAndMinPropertiesWithOmitEmpty has a valid zero value \\({\"string\": \"\", \"int\": 0}\\) and should be a pointer."
 
 	// +required
-	StructPtrWithNonOmittedFieldsAndMinProperties *StructWithNonOmittedFieldsAndMinProperties `json:"structPtrWithNonOmittedFieldsAndMinProperties"` // want "field StructPtrWithNonOmittedFieldsAndMinProperties should have the omitempty tag."
+	StructPtrWithNonOmittedFieldsAndMinProperties *StructWithNonOmittedFieldsAndMinProperties `json:"structPtrWithNonOmittedFieldsAndMinProperties"` // want "field TestStructs.StructPtrWithNonOmittedFieldsAndMinProperties should have the omitempty tag."
 
 	// +required
 	StructPtrWithNonOmittedFieldsAndMinPropertiesWithOmitEmpty *StructWithNonOmittedFieldsAndMinProperties `json:"structPtrWithNonOmittedFieldsAndMinPropertiesWithOmitEmpty,omitempty"`
@@ -60,30 +60,30 @@ type TestStructs struct {
 	// StructWithOneNonOmittedFieldAndMinProperties has a zero value of {"string":""}, which is not valid because the MinProperties marker is not satisfied.
 
 	// +required
-	StructWithOneNonOmittedFieldAndMinProperties StructWithOneNonOmittedFieldAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty"` // want "field StructWithOneNonOmittedFieldAndMinProperties does not allow the zero value. It must have the omitzero tag."
+	StructWithOneNonOmittedFieldAndMinProperties StructWithOneNonOmittedFieldAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty"` // want "field TestStructs.StructWithOneNonOmittedFieldAndMinProperties does not allow the zero value. It must have the omitzero tag."
 
 	// +required
-	StructWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty StructWithOneNonOmittedFieldAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty,omitempty"` // want "field StructWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
+	StructWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty StructWithOneNonOmittedFieldAndMinProperties `json:"structWithOneNonOmittedFieldAndMinPropertiesAndOmitEmpty,omitempty"` // want "field TestStructs.StructWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
 
 	// +required
-	StructPtrWithOneNonOmittedFieldAndMinProperties *StructWithOneNonOmittedFieldAndMinProperties `json:"structPtrWithOneNonOmittedFieldAndMinProperties"` // want "field StructPtrWithOneNonOmittedFieldAndMinProperties does not allow the zero value. It must have the omitzero tag." "field StructPtrWithOneNonOmittedFieldAndMinProperties does not allow the zero value. The field does not need to be a pointer."
+	StructPtrWithOneNonOmittedFieldAndMinProperties *StructWithOneNonOmittedFieldAndMinProperties `json:"structPtrWithOneNonOmittedFieldAndMinProperties"` // want "field TestStructs.StructPtrWithOneNonOmittedFieldAndMinProperties does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithOneNonOmittedFieldAndMinProperties does not allow the zero value. The field does not need to be a pointer."
 
 	// +required
-	StructPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty *StructWithOneNonOmittedFieldAndMinProperties `json:"structPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty,omitempty"` // want "field StructPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field StructPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+	StructPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty *StructWithOneNonOmittedFieldAndMinProperties `json:"structPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithOneNonOmittedFieldAndMinPropertiesWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
 
 	// StructWithOmittedRequiredField has a zero value of {}, which is not valid because the required marker is not satisfied.
 
 	// +required
-	StructWithOmittedRequiredField StructWithOmittedRequiredField `json:"structWithOmittedRequiredField"` // want "field StructWithOmittedRequiredField does not allow the zero value. It must have the omitzero tag."
+	StructWithOmittedRequiredField StructWithOmittedRequiredField `json:"structWithOmittedRequiredField"` // want "field TestStructs.StructWithOmittedRequiredField does not allow the zero value. It must have the omitzero tag."
 
 	// +required
-	StructWithOmittedRequiredFieldWithOmitEmpty StructWithOmittedRequiredField `json:"structWithOmittedRequiredFieldWithOmitEmpty,omitempty"` // want "field StructWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
+	StructWithOmittedRequiredFieldWithOmitEmpty StructWithOmittedRequiredField `json:"structWithOmittedRequiredFieldWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
 
 	// +required
-	StructPtrWithOmittedRequiredField *StructWithOmittedRequiredField `json:"structPtrWithOmittedRequiredField"` // want "field StructPtrWithOmittedRequiredField does not allow the zero value. It must have the omitzero tag." "field StructPtrWithOmittedRequiredField does not allow the zero value. The field does not need to be a pointer."
+	StructPtrWithOmittedRequiredField *StructWithOmittedRequiredField `json:"structPtrWithOmittedRequiredField"` // want "field TestStructs.StructPtrWithOmittedRequiredField does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithOmittedRequiredField does not allow the zero value. The field does not need to be a pointer."
 
 	// +required
-	StructPtrWithOmittedRequiredFieldWithOmitEmpty *StructWithOmittedRequiredField `json:"structPtrWithOmittedRequiredFieldWithOmitEmpty,omitempty"` // want "field StructPtrWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field StructPtrWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+	StructPtrWithOmittedRequiredFieldWithOmitEmpty *StructWithOmittedRequiredField `json:"structPtrWithOmittedRequiredFieldWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
 }
 
 type StructWithAllOptionalFields struct {
@@ -109,10 +109,10 @@ type StructWithMinProperties struct {
 
 type StructWithNonOmittedFields struct {
 	// +required
-	String string `json:"string"` // want "field String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field String should have the omitempty tag."
+	String string `json:"string"` // want "field StructWithNonOmittedFields.String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field StructWithNonOmittedFields.String should have the omitempty tag."
 
 	// +required
-	Int int32 `json:"int"` // want "field Int has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field Int should have the omitempty tag."
+	Int int32 `json:"int"` // want "field StructWithNonOmittedFields.Int has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field StructWithNonOmittedFields.Int should have the omitempty tag."
 }
 
 // Struct with non-omitted fields and minProperties marker.
@@ -121,10 +121,10 @@ type StructWithNonOmittedFields struct {
 // +kubebuilder:validation:MinProperties=2
 type StructWithNonOmittedFieldsAndMinProperties struct {
 	// +required
-	String string `json:"string"` // want "field String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field String should have the omitempty tag."
+	String string `json:"string"` // want "field StructWithNonOmittedFieldsAndMinProperties.String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field StructWithNonOmittedFieldsAndMinProperties.String should have the omitempty tag."
 
 	// +required
-	Int int32 `json:"int"` // want "field Int has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field Int should have the omitempty tag."
+	Int int32 `json:"int"` // want "field StructWithNonOmittedFieldsAndMinProperties.Int has a valid zero value \\(0\\), but the validation is not complete \\(e.g. minimum/maximum\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field StructWithNonOmittedFieldsAndMinProperties.Int should have the omitempty tag."
 }
 
 // Struct with one non-omitted field, and one omitted field and minProperties marker.
@@ -132,7 +132,7 @@ type StructWithNonOmittedFieldsAndMinProperties struct {
 // +kubebuilder:validation:MinProperties=2
 type StructWithOneNonOmittedFieldAndMinProperties struct {
 	// +required
-	String string `json:"string"` // want "field String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field String should have the omitempty tag."
+	String string `json:"string"` // want "field StructWithOneNonOmittedFieldAndMinProperties.String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field StructWithOneNonOmittedFieldAndMinProperties.String should have the omitempty tag."
 
 	// +optional
 	Int int32 `json:"int,omitempty"`
@@ -142,5 +142,5 @@ type StructWithOneNonOmittedFieldAndMinProperties struct {
 // The zero value of the struct is `{}` which is not valid because it does not satisfy the required marker on the string field.
 type StructWithOmittedRequiredField struct {
 	// +required
-	String string `json:"string,omitempty"` // want "field String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+	String string `json:"string,omitempty"` // want "field StructWithOmittedRequiredField.String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 }
