@@ -1634,7 +1634,7 @@ type PersistentVolumeClaimTemplate struct {
 	// copied unchanged into the PVC that gets created from this
 	// template. The same fields as in a PersistentVolumeClaim
 	// are also valid here.
-	Spec PersistentVolumeClaimSpec `json:"spec" protobuf:"bytes,2,name=spec"` // want "optionalorrequired: field PersistentVolumeClaimTemplate.Spec must be marked as optional or required"
+	Spec PersistentVolumeClaimSpec `json:"spec" protobuf:"bytes,2,name=spec"` // want "optionalorrequired: field PersistentVolumeClaimTemplate.Spec must be marked as optional or required" "nonpointerstructs: field PersistentVolumeClaimTemplate.Spec is a non-pointer struct with no required fields. It must be marked as optional."
 }
 
 // Adapts a ConfigMap into a projected volume.
