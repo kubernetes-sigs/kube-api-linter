@@ -73,12 +73,41 @@ func getUnderlyingType(expr ast.Expr) ast.Expr {
 	return expr
 }
 
+// GetTypeMarkerValue returns the value of the kubebuilder Type marker for a field.
+// Returns empty string if no Type marker is present.
+// The Type marker indicates how the field serializes (e.g., "string", "number", "object").
+func GetTypeMarkerValue(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) string {
+	fieldMarkers := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
+	typeMarkers := fieldMarkers.Get(markers.KubebuilderTypeMarker)
+
+	for _, typeMarker := range typeMarkers {
+		// The value might be "string" (with quotes) or string (without quotes)
+		typeValue := strings.Trim(typeMarker.Payload.Value, `"`)
+		if typeValue != "" {
+			return typeValue
+		}
+	}
+
+	return ""
+}
+
 // isStructZeroValueValid checks if the zero value of a struct is valid.
 // It checks if all non-omitted fields within the struct accept their zero values.
 // It also checks if the struct has a minProperties marker, and if so, whether the number of non-omitted fields is greater than or equal to the minProperties value.
+// Special case: If the struct has Type=string marker with string validation markers (MinLength/MaxLength),
+// treat it as a string for validation purposes (e.g., for structs with custom marshalling).
 func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *ast.StructType, markersAccess markershelper.Markers, considerOmitzero bool, qualifiedFieldName string) (bool, bool) {
 	if structType == nil {
 		return false, false
+	}
+
+	// Check if this struct should be validated as a string (Type=string marker).
+	// This handles structs with custom marshalling that serialize as strings.
+	if GetTypeMarkerValue(pass, field, markersAccess) == "string" {
+		// Use string validation logic instead of struct validation logic.
+		// This ensures that string-specific validation markers (MinLength, MaxLength, Pattern)
+		// are properly evaluated for structs that marshal as strings.
+		return isStringZeroValueValid(pass, field, markersAccess)
 	}
 
 	jsonTagInfo, ok := pass.ResultOf[extractjsontags.Analyzer].(extractjsontags.StructFieldTags)
