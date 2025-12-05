@@ -153,14 +153,38 @@ const (
 	// KubebuilderItemsXValidationMarker is the marker used to specify CEL validation rules for entries to a nested array type or field in kubebuilder.
 	KubebuilderItemsXValidationMarker = "kubebuilder:validation:items:XValidation"
 
-	// KubebuilderListTypeMarker is the marker used to specify the type of list for server-side apply operations.
-	KubebuilderListTypeMarker = "listType"
+	// ListTypeMarker is the marker used to specify the type of list for server-side apply operations.
+	ListTypeMarker = "listType"
 
-	// KubebuilderListMapKeyMarker is the marker used to specify the key field for map-type lists.
-	KubebuilderListMapKeyMarker = "listMapKey"
+	// ListMapKeyMarker is the marker used to specify the key field for map-type lists.
+	ListMapKeyMarker = "listMapKey"
+
+	// MapTypeMarker is the marker used to specify the atomicity level of a map.
+	MapTypeMarker = "mapType"
+
+	// StructTypeMarker is the marker used to specify the atomicity level of a struct.
+	StructTypeMarker = "structType"
 
 	// KubebuilderSchemaLessMarker is the marker that indicates that a struct is schemaless.
 	KubebuilderSchemaLessMarker = "kubebuilder:validation:Schemaless"
+
+	// KubebuilderEmbeddedResourceMarker is the marker that indicates that a field is an embedded resource.
+	KubebuilderEmbeddedResourceMarker = "kubebuilder:validation:EmbeddedResource"
+
+	// KubebuilderValidationItemsExactlyOneOfMarker is the marker for type-level field constraint.
+	KubebuilderValidationItemsExactlyOneOfMarker = "kubebuilder:validation:items:ExactlyOneOf"
+
+	// KubebuilderValidationItemsAtMostOneOfMarker is the marker for type-level field constraint.
+	KubebuilderValidationItemsAtMostOneOfMarker = "kubebuilder:validation:items:AtMostOneOf"
+
+	// KubebuilderValidationItemsAtLeastOneOfMarker is the marker for type-level field constraint.
+	KubebuilderValidationItemsAtLeastOneOfMarker = "kubebuilder:validation:items:AtLeastOneOf"
+
+	// KubebuilderPruningPreserveUnknownFieldsMarker is the marker for preserving unknown fields during pruning.
+	KubebuilderPruningPreserveUnknownFieldsMarker = "kubebuilder:pruning:PreserveUnknownFields"
+
+	// KubebuilderTitleMarker is the marker for specifying a title.
+	KubebuilderTitleMarker = "kubebuilder:title"
 )
 
 const (
