@@ -53,7 +53,12 @@ func testAnalyzer() *analysis.Analyzer {
 				(*ast.TypeSpec)(nil),
 			}
 
-			typeChecker := utils.NewTypeChecker(func(pass *analysis.Pass, ident *ast.Ident, node ast.Node, prefix string) {
+			typeChecker := utils.NewTypeChecker(utils.IsBasicType, func(pass *analysis.Pass, expr ast.Expr, node ast.Node, prefix string) {
+				ident, ok := expr.(*ast.Ident)
+				if !ok {
+					return
+				}
+
 				if ident.Name == "string" {
 					pass.Reportf(node.Pos(), "%s is a string", prefix)
 				}
