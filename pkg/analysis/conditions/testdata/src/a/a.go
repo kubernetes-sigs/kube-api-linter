@@ -104,3 +104,16 @@ type IncorrectFieldTag struct {
 	// +optional
 	Conditions []metav1.Condition `json:"conditions"  patchMergeKey:"type" protobuf:"bytes,3,rep,name=conditions"` // want "Conditions field in IncorrectFieldTag has incorrect tags, should be: `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`"
 }
+
+// ConditionsWithOrphanedMarkers tests the fix for orphaned markers where markers
+// separated from the field doc comment by a blank line were not being detected.
+type ConditionsWithOrphanedMarkers struct {
+	// +optional
+	// +listType=map
+	// +listMapKey=type
+	// +patchStrategy=merge
+	// +patchMergeKey=type
+
+	// Conditions update as changes occur in the status.
+	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+}
