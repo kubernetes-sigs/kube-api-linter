@@ -1233,7 +1233,7 @@ type AzureDiskVolumeSource struct {
 	ReadOnly *bool `json:"readOnly,omitempty" protobuf:"varint,5,opt,name=readOnly"`
 	// kind expected values are Shared: multiple blob disks per storage account  Dedicated: single blob disk per storage account  Managed: azure managed data disk (only in managed availability set). defaults to shared
 	// +default=ref(AzureSharedBlobDisk)
-	Kind *AzureDataDiskKind `json:"kind,omitempty" protobuf:"bytes,6,opt,name=kind,casttype=AzureDataDiskKind"` // want "optionalorrequired: field AzureDiskVolumeSource.Kind must be marked as optional or required"
+	Kind *AzureDataDiskKind `json:"kind,omitempty" protobuf:"bytes,6,opt,name=kind,casttype=AzureDataDiskKind"` // want "optionalorrequired: field AzureDiskVolumeSource.Kind must be marked as optional or required" "defaults: field AzureDiskVolumeSource.Kind has a default value but is not marked as optional"
 }
 
 // PortworxVolumeSource represents a Portworx volume resource.
