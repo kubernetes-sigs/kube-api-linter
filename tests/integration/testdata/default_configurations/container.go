@@ -667,7 +667,7 @@ type GRPCAction struct {
 	// If this is not specified, the default behavior is defined by gRPC.
 	// +optional
 	// +default=""
-	Service *string `json:"service" protobuf:"bytes,2,opt,name=service"` // want "optionalfields: field GRPCAction.Service should have the omitempty tag."
+	Service *string `json:"service" protobuf:"bytes,2,opt,name=service"` // want "optionalfields: field GRPCAction.Service should have the omitempty tag." "defaults: field GRPCAction.Service has a default value but does not have omitempty in its json tag"
 }
 
 // ExecAction describes a "run in container" action.

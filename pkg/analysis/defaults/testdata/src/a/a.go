@@ -1,0 +1,119 @@
+package a
+
+type A struct {
+	// GoodDefaultField is correctly configured with +default, +optional, and omitempty.
+	// +optional
+	// +default="default-value"
+	GoodDefaultField string `json:"goodDefaultField,omitempty"`
+
+	// K8sDefaultOnlyField uses only +k8s:default which requires adding the preferred marker.
+	// +optional
+	// +k8s:default="default-value"
+	K8sDefaultOnlyField string `json:"k8sDefaultOnlyField,omitempty"` // want "field A.K8sDefaultOnlyField has \\+k8s:default but should also have \\+default marker"
+
+	// KubebuilderDefaultField uses +kubebuilder:default which should be replaced.
+	// +optional
+	// +kubebuilder:default="default-value"
+	KubebuilderDefaultField string `json:"kubebuilderDefaultField,omitempty"` // want "field A.KubebuilderDefaultField should use \\+default marker instead of \\+kubebuilder:default"
+
+	// MissingOptionalField has a default but is not marked optional.
+	// +default="value"
+	MissingOptionalField string `json:"missingOptionalField,omitempty"` // want "field A.MissingOptionalField has a default value but is not marked as optional"
+
+	// MissingOmitEmptyField has a default and optional but no omitempty.
+	// +optional
+	// +default="value"
+	MissingOmitEmptyField string `json:"missingOmitEmptyField"` // want "field A.MissingOmitEmptyField has a default value but does not have omitempty in its json tag"
+
+	// BothIssuesField has both issues: not optional and no omitempty.
+	// +default="value"
+	BothIssuesField string `json:"bothIssuesField"` // want "field A.BothIssuesField has a default value but is not marked as optional" "field A.BothIssuesField has a default value but does not have omitempty in its json tag"
+
+	// NoDefaultField is a regular field without default - should not be flagged.
+	// +optional
+	NoDefaultField string `json:"noDefaultField,omitempty"`
+
+	// RequiredFieldWithDefault has both required and default, which is contradictory.
+	// +required
+	// +default="value"
+	RequiredFieldWithDefault string `json:"requiredFieldWithDefault,omitempty"` // want "field A.RequiredFieldWithDefault has a default value but is marked as required, which is contradictory"
+
+	// RequiredFieldNoDefault is a required field without default - should not be flagged.
+	// +required
+	RequiredFieldNoDefault string `json:"requiredFieldNoDefault"`
+
+	// RequiredFieldNoOmitEmpty is a required field without omitempty - should not be flagged.
+	// This tests that required fields without omitempty are not incorrectly flagged.
+	// +required
+	RequiredFieldNoOmitEmpty string `json:"requiredFieldNoOmitEmpty"`
+
+	// InlineField with default and inline tag should not require omitempty.
+	// +optional
+	// +default={}
+	InlineField NestedStruct `json:",inline"`
+
+	// IgnoredField with json ignore tag is skipped entirely by the inspector.
+	// No checks are performed for optional/omitempty on ignored fields.
+	// +default="ignored"
+	IgnoredField string `json:"-"`
+
+	// BothDefaultAndK8sMarkers has both +default and +k8s:default which is acceptable (K/K transition).
+	// +optional
+	// +default="value"
+	// +k8s:default="value"
+	BothDefaultAndK8sMarkers string `json:"bothDefaultAndK8sMarkers,omitempty"`
+
+	// BothDefaultAndKubebuilderMarkers has both +default and +kubebuilder:default which should suggest removing kubebuilder:default.
+	// +optional
+	// +default="value"
+	// +kubebuilder:default="value"
+	BothDefaultAndKubebuilderMarkers string `json:"bothDefaultAndKubebuilderMarkers,omitempty"` // want "field A.BothDefaultAndKubebuilderMarkers should use only the marker \\+default, \\+kubebuilder:default is not required"
+
+	// StructFieldWithOmitEmpty has omitempty only (missing omitzero for struct types).
+	// +optional
+	// +default={}
+	StructFieldWithOmitEmpty NestedStruct `json:"structFieldWithOmitEmpty,omitempty"` // want "field A.StructFieldWithOmitEmpty has a default value but does not have omitzero in its json tag"
+
+	// StructFieldWithOmitZero has omitzero only (missing omitempty).
+	// +optional
+	// +default={}
+	StructFieldWithOmitZero NestedStruct `json:"structFieldWithOmitZero,omitzero"` // want "field A.StructFieldWithOmitZero has a default value but does not have omitempty in its json tag"
+
+	// StructFieldWithBothOmit has both omitempty and omitzero (valid for struct types).
+	// +optional
+	// +default={}
+	StructFieldWithBothOmit NestedStruct `json:"structFieldWithBothOmit,omitempty,omitzero"`
+
+	// DefinedTypeField uses a defined type (alias to struct) - should require omitzero.
+	// +optional
+	// +default={}
+	DefinedTypeField DefinedStructType `json:"definedTypeField,omitempty"` // want "field A.DefinedTypeField has a default value but does not have omitzero in its json tag"
+
+	// TypeAliasField uses a type alias to struct - should require omitzero.
+	// +optional
+	// +default={}
+	TypeAliasField StructTypeAlias `json:"typeAliasField,omitempty"` // want "field A.TypeAliasField has a default value but does not have omitzero in its json tag"
+
+	// PointerToStructField is a pointer to struct - should NOT require omitzero (pointers have nil zero value).
+	// +optional
+	// +default={}
+	PointerToStructField *NestedStruct `json:"pointerToStructField,omitempty"`
+
+	// PointerToStructMissingOmitEmpty is a pointer to struct missing omitempty.
+	// +optional
+	// +default={}
+	PointerToStructMissingOmitEmpty *NestedStruct `json:"pointerToStructMissingOmitEmpty"` // want "field A.PointerToStructMissingOmitEmpty has a default value but does not have omitempty in its json tag"
+}
+
+// NestedStruct is a simple struct for testing.
+type NestedStruct struct {
+	// Field is a nested field.
+	// +optional
+	Field string `json:"field,omitempty"`
+}
+
+// DefinedStructType is a defined type based on NestedStruct.
+type DefinedStructType NestedStruct
+
+// StructTypeAlias is a type alias to NestedStruct.
+type StructTypeAlias = NestedStruct
