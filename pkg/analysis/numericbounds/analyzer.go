@@ -118,7 +118,9 @@ func checkNumericTypeExpr(pass *analysis.Pass, expr ast.Expr, node ast.Node, mar
 
 	// Handle both fields and type aliases
 	var markerSet markershelper.MarkerSet
+
 	var isSlice bool
+
 	var pos ast.Node
 
 	switch n := node.(type) {
