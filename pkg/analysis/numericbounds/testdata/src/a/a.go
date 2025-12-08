@@ -148,10 +148,10 @@ type SliceFields struct {
 }
 
 // TypeAliasFields with type aliases should be checked
-type Int32Alias int32
-type Int64Alias int64
-type Float32Alias float32
-type Float64Alias float64
+type Int32Alias int32       // want "Int32Alias is missing minimum bound validation marker" "Int32Alias is missing maximum bound validation marker"
+type Int64Alias int64       // want "Int64Alias is missing minimum bound validation marker" "Int64Alias is missing maximum bound validation marker"
+type Float32Alias float32   // want "Float32Alias is missing minimum bound validation marker" "Float32Alias is missing maximum bound validation marker"
+type Float64Alias float64   // want "Float64Alias is missing minimum bound validation marker" "Float64Alias is missing maximum bound validation marker"
 
 // Type aliases with bounds on the type itself
 // +kubebuilder:validation:Minimum=0
