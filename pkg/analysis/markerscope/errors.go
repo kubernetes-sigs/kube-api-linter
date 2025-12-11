@@ -37,7 +37,7 @@ type invalidNamedTypeConstraintError struct {
 }
 
 func (e *invalidNamedTypeConstraintError) Error() string {
-	return fmt.Sprintf("invalid namedTypeConstraint: %q (must be one of: AllowField, RequireTypeDefinition, or empty)", e.constraint)
+	return fmt.Sprintf("invalid namedTypeConstraint: %q (must be one of: AllowTypeOrField, OnTypeOnly, or empty)", e.constraint)
 }
 
 type invalidSchemaTypeError struct {

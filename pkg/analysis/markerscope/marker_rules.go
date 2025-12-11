@@ -98,35 +98,35 @@ func addNumericMarkers(rules map[string]MarkerScopeRule) {
 		// numeric markers (field or type, integer or number types)
 		markers.KubebuilderMinimumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 			},
 		},
 		markers.KubebuilderMaximumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 			},
 		},
 		markers.KubebuilderExclusiveMaximumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 			},
 		},
 		markers.KubebuilderExclusiveMinimumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 			},
 		},
 		markers.KubebuilderMultipleOfMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
 			},
@@ -142,14 +142,14 @@ func addObjectMarkers(rules map[string]MarkerScopeRule) {
 		// object markers (field or type, object types)
 		markers.KubebuilderMinPropertiesMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
 			},
 		},
 		markers.KubebuilderMaxPropertiesMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
 			},
@@ -165,21 +165,21 @@ func addStringMarkers(rules map[string]MarkerScopeRule) {
 		// string markers (field or type, string types)
 		markers.KubebuilderPatternMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeString},
 			},
 		},
 		markers.KubebuilderMinLengthMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeString},
 			},
 		},
 		markers.KubebuilderMaxLengthMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeString},
 			},
@@ -195,21 +195,21 @@ func addArrayMarkers(rules map[string]MarkerScopeRule) {
 		// array markers (field or type, array types)
 		markers.KubebuilderMinItemsMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
 		},
 		markers.KubebuilderMaxItemsMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
 		},
 		markers.KubebuilderUniqueItemsMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
@@ -234,7 +234,7 @@ func addGeneralMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderXValidationMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 		},
 	}
 
@@ -247,21 +247,21 @@ func addSSATopologyMarkers(rules map[string]MarkerScopeRule) {
 		// Server-Side Apply topology markers
 		markers.ListTypeMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
 		},
 		markers.ListMapKeyMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 			},
 		},
 		markers.MapTypeMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeObject},
 			},
@@ -292,7 +292,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 	itemsNumericMarkers := map[string]MarkerScopeRule{
 		markers.KubebuilderItemsMaximumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -302,7 +302,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsMinimumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -312,7 +312,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsExclusiveMaximumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -322,7 +322,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsExclusiveMinimumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -332,7 +332,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsMultipleOfMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -350,7 +350,7 @@ func addArrayItemsStringMarkers(rules map[string]MarkerScopeRule) {
 	itemsStringMarkers := map[string]MarkerScopeRule{
 		markers.KubebuilderItemsMinLengthMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -360,7 +360,7 @@ func addArrayItemsStringMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsMaxLengthMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -370,7 +370,7 @@ func addArrayItemsStringMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsPatternMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -388,7 +388,7 @@ func addArrayItemsArrayMarkers(rules map[string]MarkerScopeRule) {
 	itemsArrayMarkers := map[string]MarkerScopeRule{
 		markers.KubebuilderItemsMaxItemsMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -398,7 +398,7 @@ func addArrayItemsArrayMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsMinItemsMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -408,7 +408,7 @@ func addArrayItemsArrayMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsUniqueItemsMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -426,7 +426,7 @@ func addArrayItemsObjectMarkers(rules map[string]MarkerScopeRule) {
 	itemsObjectMarkers := map[string]MarkerScopeRule{
 		markers.KubebuilderItemsMinPropertiesMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -436,7 +436,7 @@ func addArrayItemsObjectMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsMaxPropertiesMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
@@ -454,7 +454,7 @@ func addArrayItemsGeneralMarkers(rules map[string]MarkerScopeRule) {
 	itemsGeneralMarkers := map[string]MarkerScopeRule{
 		markers.KubebuilderItemsEnumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				// Enum can apply to any element type
@@ -463,7 +463,7 @@ func addArrayItemsGeneralMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsFormatMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				// Format can apply to various types
@@ -472,7 +472,7 @@ func addArrayItemsGeneralMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsTypeMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				// Type marker can override any element type
@@ -481,7 +481,7 @@ func addArrayItemsGeneralMarkers(rules map[string]MarkerScopeRule) {
 		},
 		markers.KubebuilderItemsXValidationMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintRequireTypeDefinition,
+			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				// CEL validation can apply to any element type

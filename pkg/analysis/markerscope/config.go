@@ -50,13 +50,13 @@ type TypeConstraint struct {
 type NamedTypeConstraint string
 
 const (
-	// NamedTypeConstraintAllowField allows markers on fields with named types.
+	// NamedTypeConstraintAllowTypeOrField allows markers on either the field or the type definition.
 	// The marker can be placed on the field even if the field uses a named type.
-	NamedTypeConstraintAllowField NamedTypeConstraint = "AllowField"
+	NamedTypeConstraintAllowTypeOrField NamedTypeConstraint = "AllowTypeOrField"
 
-	// NamedTypeConstraintRequireTypeDefinition requires markers to be on the type definition.
+	// NamedTypeConstraintOnTypeOnly requires markers to be on the type definition only.
 	// When a field uses a named type, the marker must be placed on the type definition instead.
-	NamedTypeConstraintRequireTypeDefinition NamedTypeConstraint = "RequireTypeDefinition"
+	NamedTypeConstraintOnTypeOnly NamedTypeConstraint = "OnTypeOnly"
 )
 
 // MarkerScopeRule defines comprehensive scope validation rules for a marker.
@@ -71,7 +71,7 @@ type MarkerScopeRule struct {
 	// NamedTypeConstraint specifies how markers should be applied to named types.
 	// When a field uses a named type (e.g., type CustomInt int32), this determines
 	// whether the marker can be on the field or must be on the type definition.
-	// If empty, defaults to AllowField (marker can be placed on either field or type).
+	// If empty, defaults to AllowTypeOrField (marker can be placed on either field or type).
 	NamedTypeConstraint NamedTypeConstraint `json:"namedTypeConstraint,omitempty"`
 
 	// TypeConstraint specifies what types the marker can be applied to.
