@@ -459,14 +459,14 @@ OpenAPI schema types map to Go types as follows:
 - `array`: []T, [N]T (slices and arrays)
 - `object`: struct, map[K]V
 
-#### Strict Type Constraints
+#### Named Type Constraints
 
-For markers that can be applied to both fields and types with type constraints, the `strictTypeConstraint` flag controls where the marker should be declared when used with named types:
+For markers that can be applied to both fields and types with type constraints, the `namedTypeConstraint` field controls where the marker should be declared when used with named types:
 
-- When `strictTypeConstraint` is `false` (default): The marker can be declared on either the field or the type definition.
-- When `strictTypeConstraint` is `true`: The marker must be declared on the type definition, not on fields using that type.
+- `AllowTypeOrField` (default): The marker can be declared on either the field or the type definition.
+- `OnTypeOnly`: The marker must be declared on the type definition, not on fields using that type.
 
-Example with `strictTypeConstraint: true`:
+Example with `namedTypeConstraint: OnTypeOnly`:
 
 ```go
 // ✅ Valid: marker on type definition
@@ -486,7 +486,7 @@ type Service struct {
 }
 ```
 
-Most built-in kubebuilder validation markers use `strictTypeConstraint: true` to encourage consistent marker placement on type definitions.
+Most built-in kubebuilder validation markers use `namedTypeConstraint: OnTypeOnly` to encourage consistent marker placement on type definitions.
 
 ### Default Marker Rules
 
@@ -529,7 +529,11 @@ The `typeConstraint` field allows you to restrict which Go types a marker can be
 **Type constraint fields:**
 - `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `string`, `boolean`, `array`, `object`)
 - `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
-- `strictTypeConstraint`: When `true`, markers that can be applied to both fields and types with type constraints applied to fields using named types must be declared on the type definition instead of the field. Defaults to `false`.
+
+**Named type constraint values:**
+- `namedTypeConstraint`: Controls where markers should be placed when applied to fields using named types
+  - `AllowTypeOrField` (default): Marker can be placed on either the field or the type definition
+  - `OnTypeOnly`: Marker must be placed on the type definition, not on the field
 
 **Configuration example:**
 
@@ -552,7 +556,7 @@ lintersConfig:
       # Custom marker with scope and type constraints
       - identifier: "mycompany:validation:NumericLimit"
         scopes: [Field, Type]
-        strictTypeConstraint: true # Require declaration on type definition for named types
+        namedTypeConstraint: OnTypeOnly # Require declaration on type definition for named types
         typeConstraint:
           allowedSchemaTypes:
             - integer

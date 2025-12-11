@@ -347,7 +347,7 @@ func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.F
 	}
 
 	// Check if the marker should be on the type definition instead of the field
-	if rule.NamedTypeConstraint == NamedTypeConstraintRequireTypeDefinition && rule.AllowsScope(TypeScope) {
+	if rule.NamedTypeConstraint == NamedTypeConstraintOnTypeOnly && rule.AllowsScope(TypeScope) {
 		namedType, ok := tv.Type.(*types.Named)
 		if ok {
 			return &markerShouldBeOnTypeDefinitionError{typeName: namedType.Obj().Name()}

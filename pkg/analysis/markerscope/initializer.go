@@ -200,13 +200,13 @@ func isValidSchemaType(st SchemaType) bool {
 }
 
 func isValidNamedTypeConstraint(ntc NamedTypeConstraint) bool {
-	// Empty is valid (defaults to AllowField)
+	// Empty is valid (defaults to AllowTypeOrField)
 	if ntc == "" {
 		return true
 	}
 
 	switch ntc {
-	case NamedTypeConstraintAllowField, NamedTypeConstraintRequireTypeDefinition:
+	case NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly:
 		return true
 	default:
 		return false
