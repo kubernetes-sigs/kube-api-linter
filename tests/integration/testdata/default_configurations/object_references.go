@@ -80,7 +80,7 @@ type LocalObjectReference struct {
 	// +default=""
 	// +kubebuilder:default=""
 	// TODO: Drop `kubebuilder:default` when controller-gen doesn't need it https://github.com/kubernetes-sigs/kubebuilder/issues/3896.
-	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field LocalObjectReference.Name should be a pointer."
+	Name string `json:"name,omitempty" protobuf:"bytes,1,opt,name=name"` // want "optionalfields: field LocalObjectReference.Name should be a pointer." "defaults: field LocalObjectReference.Name should use only the marker \\+default, \\+kubebuilder:default is not required"
 }
 
 // TypedLocalObjectReference contains enough information to let you locate the

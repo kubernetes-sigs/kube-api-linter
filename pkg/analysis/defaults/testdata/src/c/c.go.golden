@@ -1,0 +1,29 @@
+package c
+
+// This test file tests the behavior when omitzero policy is Forbid.
+// When forbidden, the linter should only suggest omitempty, not omitzero,
+// even for struct types.
+
+type C struct {
+	// GoodDefaultField is correctly configured with +default, +optional, and omitempty.
+	// +optional
+	// +default="default-value"
+	GoodDefaultField string `json:"goodDefaultField,omitempty"`
+
+	// StructFieldMissingOmitEmpty has a default and optional but no omitempty.
+	// When omitzero is forbidden, only omitempty should be suggested.
+	// +optional
+	// +default={}
+	StructFieldMissingOmitEmpty NestedStruct `json:"structFieldMissingOmitEmpty,omitempty"` // want "field C.StructFieldMissingOmitEmpty has a default value but does not have omitempty in its json tag"
+
+	// StructFieldWithOmitEmpty is correctly configured with omitempty (omitzero not required when forbidden).
+	// +optional
+	// +default={}
+	StructFieldWithOmitEmpty NestedStruct `json:"structFieldWithOmitEmpty,omitempty"`
+}
+
+type NestedStruct struct {
+	// Field is a nested field.
+	// +optional
+	Field string `json:"field,omitempty"`
+}
