@@ -143,31 +143,40 @@ func sortMarkersByPosition(markers []markershelper.Marker) []markershelper.Marke
 
 // checkFieldMarkers checks markers on fields for violations.
 func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	fieldMarkers := markersAccess.FieldMarkers(field)
-	markers := sortMarkersByPosition(fieldMarkers.UnsortedList())
-
-	for _, marker := range markers {
-		rule, ok := a.markerRules[marker.Identifier]
-		if !ok {
-			// No rule defined for this marker, skip validation
-			continue
-		}
-
-		// Check if FieldScope is allowed
-		if !rule.AllowsScope(FieldScope) {
+	a.checkMarkers(
+		markersAccess.FieldMarkers(field).UnsortedList(),
+		FieldScope,
+		func(marker markershelper.Marker, rule MarkerScopeRule) {
 			a.reportFieldScopeViolation(pass, field, marker, rule)
-			continue
-		}
-
-		// Check type constraints if present
-		a.checkFieldTypeConstraintViolation(pass, field, marker, rule)
-	}
+		},
+		func(marker markershelper.Marker, rule MarkerScopeRule) {
+			a.checkFieldTypeConstraintViolation(pass, field, marker, rule)
+		},
+	)
 }
 
 // checkTypeSpecMarkers checks markers on a type spec for violations.
 func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
-	typeMarkers := markersAccess.TypeMarkers(typeSpec)
-	markers := sortMarkersByPosition(typeMarkers.UnsortedList())
+	a.checkMarkers(
+		markersAccess.TypeMarkers(typeSpec).UnsortedList(),
+		TypeScope,
+		func(marker markershelper.Marker, rule MarkerScopeRule) {
+			a.reportTypeScopeViolation(pass, typeSpec, marker, rule)
+		},
+		func(marker markershelper.Marker, rule MarkerScopeRule) {
+			a.checkTypeConstraintViolation(pass, typeSpec, marker, rule)
+		},
+	)
+}
+
+// checkMarkers is a common function for checking markers against rules.
+func (a *analyzer) checkMarkers(
+	unsortedMarkers []markershelper.Marker,
+	scope ScopeConstraint,
+	reportScopeViolation func(marker markershelper.Marker, rule MarkerScopeRule),
+	checkTypeConstraint func(marker markershelper.Marker, rule MarkerScopeRule),
+) {
+	markers := sortMarkersByPosition(unsortedMarkers)
 
 	for _, marker := range markers {
 		rule, ok := a.markerRules[marker.Identifier]
@@ -176,39 +185,20 @@ func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeS
 			continue
 		}
 
-		// Check if TypeScope is allowed
-		if !rule.AllowsScope(TypeScope) {
-			a.reportTypeScopeViolation(pass, typeSpec, marker, rule)
-			continue
+		// Check if scope is allowed
+		if !rule.AllowsScope(scope) {
+			reportScopeViolation(marker, rule)
 		}
 
 		// Check type constraints if present
-		a.checkTypeConstraintViolation(pass, typeSpec, marker, rule)
+		checkTypeConstraint(marker, rule)
 	}
 }
 
 // reportFieldScopeViolation reports a scope violation for a field marker.
 func (a *analyzer) reportFieldScopeViolation(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) {
-	var message string
-
-	var fixes []analysis.SuggestedFix
-
-	if rule.AllowsScope(TypeScope) {
-		message = fmt.Sprintf("marker %q can only be applied to types", marker.Identifier)
-
-		if a.policy == MarkerScopePolicySuggestFix {
-			fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
-		}
-	} else {
-		// This shouldn't happen in practice, but handle it gracefully
-		message = fmt.Sprintf("marker %q cannot be applied to fields", marker.Identifier)
-	}
-
-	pass.Report(analysis.Diagnostic{
-		Pos:            marker.Pos,
-		End:            marker.End,
-		Message:        message,
-		SuggestedFixes: fixes,
+	a.reportScopeViolation(pass, marker, rule, TypeScope, "types", "fields", func() []analysis.SuggestedFix {
+		return a.suggestMoveToTypeDefinition(pass, field, marker, rule)
 	})
 }
 
@@ -227,7 +217,7 @@ func (a *analyzer) reportTypeConstraintViolation(pass *analysis.Pass, field *ast
 		// Check if this is a "should be on type definition" error
 		if errors.Is(err, &markerShouldBeOnTypeDefinitionError{}) {
 			// Suggest moving to type definition
-			fixes = a.suggestMoveToFieldsIfCompatible(pass, field, marker, rule)
+			fixes = a.suggestMoveToTypeDefinition(pass, field, marker, rule)
 		} else {
 			// Type constraint violation - suggest removing the marker
 			fixes = []analysis.SuggestedFix{
@@ -254,15 +244,32 @@ func (a *analyzer) reportTypeConstraintViolation(pass *analysis.Pass, field *ast
 
 // reportTypeScopeViolation reports a scope violation for a type marker.
 func (a *analyzer) reportTypeScopeViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
+	a.reportScopeViolation(pass, marker, rule, FieldScope, "fields", "types", func() []analysis.SuggestedFix {
+		return a.suggestMoveToField(pass, typeSpec, marker, rule)
+	})
+}
+
+// reportScopeViolation is a common function for reporting scope violations.
+func (a *analyzer) reportScopeViolation(
+	pass *analysis.Pass,
+	marker markershelper.Marker,
+	rule MarkerScopeRule,
+	alternateScope ScopeConstraint,
+	alternateScopeName string,
+	appliedScopeName string,
+	suggestFix func() []analysis.SuggestedFix,
+) {
+	var message string
 	var fixes []analysis.SuggestedFix
 
-	message := fmt.Sprintf("marker %q cannot be applied to types", marker.Identifier)
-	if rule.AllowsScope(FieldScope) {
-		message = fmt.Sprintf("marker %q can only be applied to fields", marker.Identifier)
+	if rule.AllowsScope(alternateScope) {
+		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, alternateScopeName)
 
 		if a.policy == MarkerScopePolicySuggestFix {
-			fixes = a.suggestMoveToField(pass, typeSpec, marker, rule)
+			fixes = suggestFix()
 		}
+	} else {
+		message = fmt.Sprintf("marker %q cannot be applied to %s", marker.Identifier, appliedScopeName)
 	}
 
 	pass.Report(analysis.Diagnostic{
@@ -422,8 +429,8 @@ func (a *analyzer) suggestMoveToField(pass *analysis.Pass, typeSpec *ast.TypeSpe
 	}
 }
 
-// suggestMoveToFieldsIfCompatible generates suggested fixes to move a marker from type to compatible fields.
-func (a *analyzer) suggestMoveToFieldsIfCompatible(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) []analysis.SuggestedFix {
+// suggestMoveToTypeDefinition generates suggested fixes to move a marker from a field to its type definition.
+func (a *analyzer) suggestMoveToTypeDefinition(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) []analysis.SuggestedFix {
 	// Only suggest moving to type if TypeScope is allowed
 	if !rule.AllowsScope(TypeScope) {
 		return nil

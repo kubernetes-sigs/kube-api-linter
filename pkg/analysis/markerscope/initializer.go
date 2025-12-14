@@ -67,14 +67,15 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 }
 
 func validatePolicy(policy MarkerScopePolicy, fldPath *field.Path) field.ErrorList {
-	if policy != "" && policy != MarkerScopePolicyWarn && policy != MarkerScopePolicySuggestFix {
+	switch policy {
+	case "", MarkerScopePolicyWarn, MarkerScopePolicySuggestFix:
+		return nil
+	default:
 		return field.ErrorList{
 			field.Invalid(fldPath.Child("policy"), policy,
 				fmt.Sprintf("invalid policy, must be one of: %q, %q", MarkerScopePolicyWarn, MarkerScopePolicySuggestFix)),
 		}
 	}
-
-	return nil
 }
 
 func validateOverrideMarkers(rules []MarkerScopeRule, defaultRules map[string]MarkerScopeRule, fldPath *field.Path) field.ErrorList {
@@ -98,9 +99,7 @@ func validateOverrideMarkers(rules []MarkerScopeRule, defaultRules map[string]Ma
 			continue
 		}
 
-		if err := validateMarkerRule(rule); err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath, rule, err.Error()))
-		}
+		fieldErrors = append(fieldErrors, validateMarkerRule(rule, markerRulePath)...)
 	}
 
 	return fieldErrors
@@ -127,67 +126,66 @@ func validateCustomMarkers(rules []MarkerScopeRule, defaultRules map[string]Mark
 			continue
 		}
 
-		if err := validateMarkerRule(rule); err != nil {
-			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath, rule, err.Error()))
-		}
+		fieldErrors = append(fieldErrors, validateMarkerRule(rule, markerRulePath)...)
 	}
 
 	return fieldErrors
 }
 
-func validateMarkerRule(rule MarkerScopeRule) error {
+func validateMarkerRule(rule MarkerScopeRule, fldPath *field.Path) field.ErrorList {
+	fieldErrors := field.ErrorList{}
+
 	// Validate scope constraint
 	if len(rule.Scopes) == 0 {
-		return errScopeRequired
+		return field.ErrorList{field.Required(fldPath.Child("scopes"), errScopeRequired.Error())}
 	}
 
 	// Validate that each scope is a valid value
-	for _, scope := range rule.Scopes {
+	for i, scope := range rule.Scopes {
 		switch scope {
 		case FieldScope, TypeScope:
 			// Valid scope
 		default:
-			return &invalidScopeConstraintError{scope: string(scope)}
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("scopes").Index(i), scope,
+				(&invalidScopeConstraintError{scope: string(scope)}).Error()))
 		}
 	}
 
 	// Validate named type constraint if present
 	if !isValidNamedTypeConstraint(rule.NamedTypeConstraint) {
-		return &invalidNamedTypeConstraintError{constraint: string(rule.NamedTypeConstraint)}
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("namedTypeConstraint"), rule.NamedTypeConstraint,
+			(&invalidNamedTypeConstraintError{constraint: string(rule.NamedTypeConstraint)}).Error()))
 	}
 
 	// Validate type constraint if present
 	if rule.TypeConstraint != nil {
-		if err := validateTypeConstraint(rule.TypeConstraint); err != nil {
-			return &invalidTypeConstraintError{
-				err: err,
-			}
-		}
+		fieldErrors = append(fieldErrors, validateTypeConstraint(rule.TypeConstraint, fldPath.Child("typeConstraint"))...)
 	}
 
-	return nil
+	return fieldErrors
 }
 
-func validateTypeConstraint(tc *TypeConstraint) error {
+func validateTypeConstraint(tc *TypeConstraint, fldPath *field.Path) field.ErrorList {
 	if tc == nil {
 		return nil
 	}
 
+	fieldErrors := field.ErrorList{}
+
 	// Validate schema types if specified
-	for _, st := range tc.AllowedSchemaTypes {
+	for i, st := range tc.AllowedSchemaTypes {
 		if !isValidSchemaType(st) {
-			return &invalidSchemaTypeError{schemaType: string(st)}
+			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("allowedSchemaTypes").Index(i), st,
+				(&invalidSchemaTypeError{schemaType: string(st)}).Error()))
 		}
 	}
 
 	// Validate element constraint recursively
 	if tc.ElementConstraint != nil {
-		if err := validateTypeConstraint(tc.ElementConstraint); err != nil {
-			return fmt.Errorf("invalid element constraint: %w", err)
-		}
+		fieldErrors = append(fieldErrors, validateTypeConstraint(tc.ElementConstraint, fldPath.Child("elementConstraint"))...)
 	}
 
-	return nil
+	return fieldErrors
 }
 
 func isValidSchemaType(st SchemaType) bool {
@@ -200,13 +198,8 @@ func isValidSchemaType(st SchemaType) bool {
 }
 
 func isValidNamedTypeConstraint(ntc NamedTypeConstraint) bool {
-	// Empty is valid (defaults to AllowTypeOrField)
-	if ntc == "" {
-		return true
-	}
-
 	switch ntc {
-	case NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly:
+	case "", NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly:
 		return true
 	default:
 		return false
