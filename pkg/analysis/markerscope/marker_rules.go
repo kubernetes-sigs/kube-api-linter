@@ -43,7 +43,6 @@ func defaultMarkerRules() map[string]MarkerScopeRule {
 	addObjectMarkers(rules)
 	addStringMarkers(rules)
 	addArrayMarkers(rules)
-	addGeneralMarkers(rules)
 	addSSATopologyMarkers(rules)
 	addArrayItemsMarkers(rules)
 
@@ -84,9 +83,13 @@ func addTypeOnlyMarkers(rules map[string]MarkerScopeRule) {
 // addFieldOrTypeMarkers adds markers that can be applied to both fields and types.
 func addFieldOrTypeMarkers(rules map[string]MarkerScopeRule) {
 	fieldOrTypeMarkers := map[string]MarkerScopeRule{
-		// field-or-type markers
-		markers.KubebuilderPruningPreserveUnknownFieldsMarker: {Scopes: []ScopeConstraint{FieldScope, TypeScope}, TypeConstraint: nil},
-		markers.KubebuilderTitleMarker:                        {Scopes: []ScopeConstraint{FieldScope, TypeScope}, TypeConstraint: nil},
+		// field-or-type markers (any type)
+		markers.KubebuilderEnumMarker:                         {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
+		markers.KubebuilderFormatMarker:                       {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
+		markers.KubebuilderPruningPreserveUnknownFieldsMarker: {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
+		markers.KubebuilderTitleMarker:                        {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
+		markers.KubebuilderTypeMarker:                         {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
+		markers.KubebuilderXValidationMarker:                  {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
 	}
 
 	maps.Copy(rules, fieldOrTypeMarkers)
@@ -217,28 +220,6 @@ func addArrayMarkers(rules map[string]MarkerScopeRule) {
 	}
 
 	maps.Copy(rules, arrayMarkers)
-}
-
-// addGeneralMarkers adds general markers that can apply to any type.
-func addGeneralMarkers(rules map[string]MarkerScopeRule) {
-	generalMarkers := map[string]MarkerScopeRule{
-		// general markers (field or type, any type)
-		markers.KubebuilderEnumMarker: {
-			Scopes: []ScopeConstraint{FieldScope, TypeScope},
-		},
-		markers.KubebuilderFormatMarker: {
-			Scopes: []ScopeConstraint{FieldScope, TypeScope},
-		},
-		markers.KubebuilderTypeMarker: {
-			Scopes: []ScopeConstraint{FieldScope, TypeScope},
-		},
-		markers.KubebuilderXValidationMarker: {
-			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
-			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
-		},
-	}
-
-	maps.Copy(rules, generalMarkers)
 }
 
 // addSSATopologyMarkers adds Server-Side Apply topology markers.
