@@ -137,7 +137,7 @@ func validateMarkerRule(rule MarkerScopeRule, fldPath *field.Path) field.ErrorLi
 
 	// Validate scope constraint
 	if len(rule.Scopes) == 0 {
-		return field.ErrorList{field.Required(fldPath.Child("scopes"), errScopeRequired.Error())}
+		return field.ErrorList{field.Required(fldPath.Child("scopes"), "scope is required")}
 	}
 
 	// Validate that each scope is a valid value
@@ -147,14 +147,14 @@ func validateMarkerRule(rule MarkerScopeRule, fldPath *field.Path) field.ErrorLi
 			// Valid scope
 		default:
 			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("scopes").Index(i), scope,
-				(&invalidScopeConstraintError{scope: string(scope)}).Error()))
+				fmt.Sprintf("invalid scope: %q (must be one of: Field, Type)", scope)))
 		}
 	}
 
 	// Validate named type constraint if present
 	if !isValidNamedTypeConstraint(rule.NamedTypeConstraint) {
 		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("namedTypeConstraint"), rule.NamedTypeConstraint,
-			(&invalidNamedTypeConstraintError{constraint: string(rule.NamedTypeConstraint)}).Error()))
+			fmt.Sprintf("invalid named type constraint: %q", rule.NamedTypeConstraint)))
 	}
 
 	// Validate type constraint if present
@@ -176,7 +176,7 @@ func validateTypeConstraint(tc *TypeConstraint, fldPath *field.Path) field.Error
 	for i, st := range tc.AllowedSchemaTypes {
 		if !isValidSchemaType(st) {
 			fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("allowedSchemaTypes").Index(i), st,
-				(&invalidSchemaTypeError{schemaType: string(st)}).Error()))
+				fmt.Sprintf("invalid schema type: %q", st)))
 		}
 	}
 
