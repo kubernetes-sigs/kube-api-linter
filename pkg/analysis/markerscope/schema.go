@@ -23,9 +23,9 @@ import (
 type SchemaType string
 
 const (
-	// SchemaTypeInteger represents integer types (int, int32, int64, uint, etc.)
+	// SchemaTypeInteger represents integer types (int, int32, int64, uint, etc.).
 	SchemaTypeInteger SchemaType = "integer"
-	// SchemaTypeNumber represents floating-point types (float32, float64)
+	// SchemaTypeNumber represents floating-point types (float32, float64).
 	SchemaTypeNumber SchemaType = "number"
 	// SchemaTypeString represents string types.
 	SchemaTypeString SchemaType = "string"
