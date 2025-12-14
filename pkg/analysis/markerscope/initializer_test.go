@@ -27,9 +27,8 @@ import (
 var _ = Describe("markerscope initializer", func() {
 	Context("config validation", func() {
 		type testCase struct {
-			config         markerscope.MarkerScopeConfig
-			expectedErr    string
-			expectedSuffix string // Optional: for cases with dynamic pointer addresses
+			config      markerscope.MarkerScopeConfig
+			expectedErr string
 		}
 
 		DescribeTable("should validate the provided config",
@@ -40,13 +39,7 @@ var _ = Describe("markerscope initializer", func() {
 				errs := ci.ValidateConfig(&in.config, field.NewPath("markerscope"))
 				if len(in.expectedErr) > 0 {
 					Expect(errs.ToAggregate()).To(HaveOccurred())
-					if len(in.expectedSuffix) > 0 {
-						// For errors with dynamic pointer addresses, check prefix and suffix
-						Expect(errs.ToAggregate().Error()).To(HavePrefix(in.expectedErr))
-						Expect(errs.ToAggregate().Error()).To(HaveSuffix(in.expectedSuffix))
-					} else {
-						Expect(errs.ToAggregate().Error()).To(Equal(in.expectedErr))
-					}
+					Expect(errs.ToAggregate().Error()).To(Equal(in.expectedErr))
 				} else {
 					Expect(errs).To(HaveLen(0), "No errors were expected")
 				}
@@ -99,7 +92,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:marker", Scopes:[]markerscope.ScopeConstraint{}, NamedTypeConstraint:"", TypeConstraint:(*markerscope.TypeConstraint)(nil)}: scope is required`,
+				expectedErr: `markerscope.customMarkers[0].scopes: Required value: scope is required`,
 			}),
 
 			Entry("With marker rule having invalid scope value", testCase{
@@ -111,7 +104,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:marker", Scopes:[]markerscope.ScopeConstraint{"invalid"}, NamedTypeConstraint:"", TypeConstraint:(*markerscope.TypeConstraint)(nil)}: invalid scope: "invalid" (must be one of: Field, Type)`,
+				expectedErr: `markerscope.customMarkers[0].scopes[0]: Invalid value: "invalid": invalid scope: "invalid" (must be one of: Field, Type)`,
 			}),
 
 			Entry("With marker rule having invalid schema type", testCase{
@@ -126,8 +119,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr:    `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:marker"`,
-				expectedSuffix: `invalid type constraint: invalid schema type: "invalid-type"`,
+				expectedErr: `markerscope.customMarkers[0].typeConstraint.allowedSchemaTypes[0]: Invalid value: "invalid-type": invalid schema type: "invalid-type"`,
 			}),
 
 			Entry("With valid type constraint with string type", testCase{
@@ -211,8 +203,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr:    `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:invalid-array"`,
-				expectedSuffix: `invalid type constraint: invalid element constraint: invalid schema type: "invalid-type"`,
+				expectedErr: `markerscope.customMarkers[0].typeConstraint.elementConstraint.allowedSchemaTypes[0]: Invalid value: "invalid-type": invalid schema type: "invalid-type"`,
 			}),
 
 			Entry("With both Field and Type scopes", testCase{
