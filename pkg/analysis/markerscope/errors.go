@@ -29,7 +29,7 @@ type invalidScopeConstraintError struct {
 }
 
 func (e *invalidScopeConstraintError) Error() string {
-	return fmt.Sprintf("invalid scope: %q (must be one of: Field, Type, Any)", e.scope)
+	return fmt.Sprintf("invalid scope: %q (must be one of: Field, Type)", e.scope)
 }
 
 type invalidNamedTypeConstraintError struct {

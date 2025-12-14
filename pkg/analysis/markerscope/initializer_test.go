@@ -27,8 +27,9 @@ import (
 var _ = Describe("markerscope initializer", func() {
 	Context("config validation", func() {
 		type testCase struct {
-			config      markerscope.MarkerScopeConfig
-			expectedErr string
+			config         markerscope.MarkerScopeConfig
+			expectedErr    string
+			expectedSuffix string // Optional: for cases with dynamic pointer addresses
 		}
 
 		DescribeTable("should validate the provided config",
@@ -39,7 +40,13 @@ var _ = Describe("markerscope initializer", func() {
 				errs := ci.ValidateConfig(&in.config, field.NewPath("markerscope"))
 				if len(in.expectedErr) > 0 {
 					Expect(errs.ToAggregate()).To(HaveOccurred())
-					Expect(errs.ToAggregate().Error()).To(ContainSubstring(in.expectedErr))
+					if len(in.expectedSuffix) > 0 {
+						// For errors with dynamic pointer addresses, check prefix and suffix
+						Expect(errs.ToAggregate().Error()).To(HavePrefix(in.expectedErr))
+						Expect(errs.ToAggregate().Error()).To(HaveSuffix(in.expectedSuffix))
+					} else {
+						Expect(errs.ToAggregate().Error()).To(Equal(in.expectedErr))
+					}
 				} else {
 					Expect(errs).To(HaveLen(0), "No errors were expected")
 				}
@@ -50,19 +57,14 @@ var _ = Describe("markerscope initializer", func() {
 				expectedErr: "",
 			}),
 
-			Entry("With empty config", testCase{
-				config:      markerscope.MarkerScopeConfig{},
-				expectedErr: "",
-			}),
-
-			Entry("With valid warn policy", testCase{
+			Entry("With valid Warn policy", testCase{
 				config: markerscope.MarkerScopeConfig{
 					Policy: markerscope.MarkerScopePolicyWarn,
 				},
 				expectedErr: "",
 			}),
 
-			Entry("With valid suggest_fix policy", testCase{
+			Entry("With valid SuggestFix policy", testCase{
 				config: markerscope.MarkerScopeConfig{
 					Policy: markerscope.MarkerScopePolicySuggestFix,
 				},
@@ -97,7 +99,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `scope is required`,
+				expectedErr: `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:marker", Scopes:[]markerscope.ScopeConstraint{}, NamedTypeConstraint:"", TypeConstraint:(*markerscope.TypeConstraint)(nil)}: scope is required`,
 			}),
 
 			Entry("With marker rule having invalid scope value", testCase{
@@ -109,7 +111,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `invalid scope: "invalid" (must be one of: Field, Type, Any)`,
+				expectedErr: `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:marker", Scopes:[]markerscope.ScopeConstraint{"invalid"}, NamedTypeConstraint:"", TypeConstraint:(*markerscope.TypeConstraint)(nil)}: invalid scope: "invalid" (must be one of: Field, Type)`,
 			}),
 
 			Entry("With marker rule having invalid schema type", testCase{
@@ -124,7 +126,8 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `invalid type constraint: invalid schema type: "invalid-type"`,
+				expectedErr:    `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:marker"`,
+				expectedSuffix: `invalid type constraint: invalid schema type: "invalid-type"`,
 			}),
 
 			Entry("With valid type constraint with string type", testCase{
@@ -161,11 +164,12 @@ var _ = Describe("markerscope initializer", func() {
 				config: markerscope.MarkerScopeConfig{
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
-							Identifier: "custom:numeric-marker",
+							Identifier: "custom:numeric-string-marker",
 							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
 							TypeConstraint: &markerscope.TypeConstraint{
 								AllowedSchemaTypes: []markerscope.SchemaType{
 									markerscope.SchemaTypeInteger,
+									markerscope.SchemaTypeString,
 								},
 							},
 						},
@@ -207,10 +211,11 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: `invalid type constraint: invalid element constraint: invalid schema type: "invalid-type"`,
+				expectedErr:    `markerscope.customMarkers[0]: Invalid value: markerscope.MarkerScopeRule{Identifier:"custom:invalid-array"`,
+				expectedSuffix: `invalid type constraint: invalid element constraint: invalid schema type: "invalid-type"`,
 			}),
 
-			Entry("With Any scope (field and type)", testCase{
+			Entry("With both Field and Type scopes", testCase{
 				config: markerscope.MarkerScopeConfig{
 					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
@@ -243,7 +248,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: "override marker must be a built-in marker; use customMarkers for custom markers",
+				expectedErr: `markerscope.overrideMarkers[0].identifier: Invalid value: "custom:nonexistent": override marker must be a built-in marker; use customMarkers for custom markers`,
 			}),
 
 			Entry("With custom marker for built-in marker", testCase{
@@ -255,7 +260,7 @@ var _ = Describe("markerscope initializer", func() {
 						},
 					},
 				},
-				expectedErr: "custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers",
+				expectedErr: `markerscope.customMarkers[0].identifier: Invalid value: "optional": custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers`,
 			}),
 
 			Entry("With both override and custom markers", testCase{
@@ -280,14 +285,6 @@ var _ = Describe("markerscope initializer", func() {
 
 	Context("analyzer initialization", func() {
 		It("should initialize analyzer with nil config", func() {
-			// Note: Init expects a MarkerScopeConfig, passing nil will error
-			// Use empty config instead
-			analyzer, err := markerscope.Initializer().Init(&markerscope.MarkerScopeConfig{})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(analyzer).ToNot(BeNil())
-		})
-
-		It("should initialize analyzer with empty config", func() {
 			analyzer, err := markerscope.Initializer().Init(&markerscope.MarkerScopeConfig{})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(analyzer).ToNot(BeNil())
