@@ -540,7 +540,7 @@ The `typeConstraint` field allows you to restrict which Go types a marker can be
 ```yaml
 lintersConfig:
   markerscope:
-    policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `Warn`.
+    policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `SuggestFix`.
 
     # Override default rules for built-in markers
     overrideMarkers:
@@ -575,7 +575,7 @@ lintersConfig:
 **Configuration notes:**
 - Use `overrideMarkers` to customize the behavior of built-in kubebuilder/controller-runtime markers
 - Use `customMarkers` to add validation for your own custom markers
-- If a marker is not in either list and not in the default rules, no validation is performed for that marker
+- If a marker is not in either list and not in the default rules, validation is performed by default
 
 ### Fixes
 

@@ -16,6 +16,7 @@ limitations under the License.
 package markerscope
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"go/ast"
@@ -35,18 +36,6 @@ import (
 const (
 	name = "markerscope"
 )
-
-func init() {
-	// Register all markers we want to validate scope for
-	defaults := defaultMarkerRules()
-	markers := make([]string, 0, len(defaults))
-
-	for marker := range defaults {
-		markers = append(markers, marker)
-	}
-
-	markershelper.DefaultRegistry().Register(markers...)
-}
 
 type analyzer struct {
 	markerRules map[string]MarkerScopeRule
@@ -120,7 +109,7 @@ func markerRulesListToMap(rules []MarkerScopeRule) map[string]MarkerScopeRule {
 func defaultConfig(cfg *MarkerScopeConfig) {
 	// Set default policy if not specified
 	if cfg.Policy == "" {
-		cfg.Policy = MarkerScopePolicyWarn
+		cfg.Policy = MarkerScopePolicySuggestFix
 	}
 }
 
@@ -146,15 +135,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 // sortMarkersByPosition sorts markers by their position to ensure consistent ordering.
 func sortMarkersByPosition(markers []markershelper.Marker) []markershelper.Marker {
 	slices.SortFunc(markers, func(a, b markershelper.Marker) int {
-		if a.Pos < b.Pos {
-			return -1
-		}
-
-		if a.Pos > b.Pos {
-			return 1
-		}
-
-		return 0
+		return cmp.Compare(a.Pos, b.Pos)
 	})
 
 	return markers
