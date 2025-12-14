@@ -30,9 +30,9 @@ type MaximumType int64
 // +kubebuilder:validation:MultipleOf=3
 type MultipleOfType int32
 
-// Invalid: Float type with numeric markers (float types are not supported)
-// +kubebuilder:validation:Minimum=0.0 // want `marker "kubebuilder:validation:Minimum": type  is not allowed \(expected one of: \[integer\]\)`
-// +kubebuilder:validation:Maximum=1.0 // want `marker "kubebuilder:validation:Maximum": type  is not allowed \(expected one of: \[integer\]\)`
+// Invalid: Float type with numeric markers (number type is not allowed for integer-only markers)
+// +kubebuilder:validation:Minimum=0.0 // want `marker "kubebuilder:validation:Minimum": type number is not allowed \(expected one of: \[integer\]\)`
+// +kubebuilder:validation:Maximum=1.0 // want `marker "kubebuilder:validation:Maximum": type number is not allowed \(expected one of: \[integer\]\)`
 type FloatType float64
 
 // Invalid: Minimum marker on string type

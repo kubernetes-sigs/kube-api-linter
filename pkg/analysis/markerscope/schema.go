@@ -25,6 +25,8 @@ type SchemaType string
 const (
 	// SchemaTypeInteger represents integer types (int, int32, int64, uint, etc.)
 	SchemaTypeInteger SchemaType = "integer"
+	// SchemaTypeNumber represents floating-point types (float32, float64)
+	SchemaTypeNumber SchemaType = "number"
 	// SchemaTypeString represents string types.
 	SchemaTypeString SchemaType = "string"
 	// SchemaTypeBoolean represents boolean types.
@@ -61,17 +63,20 @@ func getSchemaType(t types.Type) SchemaType {
 
 // getBasicTypeSchema returns the schema type for a basic Go type.
 func getBasicTypeSchema(bt *types.Basic) SchemaType {
-	//nolint:exhaustive // Only supporting OpenAPI-compatible types
+	//nolint:exhaustive
+	// We only support OpenAPI-compatible types in this function
+	// so we can return an empty string for other types such as complex, unsafe, and untyped
 	switch bt.Kind() {
 	case types.Bool:
 		return SchemaTypeBoolean
 	case types.Int, types.Int8, types.Int16, types.Int32, types.Int64,
 		types.Uint, types.Uint8, types.Uint16, types.Uint32, types.Uint64:
 		return SchemaTypeInteger
+	case types.Float32, types.Float64:
+		return SchemaTypeNumber
 	case types.String:
 		return SchemaTypeString
 	default:
-		// Other types (float, complex, unsafe, untyped) are not supported in OpenAPI schemas
 		return ""
 	}
 }

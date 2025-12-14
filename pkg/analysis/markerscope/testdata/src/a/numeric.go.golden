@@ -35,7 +35,7 @@ type MaximumType int64
 // +kubebuilder:validation:MultipleOf=3
 type MultipleOfType int32
 
-// Invalid: Float type with numeric markers (float types are not supported)
+// Invalid: Float type with numeric markers (number type is not allowed for integer-only markers)
 type FloatType float64
 
 // Invalid: Minimum marker on string type

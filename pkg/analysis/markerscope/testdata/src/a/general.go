@@ -92,7 +92,7 @@ type GeneralMarkersFieldTest struct {
 	// +kubebuilder:validation:Type=string
 	InvalidTypeOnGeneralType GeneralType `json:"invalidTypeOnGeneralType"`
 
-	// Invalid: XValidation marker on named type
-	// +kubebuilder:validation:XValidation:rule="self.size() > 0" // want `marker "kubebuilder:validation:XValidation": marker should be declared on the type definition of GeneralType instead of the field`
-	InvalidXValidationOnGeneralType GeneralType `json:"invalidXValidationOnGeneralType"`
+	// Valid: XValidation marker on named type (allowed on both field and type)
+	// +kubebuilder:validation:XValidation:rule="self.size() > 0"
+	ValidXValidationOnGeneralType GeneralType `json:"validXValidationOnGeneralType"`
 }
