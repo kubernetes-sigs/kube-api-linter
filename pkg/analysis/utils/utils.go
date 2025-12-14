@@ -586,15 +586,18 @@ func matchesType(expr ast.Expr, typeName string) bool {
 		return matchesType(e.X, typeName)
 	case *ast.ArrayType:
 		return matchesType(e.Elt, typeName)
+	case *ast.MapType:
+		return matchesType(e.Value, typeName)
 	default:
 		return false
 	}
 }
 
-// UnwrapType unwraps pointer, named, slice, and array types to get the underlying element type.
+// UnwrapType unwraps pointer, named, slice, array, and map types to get the underlying element type.
 // For pointer types, it returns the element type.
 // For named types, it returns the underlying type.
-// For slice and array types, it recursively unwraps to get the element type.
+// For slice and array types, it returns the element type.
+// For map types, it returns the value type.
 // Otherwise, it returns the type as-is.
 func UnwrapType(t types.Type) types.Type {
 	// Unwrap pointer types
@@ -607,18 +610,20 @@ func UnwrapType(t types.Type) types.Type {
 		t = named.Underlying()
 	}
 
-	// Unwrap slice and array types to get element type
+	// Unwrap slice, array, and map types to get element/value type
 	switch ut := t.Underlying().(type) {
 	case *types.Slice:
 		return ut.Elem()
 	case *types.Array:
+		return ut.Elem()
+	case *types.Map:
 		return ut.Elem()
 	}
 
 	return t
 }
 
-// ExtractIdent extracts an *ast.Ident from an ast.Expr, unwrapping pointers and arrays.
+// ExtractIdent extracts an *ast.Ident from an ast.Expr, unwrapping pointers, arrays, and maps.
 func ExtractIdent(expr ast.Expr) *ast.Ident {
 	switch e := expr.(type) {
 	case *ast.Ident:
@@ -627,6 +632,8 @@ func ExtractIdent(expr ast.Expr) *ast.Ident {
 		return ExtractIdent(e.X)
 	case *ast.ArrayType:
 		return ExtractIdent(e.Elt)
+	case *ast.MapType:
+		return ExtractIdent(e.Value)
 	default:
 		return nil
 	}
