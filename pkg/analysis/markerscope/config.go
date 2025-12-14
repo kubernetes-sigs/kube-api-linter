@@ -106,7 +106,7 @@ type MarkerScopeConfig struct {
 	// Example: Add a custom marker
 	//   customMarkers:
 	//     - identifier: "mycompany:validation:CustomMarker"
-	//       scope: Any
+	//       scopes: [Field, Type]
 	//       typeConstraint:
 	//         allowedSchemaTypes: ["string"]
 	CustomMarkers []MarkerScopeRule `json:"customMarkers,omitempty"`
