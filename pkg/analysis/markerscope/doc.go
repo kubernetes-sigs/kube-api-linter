@@ -20,26 +20,26 @@ limitations under the License.
 // # Scope Validation
 //
 // Some markers are only valid when applied to specific Go constructs:
-//   - Field-only markers: optional, required, nullable
-//   - Type/Struct-only markers: MinProperties, MaxProperties, kubebuilder:object:root, kubebuilder:subresource:status
-//   - Field or Type markers: default, MinLength, MaxLength, etc.
+//   - Field-only markers: optional, required, kubebuilder:validation:XValidation
+//   - Type-only markers: kubebuilder:validation:MinProperties, kubebuilder:validation:MaxProperties
+//   - Field or Type markers: kubebuilder:default, kubebuilder:validation:MinLength, kubebuilder:validation:MaxLength, etc.
 //
 // # Type Constraint Validation
 //
 // Markers are also validated for type correctness to ensure they are applied to compatible data types:
-//   - Numeric markers (Minimum, Maximum, MultipleOf) must be applied to integer or number types
-//   - String markers (Pattern, MinLength, MaxLength) must be applied to string types
-//   - Array markers (MinItems, MaxItems, UniqueItems) must be applied to array types
-//   - Object markers (MinProperties, MaxProperties) must be applied to object types (struct/map)
+//   - Numeric markers (kubebuilder:validation:Minimum, kubebuilder:validation:Maximum, kubebuilder:validation:MultipleOf) must be applied to integer types
+//   - String markers (kubebuilder:validation:Pattern, kubebuilder:validation:MinLength, kubebuilder:validation:MaxLength) must be applied to string types
+//   - Array markers (kubebuilder:validation:MinItems, kubebuilder:validation:MaxItems, kubebuilder:validation:UniqueItems) must be applied to array types
+//   - Object markers (kubebuilder:validation:MinProperties, kubebuilder:validation:MaxProperties) must be applied to object types (struct/map)
 //
 // For example, applying kubebuilder:validation:Maximum to a string field will be flagged as an error
-// since Maximum is only valid for numeric types.
+// since kubebuilder:validation:Maximum is only valid for numeric types.
 //
 // # Array Element Type Constraints
 //
-// For array types, element-level constraints can be specified using items: prefix markers
-// (e.g., items:Minimum, items:Pattern). These validate the array element types rather than
-// the array itself.
+// For array types, element-level constraints can be specified using kubebuilder:validation:items: prefix markers
+// (e.g., kubebuilder:validation:items:Minimum, kubebuilder:validation:items:Pattern). These validate the array
+// element types rather than the array itself.
 //
 // This linter ensures markers are applied in their appropriate contexts and to compatible types
 // to prevent configuration errors and improve API consistency.
