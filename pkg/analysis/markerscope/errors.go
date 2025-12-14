@@ -48,14 +48,6 @@ func (e *invalidSchemaTypeError) Error() string {
 	return fmt.Sprintf("invalid schema type: %q", e.schemaType)
 }
 
-type invalidTypeConstraintError struct {
-	err error
-}
-
-func (e *invalidTypeConstraintError) Error() string {
-	return fmt.Sprintf("invalid type constraint: %v", e.err)
-}
-
 type invalidElementConstraintError struct {
 	err error
 }

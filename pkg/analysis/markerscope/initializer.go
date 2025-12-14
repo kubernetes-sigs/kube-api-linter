@@ -190,7 +190,7 @@ func validateTypeConstraint(tc *TypeConstraint, fldPath *field.Path) field.Error
 
 func isValidSchemaType(st SchemaType) bool {
 	switch st {
-	case SchemaTypeInteger, SchemaTypeString, SchemaTypeBoolean, SchemaTypeArray, SchemaTypeObject:
+	case SchemaTypeInteger, SchemaTypeNumber, SchemaTypeString, SchemaTypeBoolean, SchemaTypeArray, SchemaTypeObject:
 		return true
 	default:
 		return false

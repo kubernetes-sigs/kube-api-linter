@@ -259,8 +259,10 @@ func (a *analyzer) reportScopeViolation(
 	appliedScopeName string,
 	suggestFix func() []analysis.SuggestedFix,
 ) {
-	var message string
-	var fixes []analysis.SuggestedFix
+	var (
+		message string
+		fixes   []analysis.SuggestedFix
+	)
 
 	if rule.AllowsScope(alternateScope) {
 		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, alternateScopeName)
