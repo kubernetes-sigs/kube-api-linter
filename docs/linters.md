@@ -454,6 +454,7 @@ The linter validates that markers are applied to compatible OpenAPI schema types
 
 OpenAPI schema types map to Go types as follows:
 - `integer`: int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64
+- `number`: float32, float64
 - `string`: string
 - `boolean`: bool
 - `array`: []T, [N]T (slices and arrays)
