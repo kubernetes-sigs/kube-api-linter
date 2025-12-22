@@ -19,7 +19,7 @@ type D struct {
 	// OmitZero policy is still SuggestFix by default, so this should suggest a fix.
 	// +optional
 	// +default={}
-	StructFieldMissingOmitZero NestedStruct `json:"structFieldMissingOmitZero,omitempty,omitzero"` // want "field D.StructFieldMissingOmitZero has a default value but does not have omitzero in its json tag"
+	StructFieldMissingOmitZero NestedStruct `json:"structFieldMissingOmitZero,omitzero"` // want "field D.StructFieldMissingOmitZero has a default value but does not have omitzero in its json tag"
 }
 
 type NestedStruct struct {

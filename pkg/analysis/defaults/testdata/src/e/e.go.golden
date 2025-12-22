@@ -24,7 +24,7 @@ type E struct {
 	// StructFieldWithOmitEmpty has omitempty but missing omitzero.
 	// +optional
 	// +default={}
-	StructFieldWithOmitEmpty NestedStruct `json:"structFieldWithOmitEmpty,omitempty,omitzero"` // want "field E.StructFieldWithOmitEmpty has a default value but does not have omitzero in its json tag"
+	StructFieldWithOmitEmpty NestedStruct `json:"structFieldWithOmitEmpty,omitzero"` // want "field E.StructFieldWithOmitEmpty has a default value but does not have omitzero in its json tag"
 }
 
 type NestedStruct struct {

@@ -20,7 +20,6 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/defaults"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -53,7 +52,7 @@ func TestOmitZeroForbidden(t *testing.T) {
 
 	a, err := defaults.Initializer().Init(&defaults.DefaultsConfig{
 		OmitZero: defaults.DefaultsOmitZero{
-			Policy: serialization.OmitZeroPolicyForbid,
+			Policy: defaults.OmitZeroPolicyForbid,
 		},
 	})
 	if err != nil {
@@ -68,7 +67,7 @@ func TestOmitEmptyWarn(t *testing.T) {
 
 	a, err := defaults.Initializer().Init(&defaults.DefaultsConfig{
 		OmitEmpty: defaults.DefaultsOmitEmpty{
-			Policy: serialization.OmitEmptyPolicyWarn,
+			Policy: defaults.OmitEmptyPolicyWarn,
 		},
 	})
 	if err != nil {
@@ -83,7 +82,7 @@ func TestOmitEmptyIgnore(t *testing.T) {
 
 	a, err := defaults.Initializer().Init(&defaults.DefaultsConfig{
 		OmitEmpty: defaults.DefaultsOmitEmpty{
-			Policy: serialization.OmitEmptyPolicyIgnore,
+			Policy: defaults.OmitEmptyPolicyIgnore,
 		},
 	})
 	if err != nil {
@@ -98,7 +97,7 @@ func TestOmitZeroWarn(t *testing.T) {
 
 	a, err := defaults.Initializer().Init(&defaults.DefaultsConfig{
 		OmitZero: defaults.DefaultsOmitZero{
-			Policy: serialization.OmitZeroPolicyWarn,
+			Policy: defaults.OmitZeroPolicyWarn,
 		},
 	})
 	if err != nil {

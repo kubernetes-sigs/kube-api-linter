@@ -22,7 +22,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -70,9 +69,9 @@ func validateOmitEmpty(oec DefaultsOmitEmpty, fldPath *field.Path) field.ErrorLi
 	fieldErrors := field.ErrorList{}
 
 	switch oec.Policy {
-	case "", serialization.OmitEmptyPolicyIgnore, serialization.OmitEmptyPolicyWarn, serialization.OmitEmptyPolicySuggestFix:
+	case "", OmitEmptyPolicyIgnore, OmitEmptyPolicyWarn, OmitEmptyPolicySuggestFix:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), oec.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", serialization.OmitEmptyPolicyIgnore, serialization.OmitEmptyPolicyWarn, serialization.OmitEmptyPolicySuggestFix)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), oec.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", OmitEmptyPolicyIgnore, OmitEmptyPolicyWarn, OmitEmptyPolicySuggestFix)))
 	}
 
 	return fieldErrors
@@ -83,9 +82,9 @@ func validateOmitZero(ozc DefaultsOmitZero, fldPath *field.Path) field.ErrorList
 	fieldErrors := field.ErrorList{}
 
 	switch ozc.Policy {
-	case "", serialization.OmitZeroPolicyForbid, serialization.OmitZeroPolicyWarn, serialization.OmitZeroPolicySuggestFix:
+	case "", OmitZeroPolicyForbid, OmitZeroPolicyWarn, OmitZeroPolicySuggestFix:
 	default:
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), ozc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", serialization.OmitZeroPolicyForbid, serialization.OmitZeroPolicyWarn, serialization.OmitZeroPolicySuggestFix)))
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("policy"), ozc.Policy, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", OmitZeroPolicyForbid, OmitZeroPolicyWarn, OmitZeroPolicySuggestFix)))
 	}
 
 	return fieldErrors

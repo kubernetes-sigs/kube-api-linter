@@ -15,7 +15,39 @@ limitations under the License.
 */
 package defaults
 
-import "sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
+// OmitEmptyPolicy is the policy for omitempty.
+// SuggestFix will suggest a fix for the field to add omitempty.
+// Warn will warn about the field to add omitempty.
+// Ignore will ignore the the absence of omitempty.
+type OmitEmptyPolicy string
+
+const (
+	// OmitEmptyPolicySuggestFix will suggest a fix for the field.
+	OmitEmptyPolicySuggestFix OmitEmptyPolicy = "SuggestFix"
+
+	// OmitEmptyPolicyWarn will warn about the field.
+	OmitEmptyPolicyWarn OmitEmptyPolicy = "Warn"
+
+	// OmitEmptyPolicyIgnore will ignore the field.
+	OmitEmptyPolicyIgnore OmitEmptyPolicy = "Ignore"
+)
+
+// OmitZeroPolicy is the policy for omitzero.
+// SuggestFix will suggest a fix for the field to add omitzero.
+// Warn will warn about the field to add omitzero.
+// Forbid will forbid the field to have omitzero.
+type OmitZeroPolicy string
+
+const (
+	// OmitZeroPolicySuggestFix will suggest a fix for the field.
+	OmitZeroPolicySuggestFix OmitZeroPolicy = "SuggestFix"
+
+	// OmitZeroPolicyWarn will warn about the field.
+	OmitZeroPolicyWarn OmitZeroPolicy = "Warn"
+
+	// OmitZeroPolicyForbid will forbid the field.
+	OmitZeroPolicyForbid OmitZeroPolicy = "Forbid"
+)
 
 // DefaultsConfig contains configuration for the defaults linter.
 type DefaultsConfig struct {
@@ -43,7 +75,7 @@ type DefaultsOmitEmpty struct {
 	// When set to "Warn", the linter will emit a warning if the field does not have the `omitempty` tag.
 	// When set to "Ignore", a field with default missing the `omitempty` tag will be ignored.
 	// When otherwise not specified, the default value is "SuggestFix".
-	Policy serialization.OmitEmptyPolicy `json:"policy"`
+	Policy OmitEmptyPolicy `json:"policy"`
 }
 
 // DefaultsOmitZero is the configuration for the `omitzero` tag on fields with defaults.
@@ -57,5 +89,5 @@ type DefaultsOmitZero struct {
 	// Note, `omitzero` tag is supported in go version starting from go 1.24.
 	// Note, Configure omitzero policy to 'Forbid', if using with go version less than go 1.24.
 	// When otherwise not specified, the default value is "SuggestFix".
-	Policy serialization.OmitZeroPolicy `json:"policy"`
+	Policy OmitZeroPolicy `json:"policy"`
 }

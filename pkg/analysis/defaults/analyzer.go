@@ -18,6 +18,7 @@ package defaults
 import (
 	"fmt"
 	"go/ast"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
@@ -25,7 +26,6 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -50,8 +50,8 @@ func init() {
 type analyzer struct {
 	preferredDefaultMarker string
 	secondaryDefaultMarker string
-	omitEmptyPolicy        serialization.OmitEmptyPolicy
-	omitZeroPolicy         serialization.OmitZeroPolicy
+	omitEmptyPolicy        OmitEmptyPolicy
+	omitZeroPolicy         OmitZeroPolicy
 }
 
 // newAnalyzer creates a new analyzer with the given configuration.
@@ -93,11 +93,11 @@ func defaultConfig(cfg *DefaultsConfig) {
 	}
 
 	if cfg.OmitEmpty.Policy == "" {
-		cfg.OmitEmpty.Policy = serialization.OmitEmptyPolicySuggestFix
+		cfg.OmitEmpty.Policy = OmitEmptyPolicySuggestFix
 	}
 
 	if cfg.OmitZero.Policy == "" {
-		cfg.OmitZero.Policy = serialization.OmitZeroPolicySuggestFix
+		cfg.OmitZero.Policy = OmitZeroPolicySuggestFix
 	}
 }
 
@@ -291,18 +291,18 @@ func (a *analyzer) checkDefaultOmitEmptyOrOmitZero(pass *analysis.Pass, field *a
 	isPointer, _ := utils.IsStarExpr(field.Type)
 	isStruct := !isPointer && utils.IsStructType(pass, field.Type)
 
-	// Check omitzero for struct types (but not pointers)
-	// When omitempty policy is Ignore, we don't add omitempty even if it's missing
-	shouldAddOmitEmpty := a.omitEmptyPolicy != serialization.OmitEmptyPolicyIgnore
-
-	if isStruct && a.omitZeroPolicy != serialization.OmitZeroPolicyForbid {
+	// For struct types (but not pointers), we prefer omitzero over omitempty.
+	// When omitzero is present, omitempty is not needed (modernize linter would complain).
+	if isStruct && a.omitZeroPolicy != OmitZeroPolicyForbid {
 		if !hasOmitZero {
-			a.reportMissingOmitZero(pass, field, jsonTagInfo, qualifiedFieldName, hasOmitEmpty, shouldAddOmitEmpty)
+			a.reportMissingOmitZero(pass, field, jsonTagInfo, qualifiedFieldName, hasOmitEmpty)
 		}
+
+		return
 	}
 
-	// Check omitempty (only if policy is not Ignore)
-	if a.omitEmptyPolicy != serialization.OmitEmptyPolicyIgnore && !hasOmitEmpty {
+	// Check omitempty for non-struct types (only if policy is not Ignore)
+	if a.omitEmptyPolicy != OmitEmptyPolicyIgnore && !hasOmitEmpty {
 		a.reportMissingOmitEmpty(pass, field, jsonTagInfo, qualifiedFieldName)
 	}
 }
@@ -312,7 +312,7 @@ func (a *analyzer) reportMissingOmitEmpty(pass *analysis.Pass, field *ast.Field,
 	message := fmt.Sprintf("add omitempty to the json tag of field %s", qualifiedFieldName)
 
 	switch a.omitEmptyPolicy {
-	case serialization.OmitEmptyPolicySuggestFix:
+	case OmitEmptyPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf("field %s has a default value but does not have omitempty in its json tag", qualifiedFieldName),
@@ -329,30 +329,35 @@ func (a *analyzer) reportMissingOmitEmpty(pass *analysis.Pass, field *ast.Field,
 				},
 			},
 		})
-	case serialization.OmitEmptyPolicyWarn:
+	case OmitEmptyPolicyWarn:
 		pass.Reportf(field.Pos(), "field %s has a default value but does not have omitempty in its json tag", qualifiedFieldName)
-	case serialization.OmitEmptyPolicyIgnore:
+	case OmitEmptyPolicyIgnore:
 		// Unreachable: this function is only called when the policy is not Ignore.
 		return
 	}
 }
 
-func (a *analyzer) reportMissingOmitZero(pass *analysis.Pass, field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string, hasOmitEmpty, shouldAddOmitEmpty bool) {
+func (a *analyzer) reportMissingOmitZero(pass *analysis.Pass, field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string, hasOmitEmpty bool) {
+	// For struct types, we prefer omitzero over omitempty.
+	// If the field has omitempty, we replace it with omitzero.
+	// If the field doesn't have omitempty, we just add omitzero.
+	// We never add both omitempty and omitzero together (modernize linter would complain).
 	var suggestedTag string
 
-	switch {
-	case hasOmitEmpty:
+	var message string
+
+	if hasOmitEmpty {
+		// Replace omitempty with omitzero
+		suggestedTag = replaceOmitEmptyWithOmitZero(jsonTagInfo.RawValue)
+		message = fmt.Sprintf("replace omitempty with omitzero in the json tag of field %s", qualifiedFieldName)
+	} else {
+		// Just add omitzero
 		suggestedTag = fmt.Sprintf("%s,omitzero", jsonTagInfo.RawValue)
-	case shouldAddOmitEmpty:
-		suggestedTag = fmt.Sprintf("%s,omitempty,omitzero", jsonTagInfo.RawValue)
-	default:
-		suggestedTag = fmt.Sprintf("%s,omitzero", jsonTagInfo.RawValue)
+		message = fmt.Sprintf("add omitzero to the json tag of field %s", qualifiedFieldName)
 	}
 
-	message := fmt.Sprintf("add omitzero to the json tag of field %s", qualifiedFieldName)
-
 	switch a.omitZeroPolicy {
-	case serialization.OmitZeroPolicySuggestFix:
+	case OmitZeroPolicySuggestFix:
 		pass.Report(analysis.Diagnostic{
 			Pos:     field.Pos(),
 			Message: fmt.Sprintf("field %s has a default value but does not have omitzero in its json tag", qualifiedFieldName),
@@ -369,10 +374,24 @@ func (a *analyzer) reportMissingOmitZero(pass *analysis.Pass, field *ast.Field, 
 				},
 			},
 		})
-	case serialization.OmitZeroPolicyWarn:
+	case OmitZeroPolicyWarn:
 		pass.Reportf(field.Pos(), "field %s has a default value but does not have omitzero in its json tag", qualifiedFieldName)
-	case serialization.OmitZeroPolicyForbid:
+	case OmitZeroPolicyForbid:
 		// Unreachable: this function is only called when the policy is not Forbid.
 		return
 	}
+}
+
+// replaceOmitEmptyWithOmitZero replaces omitempty with omitzero in the json tag value.
+func replaceOmitEmptyWithOmitZero(rawValue string) string {
+	// rawValue is like "fieldName,omitempty" or "fieldName,omitempty,inline"
+	// We need to replace "omitempty" with "omitzero"
+	parts := strings.Split(rawValue, ",")
+	for i, part := range parts {
+		if part == "omitempty" {
+			parts[i] = "omitzero"
+		}
+	}
+
+	return strings.Join(parts, ",")
 }

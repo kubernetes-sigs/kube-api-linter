@@ -21,10 +21,11 @@ type F struct {
 	// +default={}
 	StructFieldMissingOmitZero NestedStruct `json:"structFieldMissingOmitZero,omitempty"` // want "field F.StructFieldMissingOmitZero has a default value but does not have omitzero in its json tag"
 
-	// StructFieldWithBothOmit is correctly configured with omitempty and omitzero.
+	// StructFieldWithOmitZero is correctly configured with omitzero only.
+	// omitempty is not required when omitzero is present (modernize linter would complain if both were present).
 	// +optional
 	// +default={}
-	StructFieldWithBothOmit NestedStruct `json:"structFieldWithBothOmit,omitempty,omitzero"`
+	StructFieldWithOmitZero NestedStruct `json:"structFieldWithOmitZero,omitzero"`
 }
 
 type NestedStruct struct {

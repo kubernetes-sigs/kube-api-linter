@@ -23,7 +23,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/defaults"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
@@ -66,7 +65,7 @@ var _ = Describe("defaults initializer", func() {
 			Entry("With SuggestFix omitempty policy", testCase{
 				config: defaults.DefaultsConfig{
 					OmitEmpty: defaults.DefaultsOmitEmpty{
-						Policy: serialization.OmitEmptyPolicySuggestFix,
+						Policy: defaults.OmitEmptyPolicySuggestFix,
 					},
 				},
 				expectedErr: "",
@@ -74,7 +73,7 @@ var _ = Describe("defaults initializer", func() {
 			Entry("With Warn omitempty policy", testCase{
 				config: defaults.DefaultsConfig{
 					OmitEmpty: defaults.DefaultsOmitEmpty{
-						Policy: serialization.OmitEmptyPolicyWarn,
+						Policy: defaults.OmitEmptyPolicyWarn,
 					},
 				},
 				expectedErr: "",
@@ -82,7 +81,7 @@ var _ = Describe("defaults initializer", func() {
 			Entry("With Ignore omitempty policy", testCase{
 				config: defaults.DefaultsConfig{
 					OmitEmpty: defaults.DefaultsOmitEmpty{
-						Policy: serialization.OmitEmptyPolicyIgnore,
+						Policy: defaults.OmitEmptyPolicyIgnore,
 					},
 				},
 				expectedErr: "",
@@ -98,7 +97,7 @@ var _ = Describe("defaults initializer", func() {
 			Entry("With SuggestFix omitzero policy", testCase{
 				config: defaults.DefaultsConfig{
 					OmitZero: defaults.DefaultsOmitZero{
-						Policy: serialization.OmitZeroPolicySuggestFix,
+						Policy: defaults.OmitZeroPolicySuggestFix,
 					},
 				},
 				expectedErr: "",
@@ -106,7 +105,7 @@ var _ = Describe("defaults initializer", func() {
 			Entry("With Warn omitzero policy", testCase{
 				config: defaults.DefaultsConfig{
 					OmitZero: defaults.DefaultsOmitZero{
-						Policy: serialization.OmitZeroPolicyWarn,
+						Policy: defaults.OmitZeroPolicyWarn,
 					},
 				},
 				expectedErr: "",
@@ -114,7 +113,7 @@ var _ = Describe("defaults initializer", func() {
 			Entry("With Forbid omitzero policy", testCase{
 				config: defaults.DefaultsConfig{
 					OmitZero: defaults.DefaultsOmitZero{
-						Policy: serialization.OmitZeroPolicyForbid,
+						Policy: defaults.OmitZeroPolicyForbid,
 					},
 				},
 				expectedErr: "",
