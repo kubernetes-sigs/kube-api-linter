@@ -1,0 +1,37 @@
+package b
+
+// This test file tests the behavior when kubebuilder:default marker is preferred.
+
+type B struct {
+	// GoodKubebuilderDefaultField is correctly configured with +kubebuilder:default, +optional, and omitempty.
+	// +optional
+	// +kubebuilder:default="default-value"
+	GoodKubebuilderDefaultField string `json:"goodKubebuilderDefaultField,omitempty"`
+
+	// DefaultMarkerField uses +default which should be replaced with +kubebuilder:default when kubebuilder:default is preferred.
+	// +optional
+	// +default="default-value"
+	DefaultMarkerField string `json:"defaultMarkerField,omitempty"` // want "field B.DefaultMarkerField should use \\+kubebuilder:default marker instead of \\+default"
+
+	// K8sDefaultOnlyField uses only +k8s:default which requires adding the preferred marker.
+	// +optional
+	// +k8s:default="default-value"
+	K8sDefaultOnlyField string `json:"k8sDefaultOnlyField,omitempty"` // want "field B.K8sDefaultOnlyField has \\+k8s:default but should also have \\+kubebuilder:default marker"
+
+	// BothKubebuilderAndK8sMarkers has both +kubebuilder:default and +k8s:default which is acceptable.
+	// +optional
+	// +kubebuilder:default="value"
+	// +k8s:default="value"
+	BothKubebuilderAndK8sMarkers string `json:"bothKubebuilderAndK8sMarkers,omitempty"`
+
+	// BothDefaultMarkers has both +kubebuilder:default and +default which should suggest removing +default.
+	// +optional
+	// +kubebuilder:default="value"
+	// +default="value"
+	BothDefaultMarkers string `json:"bothDefaultMarkers,omitempty"` // want "field B.BothDefaultMarkers should use only the marker \\+kubebuilder:default, \\+default is not required"
+
+	// RequiredFieldWithDefault has both required and default, which is contradictory.
+	// +required
+	// +kubebuilder:default="value"
+	RequiredFieldWithDefault string `json:"requiredFieldWithDefault,omitempty"` // want "field B.RequiredFieldWithDefault has a default value but is marked as required, which is contradictory"
+}

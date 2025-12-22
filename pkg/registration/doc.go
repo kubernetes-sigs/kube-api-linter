@@ -29,6 +29,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/conflictingmarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/defaultorrequired"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/defaults"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/dependenttags"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"

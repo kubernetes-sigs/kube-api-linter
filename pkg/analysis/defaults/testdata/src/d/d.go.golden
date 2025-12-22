@@ -1,0 +1,29 @@
+package d
+
+// This test file tests the behavior when OmitEmpty.Policy is Warn.
+// When set to Warn, the linter emits a warning without a suggested fix.
+
+type D struct {
+	// GoodField is correctly configured with +default, +optional, and omitempty.
+	// +optional
+	// +default="value"
+	GoodField string `json:"goodField,omitempty"`
+
+	// MissingOmitEmpty has a default and optional but no omitempty.
+	// When policy is Warn, this should emit a warning without a fix.
+	// +optional
+	// +default="value"
+	MissingOmitEmpty string `json:"missingOmitEmpty"` // want "field D.MissingOmitEmpty has a default value but does not have omitempty in its json tag"
+
+	// StructFieldMissingOmitZero is a struct field with default but missing omitzero.
+	// OmitZero policy is still SuggestFix by default, so this should suggest a fix.
+	// +optional
+	// +default={}
+	StructFieldMissingOmitZero NestedStruct `json:"structFieldMissingOmitZero,omitzero"` // want "field D.StructFieldMissingOmitZero has a default value but does not have omitzero in its json tag"
+}
+
+type NestedStruct struct {
+	// Field is a nested field.
+	// +optional
+	Field string `json:"field,omitempty"`
+}

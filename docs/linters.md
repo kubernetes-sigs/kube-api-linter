@@ -5,6 +5,7 @@
 - [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
 - [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
 - [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
+- [Defaults](#defaults) - Checks that fields with default markers are configured correctly
 - [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
 - [DependentTags](#dependenttags) - Enforces dependencies between markers
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
@@ -211,6 +212,45 @@ The linter also detects conflicts with:
 - `+kubebuilder:default`
 
 This linter is enabled by default and helps ensure that API designs are consistent and unambiguous about whether fields are truly required or have default values.
+
+## Defaults
+
+The `defaults` linter checks that fields with default markers are configured correctly.
+
+Fields with default markers (`+default`, `+kubebuilder:default`, or `+k8s:default`) should also be marked as optional.
+Additionally, fields with default markers should have `omitempty` or `omitzero` in their json tags to ensure that
+the default values are applied correctly during serialization and deserialization.
+
+### Example
+
+A well-configured field with a default:
+
+```go
+type MyStruct struct {
+	// +optional
+	// +default="default-value"
+	Field string `json:"field,omitempty"`
+}
+```
+
+The following issues will be flagged by the linter:
+
+```go
+type MyStruct struct {
+	// Missing optional marker
+	// +default="value"
+	Field1 string `json:"field1,omitempty"` // Error: has default but not marked as optional
+
+	// Missing omitempty tag
+	// +optional
+	// +default="value"
+	Field2 string `json:"field2"` // Error: has default but no omitempty or omitzero
+}
+```
+
+### Fixes
+
+The `defaults` linter can automatically add `omitempty,omitzero` to the json tag when missing.
 
 ## DuplicateMarkers
 
