@@ -16,6 +16,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
+      - name: Verify registration
+        run: make verify-validate-linter-registration
       - name: Build
         run: make build
       - name: Test
