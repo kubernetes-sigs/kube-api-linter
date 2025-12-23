@@ -103,35 +103,35 @@ func addNumericMarkers(rules map[string]MarkerScopeRule) {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
 			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 		markers.KubebuilderMaximumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
 			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 		markers.KubebuilderExclusiveMaximumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
 			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 		markers.KubebuilderExclusiveMinimumMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
 			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 		markers.KubebuilderMultipleOfMarker: {
 			Scopes:              []ScopeConstraint{FieldScope, TypeScope},
 			NamedTypeConstraint: NamedTypeConstraintOnTypeOnly,
 			TypeConstraint: &TypeConstraint{
-				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+				AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 			},
 		},
 	}
@@ -277,7 +277,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},
@@ -287,7 +287,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},
@@ -297,7 +297,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},
@@ -307,7 +307,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},
@@ -317,7 +317,7 @@ func addArrayItemsNumericMarkers(rules map[string]MarkerScopeRule) {
 			TypeConstraint: &TypeConstraint{
 				AllowedSchemaTypes: []SchemaType{SchemaTypeArray},
 				ElementConstraint: &TypeConstraint{
-					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger},
+					AllowedSchemaTypes: []SchemaType{SchemaTypeInteger, SchemaTypeNumber},
 				},
 			},
 		},

@@ -47,7 +47,7 @@ type ObjectArrayTypeNoMarker []map[string]string
 type GeneralArrayTypeNoMarker []string
 
 // Invalid: items:Maximum on string array type
-// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer\]\)`
+// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
 type InvalidItemsMaximumOnStringArrayType []string
 
 // Invalid: items:Pattern on int array type
@@ -128,7 +128,7 @@ type ArrayItemsMarkersFieldTest struct {
 	InvalidItemsFormatOnGeneralArrayType GeneralArrayTypeNoMarker `json:"invalidItemsFormatOnGeneralArrayType"`
 
 	// Invalid: items:Maximum on string array (element type mismatch)
-	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer\]\)`
+	// +kubebuilder:validation:items:Maximum=100 // want `marker "kubebuilder:validation:items:Maximum": array element: type string is not allowed \(expected one of: \[integer number\]\)`
 	InvalidItemsMaximumOnStringArray []string `json:"invalidItemsMaximumOnStringArray"`
 
 	// Invalid: items:Pattern on int array (element type mismatch)
