@@ -83,7 +83,7 @@ func addTypeOnlyMarkers(rules map[string]MarkerScopeRule) {
 // addFieldOrTypeMarkers adds markers that can be applied to both fields and types.
 func addFieldOrTypeMarkers(rules map[string]MarkerScopeRule) {
 	fieldOrTypeMarkers := map[string]MarkerScopeRule{
-		// field-or-type markers (any type)
+		// field-or-type markers without type constraints
 		markers.KubebuilderEnumMarker:                         {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
 		markers.KubebuilderFormatMarker:                       {Scopes: []ScopeConstraint{FieldScope, TypeScope}},
 		markers.KubebuilderPruningPreserveUnknownFieldsMarker: {Scopes: []ScopeConstraint{FieldScope, TypeScope}},

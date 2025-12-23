@@ -35,7 +35,7 @@ func (r MarkerScopeRule) AllowsScope(scope ScopeConstraint) bool {
 // TypeConstraint specifies what types a marker can be applied to.
 type TypeConstraint struct {
 	// allowedSchemaTypes specifies the allowed OpenAPI schema types.
-	// If nil or empty, any type is allowed.
+	// If nil or empty, no type constraint is enforced.
 	// Maps to JSONSchemaProps.Type (integer, string, boolean, array, object)
 	AllowedSchemaTypes []SchemaType `json:"allowedSchemaTypes,omitempty"`
 
@@ -74,7 +74,7 @@ type MarkerScopeRule struct {
 
 	// typeConstraint specifies what types the marker can be applied to.
 	// This is used for both Field and Type scope markers.
-	// If nil, no type constraint is enforced (any type is allowed).
+	// If nil, no type constraint is enforced.
 	TypeConstraint *TypeConstraint `json:"typeConstraint,omitempty"`
 }
 
