@@ -54,14 +54,8 @@ func validateConfig(cfg *MarkerScopeConfig, fldPath *field.Path) field.ErrorList
 	// Validate policy
 	fieldErrors = append(fieldErrors, validatePolicy(cfg.Policy, fldPath)...)
 
-	// Get default marker rules for validation
-	defaultRules := defaultMarkerRules()
-
-	// Validate override marker rules
-	fieldErrors = append(fieldErrors, validateOverrideMarkers(cfg.OverrideMarkers, defaultRules, fldPath)...)
-
-	// Validate custom marker rules
-	fieldErrors = append(fieldErrors, validateCustomMarkers(cfg.CustomMarkers, defaultRules, fldPath)...)
+	// Validate custom marker rules (includes both overrides and new markers)
+	fieldErrors = append(fieldErrors, validateCustomMarkers(cfg.CustomMarkers, fldPath)...)
 
 	return fieldErrors
 }
@@ -78,34 +72,7 @@ func validatePolicy(policy MarkerScopePolicy, fldPath *field.Path) field.ErrorLi
 	}
 }
 
-func validateOverrideMarkers(rules []MarkerScopeRule, defaultRules map[string]MarkerScopeRule, fldPath *field.Path) field.ErrorList {
-	fieldErrors := field.ErrorList{}
-
-	for i, rule := range rules {
-		markerRulePath := fldPath.Child("overrideMarkers").Index(i)
-
-		// Validate that identifier is not empty
-		if rule.Identifier == "" {
-			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("identifier"), "marker identifier is required"))
-
-			continue
-		}
-
-		// Validate that override marker exists in default rules
-		if _, exists := defaultRules[rule.Identifier]; !exists {
-			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath.Child("identifier"), rule.Identifier,
-				"override marker must be a built-in marker; use customMarkers for custom markers"))
-
-			continue
-		}
-
-		fieldErrors = append(fieldErrors, validateMarkerRule(rule, markerRulePath)...)
-	}
-
-	return fieldErrors
-}
-
-func validateCustomMarkers(rules []MarkerScopeRule, defaultRules map[string]MarkerScopeRule, fldPath *field.Path) field.ErrorList {
+func validateCustomMarkers(rules []MarkerScopeRule, fldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 
 	for i, rule := range rules {
@@ -114,14 +81,6 @@ func validateCustomMarkers(rules []MarkerScopeRule, defaultRules map[string]Mark
 		// Validate that identifier is not empty
 		if rule.Identifier == "" {
 			fieldErrors = append(fieldErrors, field.Required(markerRulePath.Child("identifier"), "marker identifier is required"))
-
-			continue
-		}
-
-		// Validate that custom marker does not exist in default rules
-		if _, exists := defaultRules[rule.Identifier]; exists {
-			fieldErrors = append(fieldErrors, field.Invalid(markerRulePath.Child("identifier"), rule.Identifier,
-				"custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers"))
 
 			continue
 		}

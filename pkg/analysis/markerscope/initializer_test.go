@@ -218,9 +218,9 @@ var _ = Describe("markerscope initializer", func() {
 				expectedErr: "",
 			}),
 
-			Entry("With override marker for built-in marker", testCase{
+			Entry("With custom marker overriding built-in marker", testCase{
 				config: markerscope.MarkerScopeConfig{
-					OverrideMarkers: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "optional",
 							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope}, // Override default [FieldScope]
@@ -230,39 +230,13 @@ var _ = Describe("markerscope initializer", func() {
 				expectedErr: "",
 			}),
 
-			Entry("With override marker for non-built-in marker", testCase{
-				config: markerscope.MarkerScopeConfig{
-					OverrideMarkers: []markerscope.MarkerScopeRule{
-						{
-							Identifier: "custom:nonexistent",
-							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
-						},
-					},
-				},
-				expectedErr: `markerscope.overrideMarkers[0].identifier: Invalid value: "custom:nonexistent": override marker must be a built-in marker; use customMarkers for custom markers`,
-			}),
-
-			Entry("With custom marker for built-in marker", testCase{
-				config: markerscope.MarkerScopeConfig{
-					CustomMarkers: []markerscope.MarkerScopeRule{
-						{
-							Identifier: "optional", // Built-in marker
-							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
-						},
-					},
-				},
-				expectedErr: `markerscope.customMarkers[0].identifier: Invalid value: "optional": custom marker cannot be a built-in marker; use overrideMarkers to override built-in markers`,
-			}),
-
 			Entry("With both override and custom markers", testCase{
 				config: markerscope.MarkerScopeConfig{
-					OverrideMarkers: []markerscope.MarkerScopeRule{
+					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "optional",
 							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 						},
-					},
-					CustomMarkers: []markerscope.MarkerScopeRule{
 						{
 							Identifier: "custom:marker",
 							Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},
@@ -296,10 +270,10 @@ var _ = Describe("markerscope initializer", func() {
 			Expect(analyzer).ToNot(BeNil())
 		})
 
-		It("should initialize analyzer with override markers", func() {
+		It("should initialize analyzer with custom markers overriding built-in", func() {
 			cfg := &markerscope.MarkerScopeConfig{
 				Policy: markerscope.MarkerScopePolicyWarn,
-				OverrideMarkers: []markerscope.MarkerScopeRule{
+				CustomMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "optional",
 						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope}, // Override default [FieldScope]
@@ -314,13 +288,11 @@ var _ = Describe("markerscope initializer", func() {
 		It("should initialize analyzer with both override and custom markers", func() {
 			cfg := &markerscope.MarkerScopeConfig{
 				Policy: markerscope.MarkerScopePolicySuggestFix,
-				OverrideMarkers: []markerscope.MarkerScopeRule{
+				CustomMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "optional",
 						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 					},
-				},
-				CustomMarkers: []markerscope.MarkerScopeRule{
 					{
 						Identifier: "custom:validation:MyMarker",
 						Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope},

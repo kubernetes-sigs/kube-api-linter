@@ -17,9 +17,9 @@ package b
 
 // ============================================================================
 // Override marker tests
-// These test that overrideMarkers configuration works correctly.
+// These test that customMarkers configuration works correctly for overriding built-in markers.
 //
-// The TestAnalyzerWithOverrideMarkers configures:
+// The TestAnalyzerWithCustomAndOverrideMarkers configures:
 // - optional: AnyScope (overrides default FieldScope)
 // - required: AnyScope (overrides default FieldScope)
 // ============================================================================

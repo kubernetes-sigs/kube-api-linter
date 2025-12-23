@@ -41,6 +41,31 @@ limitations under the License.
 // (e.g., kubebuilder:validation:items:Minimum, kubebuilder:validation:items:Pattern). These validate the array
 // element types rather than the array itself.
 //
+// # Custom Markers Configuration
+//
+// The analyzer includes 100+ built-in kubebuilder marker rules. You can customize the behavior using
+// the customMarkers configuration field, which supports two use cases:
+//
+//  1. Overriding built-in markers: Change the validation rules for existing markers
+//     by providing a marker rule with the same identifier as a built-in marker.
+//
+//  2. Adding custom markers: Define validation rules for your own custom markers
+//     that are not included in the default rules.
+//
+// Example configuration to override a built-in marker:
+//
+//	customMarkers:
+//	  - identifier: "optional"
+//	    scopes: [Field, Type]  # Override default [Field] to allow on both
+//
+// Example configuration to add a custom marker:
+//
+//	customMarkers:
+//	  - identifier: "mycompany:validation:CustomMarker"
+//	    scopes: [Field]
+//	    typeConstraint:
+//	      allowedSchemaTypes: ["string"]
+//
 // This linter ensures markers are applied in their appropriate contexts and to compatible types
 // to prevent configuration errors and improve API consistency.
 package markerscope
