@@ -446,7 +446,7 @@ The linter defines different scope types for markers:
 
 The linter validates that markers are applied to compatible OpenAPI schema types:
 
-- **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` types
+- **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` and `number` types
 - **String markers** (`Pattern`, `MinLength`, `MaxLength`): Only for `string` types
 - **Array markers** (`MinItems`, `MaxItems`, `UniqueItems`): Only for `array` types
 - **Object markers** (`MinProperties`, `MaxProperties`): Only for `object` types (struct/map)
@@ -503,7 +503,7 @@ The linter includes built-in rules for all standard kubebuilder markers and k8s 
 - `kubebuilder:validation:items:AtLeastOneOf`
 
 **Field and Type markers with type constraints:**
-- `kubebuilder:validation:Minimum` (integer types only)
+- `kubebuilder:validation:Minimum` (integer and number types)
 - `kubebuilder:validation:Pattern` (string types only)
 - `kubebuilder:validation:MinItems` (array types only)
 - `kubebuilder:validation:MinProperties` (object types only)
@@ -525,10 +525,10 @@ The `scopes` field accepts an array of scope constraints:
 
 **Type constraints:**
 
-The `typeConstraint` field allows you to restrict which Go types a marker can be applied to. This ensures that markers are only used with compatible data types (e.g., numeric markers like `Minimum` are only applied to integer types).
+The `typeConstraint` field allows you to restrict which Go types a marker can be applied to. This ensures that markers are only used with compatible data types (e.g., numeric markers like `Minimum` are only applied to integer and number types).
 
 **Type constraint fields:**
-- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `string`, `boolean`, `array`, `object`)
+- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
 - `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
 
 **Named type constraint values:**

@@ -27,7 +27,7 @@ limitations under the License.
 // # Type Constraint Validation
 //
 // Markers are also validated for type correctness to ensure they are applied to compatible data types:
-//   - Numeric markers (kubebuilder:validation:Minimum, kubebuilder:validation:Maximum, kubebuilder:validation:MultipleOf) must be applied to integer types
+//   - Numeric markers (kubebuilder:validation:Minimum, kubebuilder:validation:Maximum, kubebuilder:validation:MultipleOf) must be applied to integer and number types
 //   - String markers (kubebuilder:validation:Pattern, kubebuilder:validation:MinLength, kubebuilder:validation:MaxLength) must be applied to string types
 //   - Array markers (kubebuilder:validation:MinItems, kubebuilder:validation:MaxItems, kubebuilder:validation:UniqueItems) must be applied to array types
 //   - Object markers (kubebuilder:validation:MinProperties, kubebuilder:validation:MaxProperties) must be applied to object types (struct/map)
