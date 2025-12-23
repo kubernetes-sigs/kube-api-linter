@@ -91,17 +91,15 @@ const (
 
 // MarkerScopeConfig contains configuration for marker scope validation.
 type MarkerScopeConfig struct {
-	// overrideMarkers is a list of marker rules that override default rules for built-in markers.
-	// Use this to customize the behavior of standard kubebuilder/controller-runtime markers.
+	// customMarkers is a list of marker rules for custom markers.
+	// This can include both:
+	// 1. New custom markers not included in the default rules
+	// 2. Overrides for built-in markers (if the identifier matches a built-in marker)
 	//
 	// Example: Override the built-in "optional" marker
-	//   overrideMarkers:
+	//   customMarkers:
 	//     - identifier: "optional"
 	//       scope: Field
-	OverrideMarkers []MarkerScopeRule `json:"overrideMarkers,omitempty"`
-
-	// customMarkers is a list of marker rules for custom markers not included in the default rules.
-	// Use this to add validation for your own custom markers.
 	//
 	// Example: Add a custom marker
 	//   customMarkers:

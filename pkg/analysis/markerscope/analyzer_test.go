@@ -26,8 +26,7 @@ func TestAnalyzerWithDefaultConfig(t *testing.T) {
 	testdata := analysistest.TestData()
 	// Test with nil config - should use all defaults:
 	// - Policy: Warn
-	// - OverrideMarkers: empty (use built-in defaults)
-	// - CustomMarkers: empty
+	// - CustomMarkers: empty (use built-in defaults)
 	analyzer, err := markerscope.Initializer().Init(&markerscope.MarkerScopeConfig{})
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +53,7 @@ func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 	testdata := analysistest.TestData()
 	cfg := &markerscope.MarkerScopeConfig{
 		Policy: markerscope.MarkerScopePolicyWarn,
-		OverrideMarkers: []markerscope.MarkerScopeRule{
+		CustomMarkers: []markerscope.MarkerScopeRule{
 			// Override built-in "optional" to allow on types (default is FieldScope only)
 			{
 				Identifier: "optional",
@@ -65,8 +64,6 @@ func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
 				Identifier: "required",
 				Scopes:     []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
 			},
-		},
-		CustomMarkers: []markerscope.MarkerScopeRule{
 			// Custom field-only marker
 			{
 				Identifier: "custom:field-only",

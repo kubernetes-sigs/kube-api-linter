@@ -543,13 +543,14 @@ lintersConfig:
   markerscope:
     policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `SuggestFix`.
 
-    # Override default rules for built-in markers
-    overrideMarkers:
-      - identifier: "optional"
-        scopes: [Field]  # Can specify [Field], [Type], or [Field, Type]
-
-    # Add rules for custom markers
+    # Custom markers can be used for both:
+    # 1. Overriding built-in markers (by using the same identifier)
+    # 2. Adding validation for your own custom markers
     customMarkers:
+      # Override a built-in marker by using its identifier
+      - identifier: "optional"
+        scopes: [Field, Type]  # Override default [Field] to allow on both
+
       # Custom marker with scope constraint only
       - identifier: "mycompany:validation:CustomMarker"
         scopes: [Field, Type]
@@ -574,9 +575,9 @@ lintersConfig:
 ```
 
 **Configuration notes:**
-- Use `overrideMarkers` to customize the behavior of built-in kubebuilder/controller-runtime markers
-- Use `customMarkers` to add validation for your own custom markers
-- If a marker is not in either list and not in the default rules, validation is performed by default
+- Use `customMarkers` to both override built-in markers and add validation for your own custom markers
+- To override a built-in marker, use the same identifier as the built-in marker
+- If a marker is not in the customMarkers list and not in the default rules, no validation is performed
 
 ### Fixes
 

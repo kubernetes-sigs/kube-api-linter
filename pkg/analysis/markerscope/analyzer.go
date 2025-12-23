@@ -50,19 +50,14 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 	// Apply default configuration
 	defaultConfig(cfg)
 
-	// Convert override and custom marker lists to maps
-	overrideRules := markerRulesListToMap(cfg.OverrideMarkers)
+	// Convert custom marker list to map
 	customRules := markerRulesListToMap(cfg.CustomMarkers)
 
 	// Merge rules:
 	// 1. Start with default built-in marker rules
-	// 2. Apply overrides (replaces default rules for built-in markers)
-	// 3. Add custom markers (new markers not in defaults)
-	// Note: Validation ensures overrideMarkers only contains built-in markers
-	// and customMarkers only contains non-built-in markers, so no conflicts.
+	// 2. Apply custom markers (replaces default rules if identifier matches, otherwise adds new marker)
 	rules := defaultMarkerRules()
-	maps.Copy(rules, overrideRules) // Override built-in markers
-	maps.Copy(rules, customRules)   // Add custom markers
+	maps.Copy(rules, customRules) // Override or add markers
 
 	a := &analyzer{
 		markerRules: rules,
@@ -83,7 +78,7 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		1. Scope validation - ensures markers are placed on the correct location (field vs type)
 		2. Type constraint validation - ensures markers are applied to compatible data types
 		The analyzer includes 100+ built-in kubebuilder marker rules. You can override built-in marker
-		rules using overrideMarkers configuration, or add custom markers using customMarkers configuration.
+		rules or add custom markers using customMarkers configuration.
 		`,
 		Run:              a.run,
 		Requires:         []*analysis.Analyzer{inspectorhelper.Analyzer},
