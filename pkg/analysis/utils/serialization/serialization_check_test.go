@@ -80,6 +80,22 @@ func TestPointersWhenRequiredOmitEmptyIgnore(t *testing.T) {
 	}), "pointers_when_required_omit_empty_ignore")
 }
 
+func TestPointersWhenRequiredOmitEmptyIgnoreOmitZeroSuggestFix(t *testing.T) {
+	testdata := analysistest.TestData()
+	analysistest.RunWithSuggestedFixes(t, testdata, testSerializationAnalyzer(&serialization.Config{
+		Pointers: serialization.PointersConfig{
+			Policy:     serialization.PointersPolicySuggestFix,
+			Preference: serialization.PointersPreferenceWhenRequired,
+		},
+		OmitEmpty: serialization.OmitEmptyConfig{
+			Policy: serialization.OmitEmptyPolicyIgnore,
+		},
+		OmitZero: serialization.OmitZeroConfig{
+			Policy: serialization.OmitZeroPolicySuggestFix,
+		},
+	}), "pointers_when_required_omit_empty_ignore_omit_zero_suggest_fix")
+}
+
 func TestPointersWhenRequiredOmitEmptySuggestFixOmitZeroSuggestFix(t *testing.T) {
 	testdata := analysistest.TestData()
 	analysistest.RunWithSuggestedFixes(t, testdata, testSerializationAnalyzer(&serialization.Config{

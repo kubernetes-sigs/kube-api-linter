@@ -1,39 +1,16 @@
-package a
+package c
 
-type A struct {
-	// optional field should not be picked up.
-	// +optional
-	OptionalField *string `json:"optionalField,omitempty"`
-
-	// requiredCorrectField should not be picked up.
+type Foo struct {
 	// +required
-	RequiredCorrectField string `json:"requiredCorrectField"`
+	RequiredStructWithRequiredFieldWithoutOmitZero StructWithRequiredField `json:"requiredStructWithRequiredFieldWithoutOmitZero"` // want "field Foo.RequiredStructWithRequiredFieldWithoutOmitZero does not allow the zero value. It must have the omitzero tag."
 
-	// requiredOmitEmptyField field should be picked up.
 	// +required
-	RequiredOmitEmptyField string `json:"requiredOmitEmptyField,omitempty"` // want "field RequiredOmitEmptyField is marked as required, but has the omitempty tag"
+	RequiredStructWithRequiredFieldWithOmitZero StructWithRequiredField `json:"requiredStructWithRequiredFieldWithOmitZero,omitzero"`
+}
 
-	// requiredPointerField should be picked up.
+type StructWithRequiredField struct {
+	// Does not allow the zero value.
 	// +required
-	RequiredPointerField *string `json:"requiredPointerField"` // want "field RequiredPointerField is marked as required, should not be a pointer"
-
-	// requiredPointerOmitEmptyField should be picked up.
-	// +required
-	RequiredPointerOmitEmptyField *string `json:"requiredPointerOmitEmptyField,omitempty"` // want "field RequiredPointerOmitEmptyField is marked as required, but has the omitempty tag" "field RequiredPointerOmitEmptyField is marked as required, should not be a pointer"
-
-	// requiredKubebuilderMarkerField should not be picked up.
-	// +kubebuilder:validation:Required
-	RequiredKubebuilderMarkerField string `json:"requiredKubebuilderMarkerField"`
-
-	// requiredKubebuilderMarkerOmitEmptyField should be picked up.
-	// +kubebuilder:validation:Required
-	RequiredKubebuilderMarkerOmitEmptyField string `json:"requiredKubebuilderMarkerOmitEmptyField,omitempty"` // want "field RequiredKubebuilderMarkerOmitEmptyField is marked as required, but has the omitempty tag"
-
-	// requiredKubebuilderMarkerPointerField should be picked up.
-	// +kubebuilder:validation:Required
-	RequiredKubebuilderMarkerPointerField *string `json:"requiredKubebuilderMarkerPointerField"` // want "field RequiredKubebuilderMarkerPointerField is marked as required, should not be a pointer"
-
-	// requiredKubebuilderMarkerPointerOmitEmptyField should be picked up.
-	// +kubebuilder:validation:Required
-	RequiredKubebuilderMarkerPointerOmitEmptyField *string `json:"requiredKubebuilderMarkerPointerOmitEmptyField,omitempty"` // want "field RequiredKubebuilderMarkerPointerOmitEmptyField is marked as required, but has the omitempty tag" "field RequiredKubebuilderMarkerPointerOmitEmptyField is marked as required, should not be a pointer"
+	// +kubebuilder:validation:Enum=A;B;C
+	EnumStringWithoutOmitEmpty string `json:"enumStringWithoutOmitEmpty"` // want "field StructWithRequiredField.EnumStringWithoutOmitEmpty does not allow the zero value. It must have the omitempty tag."
 }
