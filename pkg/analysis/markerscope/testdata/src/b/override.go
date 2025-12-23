@@ -20,22 +20,22 @@ package b
 // These test that customMarkers configuration works correctly for overriding built-in markers.
 //
 // The TestAnalyzerWithCustomAndOverrideMarkers configures:
-// - optional: AnyScope (overrides default FieldScope)
-// - required: AnyScope (overrides default FieldScope)
+// - optional: [Field, Type] (overrides default FieldScope)
+// - required: [Field, Type] (overrides default FieldScope)
 // ============================================================================
 
 // Built-in markers should work with their default scope on fields
 type BuiltInMarkerTest struct {
-	// Valid: optional is allowed on fields (AnyScope includes FieldScope)
+	// Valid: optional is allowed on fields ([Field, Type] includes FieldScope)
 	// +optional
 	ValidOptionalField string `json:"validOptionalField"`
 
-	// Valid: required is allowed on fields (AnyScope includes FieldScope)
+	// Valid: required is allowed on fields ([Field, Type] includes FieldScope)
 	// +required
 	ValidRequiredField string `json:"validRequiredField"`
 }
 
-// Built-in markers on types should now be VALID with overridden AnyScope
+// Built-in markers on types should now be VALID with overridden [Field, Type]
 // +optional
 type ValidOptionalOnType struct {
 	Name string `json:"name"`

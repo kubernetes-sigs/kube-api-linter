@@ -27,18 +27,18 @@ type ValidTitleType struct {
 	Name string `json:"name"`
 }
 
-// Valid: All AnyScope markers on type
+// Valid: All [Field, Type] markers on type
 // +kubebuilder:pruning:PreserveUnknownFields
 // +kubebuilder:title="Combined Title"
-type ValidAllAnyScopeType struct {
+type ValidAllFieldOrTypeType struct {
 	Name string `json:"name"`
 }
 
-type NoMarkerAllAnyScopeType struct {
+type NoMarkerAllFieldOrTypeType struct {
 	Name string `json:"name"`
 }
 
-type AnyScopeOnFieldTest struct {
+type FieldOrTypeOnFieldTest struct {
 	// Valid: PreserveUnknownFields on field
 	// +kubebuilder:pruning:PreserveUnknownFields
 	ValidPreserveUnknownFields map[string]string `json:"validPreserveUnknownFields"`
@@ -47,22 +47,22 @@ type AnyScopeOnFieldTest struct {
 	// +kubebuilder:title="Field Title"
 	ValidTitle map[string]string `json:"validTitle"`
 
-	// Valid: All AnyScope markers on field
+	// Valid: All [Field, Type] markers on field
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:title="Combined Field Title"
-	ValidAllAnyScopeMarkers map[string]interface{} `json:"validAllAnyScopeMarkers"`
+	ValidAllFieldOrTypeMarkers map[string]interface{} `json:"validAllFieldOrTypeMarkers"`
 
-	// Valid: Using type with AnyScope markers
+	// Valid: Using type with [Field, Type] markers
 	ValidPreserveUnknownFieldsTyped ValidPreserveUnknownFieldsType `json:"validPreserveUnknownFieldsTyped"`
 
 	// Valid: Using type with title marker
 	ValidTitleTyped ValidTitleType `json:"validTitleTyped"`
 
-	// Valid: Using type with all AnyScope markers
-	ValidAllAnyScopeTyped ValidAllAnyScopeType `json:"validAllAnyScopeTyped"`
+	// Valid: Using type with all [Field, Type] markers
+	ValidAllFieldOrTypeTyped ValidAllFieldOrTypeType `json:"validAllFieldOrTypeTyped"`
 
-	// Valid: Using type with no AnyScope markers
+	// Valid: Using type with no [Field, Type] markers
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:title="Field Combined Title"
-	NoMarkerAllAnyScopeType NoMarkerAllAnyScopeType `json:"noMarkerAllAnyScopeType"`
+	NoMarkerAllFieldOrTypeType NoMarkerAllFieldOrTypeType `json:"noMarkerAllFieldOrTypeType"`
 }
