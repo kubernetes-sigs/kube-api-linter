@@ -52,13 +52,25 @@ func getSchemaType(t types.Type) SchemaType {
 	switch ut := t.Underlying().(type) {
 	case *types.Basic:
 		return getBasicTypeSchema(ut)
-	case *types.Slice, *types.Array:
+	case *types.Slice:
+		return getSliceSchemaType(ut)
+	case *types.Array:
 		return SchemaTypeArray
 	case *types.Map, *types.Struct:
 		return SchemaTypeObject
 	}
 
 	return ""
+}
+
+// getSliceSchemaType returns the schema type for a slice.
+// []byte is treated as string in OpenAPI (format: byte).
+func getSliceSchemaType(slice *types.Slice) SchemaType {
+	if elem, ok := slice.Elem().(*types.Basic); ok && elem.Kind() == types.Uint8 {
+		return SchemaTypeString
+	}
+
+	return SchemaTypeArray
 }
 
 // getBasicTypeSchema returns the schema type for a basic Go type.
