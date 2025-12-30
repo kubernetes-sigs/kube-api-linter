@@ -444,7 +444,7 @@ The linter defines different scope types for markers:
 
 ### Type Constraints
 
-The linter validates that markers are applied to compatible OpenAPI schema types:
+The linter validates that markers are applied to compatible OpenAPI schema types. By default, the schema type is determined by the Go type, but you can override this using the `kubebuilder:validation:Type` marker (or `kubebuilder:validation:items:Type` for array element types). This allows advanced use cases like treating a `[]byte` as an array instead of a string, or validating an `int32` field as a string with pattern validation.
 
 - **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` and `number` types
 - **String markers** (`Pattern`, `MinLength`, `MaxLength`): Only for `string` types
@@ -459,6 +459,8 @@ OpenAPI schema types map to Go types as follows:
 - `boolean`: bool
 - `array`: []T, [N]T (slices and arrays)
 - `object`: struct, map[K]V
+
+**Special case:** `[]byte` is treated as `string` type in OpenAPI (with format: byte for base64 encoding). This matches the standard OpenAPI representation where byte arrays are encoded as base64 strings. However, you can override this behavior using the `kubebuilder:validation:Type=array` marker to treat `[]byte` as an actual array type.
 
 #### Named Type Constraints
 
@@ -488,6 +490,28 @@ type Service struct {
 ```
 
 Most built-in kubebuilder validation markers use `namedTypeConstraint: OnTypeOnly` to encourage consistent marker placement on type definitions.
+
+#### Type Override Examples
+
+You can override the default schema type using the `kubebuilder:validation:Type` marker:
+
+```go
+// Treat []byte as an array instead of string (base64)
+// +kubebuilder:validation:Type=array
+// +kubebuilder:validation:MinItems=1
+Certificate []byte `json:"certificate"`
+
+// Validate int32 field as string with pattern
+// +kubebuilder:validation:Type=string
+// +kubebuilder:validation:Pattern="^[0-9]+$"
+type IntOrString int32
+
+// Validate string field as integer with range
+// +kubebuilder:validation:Type=integer
+// +kubebuilder:validation:Minimum=1
+// +kubebuilder:validation:Maximum=65535
+Port string `json:"port"`
+```
 
 ### Default Marker Rules
 

@@ -60,7 +60,7 @@ func (r MarkerScopeRule) AllowsScope(scope ScopeConstraint) bool {
 type TypeConstraint struct {
 	// allowedSchemaTypes specifies the allowed OpenAPI schema types.
 	// If nil or empty, no type constraint is enforced.
-	// Maps to JSONSchemaProps.Type (integer, string, boolean, array, object)
+	// Maps to JSONSchemaProps.Type (integer, number, string, boolean, array, object)
 	AllowedSchemaTypes []SchemaType `json:"allowedSchemaTypes,omitempty"`
 
 	// elementConstraint specifies constraints on slice/array element types.
@@ -123,7 +123,7 @@ type MarkerScopeConfig struct {
 	// Example: Override the built-in "optional" marker
 	//   customMarkers:
 	//     - identifier: "optional"
-	//       scope: Field
+	//       scopes: [Field]
 	//
 	// Example: Add a custom marker
 	//   customMarkers:
