@@ -282,7 +282,7 @@ The `forbiddenmarkers` linter ensures that types and fields do not contain any m
 
 By default, `forbiddenmarkers` is not enabled.
 
-### Configuation
+### Configuration
 
 It can be configured with a list of marker identifiers and optionally their attributes and values that are forbidden.
 
@@ -433,7 +433,7 @@ For strings, this means they have a `+kubebuilder:validation:MaxLength` marker.
 For arrays, this means they have a `+kubebuilder:validation:MaxItems` marker.
 
 For arrays of strings, the array element should also have a `+kubebuilder:validation:MaxLength` marker if the array element is a type alias,
-or `+kubebuilder:validation:items:MaxLenth` if the array is an element of the built-in string type.
+or `+kubebuilder:validation:items:MaxLength` if the array is an element of the built-in string type.
 
 Adding maximum lengths to strings and arrays not only ensures that the API is not abused (used to store overly large data, reduces DDOS etc.),
 but also allows CEL validation cost estimations to be kept within reasonable bounds.

@@ -21,7 +21,7 @@ Once you are within the `inspect.Preorder`, you can then implement the business 
 
 ## Registry
 
-The registry in the analysis package co-ordinates the initialization of all linters.
+The registry in the analysis package coordinates the initialization of all linters.
 Where linters have configuration, or are enabled/disabled by higher level configuration, the registry takes on making sure the linters are initialized correctly.
 
 To enable the registry, each linter package must create an `Initializer` function that returns an `initializer.AnalyzerInitializer` interface (from `pkg/analysis/initializer`).
@@ -73,7 +73,7 @@ func Initializer() initializer.AnalyzerInitializer {
 	)
 }
 
-// initAnalyzer returns the intialized Analyzer.
+// initAnalyzer returns the initialized Analyzer.
 func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
 	return newAnalyzer(cfg), nil
 }
