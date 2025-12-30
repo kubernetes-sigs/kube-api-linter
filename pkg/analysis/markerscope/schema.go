@@ -17,6 +17,9 @@ package markerscope
 
 import (
 	"go/types"
+	"strings"
+
+	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
 
 // SchemaType represents OpenAPI schema types that markers can target.
@@ -88,6 +91,42 @@ func getBasicTypeSchema(bt *types.Basic) SchemaType {
 		return SchemaTypeNumber
 	case types.String:
 		return SchemaTypeString
+	default:
+		return ""
+	}
+}
+
+// getSchemaTypeFromMarker extracts the schema type value from the specified marker.
+// Returns empty string if the marker is not present or has no value.
+func getSchemaTypeFromMarker(markerSet markershelper.MarkerSet, markerIdentifier string) SchemaType {
+	typeMarkers := markerSet.Get(markerIdentifier)
+	if len(typeMarkers) == 0 {
+		return ""
+	}
+
+	// Use the first marker's value
+	typeValue := typeMarkers[0].Payload.Value
+	if typeValue == "" {
+		return ""
+	}
+
+	// Normalize the type value (remove quotes if present)
+	typeValue = strings.Trim(typeValue, `"'`)
+
+	// Map the marker value to a SchemaType
+	switch strings.ToLower(typeValue) {
+	case "string":
+		return SchemaTypeString
+	case "integer":
+		return SchemaTypeInteger
+	case "number":
+		return SchemaTypeNumber
+	case "boolean":
+		return SchemaTypeBoolean
+	case "array":
+		return SchemaTypeArray
+	case "object":
+		return SchemaTypeObject
 	default:
 		return ""
 	}
