@@ -27,6 +27,30 @@ const (
 	TypeScope ScopeConstraint = "Type"
 )
 
+// PluralName returns the plural form name of the scope for use in messages.
+func (s ScopeConstraint) PluralName() string {
+	switch s {
+	case FieldScope:
+		return "fields"
+	case TypeScope:
+		return "types"
+	default:
+		return string(s)
+	}
+}
+
+// Opposite returns the opposite scope constraint.
+func (s ScopeConstraint) Opposite() ScopeConstraint {
+	switch s {
+	case FieldScope:
+		return TypeScope
+	case TypeScope:
+		return FieldScope
+	default:
+		return s
+	}
+}
+
 // AllowsScope checks if the given scope is allowed by this rule.
 func (r MarkerScopeRule) AllowsScope(scope ScopeConstraint) bool {
 	return slices.Contains(r.Scopes, scope)

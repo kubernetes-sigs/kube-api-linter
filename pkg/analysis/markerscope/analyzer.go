@@ -30,6 +30,7 @@ import (
 	inspectorhelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 const (
@@ -137,105 +138,49 @@ func sortMarkersByPosition(markers []markershelper.Marker) []markershelper.Marke
 
 // checkFieldMarkers checks markers on fields for violations.
 func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
-	a.checkMarkers(
-		markersAccess.FieldMarkers(field).UnsortedList(),
-		FieldScope,
-		func(marker markershelper.Marker, rule MarkerScopeRule) {
-			a.reportFieldScopeViolation(pass, field, marker, rule)
-		},
-		func(marker markershelper.Marker, rule MarkerScopeRule) {
-			a.checkFieldTypeConstraintViolation(pass, field, marker, rule)
-		},
-	)
-}
+	fieldMarkers := markersAccess.FieldMarkers(field)
 
-// checkTypeSpecMarkers checks markers on a type spec for violations.
-func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
-	a.checkMarkers(
-		markersAccess.TypeMarkers(typeSpec).UnsortedList(),
-		TypeScope,
-		func(marker markershelper.Marker, rule MarkerScopeRule) {
-			a.reportTypeScopeViolation(pass, typeSpec, marker, rule)
-		},
-		func(marker markershelper.Marker, rule MarkerScopeRule) {
-			a.checkTypeConstraintViolation(pass, typeSpec, marker, rule)
-		},
-	)
-}
-
-// checkMarkers is a common function for checking markers against rules.
-func (a *analyzer) checkMarkers(
-	unsortedMarkers []markershelper.Marker,
-	scope ScopeConstraint,
-	reportScopeViolation func(marker markershelper.Marker, rule MarkerScopeRule),
-	checkTypeConstraint func(marker markershelper.Marker, rule MarkerScopeRule),
-) {
-	markers := sortMarkersByPosition(unsortedMarkers)
-
-	for _, marker := range markers {
+	for _, marker := range sortMarkersByPosition(fieldMarkers.UnsortedList()) {
 		rule, ok := a.markerRules[marker.Identifier]
 		if !ok {
 			// No rule defined for this marker, skip validation
 			continue
 		}
 
-		// Check if scope is allowed
-		if !rule.AllowsScope(scope) {
-			reportScopeViolation(marker, rule)
+		a.checkAllowedScope(pass, field, marker, FieldScope, rule)
+
+		a.checkTypeConstraintViolation(pass, field, marker, rule, fieldMarkers)
+	}
+}
+
+// checkTypeSpecMarkers checks markers on a type spec for violations.
+func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
+	typeMarkers := markersAccess.TypeMarkers(typeSpec)
+
+	for _, marker := range sortMarkersByPosition(typeMarkers.UnsortedList()) {
+		rule, ok := a.markerRules[marker.Identifier]
+		if !ok {
+			// No rule defined for this marker, skip validation
+			continue
 		}
 
-		// Check type constraints if present
-		checkTypeConstraint(marker, rule)
+		a.checkAllowedScope(pass, typeSpec, marker, TypeScope, rule)
+
+		a.checkTypeConstraintViolation(pass, typeSpec, marker, rule, typeMarkers)
 	}
-}
-
-// reportFieldScopeViolation reports a scope violation for a field marker.
-func (a *analyzer) reportFieldScopeViolation(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) {
-	a.reportScopeViolation(pass, marker, rule, TypeScope, "types", "fields", func() []analysis.SuggestedFix {
-		return a.suggestMoveToTypeDefinition(pass, field, marker, rule)
-	})
-}
-
-// checkFieldTypeConstraintViolation checks and reports type constraint violations for field markers.
-func (a *analyzer) checkFieldTypeConstraintViolation(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) {
-	// First, validate the type constraint
-	if err := a.validateFieldTypeConstraint(pass, field, rule); err != nil {
-		a.reportTypeConstraintViolation(pass, marker, err)
-		return
-	}
-
-	// Then, check if marker should be on type definition instead of field
-	if typeName := a.shouldBeOnTypeDefinition(pass, field, rule); typeName != "" {
-		a.reportShouldBeOnTypeDefinition(pass, field, marker, rule, typeName)
-	}
-}
-
-// shouldBeOnTypeDefinition checks if a marker should be on the type definition instead of the field.
-// Returns the type name if the marker should be on the type definition, empty string otherwise.
-func (a *analyzer) shouldBeOnTypeDefinition(pass *analysis.Pass, field *ast.Field, rule MarkerScopeRule) string {
-	if rule.NamedTypeConstraint != NamedTypeConstraintOnTypeOnly || !rule.AllowsScope(TypeScope) {
-		return ""
-	}
-
-	tv, ok := pass.TypesInfo.Types[field.Type]
-	if !ok {
-		return ""
-	}
-
-	namedType, ok := tv.Type.(*types.Named)
-	if !ok {
-		return ""
-	}
-
-	return namedType.Obj().Name()
 }
 
 // reportShouldBeOnTypeDefinition reports that a marker should be on the type definition.
-func (a *analyzer) reportShouldBeOnTypeDefinition(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule, typeName string) {
+func (a *analyzer) reportShouldBeOnTypeDefinition(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, typeName string) {
 	var fixes []analysis.SuggestedFix
 
 	if a.policy == MarkerScopePolicySuggestFix {
-		fixes = a.suggestMoveToTypeDefinition(pass, field, marker, rule)
+		ident := utils.ExtractIdent(field.Type)
+		if ident != nil {
+			if fieldTypeSpec, ok := utils.LookupTypeSpec(pass, ident); ok {
+				fixes = a.buildMoveToTypeDefinitionFix(pass, fieldTypeSpec, marker)
+			}
+		}
 	}
 
 	pass.Report(analysis.Diagnostic{
@@ -244,6 +189,53 @@ func (a *analyzer) reportShouldBeOnTypeDefinition(pass *analysis.Pass, field *as
 		Message:        fmt.Sprintf("marker %q: marker should be declared on the type definition of %s instead of the field", marker.Identifier, typeName),
 		SuggestedFixes: fixes,
 	})
+}
+
+// handleTypeConstraintValidation handles type constraint validation and reporting.
+// Returns true if validation passed (or should continue checking), false if error was reported.
+func (a *analyzer) handleTypeConstraintValidation(
+	pass *analysis.Pass,
+	goType types.Type,
+	tc *TypeConstraint,
+	marker markershelper.Marker,
+	markerSet markershelper.MarkerSet,
+) bool {
+	// Check if there's a validation:Type marker that overrides the schema type
+	schemaTypeOverride := getSchemaTypeFromMarker(markerSet, markers.KubebuilderTypeMarker)
+	// Check if there's a validation:items:Type marker that overrides the array element schema type
+	itemsSchemaTypeOverride := getSchemaTypeFromMarker(markerSet, markers.KubebuilderItemsTypeMarker)
+
+	if err := handleTypeAgainstConstraint(goType, tc, schemaTypeOverride, itemsSchemaTypeOverride); err != nil {
+		a.reportTypeConstraintViolation(pass, marker, err)
+		return false
+	}
+	return true
+}
+
+// handleShouldBeOnTypeDefinition handles the check and reporting for markers
+// that should be on type definition instead of field.
+func (a *analyzer) handleShouldBeOnTypeDefinition(
+	pass *analysis.Pass,
+	field *ast.Field,
+	marker markershelper.Marker,
+	rule MarkerScopeRule,
+) {
+	if rule.NamedTypeConstraint != NamedTypeConstraintOnTypeOnly || !rule.AllowsScope(TypeScope) {
+		return
+	}
+
+	tv, ok := pass.TypesInfo.Types[field.Type]
+	if !ok {
+		return
+	}
+
+	namedType, ok := tv.Type.(*types.Named)
+	if !ok {
+		return
+	}
+
+	typeName := namedType.Obj().Name()
+	a.reportShouldBeOnTypeDefinition(pass, field, marker, typeName)
 }
 
 // reportTypeConstraintViolation reports a type constraint violation with suggested fix to remove the marker.
@@ -272,36 +264,20 @@ func (a *analyzer) reportTypeConstraintViolation(pass *analysis.Pass, marker mar
 	})
 }
 
-// reportTypeScopeViolation reports a scope violation for a type marker.
-func (a *analyzer) reportTypeScopeViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
-	a.reportScopeViolation(pass, marker, rule, FieldScope, "fields", "types", func() []analysis.SuggestedFix {
-		return a.suggestMoveToField(pass, typeSpec, marker, rule)
-	})
-}
-
 // reportScopeViolation is a common function for reporting scope violations.
 func (a *analyzer) reportScopeViolation(
 	pass *analysis.Pass,
 	marker markershelper.Marker,
 	rule MarkerScopeRule,
 	alternateScope ScopeConstraint,
-	alternateScopeName string,
-	appliedScopeName string,
-	suggestFix func() []analysis.SuggestedFix,
+	fixes []analysis.SuggestedFix,
 ) {
-	var (
-		message string
-		fixes   []analysis.SuggestedFix
-	)
+	var message string
 
 	if rule.AllowsScope(alternateScope) {
-		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, alternateScopeName)
-
-		if a.policy == MarkerScopePolicySuggestFix {
-			fixes = suggestFix()
-		}
+		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, alternateScope.PluralName())
 	} else {
-		message = fmt.Sprintf("marker %q cannot be applied to %s", marker.Identifier, appliedScopeName)
+		message = fmt.Sprintf("marker %q cannot be applied to %s", marker.Identifier, alternateScope.Opposite().PluralName())
 	}
 
 	pass.Report(analysis.Diagnostic{
@@ -313,69 +289,63 @@ func (a *analyzer) reportScopeViolation(
 }
 
 // checkTypeConstraintViolation checks and reports type constraint violations.
-func (a *analyzer) checkTypeConstraintViolation(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) {
-	if err := a.validateTypeSpecTypeConstraint(pass, typeSpec, rule.TypeConstraint); err != nil {
-		a.reportTypeSpecTypeConstraintViolation(pass, marker, err)
-	}
-}
+// Supports both *ast.Field and *ast.TypeSpec nodes.
+func (a *analyzer) checkTypeConstraintViolation(
+	pass *analysis.Pass,
+	node ast.Node,
+	marker markershelper.Marker,
+	rule MarkerScopeRule,
+	markerSet markershelper.MarkerSet,
+) {
+	// Extract types.Type based on node type
+	var goType types.Type
 
-// reportTypeSpecTypeConstraintViolation reports a type constraint violation on a type spec with suggested fix to remove the marker.
-func (a *analyzer) reportTypeSpecTypeConstraintViolation(pass *analysis.Pass, marker markershelper.Marker, err error) {
-	var fixes []analysis.SuggestedFix
-
-	if a.policy == MarkerScopePolicySuggestFix {
-		fixes = []analysis.SuggestedFix{
-			{
-				Message: "Remove invalid marker",
-				TextEdits: []analysis.TextEdit{
-					{
-						Pos: marker.Pos,
-						End: marker.End + 1, // Include newline
-					},
-				},
-			},
+	switch n := node.(type) {
+	case *ast.Field:
+		// Field-side logic: get type from field.Type
+		tv, ok := pass.TypesInfo.Types[n.Type]
+		if !ok {
+			return
 		}
-	}
+		goType = tv.Type
 
-	pass.Report(analysis.Diagnostic{
-		Pos:            marker.Pos,
-		End:            marker.End,
-		Message:        fmt.Sprintf("marker %q: %s", marker.Identifier, err),
-		SuggestedFixes: fixes,
-	})
+		// Handle type constraint validation
+		if !a.handleTypeConstraintValidation(pass, goType, rule.TypeConstraint, marker, markerSet) {
+			return // Validation failed, error already reported
+		}
+
+		// Handle field-specific: check if marker should be on type definition
+		a.handleShouldBeOnTypeDefinition(pass, n, marker, rule)
+
+	case *ast.TypeSpec:
+		// Type-side logic: get type from type spec name
+		obj := pass.TypesInfo.Defs[n.Name]
+		if obj == nil {
+			return
+		}
+		typeName, ok := obj.(*types.TypeName)
+		if !ok {
+			return
+		}
+		goType = typeName.Type()
+
+		// Handle type constraint validation
+		a.handleTypeConstraintValidation(pass, goType, rule.TypeConstraint, marker, markerSet)
+
+	default:
+		return
+	}
 }
 
-// validateFieldTypeConstraint validates that a field's type matches the type constraint.
-func (a *analyzer) validateFieldTypeConstraint(pass *analysis.Pass, field *ast.Field, rule MarkerScopeRule) error {
-	// Get the type of the field
-	tv, ok := pass.TypesInfo.Types[field.Type]
-	if !ok {
-		return nil // Skip if we can't determine the type
+// handleTypeAgainstConstraint validates that a Go type satisfies the type constraint.
+// If schemaTypeOverride is not empty, it will be used instead of deriving the schema type from the Go type.
+// If itemsSchemaTypeOverride is not empty, it will be used for array element type checking.
+func handleTypeAgainstConstraint(t types.Type, tc *TypeConstraint, schemaTypeOverride SchemaType, itemsSchemaTypeOverride SchemaType) error {
+	// Get the schema type from the Go type, or use the override if provided
+	schemaType := schemaTypeOverride
+	if schemaType == "" {
+		schemaType = getSchemaType(t)
 	}
-
-	return validateTypeAgainstConstraint(tv.Type, rule.TypeConstraint)
-}
-
-// validateTypeSpecTypeConstraint validates that a type spec's type matches the type constraint.
-func (a *analyzer) validateTypeSpecTypeConstraint(pass *analysis.Pass, typeSpec *ast.TypeSpec, tc *TypeConstraint) error {
-	// Get the type of the type spec
-	obj := pass.TypesInfo.Defs[typeSpec.Name]
-	if obj == nil {
-		return nil // Skip if we can't determine the type
-	}
-
-	typeName, ok := obj.(*types.TypeName)
-	if !ok {
-		return nil
-	}
-
-	return validateTypeAgainstConstraint(typeName.Type(), tc)
-}
-
-// validateTypeAgainstConstraint validates that a Go type satisfies the type constraint.
-func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
-	// Get the schema type from the Go type
-	schemaType := getSchemaType(t)
 
 	if tc == nil {
 		return nil
@@ -393,7 +363,8 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	if tc.ElementConstraint != nil && schemaType == SchemaTypeArray {
 		elemType := utils.UnwrapType(t)
 		if elemType != nil {
-			if err := validateTypeAgainstConstraint(elemType, tc.ElementConstraint); err != nil {
+			// Use items type override for element constraint if provided
+			if err := handleTypeAgainstConstraint(elemType, tc.ElementConstraint, itemsSchemaTypeOverride, ""); err != nil {
 				return fmt.Errorf("array element: %w", err)
 			}
 		}
@@ -402,26 +373,55 @@ func validateTypeAgainstConstraint(t types.Type, tc *TypeConstraint) error {
 	return nil
 }
 
-func (a *analyzer) suggestMoveToField(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker, rule MarkerScopeRule) []analysis.SuggestedFix {
-	// Only suggest moving to field if FieldScope is allowed
-	if !rule.AllowsScope(FieldScope) {
-		return nil
-	}
+func (a *analyzer) extractMarkerText(marker markershelper.Marker) string {
+	return marker.RawComment + "\n"
+}
 
-	fieldTypeSpecs := utils.LookupTypeSpecUsage(pass, typeSpec)
-
+// buildMoveToTypeDefinitionFix builds a suggested fix to move a marker to a type definition.
+// Assumes the type definition exists and is valid (validation must be done by caller).
+func (a *analyzer) buildMoveToTypeDefinitionFix(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker) []analysis.SuggestedFix {
 	var edits []analysis.TextEdit
 
-	// Remove marker from current field (including the newline)
+	// Remove marker from current location (including the newline)
 	edits = append(edits, analysis.TextEdit{
 		Pos: marker.Pos,
 		End: marker.End + 1,
 	})
 
-	for _, fieldTypeSpec := range fieldTypeSpecs {
-		// Add marker to the line before the type definition
-		markerText := a.extractMarkerText(marker)
+	// Add marker to the line before the type definition
+	markerText := a.extractMarkerText(marker)
+	file := pass.Fset.File(typeSpec.Pos())
+	if file != nil {
+		lineStart := file.LineStart(file.Line(typeSpec.Pos()))
+		edits = append(edits, analysis.TextEdit{
+			Pos:     lineStart,
+			End:     lineStart,
+			NewText: []byte(markerText),
+		})
+	}
 
+	return []analysis.SuggestedFix{
+		{
+			Message:   "Move marker to type definition",
+			TextEdits: edits,
+		},
+	}
+}
+
+// buildMoveToFieldFix builds a suggested fix to move a marker to field definitions.
+// Assumes the field usages exist and are valid (validation must be done by caller).
+func (a *analyzer) buildMoveToFieldFix(pass *analysis.Pass, fieldTypeSpecs []*ast.Field, marker markershelper.Marker) []analysis.SuggestedFix {
+	var edits []analysis.TextEdit
+
+	// Remove marker from current location (including the newline)
+	edits = append(edits, analysis.TextEdit{
+		Pos: marker.Pos,
+		End: marker.End + 1,
+	})
+
+	// Add marker to each field usage
+	for _, fieldTypeSpec := range fieldTypeSpecs {
+		markerText := a.extractMarkerText(marker)
 		file := pass.Fset.File(fieldTypeSpec.Pos())
 		if file != nil {
 			lineStart := file.LineStart(file.Line(fieldTypeSpec.Pos()))
@@ -441,52 +441,83 @@ func (a *analyzer) suggestMoveToField(pass *analysis.Pass, typeSpec *ast.TypeSpe
 	}
 }
 
-// suggestMoveToTypeDefinition generates suggested fixes to move a marker from a field to its type definition.
-func (a *analyzer) suggestMoveToTypeDefinition(pass *analysis.Pass, field *ast.Field, marker markershelper.Marker, rule MarkerScopeRule) []analysis.SuggestedFix {
-	// Only suggest moving to type if TypeScope is allowed
-	if !rule.AllowsScope(TypeScope) {
+// buildScopeViolationFix builds fixes for scope violations.
+// Returns suggested fixes if they can be built, nil otherwise.
+func (a *analyzer) buildScopeViolationFix(
+	pass *analysis.Pass,
+	node ast.Node,
+	marker markershelper.Marker,
+	appliedScope ScopeConstraint,
+	targetScope ScopeConstraint,
+	rule MarkerScopeRule,
+) []analysis.SuggestedFix {
+	// Only build fix if policy allows
+	if a.policy != MarkerScopePolicySuggestFix {
 		return nil
 	}
 
-	// Extract identifier from field type
-	ident := utils.ExtractIdent(field.Type)
-	if ident == nil {
+	// Only build fix if target scope is allowed
+	if !rule.AllowsScope(targetScope) {
 		return nil
 	}
 
-	fieldTypeSpec, ok := utils.LookupTypeSpec(pass, ident)
-	if !ok {
-		return nil
+	// Build fix based on scope transition
+	switch {
+	case appliedScope == FieldScope && targetScope == TypeScope:
+		// Moving from field to type
+		if field, ok := node.(*ast.Field); ok {
+			ident := utils.ExtractIdent(field.Type)
+			if ident != nil {
+				if typeSpec, ok := utils.LookupTypeSpec(pass, ident); ok {
+					return a.buildMoveToTypeDefinitionFix(pass, typeSpec, marker)
+				}
+			}
+		}
+	case appliedScope == TypeScope && targetScope == FieldScope:
+		// Moving from type to field
+		if typeSpec, ok := node.(*ast.TypeSpec); ok {
+			fieldTypeSpecs := utils.LookupTypeSpecUsage(pass, typeSpec)
+			if len(fieldTypeSpecs) > 0 {
+				return a.buildMoveToFieldFix(pass, fieldTypeSpecs, marker)
+			}
+		}
 	}
 
-	var edits []analysis.TextEdit
-
-	// Remove marker from current field (including the newline)
-	edits = append(edits, analysis.TextEdit{
-		Pos: marker.Pos,
-		End: marker.End + 1,
-	})
-	// Add marker to the line before the type definition
-	markerText := a.extractMarkerText(marker)
-
-	file := pass.Fset.File(fieldTypeSpec.Pos())
-	if file != nil {
-		lineStart := file.LineStart(file.Line(fieldTypeSpec.Pos()))
-		edits = append(edits, analysis.TextEdit{
-			Pos:     lineStart,
-			End:     lineStart,
-			NewText: []byte(markerText),
-		})
-	}
-
-	return []analysis.SuggestedFix{
-		{
-			Message:   "Move marker to type definition",
-			TextEdits: edits,
-		},
-	}
+	return nil
 }
 
-func (a *analyzer) extractMarkerText(marker markershelper.Marker) string {
-	return marker.RawComment + "\n"
+// handleScopeViolation handles scope violations by building fixes and reporting.
+func (a *analyzer) handleScopeViolation(
+	pass *analysis.Pass,
+	node ast.Node,
+	marker markershelper.Marker,
+	appliedScope ScopeConstraint,
+	rule MarkerScopeRule,
+) {
+	// Determine the alternate scope
+	alternateScope := appliedScope.Opposite()
+
+	// Build fixes if possible
+	fixes := a.buildScopeViolationFix(pass, node, marker, appliedScope, alternateScope, rule)
+
+	// Report the violation
+	a.reportScopeViolation(pass, marker, rule, alternateScope, fixes)
+}
+
+// checkAllowedScope checks if a marker is applied to an allowed scope and reports violations.
+func (a *analyzer) checkAllowedScope(
+	pass *analysis.Pass,
+	node ast.Node,
+	marker markershelper.Marker,
+	appliedScope ScopeConstraint,
+	rule MarkerScopeRule,
+) {
+	// Check if applied scope is allowed
+	if rule.AllowsScope(appliedScope) {
+		// Applied scope is allowed, no violation
+		return
+	}
+
+	// Handle the violation (build + report)
+	a.handleScopeViolation(pass, node, marker, appliedScope, rule)
 }
