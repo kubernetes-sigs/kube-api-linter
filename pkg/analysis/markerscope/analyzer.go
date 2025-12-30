@@ -209,6 +209,7 @@ func (a *analyzer) handleTypeConstraintValidation(
 		a.reportTypeConstraintViolation(pass, marker, err)
 		return false
 	}
+
 	return true
 }
 
@@ -307,6 +308,7 @@ func (a *analyzer) checkTypeConstraintViolation(
 		if !ok {
 			return
 		}
+
 		goType = tv.Type
 
 		// Handle type constraint validation
@@ -323,10 +325,12 @@ func (a *analyzer) checkTypeConstraintViolation(
 		if obj == nil {
 			return
 		}
+
 		typeName, ok := obj.(*types.TypeName)
 		if !ok {
 			return
 		}
+
 		goType = typeName.Type()
 
 		// Handle type constraint validation
@@ -390,6 +394,7 @@ func (a *analyzer) buildMoveToTypeDefinitionFix(pass *analysis.Pass, typeSpec *a
 
 	// Add marker to the line before the type definition
 	markerText := a.extractMarkerText(marker)
+
 	file := pass.Fset.File(typeSpec.Pos())
 	if file != nil {
 		lineStart := file.LineStart(file.Line(typeSpec.Pos()))
@@ -422,6 +427,7 @@ func (a *analyzer) buildMoveToFieldFix(pass *analysis.Pass, fieldTypeSpecs []*as
 	// Add marker to each field usage
 	for _, fieldTypeSpec := range fieldTypeSpecs {
 		markerText := a.extractMarkerText(marker)
+
 		file := pass.Fset.File(fieldTypeSpec.Pos())
 		if file != nil {
 			lineStart := file.LineStart(file.Line(fieldTypeSpec.Pos()))
@@ -439,6 +445,39 @@ func (a *analyzer) buildMoveToFieldFix(pass *analysis.Pass, fieldTypeSpecs []*as
 			TextEdits: edits,
 		},
 	}
+}
+
+// buildFieldToTypeFix builds a fix to move a marker from field to type definition.
+func (a *analyzer) buildFieldToTypeFix(
+	pass *analysis.Pass,
+	field *ast.Field,
+	marker markershelper.Marker,
+) []analysis.SuggestedFix {
+	ident := utils.ExtractIdent(field.Type)
+	if ident == nil {
+		return nil
+	}
+
+	typeSpec, ok := utils.LookupTypeSpec(pass, ident)
+	if !ok {
+		return nil
+	}
+
+	return a.buildMoveToTypeDefinitionFix(pass, typeSpec, marker)
+}
+
+// buildTypeToFieldFix builds a fix to move a marker from type to field usages.
+func (a *analyzer) buildTypeToFieldFix(
+	pass *analysis.Pass,
+	typeSpec *ast.TypeSpec,
+	marker markershelper.Marker,
+) []analysis.SuggestedFix {
+	fieldTypeSpecs := utils.LookupTypeSpecUsage(pass, typeSpec)
+	if len(fieldTypeSpecs) == 0 {
+		return nil
+	}
+
+	return a.buildMoveToFieldFix(pass, fieldTypeSpecs, marker)
 }
 
 // buildScopeViolationFix builds fixes for scope violations.
@@ -465,22 +504,20 @@ func (a *analyzer) buildScopeViolationFix(
 	switch {
 	case appliedScope == FieldScope && targetScope == TypeScope:
 		// Moving from field to type
-		if field, ok := node.(*ast.Field); ok {
-			ident := utils.ExtractIdent(field.Type)
-			if ident != nil {
-				if typeSpec, ok := utils.LookupTypeSpec(pass, ident); ok {
-					return a.buildMoveToTypeDefinitionFix(pass, typeSpec, marker)
-				}
-			}
+		field, ok := node.(*ast.Field)
+		if !ok {
+			return nil
 		}
+
+		return a.buildFieldToTypeFix(pass, field, marker)
 	case appliedScope == TypeScope && targetScope == FieldScope:
 		// Moving from type to field
-		if typeSpec, ok := node.(*ast.TypeSpec); ok {
-			fieldTypeSpecs := utils.LookupTypeSpecUsage(pass, typeSpec)
-			if len(fieldTypeSpecs) > 0 {
-				return a.buildMoveToFieldFix(pass, fieldTypeSpecs, marker)
-			}
+		typeSpec, ok := node.(*ast.TypeSpec)
+		if !ok {
+			return nil
 		}
+
+		return a.buildTypeToFieldFix(pass, typeSpec, marker)
 	}
 
 	return nil
