@@ -533,7 +533,7 @@ type E struct {
 	// B is a struct with optional fields.
 	B B `json:"b"`
 
-	// ByteArry is a byte array field.
+	// ByteArray is a byte array field.
 	// +optional
 	ByteArray []byte `json:"byteArray"`
 }

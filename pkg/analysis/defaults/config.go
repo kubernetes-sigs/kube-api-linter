@@ -18,7 +18,7 @@ package defaults
 // OmitEmptyPolicy is the policy for omitempty.
 // SuggestFix will suggest a fix for the field to add omitempty.
 // Warn will warn about the field to add omitempty.
-// Ignore will ignore the the absence of omitempty.
+// Ignore will ignore the absence of omitempty.
 type OmitEmptyPolicy string
 
 const (
@@ -84,7 +84,7 @@ type DefaultsOmitZero struct {
 	// Valid values are "SuggestFix", "Warn" and "Forbid".
 	// When set to "SuggestFix", the linter will suggest adding the `omitzero` tag when a struct field with default does not have it.
 	// When set to "Warn", the linter will emit a warning if the field does not have the `omitzero` tag.
-	// When set to "Forbid", 'omitzero' tags wont be considered.
+	// When set to "Forbid", 'omitzero' tags will not be considered.
 	// Note, when set to "Forbid", and a field have the `omitzero` tag, the linter will not suggest adding it.
 	// Note, `omitzero` tag is supported in go version starting from go 1.24.
 	// Note, Configure omitzero policy to 'Forbid', if using with go version less than go 1.24.

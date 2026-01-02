@@ -858,7 +858,7 @@ type Marker struct {
 	// Pos is the starting position in the file for the comment line containing the marker.
 	Pos token.Pos
 
-	// End is the ending position in the file for the coment line containing the marker.
+	// End is the ending position in the file for the comment line containing the marker.
 	End token.Pos
 }
 
