@@ -1,35 +1,39 @@
 # Linters
 
-- [ArrayOfStruct](#arrayofstruct) - Ensures arrays of structs have at least one required field
-- [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
-- [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
-- [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
-- [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
-- [Defaults](#defaults) - Checks that fields with default markers are configured correctly
-- [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
-- [DependentTags](#dependenttags) - Enforces dependencies between markers
-- [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
-- [Integers](#integers) - Validates usage of supported integer types
-- [JSONTags](#jsontags) - Ensures proper JSON tag formatting
-- [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
-- [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
-- [NoBools](#nobools) - Prevents usage of boolean types
-- [NoDurations](#nodurations) - Prevents usage of duration types
-- [NoFloats](#nofloats) - Prevents usage of floating-point types
-- [Nomaps](#nomaps) - Restricts usage of map types
-- [NonPointerStructs](#nonpointerstructs) - Ensures non-pointer structs are marked correctly with required/optional markers
-- [NoNullable](#nonullable) - Prevents usage of the nullable marker
-- [Nophase](#nophase) - Prevents usage of 'Phase' fields
-- [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
-- [OptionalFields](#optionalfields) - Validates optional field conventions
-- [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
-- [NoReferences](#noreferences) - Ensures field names use Ref/Refs instead of Reference/References
-- [PreferredMarkers](#preferredmarkers) - Ensures preferred markers are used instead of equivalent markers
-- [RequiredFields](#requiredfields) - Validates required field conventions
-- [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
-- [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
-- [StatusSubresource](#statussubresource) - Validates status subresource configuration
-- [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
+| Name | Description | Default | Scope (Native/CRD)[^1] |
+|------|-------------|---------|--------------------|
+| [ArrayOfStruct](#arrayofstruct) | Ensures arrays of structs have at least one required field | True | Native, CRD |
+| [CommentStart](#commentstart) | Ensures comments start with the serialized form of the type | True | Native, CRD |
+| [Conditions](#conditions) | Checks that `Conditions` fields are correctly formatted | True | Native, CRD |
+| [ConflictingMarkers](#conflictingmarkers) | Detects mutually exclusive markers on the same field | False | Native, CRD |
+| [DefaultOrRequired](#defaultorrequired) | Ensures fields marked as required do not have default values | True | Native, CRD |
+| [Defaults](#defaults) | Checks that fields with default markers are configured correctly | True | Native, CRD |
+| [DependentTags](#dependenttags) | Enforces dependencies between markers | False | Native, CRD |
+| [DuplicateMarkers](#duplicatemarkers) | Checks for exact duplicates of markers | True | Native, CRD |
+| [ForbiddenMarkers](#forbiddenmarkers) | Checks that no forbidden markers are present on types/fields. | False | Native, CRD |
+| [Integers](#integers) | Validates usage of supported integer types | True | Native, CRD |
+| [JSONTags](#jsontags) | Ensures proper JSON tag formatting | True | Native, CRD |
+| [MaxLength](#maxlength) | Checks for maximum length constraints on strings and arrays | False | CRD |
+| [NamingConventions](#namingconventions) | Ensures field names adhere to user-defined naming conventions | False | Native, CRD |
+| [NoBools](#nobools) | Prevents usage of boolean types | False | Native, CRD |
+| [NoDurations](#nodurations) | Prevents usage of duration types | True | Native, CRD |
+| [NoFloats](#nofloats) | Prevents usage of floating-point types | True | Native, CRD |
+| [Nomaps](#nomaps) | Restricts usage of map types | True | Native, CRD |
+| [NonPointerStructs](#nonpointerstructs) | Ensures non-pointer structs are marked correctly with required/optional markers | True | Native |
+| [NoNullable](#nonullable) | Prevents usage of the nullable marker | True | Native, CRD |
+| [Nophase](#nophase) | Prevents usage of 'Phase' fields | True | Native, CRD |
+| [NoReferences](#noreferences) | Ensures field names use Ref/Refs instead of Reference/References | True | Native, CRD |
+| [Notimestamp](#notimestamp) | Prevents usage of 'TimeStamp' fields | True | Native, CRD |
+| [OptionalFields](#optionalfields) | Validates optional field conventions | True | Native, CRD |
+| [OptionalOrRequired](#optionalorrequired) | Ensures fields are explicitly marked as optional or required | True | Native, CRD |
+| [PreferredMarkers](#preferredmarkers) | Ensures preferred markers are used instead of equivalent markers | False | Native, CRD |
+| [RequiredFields](#requiredfields) | Validates required field conventions | True | Native, CRD |
+| [SSATags](#ssatags) | Ensures proper Server-Side Apply (SSA) tags on array fields | True | Native, CRD |
+| [StatusOptional](#statusoptional) | Ensures status fields are marked as optional | False | Native, CRD |
+| [StatusSubresource](#statussubresource) | Validates status subresource configuration | False | CRD |
+| [UniqueMarkers](#uniquemarkers) | Ensures unique marker definitions | True | Native, CRD |
+
+[^1]: Some linters are applicable only to Native (in-tree, go-validated APIs) or only to CRD (Custom Resource Definitions) APIs.
 
 ## ArrayOfStruct
 
