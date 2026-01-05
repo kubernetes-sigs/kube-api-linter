@@ -13,6 +13,7 @@
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
+- [NumericBounds](#numericbounds) - Validates numeric fields have appropriate bounds validation markers
 - [NoBools](#nobools) - Prevents usage of boolean types
 - [NoDurations](#nodurations) - Prevents usage of duration types
 - [NoFloats](#nofloats) - Prevents usage of floating-point types
@@ -517,6 +518,24 @@ linterConfig:
         replacement: colour
         message: prefer 'colour' over 'color' when referring to colours in field names
 ```
+
+## NumericBounds
+
+The `numericbounds` linter checks that numeric fields (`int32`, `int64`, `float32`, `float64`) have appropriate bounds validation markers.
+
+According to Kubernetes API conventions, numeric fields should have bounds checking to prevent values that are too small, negative (when not intended), or too large.
+
+This linter ensures that:
+- Numeric fields have both `+k8s:minimum` and `+k8s:maximum` markers
+- Kubebuilder validation markers (`+kubebuilder:validation:Minimum` and `+kubebuilder:validation:Maximum`) are also supported
+- Bounds values are validated:
+  - int32: within int32 range (±2^31-1)
+  - int64: within JavaScript-safe range (±2^53-1) per K8s API conventions for JSON compatibility
+  - float32/float64: marker values are valid (within type ranges)
+
+**Note:** While `+k8s:minimum` is documented in the official Kubernetes declarative validation spec, `+k8s:maximum` is not yet officially documented but is supported by this linter for forward compatibility and consistency.
+
+This linter is **not enabled by default** as it is primarily focused on CRD validation with kubebuilder markers.
 
 ## NoBools
 
