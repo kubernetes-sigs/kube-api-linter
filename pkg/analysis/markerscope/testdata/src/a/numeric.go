@@ -1,0 +1,128 @@
+/*
+Copyright 2025 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+package a
+
+// Valid: All numeric markers on type
+type NumericType int32
+
+// Valid: Minimum on type
+// +kubebuilder:validation:Minimum=10
+type MinimumType int32
+
+// Valid: Maximum on type
+// +kubebuilder:validation:Maximum=50
+type MaximumType int64
+
+// Valid: MultipleOf on type
+// +kubebuilder:validation:MultipleOf=3
+type MultipleOfType int32
+
+// Valid: Float type with numeric markers (number type is now allowed)
+// +kubebuilder:validation:Minimum=0.0
+// +kubebuilder:validation:Maximum=1.0
+type FloatType float64
+
+// Invalid: Minimum marker on string type
+// +kubebuilder:validation:Minimum=0 // want `marker "kubebuilder:validation:Minimum": type string is not allowed \(expected one of: \[integer number\]\)`
+type InvalidMinimumOnStringType string
+
+// Invalid: Maximum marker on boolean type
+// +kubebuilder:validation:Maximum=100 // want `marker "kubebuilder:validation:Maximum": type boolean is not allowed \(expected one of: \[integer number\]\)`
+type InvalidMaximumOnBoolType bool
+
+type NumericMarkersFieldTest struct {
+	// Valid: Minimum marker on integer field
+	// +kubebuilder:validation:Minimum=0
+	ValidMinimum int32 `json:"validMinimum"`
+
+	// Valid: Maximum marker on integer field
+	// +kubebuilder:validation:Maximum=100
+	ValidMaximum int32 `json:"validMaximum"`
+
+	// Valid: ExclusiveMinimum marker
+	// +kubebuilder:validation:ExclusiveMinimum=true
+	// +kubebuilder:validation:Minimum=0
+	ValidExclusiveMinimum int32 `json:"validExclusiveMinimum"`
+
+	// Valid: ExclusiveMaximum marker
+	// +kubebuilder:validation:ExclusiveMaximum=true
+	// +kubebuilder:validation:Maximum=100
+	ValidExclusiveMaximum int32 `json:"validExclusiveMaximum"`
+
+	// Valid: MultipleOf marker
+	// +kubebuilder:validation:MultipleOf=5
+	ValidMultipleOf int32 `json:"validMultipleOf"`
+
+	// Valid: All numeric markers on integer field
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=100
+	// +kubebuilder:validation:ExclusiveMinimum=false
+	// +kubebuilder:validation:ExclusiveMaximum=false
+	// +kubebuilder:validation:MultipleOf=5
+	ValidAllNumericMarkers int32 `json:"validAllNumericMarkers"`
+
+	// Valid: Using MinimumType
+	ValidMinimumTyped MinimumType `json:"validMinimumTyped"`
+
+	// Valid: Using MaximumType
+	ValidMaximumTyped MaximumType `json:"validMaximumTyped"`
+
+	// Valid: Using MultipleOfType
+	ValidMultipleOfTyped MultipleOfType `json:"validMultipleOfTyped"`
+
+	// Valid: Using FloatType
+	ValidFloatTyped FloatType `json:"validFloatTyped"`
+
+	// Invalid: Maximum marker on named type
+	// +kubebuilder:validation:Maximum=100 // want `marker "kubebuilder:validation:Maximum": marker should be declared on the type definition of NumericType instead of the field`
+	InvalidMaximumOnNumericType NumericType `json:"invalidMaximumOnNumericType"`
+
+	// Invalid: Minimum marker on named type
+	// +kubebuilder:validation:Minimum=0 // want `marker "kubebuilder:validation:Minimum": marker should be declared on the type definition of NumericType instead of the field`
+	InvalidMinimumOnNumericType NumericType `json:"invalidMinimumOnNumericType"`
+
+	// Invalid: ExclusiveMaximum marker on named type
+	// +kubebuilder:validation:ExclusiveMaximum=true // want `marker "kubebuilder:validation:ExclusiveMaximum": marker should be declared on the type definition of NumericType instead of the field`
+	InvalidExclusiveMaximumOnNumericType NumericType `json:"invalidExclusiveMaximumOnNumericType"`
+
+	// Invalid: ExclusiveMinimum marker on named type
+	// +kubebuilder:validation:ExclusiveMinimum=true // want `marker "kubebuilder:validation:ExclusiveMinimum": marker should be declared on the type definition of NumericType instead of the field`
+	InvalidExclusiveMinimumOnNumericType NumericType `json:"invalidExclusiveMinimumOnNumericType"`
+
+	// Invalid: MultipleOf marker on named type
+	// +kubebuilder:validation:MultipleOf=5 // want `marker "kubebuilder:validation:MultipleOf": marker should be declared on the type definition of NumericType instead of the field`
+	InvalidMultipleOfOnNumericType NumericType `json:"invalidMultipleOfOnNumericType"`
+
+	// Invalid: Minimum marker on string field
+	// +kubebuilder:validation:Minimum=0 // want `marker "kubebuilder:validation:Minimum": type string is not allowed \(expected one of: \[integer number\]\)`
+	InvalidMinimumOnString string `json:"invalidMinimumOnString"`
+
+	// Invalid: Maximum marker on boolean field
+	// +kubebuilder:validation:Maximum=100 // want `marker "kubebuilder:validation:Maximum": type boolean is not allowed \(expected one of: \[integer number\]\)`
+	InvalidMaximumOnBool bool `json:"invalidMaximumOnBool"`
+
+	// Invalid: MultipleOf marker on array field
+	// +kubebuilder:validation:MultipleOf=5 // want `marker "kubebuilder:validation:MultipleOf": type array is not allowed \(expected one of: \[integer number\]\)`
+	InvalidMultipleOfOnArray []int32 `json:"invalidMultipleOfOnArray"`
+
+	// Invalid: Using invalid named type
+	// +kubebuilder:validation:Minimum=50 // want `marker "kubebuilder:validation:Minimum": type string is not allowed \(expected one of: \[integer number\]\)`
+	// +kubebuilder:validation:Maximum=100 // want `marker "kubebuilder:validation:Maximum": type string is not allowed \(expected one of: \[integer number\]\)`
+	InvalidMinimumOnStringTyped InvalidMinimumOnStringType `json:"invalidMinimumOnStringTyped"`
+
+	// Invalid: Using invalid named type
+	InvalidMaximumOnBoolTyped InvalidMaximumOnBoolType `json:"invalidMaximumOnBoolTyped"`
+}

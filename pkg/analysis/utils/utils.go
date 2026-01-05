@@ -549,3 +549,92 @@ func getFieldTypeName(field *ast.Field) string {
 
 	return ""
 }
+
+// LookupTypeSpecUsage returns all fields in the package that use the given type.
+func LookupTypeSpecUsage(pass *analysis.Pass, typeSpec *ast.TypeSpec) []*ast.Field {
+	var fields []*ast.Field
+
+	// Get the type name
+	typeName := typeSpec.Name.Name
+
+	// Iterate through all files in the package
+	for _, file := range pass.Files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			field, ok := n.(*ast.Field)
+			if !ok {
+				return true
+			}
+
+			// Check if the field's type matches the type we're looking for
+			if matchesType(field.Type, typeName) {
+				fields = append(fields, field)
+			}
+
+			return true
+		})
+	}
+
+	return fields
+}
+
+// matchesType checks if an expression matches the given type name.
+func matchesType(expr ast.Expr, typeName string) bool {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e.Name == typeName
+	case *ast.StarExpr:
+		return matchesType(e.X, typeName)
+	case *ast.ArrayType:
+		return matchesType(e.Elt, typeName)
+	case *ast.MapType:
+		return matchesType(e.Value, typeName)
+	default:
+		return false
+	}
+}
+
+// UnwrapType unwraps pointer, named, slice, array, and map types to get the underlying element type.
+// For pointer types, it returns the element type.
+// For named types, it returns the underlying type.
+// For slice and array types, it returns the element type.
+// For map types, it returns the value type.
+// Otherwise, it returns the type as-is.
+func UnwrapType(t types.Type) types.Type {
+	// Unwrap pointer types
+	if ptr, ok := t.(*types.Pointer); ok {
+		t = ptr.Elem()
+	}
+
+	// Unwrap named types to get underlying type
+	if named, ok := t.(*types.Named); ok {
+		t = named.Underlying()
+	}
+
+	// Unwrap slice, array, and map types to get element/value type
+	switch ut := t.Underlying().(type) {
+	case *types.Slice:
+		return ut.Elem()
+	case *types.Array:
+		return ut.Elem()
+	case *types.Map:
+		return ut.Elem()
+	}
+
+	return t
+}
+
+// ExtractIdent extracts an *ast.Ident from an ast.Expr, unwrapping pointers, arrays, and maps.
+func ExtractIdent(expr ast.Expr) *ast.Ident {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e
+	case *ast.StarExpr:
+		return ExtractIdent(e.X)
+	case *ast.ArrayType:
+		return ExtractIdent(e.Elt)
+	case *ast.MapType:
+		return ExtractIdent(e.Value)
+	default:
+		return nil
+	}
+}
