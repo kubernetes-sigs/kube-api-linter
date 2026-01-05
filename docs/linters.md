@@ -11,6 +11,7 @@
 - [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
 - [Integers](#integers) - Validates usage of supported integer types
 - [JSONTags](#jsontags) - Ensures proper JSON tag formatting
+- [MarkerTypos](#markertypos) - Detects and fixes common typos and syntax issues in marker comments
 - [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
 - [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
 - [NoBools](#nobools) - Prevents usage of boolean types
@@ -437,6 +438,71 @@ or `+kubebuilder:validation:items:MaxLength` if the array is an element of the b
 
 Adding maximum lengths to strings and arrays not only ensures that the API is not abused (used to store overly large data, reduces DDOS etc.),
 but also allows CEL validation cost estimations to be kept within reasonable bounds.
+
+## MarkerTypos
+
+The `markertypos` linter detects and fixes common typos and syntax issues in marker comments used in Kubernetes API definitions.
+
+This linter validates three main categories of marker issues:
+
+### Spacing Issues
+
+The linter detects and fixes incorrect spacing in marker comments:
+
+- **Space after '+' symbol**: Markers should not have space after the `+` symbol
+- **Missing space after '//' prefix**: Markers should have a space after the `//` comment prefix
+
+Examples of spacing issues:
+
+```go
+// + kubebuilder:validation:MaxLength:=256  // Incorrect: space after +
+type Example1 string
+
+//+required  // Incorrect: missing space after //
+type Example2 string
+```
+
+Fixed versions:
+
+```go
+// +kubebuilder:validation:MaxLength:=256  // Correct: no space after +
+type Example1 string
+
+// +required  // Correct: space after //
+type Example2 string
+```
+
+### Common Typos
+
+The linter detects and suggests corrections for frequently misspelled marker identifiers:
+
+- `kubebuidler` → `kubebuilder`
+- `kubebuiler` → `kubebuilder`
+- `kubebulider` → `kubebuilder`
+- `kubbuilder` → `kubebuilder`
+- `kubebulder` → `kubebuilder`
+- `optinal` → `optional`
+- `requied` → `required`
+- `requird` → `required`
+- `nullabel` → `nullable`
+- `validaton` → `validation`
+- `valdiation` → `validation`
+- `defualt` → `default`
+- `defult` → `default`
+- `exampl` → `example`
+- `examle` → `example`
+
+Examples of typo detection:
+
+```go
+// +kubebuidler:validation:Required         // Typo detected: kubebuidler
+// +optinal                                 // Typo detected: optinal
+// +kubebuilder:validaton:MaxLength:=256    // Typo detected: validaton
+```
+
+### Fixes
+
+No automatic fixes are provided
 
 ## NamingConventions
 

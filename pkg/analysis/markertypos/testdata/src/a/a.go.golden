@@ -1,0 +1,117 @@
+package a
+
+// Valid markers that should not trigger any errors
+
+// +kubebuilder:validation:MaxLength:=256
+type ValidKubebuilderMarker string
+
+// +required
+// +optional
+type ValidNonKubebuilderMarkers string
+
+// +kubebuilder:object:root:=true
+// +kubebuilder:subresource:status
+type ValidKubebuilderObject struct {
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength:=1
+	ValidField string `json:"validField"`
+
+	// +optional
+	// +default:value="test"
+	ValidOptionalField string `json:"validOptionalField"`
+}
+
+// Invalid markers that should trigger errors
+
+// +kubebuilder:validation:MaxLength:=256
+type SpacingIssueKubebuilder string
+
+// +required
+type SpacingIssueNonKubebuilder string
+
+// +kubebuilder:validation:MaxLength:=256
+type KubebuilderWrongSyntax string
+
+// +kubebuilder:validation:MinLength:=1
+// +kubebuilder:validation:Format:=date-time
+type MultipleKubebuilderWrongSyntax struct {
+	Field string `json:"field"`
+}
+
+// +default:value="test"
+type NonKubebuilderWrongSyntax string
+
+// +required=true
+// +optional=false
+type MultipleNonKubebuilderWrongSyntax struct {
+	Field string `json:"field"`
+}
+
+// Common typos
+
+// +kubebuilder:validation:MaxLength:=256
+type KubebuilderTypo1 string
+
+// +kubebuilder:validation:Required
+type KubebuilderTypo2 string
+
+// +kubebuilder:object:root:=true
+type KubebuilderTypo3 string
+
+// +kubebuilder:validation:MinLength:=1
+type KubebuilderTypo4 string
+
+// +kubebuilder:subresource:status
+type KubebuilderTypo5 string
+
+// +optional
+type OptionalTypo string
+
+// +required
+type RequiredTypo string
+
+// +required
+type RequiredTypo2 string
+
+// +nullable
+type NullableTypo string
+
+// +kubebuilder:validation:MaxLength:=256
+type ValidationTypo string
+
+// +kubebuilder:validation:Required
+type ValidationTypo2 string
+
+// +default:value="test"
+type DefaultTypo string
+
+// +default:value="test"
+type DefaultTypo2 string
+
+// +kubebuilder:example:="test"
+type ExampleTypo string
+
+// +kubebuilder:example:="test"
+type ExampleTypo2 string
+
+// Complex cases with multiple issues
+
+// +kubebuilder:validation:MaxLength:=256
+type MultipleIssues string
+
+// +kubebuilder:validation:MaxLength:=256
+type ComplexValidStruct struct {
+	// +required
+	InvalidField1 string `json:"invalidField1"`
+
+	// +kubebuilder:validation:MinLength:=1
+	InvalidField2 string `json:"invalidField2"`
+
+	// +default:value="test"
+	InvalidField3 string `json:"invalidField3"`
+
+	// +kubebuilder:validation:Required
+	ValidField string `json:"validField"`
+}
+
+type NoLintMarker //nolint
