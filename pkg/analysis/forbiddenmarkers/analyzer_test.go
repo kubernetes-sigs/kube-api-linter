@@ -98,7 +98,7 @@ func TestWithConfiguration(t *testing.T) {
 				},
 			},
 			{
-				// No blue or green apples, but any othe apples allowed
+				// No blue or green apples, but any other apples allowed
 				// No red, blue, or green oranges, but any other oranges allowed
 				// No bananas allowed
 				Identifier: "custom:MultiRuleSet",
