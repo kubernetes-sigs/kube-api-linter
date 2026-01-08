@@ -523,24 +523,34 @@ Most built-in kubebuilder validation markers use `namedTypeConstraint: OnTypeOnl
 
 #### Type Override Examples
 
-You can override the default schema type using the `kubebuilder:validation:Type` marker:
+You can override the default schema type using the `kubebuilder:validation:Type` marker.
+
+**Example 1: `json.RawMessage` with `Type=object`**
+
+`json.RawMessage` stores arbitrary JSON configuration data. Since it doesn't have a known schema, use `Type=object` to override:
 
 ```go
-// Treat []byte as an array instead of string (base64)
-// +kubebuilder:validation:Type=array
-// +kubebuilder:validation:MinItems=1
-Certificate []byte `json:"certificate"`
+type MyStruct struct {
+    // +kubebuilder:validation:Schemaless
+    // +kubebuilder:pruning:PreserveUnknownFields
+    // +kubebuilder:validation:Type=object
+    // +optional
+    Config json.RawMessage `json:"config,omitempty"`
+}
+```
 
-// Validate int32 field as string with pattern
-// +kubebuilder:validation:Type=string
-// +kubebuilder:validation:Pattern="^[0-9]+$"
-type IntOrString int32
+**Example 2: `metav1.Duration` with `Type=string`**
 
-// Validate string field as integer with range
-// +kubebuilder:validation:Type=integer
-// +kubebuilder:validation:Minimum=1
-// +kubebuilder:validation:Maximum=65535
-Port string `json:"port"`
+`metav1.Duration` is serialized as a string (e.g., `"1m"`, `"30s"`). Use `Type=string` to enable string validation markers like `Pattern`:
+
+```go
+type MyStruct struct {
+    // +kubebuilder:validation:Type=string
+    // +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ms|s|m|h))+$"
+    // +kubebuilder:default:="1m"
+    // +optional
+    Interval *metav1.Duration `json:"interval,omitempty"`
+}
 ```
 
 ### Default Marker Rules

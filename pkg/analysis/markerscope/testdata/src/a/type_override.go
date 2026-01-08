@@ -15,57 +15,50 @@ limitations under the License.
 */
 package a
 
-// TypeOverrideTest tests that Type marker can override the schema type
-// for type constraint validation in real-world scenarios
-type TypeOverrideTest struct {
-	// Valid: []byte (treated as string by default) with MinLength
-	// This is a common case - []byte is represented as base64 string in OpenAPI
-	// +kubebuilder:validation:MinLength=1
-	ValidByteSliceMinLength []byte `json:"validByteSliceMinLength"`
+import "time"
 
-	// Valid: []byte explicitly marked as string with MinLength
-	// +kubebuilder:validation:Type=string
-	// +kubebuilder:validation:MinLength=1
-	ValidByteSliceAsString []byte `json:"validByteSliceAsString"`
+// RawMessage is similar to json.RawMessage (type RawMessage []byte)
+// Used to store arbitrary JSON configuration data.
+type RawMessage []byte
 
-	// Valid: []byte overridden as array allows MinItems (array marker)
-	// This allows treating []byte as actual byte array instead of base64 string
-	// +kubebuilder:validation:Type=array
-	// +kubebuilder:validation:MinItems=1
-	ValidByteSliceAsArray []byte `json:"validByteSliceAsArray"`
-
-	// Invalid: []byte without Type=array override cannot use MinItems (array marker)
-	// Note: []byte is treated as string by default, so MinItems is not allowed
-	// +kubebuilder:validation:MinItems=1 // want `marker "kubebuilder:validation:MinItems": type string is not allowed \(expected one of: \[array\]\)`
-	InvalidByteSliceMinItems []byte `json:"invalidByteSliceMinItems"`
-
-	// Real-world case: IntOrString-like type that can be either int or string
-	// Valid: Custom type overridden as string to allow string validation
-	// +kubebuilder:validation:Type=string
-	// +kubebuilder:validation:Pattern="^[0-9]+$"
-	ValidIntOrStringAsString int32 `json:"validIntOrStringAsString"`
-
-	// Real-world case: Port number stored as string but validated as integer
-	// Valid: string overridden as integer to allow numeric validation
-	// +kubebuilder:validation:Type=integer
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	ValidPortAsInteger string `json:"validPortAsInteger"`
+// Duration is similar to metav1.Duration which wraps time.Duration
+// It is serialized as a string (e.g., "1m", "30s").
+type Duration struct {
+	time.Duration
 }
 
-// Real-world type override on type definition
-// IntOrString represents a value that can be an int or string (like k8s.io/apimachinery/pkg/util/intstr.IntOrString)
-// Valid: Type override on custom type to allow string validation
-// +kubebuilder:validation:Type=string
-// +kubebuilder:validation:Pattern="^[0-9]+%?$"
-type IntOrString int32
+// TypeOverrideValidTest tests valid cases where Type marker overrides the schema type
+type TypeOverrideValidTest struct {
+	// Example 1: RawMessage ([]byte alias) with Type=object
+	// RawMessage stores arbitrary JSON configuration data.
+	// Since it doesn't have a known schema, use Type=object to override.
+	// +kubebuilder:validation:Schemaless
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Type=object
+	// +optional
+	Config RawMessage `json:"config,omitempty"`
 
-type TypeOverrideOnTypeUsageTest struct {
-	// Valid: Using IntOrString type with Type override
-	ValidIntOrString IntOrString `json:"validIntOrString"`
+	// Example 2: Duration with Type=string
+	// Duration is serialized as a string (e.g., "1m", "30s").
+	// Use Type=string to enable string validation markers like Pattern.
+	// +kubebuilder:validation:Type=string
+	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ms|s|m|h))+$"
+	// +kubebuilder:default:="1m"
+	// +optional
+	Interval *Duration `json:"interval,omitempty"`
+}
 
-	// Invalid: Cannot apply string marker to IntOrString field (underlying type is int32)
-	// The Type=string override is on the type definition, not visible when checking field constraints
-	// +kubebuilder:validation:MaxLength=10 // want `marker "kubebuilder:validation:MaxLength": type integer is not allowed \(expected one of: \[string\]\)`
-	InvalidMaxLengthOnIntOrString IntOrString `json:"invalidMaxLengthOnIntOrString"`
+// TypeOverrideInvalidTest tests invalid cases without proper Type override
+type TypeOverrideInvalidTest struct {
+	// Invalid: RawMessage without Type=object override cannot use object markers
+	// RawMessage is []byte which is treated as string by default
+	// +kubebuilder:validation:MinProperties=1 // want `marker "kubebuilder:validation:MinProperties": type string is not allowed \(expected one of: \[object\]\)`
+	// +optional
+	InvalidConfig RawMessage `json:"invalidConfig,omitempty"`
+
+	// Invalid: Duration without Type=string override cannot use string markers
+	// Duration is a struct type which is treated as object by default
+	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ms|s|m|h))+$" // want `marker "kubebuilder:validation:Pattern": type object is not allowed \(expected one of: \[string\]\)`
+	// +optional
+	InvalidInterval *Duration `json:"invalidInterval,omitempty"`
 }
