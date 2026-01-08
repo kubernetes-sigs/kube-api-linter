@@ -30,14 +30,14 @@ const (
 )
 
 const (
-	// KubebuilderAtLeastOneOfMarker is the marker that indicates that a field has at least one of in kubebuilder.
-	KubebuilderAtLeastOneOfMarker = "kubebuilder:validation:AtLeastOneOf"
-
 	// KubebuilderRootMarker is the marker that indicates that a struct is the object root for code and CRD generation.
 	KubebuilderRootMarker = "kubebuilder:object:root"
 
 	// KubebuilderStatusSubresourceMarker is the marker that indicates that the CRD generated for a struct should include the /status subresource.
 	KubebuilderStatusSubresourceMarker = "kubebuilder:subresource:status"
+
+	// KubebuilderAtLeastOneOfMarker is the marker that indicates that a type has a CEL validation in kubebuilder enforcing that at least one field is set.
+	KubebuilderAtLeastOneOfMarker = "kubebuilder:validation:AtLeastOneOf"
 
 	// KubebuilderEnumMarker is the marker that indicates that a field has an enum in kubebuilder.
 	KubebuilderEnumMarker = "kubebuilder:validation:Enum"
@@ -96,7 +96,7 @@ const (
 	// KubebuilderRequiredMarker is the marker that indicates that a field is required in kubebuilder.
 	KubebuilderRequiredMarker = "kubebuilder:validation:Required"
 
-	// KubebuilderExactlyOneOf is the marker that indicates that a field has an exactly one of in kubebuilder.
+	// KubebuilderExactlyOneOf is the marker that indicates that a type has a CEL validation in kubebuilder enforcing that exactly one field is set.
 	KubebuilderExactlyOneOf = "kubebuilder:validation:ExactlyOneOf"
 
 	// KubebuilderItemsMaxLengthMarker is the marker that indicates that a field has a maximum length in kubebuilder.
