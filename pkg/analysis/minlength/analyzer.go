@@ -180,6 +180,13 @@ func checkStructType(pass *analysis.Pass, structType *ast.StructType, node ast.N
 		return
 	}
 
+	// Check if the struct has union markers that satisfy the required constraint
+	if markerSet.Has(markers.KubebuilderExactlyOneOf) || markerSet.Has(markers.KubebuilderAtLeastOneOfMarker) {
+		// ExactlyOneOf / AtLeastOneOf markers enforces that at least one field is required,
+		//  this means that `{}` is not valid.
+		return
+	}
+
 	for _, field := range structType.Fields.List {
 		if utils.IsFieldRequired(field, markersAccess) {
 			// The struct has at least one required field,

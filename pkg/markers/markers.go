@@ -30,6 +30,9 @@ const (
 )
 
 const (
+	// KubebuilderAtLeastOneOfMarker is the marker that indicates that a field has at least one of in kubebuilder.
+	KubebuilderAtLeastOneOfMarker = "kubebuilder:validation:AtLeastOneOf"
+
 	// KubebuilderRootMarker is the marker that indicates that a struct is the object root for code and CRD generation.
 	KubebuilderRootMarker = "kubebuilder:object:root"
 
