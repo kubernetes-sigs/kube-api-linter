@@ -32,3 +32,21 @@ func TestDefaultConfiguration(t *testing.T) {
 
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "a")
 }
+
+func TestWithOmitEmptyPolicyIgnore(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := requiredfields.Initializer().Init(&requiredfields.RequiredFieldsConfig{
+		OmitEmpty: requiredfields.RequiredFieldsOmitEmpty{
+			Policy: requiredfields.RequiredFieldsOmitEmptyPolicyIgnore,
+		},
+		OmitZero: requiredfields.RequiredFieldsOmitZero{
+			Policy: requiredfields.RequiredFieldsOmitZeroPolicySuggestFix,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
+}
