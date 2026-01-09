@@ -110,6 +110,10 @@ type MinLength struct {
 
 	StructWithARequiredField StructWithARequiredField `json:"structWithARequiredField"`
 
+	StructWithExactlyOneOf StructWithARequiredField `json:"structWithExactlyOneOf"`
+
+	StructWithAtLeastOneOf StructWithAtLeastOneOf `json:"structWithAtLeastOneOf"`
+
 	StructWithMalformedMinProperties StructWithMalformedMinProperties `json:"structWithMalformedMinProperties` // want "could not get min properties for struct: invalid format for minimum properties marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"abc\\\": invalid syntax"
 
 	// +kubebuilder:validation:MinItems:=1
@@ -164,4 +168,22 @@ type StructWithARequiredField struct {
 type StructWithMalformedMinProperties struct {
 	// +kubebuilder:validation:MinLength:=256
 	StringWithMinLength string
+}
+
+// +kubebuilder:validation:ExactlyOneOf=fieldA;fieldB
+type StructWithExactlyOneOf struct {
+	// +kubebuilder:validation:MinLength:=1
+	FieldA *string `json:"fieldA,omitempty"`
+
+	// +kubebuilder:validation:MinLength:=1
+	FieldB *string `json:"fieldB,omitempty"`
+}
+
+// +kubebuilder:validation:AtLeastOneOf=fieldA;fieldB
+type StructWithAtLeastOneOf struct {
+	// +kubebuilder:validation:MinLength:=1
+	FieldA *string `json:"fieldA,omitempty"`
+
+	// +kubebuilder:validation:MinLength:=1
+	FieldB *string `json:"fieldB,omitempty"`
 }
