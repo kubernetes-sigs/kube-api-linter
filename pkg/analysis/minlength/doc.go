@@ -31,7 +31,8 @@ This ensures that empty maps are not allowed.
 Empty maps are generally not recommended and API authors should generally not distinguish between empty and omitted maps.
 When the empty map is a valid choice, setting the minimum properties marker to 0 can be used to indicate that this is an explicit choice.
 
-Structs that do not have required fields should have a minimum number of fields.
+Structs that do not have required fields and do not define an equivalent constraint, i.e., `kubebuilder:validation:ExactlyOneOf` or `kubebuilder:validation:AtLeastOneOf`,
+should have a minimum number of fields.
 This ensures that empty structs are not allowed.
 Empty structs are generally not recommended and API authors should generally not distinguish between empty and omitted structs.
 When the empty struct is a valid choice, setting the minimum properties marker to 0 can be used to indicate that this is an explicit choice.

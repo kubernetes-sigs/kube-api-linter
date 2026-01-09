@@ -14,6 +14,7 @@
 | [Integers](#integers) | Validates usage of supported integer types | True | Native, CRD |
 | [JSONTags](#jsontags) | Ensures proper JSON tag formatting | True | Native, CRD |
 | [MaxLength](#maxlength) | Checks for maximum length constraints on strings and arrays | False | CRD |
+| [MinLength](#minlength) | Checks for minium length constraints on strings, arrays, maps and structs | False | CRD |
 | [NamingConventions](#namingconventions) | Ensures field names adhere to user-defined naming conventions | False | Native, CRD |
 | [NoBools](#nobools) | Prevents usage of boolean types | False | Native, CRD |
 | [NoDurations](#nodurations) | Prevents usage of duration types | True | Native, CRD |
@@ -441,6 +442,22 @@ or `+kubebuilder:validation:items:MaxLength` if the array is an element of the b
 
 Adding maximum lengths to strings and arrays not only ensures that the API is not abused (used to store overly large data, reduces DDOS etc.),
 but also allows CEL validation cost estimations to be kept within reasonable bounds.
+
+## MinLength
+
+The `minlength` linter checks that string fields have a minimum length, array fields have a minimum number of items, maps have a minimum number of properties, and structs without required fields have a minimum number of fields.
+
+For strings, this means they have a `kubebuilder:validation:MinLength` marker.
+
+For arrays, this means they have a`kubebuilder:validation:MinItems` marker.
+
+For maps, this means they have a `kubebuilder:validation:MinProperties` marker.
+
+For structs, this means they either have required fields, an equivalent constraint on the type, i.e., `kubebuilder:validation:ExactlyOneOf` or `kubebuilder:validation:AtLeastOneOf`, or should have a `kubebuilder:validation:MinProperties` marker.
+
+Adding minimum length constraints ensures that API authors make an explicit choice about whether empty values are valid.
+When empty values are valid, this should be made explicit by setting the corresponding marker to `0`.
+In general, empty strings, arrays, maps, and structs are not recommended, and API authors should not distinguish between empty and omitted values.
 
 ## NamingConventions
 
