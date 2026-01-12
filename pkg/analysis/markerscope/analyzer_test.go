@@ -25,7 +25,7 @@ import (
 func TestAnalyzerWithDefaultConfig(t *testing.T) {
 	testdata := analysistest.TestData()
 	// Test with nil config - should use all defaults:
-	// - Policy: Warn
+	// - Policy: SuggestFix
 	// - CustomMarkers: empty (use built-in defaults)
 	analyzer, err := markerscope.Initializer().Init(&markerscope.MarkerScopeConfig{})
 	if err != nil {
@@ -35,10 +35,10 @@ func TestAnalyzerWithDefaultConfig(t *testing.T) {
 	analysistest.Run(t, testdata, analyzer, "a")
 }
 
-func TestAnalyzerSuggestFixes(t *testing.T) {
+func TestAnalyzerWarn(t *testing.T) {
 	testdata := analysistest.TestData()
 	cfg := &markerscope.MarkerScopeConfig{
-		Policy: markerscope.MarkerScopePolicySuggestFix,
+		Policy: markerscope.MarkerScopePolicyWarn,
 	}
 
 	analyzer, err := markerscope.Initializer().Init(cfg)

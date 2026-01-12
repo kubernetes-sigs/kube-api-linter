@@ -270,15 +270,15 @@ func (a *analyzer) reportScopeViolation(
 	pass *analysis.Pass,
 	marker markershelper.Marker,
 	rule MarkerScopeRule,
-	alternateScope ScopeConstraint,
+	targetScope ScopeConstraint,
 	fixes []analysis.SuggestedFix,
 ) {
 	var message string
 
-	if rule.AllowsScope(alternateScope) {
-		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, alternateScope.PluralName())
+	if rule.AllowsScope(targetScope) {
+		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, targetScope.PluralName())
 	} else {
-		message = fmt.Sprintf("marker %q cannot be applied to %s", marker.Identifier, alternateScope.Opposite().PluralName())
+		// This should never happen, but just in case
 	}
 
 	pass.Report(analysis.Diagnostic{
@@ -531,14 +531,24 @@ func (a *analyzer) handleScopeViolation(
 	appliedScope ScopeConstraint,
 	rule MarkerScopeRule,
 ) {
-	// Determine the alternate scope
-	alternateScope := appliedScope.Opposite()
+	// Determine the target scope for fix based on allowed scopes
+	var targetScope ScopeConstraint
 
-	// Build fixes if possible
-	fixes := a.buildScopeViolationFix(pass, node, marker, appliedScope, alternateScope, rule)
+	switch appliedScope {
+	case FieldScope:
+		targetScope = TypeScope
+	case TypeScope:
+		targetScope = FieldScope
+	default:
+		// This should never happen, but just in case
+		return
+	}
+
+	// Build fixes if possible (targetScope will be empty if no valid fix target)
+	fixes := a.buildScopeViolationFix(pass, node, marker, appliedScope, targetScope, rule)
 
 	// Report the violation
-	a.reportScopeViolation(pass, marker, rule, alternateScope, fixes)
+	a.reportScopeViolation(pass, marker, rule, targetScope, fixes)
 }
 
 // checkAllowedScope checks if a marker is applied to an allowed scope and reports violations.
