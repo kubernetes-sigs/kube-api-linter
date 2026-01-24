@@ -638,3 +638,8 @@ func ExtractIdent(expr ast.Expr) *ast.Ident {
 		return nil
 	}
 }
+
+// RawMarkerLine returns the raw marker comment line with a trailing newline.
+func RawMarkerLine(marker markershelper.Marker) string {
+	return marker.RawComment + "\n"
+}

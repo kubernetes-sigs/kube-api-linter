@@ -377,10 +377,6 @@ func handleTypeAgainstConstraint(t types.Type, tc *TypeConstraint, schemaTypeOve
 	return nil
 }
 
-func (a *analyzer) extractMarkerText(marker markershelper.Marker) string {
-	return marker.RawComment + "\n"
-}
-
 // buildMoveToTypeDefinitionFix builds a suggested fix to move a marker to a type definition.
 // Assumes the type definition exists and is valid (validation must be done by caller).
 func (a *analyzer) buildMoveToTypeDefinitionFix(pass *analysis.Pass, typeSpec *ast.TypeSpec, marker markershelper.Marker) []analysis.SuggestedFix {
@@ -393,7 +389,7 @@ func (a *analyzer) buildMoveToTypeDefinitionFix(pass *analysis.Pass, typeSpec *a
 	})
 
 	// Add marker to the line before the type definition
-	markerText := a.extractMarkerText(marker)
+	markerText := utils.RawMarkerLine(marker)
 
 	file := pass.Fset.File(typeSpec.Pos())
 	if file != nil {
@@ -426,7 +422,7 @@ func (a *analyzer) buildMoveToFieldFix(pass *analysis.Pass, fieldTypeSpecs []*as
 
 	// Add marker to each field usage
 	for _, fieldTypeSpec := range fieldTypeSpecs {
-		markerText := a.extractMarkerText(marker)
+		markerText := utils.RawMarkerLine(marker)
 
 		file := pass.Fset.File(fieldTypeSpec.Pos())
 		if file != nil {
