@@ -80,17 +80,17 @@ type GeneralMarkersFieldTest struct {
 	// +kubebuilder:validation:Format=int32
 	ValidFormatOnInt int32 `json:"validFormatOnInt"`
 
-	// Invalid: Enum marker on named type
+	// Valid: Enum marker on named type
 	// +kubebuilder:validation:Enum=A;B;C
-	InvalidEnumOnGeneralType GeneralType `json:"invalidEnumOnGeneralType"`
+	ValidEnumOnGeneralType GeneralType `json:"validEnumOnGeneralType"`
 
-	// Invalid: Format marker on named type
+	// Valid: Format marker on named type
 	// +kubebuilder:validation:Format=email
-	InvalidFormatOnGeneralType GeneralType `json:"invalidFormatOnGeneralType"`
+	ValidFormatOnGeneralType GeneralType `json:"validFormatOnGeneralType"`
 
-	// Invalid: Type marker on named type
+	// Valid: Type marker on named type
 	// +kubebuilder:validation:Type=string
-	InvalidTypeOnGeneralType GeneralType `json:"invalidTypeOnGeneralType"`
+	ValidTypeOnGeneralType GeneralType `json:"validTypeOnGeneralType"`
 
 	// Valid: XValidation marker on named type (allowed on both field and type)
 	// +kubebuilder:validation:XValidation:rule="self.size() > 0"

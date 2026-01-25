@@ -32,7 +32,7 @@ func TestAnalyzerWithDefaultConfig(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	analysistest.Run(t, testdata, analyzer, "a")
+	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
 }
 
 func TestAnalyzerWarn(t *testing.T) {
@@ -46,7 +46,7 @@ func TestAnalyzerWarn(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	analysistest.RunWithSuggestedFixes(t, testdata, analyzer, "a")
+	analysistest.Run(t, testdata, analyzer, "a")
 }
 
 func TestAnalyzerWithCustomAndOverrideMarkers(t *testing.T) {
