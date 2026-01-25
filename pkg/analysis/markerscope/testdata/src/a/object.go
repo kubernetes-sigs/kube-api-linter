@@ -87,10 +87,9 @@ type ObjectMarkersFieldTest struct {
 	// +kubebuilder:validation:MaxProperties=5 // want `marker "kubebuilder:validation:MaxProperties": type array is not allowed \(expected one of: \[object\]\)`
 	InvalidMaxPropertiesOnArray []string `json:"invalidMaxPropertiesOnArray"`
 
-	// Invalid: Using invalid named type
-	// +kubebuilder:validation:MinProperties=2 // want `marker "kubebuilder:validation:MinProperties": type string is not allowed \(expected one of: \[object\]\)`
+	// Invalid: Using invalid named type (error is reported on the type definition)
 	InvalidMinPropertiesOnStringTyped InvalidMinPropertiesOnStringType `json:"invalidMinPropertiesOnStringTyped"`
 
-	// Invalid: Using invalid named type
+	// Invalid: Using invalid named type (error is reported on the type definition)
 	InvalidMaxPropertiesOnArrayTyped InvalidMaxPropertiesOnArrayType `json:"invalidMaxPropertiesOnArrayTyped"`
 }

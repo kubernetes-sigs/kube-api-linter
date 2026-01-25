@@ -83,9 +83,9 @@ type ObjectMarkersFieldTest struct {
 	// Invalid: MaxProperties marker on array field
 	InvalidMaxPropertiesOnArray []string `json:"invalidMaxPropertiesOnArray"`
 
-	// Invalid: Using invalid named type
+	// Invalid: Using invalid named type (error is reported on the type definition)
 	InvalidMinPropertiesOnStringTyped InvalidMinPropertiesOnStringType `json:"invalidMinPropertiesOnStringTyped"`
 
-	// Invalid: Using invalid named type
+	// Invalid: Using invalid named type (error is reported on the type definition)
 	InvalidMaxPropertiesOnArrayTyped InvalidMaxPropertiesOnArrayType `json:"invalidMaxPropertiesOnArrayTyped"`
 }

@@ -119,8 +119,6 @@ type NumericMarkersFieldTest struct {
 	InvalidMultipleOfOnArray []int32 `json:"invalidMultipleOfOnArray"`
 
 	// Invalid: Using invalid named type
-	// +kubebuilder:validation:Minimum=50 // want `marker "kubebuilder:validation:Minimum": type string is not allowed \(expected one of: \[integer number\]\)`
-	// +kubebuilder:validation:Maximum=100 // want `marker "kubebuilder:validation:Maximum": type string is not allowed \(expected one of: \[integer number\]\)`
 	InvalidMinimumOnStringTyped InvalidMinimumOnStringType `json:"invalidMinimumOnStringTyped"`
 
 	// Invalid: Using invalid named type
