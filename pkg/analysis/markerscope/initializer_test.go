@@ -245,6 +245,45 @@ var _ = Describe("markerscope initializer", func() {
 				},
 				expectedErr: "",
 			}),
+
+			Entry("With OnTypeOnly and TypeScope allowed", testCase{
+				config: markerscope.MarkerScopeConfig{
+					CustomMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier:          "custom:marker",
+							Scopes:              []markerscope.ScopeConstraint{markerscope.FieldScope, markerscope.TypeScope},
+							NamedTypeConstraint: markerscope.NamedTypeConstraintOnTypeOnly,
+						},
+					},
+				},
+				expectedErr: "",
+			}),
+
+			Entry("With OnTypeOnly but only FieldScope allowed (invalid)", testCase{
+				config: markerscope.MarkerScopeConfig{
+					CustomMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier:          "custom:marker",
+							Scopes:              []markerscope.ScopeConstraint{markerscope.FieldScope},
+							NamedTypeConstraint: markerscope.NamedTypeConstraintOnTypeOnly,
+						},
+					},
+				},
+				expectedErr: `markerscope.customMarkers[0].namedTypeConstraint: Invalid value: "OnTypeOnly": OnTypeOnly requires TypeScope to be allowed`,
+			}),
+
+			Entry("With invalid named type constraint value", testCase{
+				config: markerscope.MarkerScopeConfig{
+					CustomMarkers: []markerscope.MarkerScopeRule{
+						{
+							Identifier:          "custom:marker",
+							Scopes:              []markerscope.ScopeConstraint{markerscope.FieldScope},
+							NamedTypeConstraint: "InvalidValue",
+						},
+					},
+				},
+				expectedErr: `markerscope.customMarkers[0].namedTypeConstraint: Invalid value: "InvalidValue": invalid named type constraint: "InvalidValue" (must be one of: "AllowTypeOrField", "OnTypeOnly")`,
+			}),
 		)
 	})
 

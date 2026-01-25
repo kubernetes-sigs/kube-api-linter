@@ -111,9 +111,8 @@ func validateMarkerRule(rule MarkerScopeRule, fldPath *field.Path) field.ErrorLi
 	}
 
 	// Validate named type constraint if present
-	if !isValidNamedTypeConstraint(rule.NamedTypeConstraint) {
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("namedTypeConstraint"), rule.NamedTypeConstraint,
-			fmt.Sprintf("invalid named type constraint: %q", rule.NamedTypeConstraint)))
+	if err := validateNamedTypeConstraint(rule.NamedTypeConstraint, rule.Scopes); err != nil {
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("namedTypeConstraint"), rule.NamedTypeConstraint, err.Error()))
 	}
 
 	// Validate type constraint if present
@@ -156,11 +155,21 @@ func isValidSchemaType(st SchemaType) bool {
 	}
 }
 
-func isValidNamedTypeConstraint(ntc NamedTypeConstraint) bool {
+// validateNamedTypeConstraint validates the named type constraint and returns an error if invalid.
+// Returns nil if the constraint is valid.
+func validateNamedTypeConstraint(ntc NamedTypeConstraint, scopes []ScopeConstraint) error {
 	switch ntc {
-	case "", NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly:
-		return true
+	case "", NamedTypeConstraintAllowTypeOrField:
+		return nil
+	case NamedTypeConstraintOnTypeOnly:
+		// OnTypeOnly requires TypeScope to be allowed, otherwise the constraint is invalid
+		for _, scope := range scopes {
+			if scope == TypeScope {
+				return nil
+			}
+		}
+		return fmt.Errorf("OnTypeOnly requires TypeScope to be allowed")
 	default:
-		return false
+		return fmt.Errorf("invalid named type constraint: %q (must be one of: %q, %q)", ntc, NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly)
 	}
 }
