@@ -26,7 +26,7 @@ import (
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
-	inspectorhelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
@@ -81,7 +81,7 @@ func newAnalyzer(cfg *MarkerScopeConfig) *analysis.Analyzer {
 		rules or add custom markers using customMarkers configuration.
 		`,
 		Run:              a.run,
-		Requires:         []*analysis.Analyzer{inspectorhelper.Analyzer},
+		Requires:         []*analysis.Analyzer{inspector.Analyzer},
 		RunDespiteErrors: true,
 	}
 }
@@ -108,18 +108,18 @@ func defaultConfig(cfg *MarkerScopeConfig) {
 }
 
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
-	inspector, ok := pass.ResultOf[inspectorhelper.Analyzer].(inspectorhelper.Inspector)
+	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
 	if !ok {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
 	// Check field markers
-	inspector.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
+	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
 		a.checkFieldMarkers(pass, field, markersAccess)
 	})
 
 	// Check type markers
-	inspector.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
+	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
 		a.checkTypeSpecMarkers(pass, typeSpec, markersAccess)
 	})
 
