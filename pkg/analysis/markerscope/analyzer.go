@@ -113,21 +113,90 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
+	// Pre-compute type usage cache to avoid duplicate O(n) traversals
+	// when building fixes for multiple markers on the same type.
+	typeUsageCache := buildTypeUsageCache(pass)
+
 	// Check field markers
 	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
-		a.checkFieldMarkers(pass, field, markersAccess)
+		a.checkFieldMarkers(pass, field, markersAccess, typeUsageCache)
 	})
 
 	// Check type markers
 	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
-		a.checkTypeSpecMarkers(pass, typeSpec, markersAccess)
+		a.checkTypeSpecMarkers(pass, typeSpec, markersAccess, typeUsageCache)
 	})
 
 	return nil, nil //nolint:nilnil
 }
 
+// buildTypeUsageCache pre-computes all type usages to enable O(1) lookups.
+// Returns a map from TypeSpec to all Fields that use that type.
+// This avoids O(n) traversals when multiple markers on the same type need fixes.
+func buildTypeUsageCache(pass *analysis.Pass) map[*ast.TypeSpec][]*ast.Field {
+	// Phase 1: Build type name → TypeSpec mapping
+	typeNameToSpec := make(map[string]*ast.TypeSpec)
+
+	for _, file := range pass.Files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			if typeSpec, ok := n.(*ast.TypeSpec); ok {
+				typeNameToSpec[typeSpec.Name.Name] = typeSpec
+			}
+
+			return true
+		})
+	}
+
+	// Phase 2: Find all fields that use each type
+	typeUsageCache := make(map[*ast.TypeSpec][]*ast.Field)
+
+	for _, file := range pass.Files {
+		ast.Inspect(file, func(n ast.Node) bool {
+			field, ok := n.(*ast.Field)
+			if !ok {
+				return true
+			}
+
+			typeName := extractTypeNameFromFieldType(field.Type)
+			if typeName == "" {
+				return true
+			}
+
+			if typeSpec, ok := typeNameToSpec[typeName]; ok {
+				typeUsageCache[typeSpec] = append(typeUsageCache[typeSpec], field)
+			}
+
+			return true
+		})
+	}
+
+	return typeUsageCache
+}
+
+// extractTypeNameFromFieldType extracts the type name from a field's type expression.
+// Handles: Ident, *Ident, []Ident, map[K]Ident.
+func extractTypeNameFromFieldType(expr ast.Expr) string {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e.Name
+	case *ast.StarExpr:
+		return extractTypeNameFromFieldType(e.X)
+	case *ast.ArrayType:
+		return extractTypeNameFromFieldType(e.Elt)
+	case *ast.MapType:
+		return extractTypeNameFromFieldType(e.Value)
+	default:
+		return ""
+	}
+}
+
 // checkFieldMarkers checks markers on fields for violations.
-func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
+func (a *analyzer) checkFieldMarkers(
+	pass *analysis.Pass,
+	field *ast.Field,
+	markersAccess markershelper.Markers,
+	typeUsageCache map[*ast.TypeSpec][]*ast.Field,
+) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
 	for marker := range utils.SortedMarkers(fieldMarkers) {
@@ -137,14 +206,19 @@ func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, mark
 			continue
 		}
 
-		a.checkAllowedScope(pass, field, marker, FieldScope, rule)
+		a.checkAllowedScope(pass, field, marker, FieldScope, rule, typeUsageCache)
 
 		a.checkTypeConstraintViolation(pass, field, marker, rule, fieldMarkers)
 	}
 }
 
 // checkTypeSpecMarkers checks markers on a type spec for violations.
-func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
+func (a *analyzer) checkTypeSpecMarkers(
+	pass *analysis.Pass,
+	typeSpec *ast.TypeSpec,
+	markersAccess markershelper.Markers,
+	typeUsageCache map[*ast.TypeSpec][]*ast.Field,
+) {
 	typeMarkers := markersAccess.TypeMarkers(typeSpec)
 
 	for marker := range utils.SortedMarkers(typeMarkers) {
@@ -154,7 +228,7 @@ func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeS
 			continue
 		}
 
-		a.checkAllowedScope(pass, typeSpec, marker, TypeScope, rule)
+		a.checkAllowedScope(pass, typeSpec, marker, TypeScope, rule, typeUsageCache)
 
 		a.checkTypeConstraintViolation(pass, typeSpec, marker, rule, typeMarkers)
 	}
@@ -458,9 +532,10 @@ func (a *analyzer) buildTypeToFieldFix(
 	pass *analysis.Pass,
 	typeSpec *ast.TypeSpec,
 	marker markershelper.Marker,
+	typeUsageCache map[*ast.TypeSpec][]*ast.Field,
 ) []analysis.SuggestedFix {
-	fieldTypeSpecs := utils.LookupTypeSpecUsage(pass, typeSpec)
-	if len(fieldTypeSpecs) == 0 {
+	fieldTypeSpecs, ok := typeUsageCache[typeSpec]
+	if !ok || len(fieldTypeSpecs) == 0 {
 		return nil
 	}
 
@@ -476,6 +551,7 @@ func (a *analyzer) buildScopeViolationFix(
 	appliedScope ScopeConstraint,
 	targetScope ScopeConstraint,
 	rule MarkerScopeRule,
+	typeUsageCache map[*ast.TypeSpec][]*ast.Field,
 ) []analysis.SuggestedFix {
 	// Only build fix if policy allows
 	if a.policy != MarkerScopePolicySuggestFix {
@@ -504,7 +580,7 @@ func (a *analyzer) buildScopeViolationFix(
 			return nil
 		}
 
-		return a.buildTypeToFieldFix(pass, typeSpec, marker)
+		return a.buildTypeToFieldFix(pass, typeSpec, marker, typeUsageCache)
 	}
 
 	return nil
@@ -517,6 +593,7 @@ func (a *analyzer) handleScopeViolation(
 	marker markershelper.Marker,
 	appliedScope ScopeConstraint,
 	rule MarkerScopeRule,
+	typeUsageCache map[*ast.TypeSpec][]*ast.Field,
 ) {
 	// Determine the target scope for fix based on allowed scopes
 	var targetScope ScopeConstraint
@@ -532,7 +609,7 @@ func (a *analyzer) handleScopeViolation(
 	}
 
 	// Build fixes if possible (targetScope will be empty if no valid fix target)
-	fixes := a.buildScopeViolationFix(pass, node, marker, appliedScope, targetScope, rule)
+	fixes := a.buildScopeViolationFix(pass, node, marker, appliedScope, targetScope, rule, typeUsageCache)
 
 	// Report the violation
 	a.reportScopeViolation(pass, marker, rule, targetScope, fixes)
@@ -545,6 +622,7 @@ func (a *analyzer) checkAllowedScope(
 	marker markershelper.Marker,
 	appliedScope ScopeConstraint,
 	rule MarkerScopeRule,
+	typeUsageCache map[*ast.TypeSpec][]*ast.Field,
 ) {
 	// Check if applied scope is allowed
 	if rule.AllowsScope(appliedScope) {
@@ -553,5 +631,5 @@ func (a *analyzer) checkAllowedScope(
 	}
 
 	// Handle the violation (build + report)
-	a.handleScopeViolation(pass, node, marker, appliedScope, rule)
+	a.handleScopeViolation(pass, node, marker, appliedScope, rule, typeUsageCache)
 }
