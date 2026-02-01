@@ -494,12 +494,13 @@ OpenAPI schema types map to Go types as follows:
 
 #### Named Type Constraints
 
-For markers that can be applied to both fields and types with type constraints, the `namedTypeConstraint` field controls where the marker should be declared when used with named types:
+For markers that can be applied to both fields and types with type constraints, the `namedTypePreference` field controls where the marker should be declared when used with named types.
 
-- `AllowTypeOrField` (default): The marker can be declared on either the field or the type definition.
+**Valid values:**
+- `AllowTypeOrField` (default, also used when empty): The marker can be declared on either the field or the type definition.
 - `OnTypeOnly`: The marker must be declared on the type definition, not on fields using that type.
 
-Example with `namedTypeConstraint: OnTypeOnly`:
+Example with `namedTypePreference: OnTypeOnly`:
 
 ```go
 // ✅ Valid: marker on type definition
@@ -519,7 +520,15 @@ type Service struct {
 }
 ```
 
-Most built-in kubebuilder validation markers use `namedTypeConstraint: OnTypeOnly` to encourage consistent marker placement on type definitions.
+Most built-in kubebuilder validation markers use `namedTypePreference: OnTypeOnly` to encourage consistent marker placement on type definitions.
+
+**Note:** These are the only two valid values for `namedTypePreference`. The `OnTypeOnly` value can only be used when `TypeScope` is included in the marker's allowed scopes.
+
+**Global vs Per-Marker Settings:**
+- The per-marker `namedTypePreference` takes precedence over the global `namedTypePreference` setting
+- If `namedTypePreference` is not specified for a marker, it inherits the value from the global setting
+- If neither is set, the default behavior is `AllowTypeOrField`
+- Use the global `namedTypePreference` for uniform behavior across all markers; use per-marker `namedTypePreference` for marker-specific overrides
 
 #### Type Override Examples
 
@@ -595,8 +604,8 @@ The `typeConstraint` field allows you to restrict which Go types a marker can be
 - `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
 - `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
 
-**Named type constraint values:**
-- `namedTypeConstraint`: Controls where markers should be placed when applied to fields using named types
+**Named type preference values:**
+- `namedTypePreference`: Controls where markers should be placed when applied to fields using named types
   - `AllowTypeOrField` (default): Marker can be placed on either the field or the type definition
   - `OnTypeOnly`: Marker must be placed on the type definition, not on the field
 
@@ -606,6 +615,11 @@ The `typeConstraint` field allows you to restrict which Go types a marker can be
 lintersConfig:
   markerscope:
     policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `SuggestFix`.
+
+    # Global preference for markers that support both Type and Field scopes
+    # This provides a convenient way to enforce uniform behavior across all markers
+    # Individual markers can override this with their own namedTypePreference setting
+    namedTypePreference: AllowTypeOrField | OnTypeOnly # Defaults to `AllowTypeOrField`
 
     # Custom markers can be used for both:
     # 1. Overriding built-in markers (by using the same identifier)
@@ -620,9 +634,10 @@ lintersConfig:
         scopes: [Field, Type]
 
       # Custom marker with scope and type constraints
+      # This marker overrides the global namedTypePreference setting
       - identifier: "mycompany:validation:NumericLimit"
         scopes: [Field, Type]
-        namedTypeConstraint: OnTypeOnly # Require declaration on type definition for named types
+        namedTypePreference: OnTypeOnly # Override: require declaration on type definition for named types
         typeConstraint:
           allowedSchemaTypes:
             - integer
@@ -642,6 +657,54 @@ lintersConfig:
 - Use `customMarkers` to both override built-in markers and add validation for your own custom markers
 - To override a built-in marker, use the same identifier as the built-in marker
 - If a marker is not in the customMarkers list and not in the default rules, no validation is performed
+
+#### Named Type Preference
+
+The `namedTypePreference` field provides a convenient way to enforce uniform behavior across all markers that support both `Type` and `Field` scopes, without having to specify `namedTypePreference` for each individual marker.
+
+**Valid values:**
+- `AllowTypeOrField` (default): Markers can be declared on either fields or type definitions
+- `OnTypeOnly`: Markers must be declared on type definitions, not on fields using named types
+
+**How it works:**
+- The global `namedTypePreference` applies to all markers that have both `Type` and `Field` in their scopes
+- Individual markers can override this global setting by specifying their own `namedTypePreference`
+- If `namedTypePreference` is not set (neither globally nor per-marker), the default behavior is `AllowTypeOrField`
+
+**Example - Enforcing uniform OnTypeOnly behavior:**
+
+```yaml
+lintersConfig:
+  markerscope:
+    policy: SuggestFix
+    namedTypePreference: OnTypeOnly  # Apply uniformly to all Type+Field markers
+    customMarkers:
+      - identifier: "kubebuilder:validation:Enum"
+        scopes: [Type, Field]
+      - identifier: "kubebuilder:validation:Format"
+        scopes: [Type, Field]
+      - identifier: "kubebuilder:validation:Minimum"
+        scopes: [Type, Field]
+```
+
+This is much simpler than specifying `namedTypePreference: OnTypeOnly` for each marker individually.
+
+**Example - Global setting with per-marker override:**
+
+```yaml
+lintersConfig:
+  markerscope:
+    policy: SuggestFix
+    namedTypePreference: OnTypeOnly  # Default for all markers
+    customMarkers:
+      - identifier: "kubebuilder:validation:Enum"
+        scopes: [Type, Field]
+        # Inherits OnTypeOnly from global setting
+
+      - identifier: "mycompany:validation:Flexible"
+        scopes: [Type, Field]
+        namedTypePreference: AllowTypeOrField  # Override: allow on both field and type
+```
 
 ### Fixes
 
