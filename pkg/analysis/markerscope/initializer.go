@@ -17,6 +17,7 @@ package markerscope
 
 import (
 	"fmt"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -111,9 +112,7 @@ func validateMarkerRule(rule MarkerScopeRule, fldPath *field.Path) field.ErrorLi
 	}
 
 	// Validate named type constraint if present
-	if err := validateNamedTypeConstraint(rule.NamedTypeConstraint, rule.Scopes); err != nil {
-		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("namedTypeConstraint"), rule.NamedTypeConstraint, err.Error()))
-	}
+	fieldErrors = append(fieldErrors, validateNamedTypeConstraint(rule.NamedTypeConstraint, rule.Scopes, fldPath.Child("namedTypeConstraint"))...)
 
 	// Validate type constraint if present
 	if rule.TypeConstraint != nil {
@@ -155,21 +154,19 @@ func isValidSchemaType(st SchemaType) bool {
 	}
 }
 
-// validateNamedTypeConstraint validates the named type constraint and returns an error if invalid.
-// Returns nil if the constraint is valid.
-func validateNamedTypeConstraint(ntc NamedTypeConstraint, scopes []ScopeConstraint) error {
+// validateNamedTypeConstraint validates the named type constraint and returns field errors if invalid.
+func validateNamedTypeConstraint(ntc NamedTypeConstraint, scopes []ScopeConstraint, fldPath *field.Path) field.ErrorList {
 	switch ntc {
 	case "", NamedTypeConstraintAllowTypeOrField:
 		return nil
 	case NamedTypeConstraintOnTypeOnly:
 		// OnTypeOnly requires TypeScope to be allowed, otherwise the constraint is invalid
-		for _, scope := range scopes {
-			if scope == TypeScope {
-				return nil
-			}
+		if !slices.Contains(scopes, TypeScope) {
+			return field.ErrorList{field.Invalid(fldPath, ntc, "OnTypeOnly requires TypeScope to be allowed")}
 		}
-		return fmt.Errorf("OnTypeOnly requires TypeScope to be allowed")
+
+		return nil
 	default:
-		return fmt.Errorf("invalid named type constraint: %q (must be one of: %q, %q)", ntc, NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly)
+		return field.ErrorList{field.Invalid(fldPath, ntc, fmt.Sprintf("invalid named type constraint: %q (must be one of: %q, %q)", ntc, NamedTypeConstraintAllowTypeOrField, NamedTypeConstraintOnTypeOnly))}
 	}
 }

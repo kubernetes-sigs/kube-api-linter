@@ -277,8 +277,6 @@ func (a *analyzer) reportScopeViolation(
 
 	if rule.AllowsScope(targetScope) {
 		message = fmt.Sprintf("marker %q can only be applied to %s", marker.Identifier, targetScope.PluralName())
-	} else {
-		// This should never happen, but just in case
 	}
 
 	pass.Report(analysis.Diagnostic{
