@@ -211,7 +211,10 @@ func (a *analyzer) handleShouldBeOnTypeDefinition(
 	marker markershelper.Marker,
 	rule MarkerScopeRule,
 ) {
-	if rule.NamedTypeConstraint != NamedTypeConstraintOnTypeOnly || !rule.AllowsScope(TypeScope) {
+	// Skip validation if marker allows placement on both field and type, or if TypeScope is not allowed
+	if rule.NamedTypeConstraint == "" ||
+		rule.NamedTypeConstraint == NamedTypeConstraintAllowTypeOrField ||
+		!rule.AllowsScope(TypeScope) {
 		return
 	}
 
