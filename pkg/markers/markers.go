@@ -27,6 +27,18 @@ const (
 
 	// DefaultMarker is the marker that specifies the default value of a field or type.
 	DefaultMarker = "default"
+
+	// ListTypeMarker is the marker used to specify the type of list for server-side apply operations.
+	ListTypeMarker = "listType"
+
+	// ListMapKeyMarker is the marker used to specify the key field for map-type lists.
+	ListMapKeyMarker = "listMapKey"
+
+	// MapTypeMarker is the marker used to specify the atomicity level of a map.
+	MapTypeMarker = "mapType"
+
+	// StructTypeMarker is the marker used to specify the atomicity level of a struct.
+	StructTypeMarker = "structType"
 )
 
 const (
@@ -155,18 +167,6 @@ const (
 
 	// KubebuilderItemsXValidationMarker is the marker used to specify CEL validation rules for entries to a nested array type or field in kubebuilder.
 	KubebuilderItemsXValidationMarker = "kubebuilder:validation:items:XValidation"
-
-	// ListTypeMarker is the marker used to specify the type of list for server-side apply operations.
-	ListTypeMarker = "listType"
-
-	// ListMapKeyMarker is the marker used to specify the key field for map-type lists.
-	ListMapKeyMarker = "listMapKey"
-
-	// MapTypeMarker is the marker used to specify the atomicity level of a map.
-	MapTypeMarker = "mapType"
-
-	// StructTypeMarker is the marker used to specify the atomicity level of a struct.
-	StructTypeMarker = "structType"
 
 	// KubebuilderSchemaLessMarker is the marker that indicates that a struct is schemaless.
 	KubebuilderSchemaLessMarker = "kubebuilder:validation:Schemaless"
