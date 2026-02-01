@@ -649,6 +649,7 @@ func SortedMarkers(markerSet markershelper.MarkerSet) iter.Seq[markershelper.Mar
 		slices.SortFunc(markers, func(a, b markershelper.Marker) int {
 			return cmp.Compare(a.Pos, b.Pos)
 		})
+
 		for _, m := range markers {
 			if !yield(m) {
 				return

@@ -20,26 +20,56 @@ limitations under the License.
 // # Scope Validation
 //
 // Some markers are only valid when applied to specific Go constructs:
-//   - Field-only markers: optional, required, kubebuilder:validation:XValidation
-//   - Type-only markers: kubebuilder:validation:MinProperties, kubebuilder:validation:MaxProperties
-//   - Field or Type markers: kubebuilder:default, kubebuilder:validation:MinLength, kubebuilder:validation:MaxLength, etc.
+//   - Field-only markers: optional, required, nullable, default, kubebuilder:default, kubebuilder:example, kubebuilder:validation:EmbeddedResource, kubebuilder:validation:Schemaless
+//   - Type-only markers: kubebuilder:validation:items:ExactlyOneOf, kubebuilder:validation:items:AtMostOneOf, kubebuilder:validation:items:AtLeastOneOf
+//   - Field or Type markers: kubebuilder:validation:Minimum, kubebuilder:validation:Maximum, kubebuilder:validation:MinLength, kubebuilder:validation:MaxLength, kubebuilder:validation:MinProperties, kubebuilder:validation:MaxProperties, etc.
 //
 // # Type Constraint Validation
 //
 // Markers are also validated for type correctness to ensure they are applied to compatible data types:
-//   - Numeric markers (kubebuilder:validation:Minimum, kubebuilder:validation:Maximum, kubebuilder:validation:MultipleOf) must be applied to integer and number types
-//   - String markers (kubebuilder:validation:Pattern, kubebuilder:validation:MinLength, kubebuilder:validation:MaxLength) must be applied to string types
-//   - Array markers (kubebuilder:validation:MinItems, kubebuilder:validation:MaxItems, kubebuilder:validation:UniqueItems) must be applied to array types
-//   - Object markers (kubebuilder:validation:MinProperties, kubebuilder:validation:MaxProperties) must be applied to object types (struct/map)
+//   - Numeric markers (Minimum, Maximum, MultipleOf, ExclusiveMinimum, ExclusiveMaximum) require integer or number types
+//   - String markers (Pattern, MinLength, MaxLength, Format) require string types
+//   - Array markers (MinItems, MaxItems, UniqueItems) require array types
+//   - Object markers (MinProperties, MaxProperties) require object types (struct or map)
 //
 // For example, applying kubebuilder:validation:Maximum to a string field will be flagged as an error
-// since kubebuilder:validation:Maximum is only valid for numeric types.
+// since Maximum is only valid for numeric types.
 //
 // # Array Element Type Constraints
 //
 // For array types, element-level constraints can be specified using kubebuilder:validation:items: prefix markers
 // (e.g., kubebuilder:validation:items:Minimum, kubebuilder:validation:items:Pattern). These validate the array
 // element types rather than the array itself.
+//
+// # Named Type Preference
+//
+// For markers that can be applied to both fields and types, the namedTypePreference setting controls
+// where the marker should be declared when used with named types:
+//
+//   - AllowTypeOrField (default): Marker can be declared on either the field or the type definition
+//   - OnTypeOnly: Marker must be declared on the type definition, not on fields using that type
+//
+// Most built-in kubebuilder validation markers use OnTypeOnly to encourage consistent marker placement
+// on type definitions. For example:
+//
+//	// Valid: marker on type definition
+//	// +kubebuilder:validation:Minimum=0
+//	type Port int32
+//
+//	type Service struct {
+//	    Port Port `json:"port"`
+//	}
+//
+//	// Invalid with OnTypeOnly: marker on field using named type
+//	type Port int32
+//
+//	type Service struct {
+//	    // +kubebuilder:validation:Minimum=0  // Error: should be on Port type definition
+//	    Port Port `json:"port"`
+//	}
+//
+// You can set a global namedTypePreference for uniform behavior across all markers, or override it
+// per marker using the marker's namedTypePreference field.
 //
 // # Custom Markers Configuration
 //
@@ -54,15 +84,19 @@ limitations under the License.
 //
 // Example configuration to override a built-in marker:
 //
-//	customMarkers:
-//	  - identifier: "optional"
-//	    scopes: [Field, Type]  # Override default [Field] to allow on both
+//	lintersConfig:
+//	  markerscope:
+//	    namedTypePreference: OnTypeOnly  # Global setting for all markers
+//	    customMarkers:
+//	      - identifier: "optional"
+//	        scopes: [Field, Type]  # Override default [Field] to allow on both
 //
-// Example configuration to add a custom marker:
+// Example configuration to add a custom marker with type constraints:
 //
 //	customMarkers:
 //	  - identifier: "mycompany:validation:CustomMarker"
-//	    scopes: [Field]
+//	    scopes: [Field, Type]
+//	    namedTypePreference: OnTypeOnly  # Require on type definition for named types
 //	    typeConstraint:
 //	      allowedSchemaTypes: ["string"]
 //
