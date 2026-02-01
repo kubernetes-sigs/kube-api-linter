@@ -16,11 +16,13 @@ limitations under the License.
 package utils
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
+	"iter"
 	"slices"
 	"strings"
 
@@ -593,13 +595,13 @@ func matchesType(expr ast.Expr, typeName string) bool {
 	}
 }
 
-// UnwrapType unwraps pointer, named, slice, array, and map types to get the underlying element type.
+// Underlying unwraps pointer, named, slice, array, and map types to get the underlying element type.
 // For pointer types, it returns the element type.
 // For named types, it returns the underlying type.
 // For slice and array types, it returns the element type.
 // For map types, it returns the value type.
 // Otherwise, it returns the type as-is.
-func UnwrapType(t types.Type) types.Type {
+func Underlying(t types.Type) types.Type {
 	// Unwrap pointer types
 	if ptr, ok := t.(*types.Pointer); ok {
 		t = ptr.Elem()
@@ -636,6 +638,22 @@ func ExtractIdent(expr ast.Expr) *ast.Ident {
 		return ExtractIdent(e.Value)
 	default:
 		return nil
+	}
+}
+
+// SortedMarkers returns an iterator that yields markers sorted by their position.
+// This ensures consistent ordering when processing markers.
+func SortedMarkers(markerSet markershelper.MarkerSet) iter.Seq[markershelper.Marker] {
+	return func(yield func(markershelper.Marker) bool) {
+		markers := slices.Clone(markerSet.UnsortedList())
+		slices.SortFunc(markers, func(a, b markershelper.Marker) int {
+			return cmp.Compare(a.Pos, b.Pos)
+		})
+		for _, m := range markers {
+			if !yield(m) {
+				return
+			}
+		}
 	}
 }
 

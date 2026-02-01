@@ -16,7 +16,6 @@ limitations under the License.
 package markerscope
 
 import (
-	"cmp"
 	"fmt"
 	"go/ast"
 	"go/types"
@@ -127,20 +126,11 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	return nil, nil //nolint:nilnil
 }
 
-// sortMarkersByPosition sorts markers by their position to ensure consistent ordering.
-func sortMarkersByPosition(markers []markershelper.Marker) []markershelper.Marker {
-	slices.SortFunc(markers, func(a, b markershelper.Marker) int {
-		return cmp.Compare(a.Pos, b.Pos)
-	})
-
-	return markers
-}
-
 // checkFieldMarkers checks markers on fields for violations.
 func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) {
 	fieldMarkers := markersAccess.FieldMarkers(field)
 
-	for _, marker := range sortMarkersByPosition(fieldMarkers.UnsortedList()) {
+	for marker := range utils.SortedMarkers(fieldMarkers) {
 		rule, ok := a.markerRules[marker.Identifier]
 		if !ok {
 			// No rule defined for this marker, skip validation
@@ -157,7 +147,7 @@ func (a *analyzer) checkFieldMarkers(pass *analysis.Pass, field *ast.Field, mark
 func (a *analyzer) checkTypeSpecMarkers(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
 	typeMarkers := markersAccess.TypeMarkers(typeSpec)
 
-	for _, marker := range sortMarkersByPosition(typeMarkers.UnsortedList()) {
+	for marker := range utils.SortedMarkers(typeMarkers) {
 		rule, ok := a.markerRules[marker.Identifier]
 		if !ok {
 			// No rule defined for this marker, skip validation
@@ -363,7 +353,7 @@ func handleTypeAgainstConstraint(t types.Type, tc *TypeConstraint, schemaTypeOve
 
 	// Validate element constraint for arrays/slices
 	if tc.ElementConstraint != nil && schemaType == SchemaTypeArray {
-		elemType := utils.UnwrapType(t)
+		elemType := utils.Underlying(t)
 		if elemType != nil {
 			// Use items type override for element constraint if provided
 			if err := handleTypeAgainstConstraint(elemType, tc.ElementConstraint, itemsSchemaTypeOverride, ""); err != nil {
