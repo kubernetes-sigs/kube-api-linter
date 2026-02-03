@@ -1,0 +1,23 @@
+package a
+
+import "externaltypes"
+
+// TestExternalTypesWithMinZero tests named slice/map types from external packages
+// with MinItems=0/MinProperties=0 markers.
+type TestExternalTypesWithMinZero struct {
+	// Pointer to external slice with MinItems=0 is valid (distinguishes nil from empty)
+	// +kubebuilder:validation:MinItems=0
+	PtrExternalSliceWithMinZero *externaltypes.StringSlice `json:"ptrExternalSliceWithMinZero,omitempty"`
+
+	// Pointer to external map with MinProperties=0 is valid (distinguishes nil from empty)
+	// +kubebuilder:validation:MinProperties=0
+	PtrExternalMapWithMinZero *externaltypes.StringMap `json:"ptrExternalMapWithMinZero,omitempty"`
+
+	// Non-pointer external slice with MinItems=0 should suggest adding pointer
+	// +kubebuilder:validation:MinItems=0
+	ExternalSliceWithMinZero externaltypes.StringSlice `json:"externalSliceWithMinZero,omitempty"` // want "field TestExternalTypesWithMinZero.ExternalSliceWithMinZero with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil \\(unset\\) from empty."
+
+	// Non-pointer external map with MinProperties=0 should suggest adding pointer
+	// +kubebuilder:validation:MinProperties=0
+	ExternalMapWithMinZero externaltypes.StringMap `json:"externalMapWithMinZero,omitempty"` // want "field TestExternalTypesWithMinZero.ExternalMapWithMinZero with MinItems=0/MinProperties=0, underlying type should be a pointer to distinguish nil \\(unset\\) from empty."
+}
