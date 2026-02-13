@@ -16,6 +16,10 @@ limitations under the License.
 package minlength
 
 import (
+	"fmt"
+
+	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 )
@@ -27,9 +31,30 @@ func init() {
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
 func Initializer() initializer.AnalyzerInitializer {
-	return initializer.NewInitializer(
+	return initializer.NewConfigurableInitializer(
 		name,
-		Analyzer,
-		false, // For now, CRD only, and so not on by default.
+		initAnalyzer,
+		false, // No longer CRD only, but keeping as disabled-by-default for backwards compatibility because the default behavior is for CRD-based suggestions
+		validateConfig,
 	)
+}
+
+func initAnalyzer(c *Config) (*analysis.Analyzer, error) {
+	return newAnalyzer(c), nil
+}
+
+func validateConfig(c *Config, fldPath *field.Path) field.ErrorList {
+	if c == nil {
+		return field.ErrorList{}
+	}
+
+	errs := field.ErrorList{}
+
+	switch c.PreferredSuggestionMarkerType {
+	case "", PreferredSuggestionMarkerTypeKubebuilder, PreferredSuggestionMarkerTypeDeclarativeValidation:
+	default:
+		errs = append(errs, field.Invalid(fldPath.Child("preferredSuggestionMarkerType"), c.PreferredSuggestionMarkerType, fmt.Sprintf("must be one of %s, %s or omitted.", PreferredSuggestionMarkerTypeKubebuilder, PreferredSuggestionMarkerTypeDeclarativeValidation)))
+	}
+
+	return errs
 }

@@ -25,5 +25,23 @@ import (
 func TestMinLength(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	analysistest.Run(t, testdata, minlength.Analyzer, "a")
+	analyzer, err := minlength.Initializer().Init(&minlength.Config{})
+	if err != nil {
+		t.Fatalf("unexpected error initializing minlength linter: %v", err)
+	}
+
+	analysistest.Run(t, testdata, analyzer, "a")
+}
+
+func TestMinLengthDeclarativeValidation(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	analyzer, err := minlength.Initializer().Init(&minlength.Config{
+		PreferredSuggestionMarkerType: minlength.PreferredSuggestionMarkerTypeDeclarativeValidation,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error initializing minlength linter: %v", err)
+	}
+
+	analysistest.Run(t, testdata, analyzer, "b")
 }

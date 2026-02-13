@@ -33,6 +33,7 @@ import (
 
 var (
 	errMarkerMissingValue = errors.New("marker does not have a value")
+	errMarkerNotFound     = errors.New("marker not found in marker set")
 )
 
 // IsZeroValueValid determines whether the zero value of the field is valid per the validation markers.
@@ -130,7 +131,7 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 		zeroValueValid = false
 	}
 
-	var completeStructValidation = true
+	completeStructValidation := true
 	if minProperties == nil && nonOmittedFields == 0 {
 		// If the struct has no non-omitted fields, then the zero value of the struct is `{}`.
 		// This generally means that the validation is incomplete as the difference between omitting the field and not omitting is not clear.
@@ -310,7 +311,7 @@ func isNumericZeroValueValid[N number](pass *analysis.Pass, field *ast.Field, ma
 func getMarkerNumericValueByName[N number](marker markershelper.MarkerSet, markerName string) (*N, error) {
 	markerList := marker.Get(markerName)
 	if len(markerList) == 0 {
-		return nil, errMarkerMissingValue
+		return nil, errMarkerNotFound
 	}
 
 	markerValue, err := getMarkerNumericValue[N](markerList[0])
