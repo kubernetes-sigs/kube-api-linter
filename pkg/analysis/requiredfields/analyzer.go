@@ -16,6 +16,7 @@ limitations under the License.
 package requiredfields
 
 import (
+	"fmt"
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
@@ -34,18 +35,37 @@ const (
 
 func init() {
 	markershelper.DefaultRegistry().Register(
+		// Required markers
 		markers.RequiredMarker,
 		markers.KubebuilderRequiredMarker,
+		markers.K8sRequiredMarker,
+
+		// MinItems markers
 		markers.KubebuilderMinItemsMarker,
+		markers.K8sMinItemsMarker,
+
+		// MinLength markers
 		markers.KubebuilderMinLengthMarker,
+		markers.K8sMinLengthMarker,
+
+		// MinProperties markers
 		markers.KubebuilderMinPropertiesMarker,
+
+		// Minimum/Maximum markers
 		markers.KubebuilderMinimumMarker,
+		markers.K8sMinimumMarker,
+		markers.KubebuilderMaximumMarker,
+		markers.K8sMaximumMarker,
+
+		// Enum markers
 		markers.KubebuilderEnumMarker,
+		markers.K8sEnumMarker,
 	)
 }
 
 type analyzer struct {
-	serializationCheck serialization.SerializationCheck
+	serializationCheck      serialization.SerializationCheck
+	preferredRequiredMarker string
 }
 
 // newAnalyzer creates a new analyzer.
@@ -73,7 +93,8 @@ func newAnalyzer(cfg *RequiredFieldsConfig) *analysis.Analyzer {
 	})
 
 	a := &analyzer{
-		serializationCheck: serializationCheck,
+		serializationCheck:      serializationCheck,
+		preferredRequiredMarker: cfg.PreferredRequiredMarker,
 	}
 
 	return &analysis.Analyzer{
@@ -110,12 +131,59 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		return
 	}
 
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	// Check +k8s:required marker (for declarative validation)
+	// If +k8s:required is present but the field doesn't have the preferred required marker
+	// or any other non-k8s required marker, suggest adding the preferred one.
+	// When preferredRequiredMarker is "k8s:required", having +k8s:required alone is sufficient.
+	hasPreferredRequired := fieldMarkers.Has(a.preferredRequiredMarker)
+	hasAnyNonK8sRequired := fieldMarkers.Has(markers.RequiredMarker) || fieldMarkers.Has(markers.KubebuilderRequiredMarker)
+	a.checkK8sRequired(pass, field, fieldMarkers, qualifiedFieldName, hasPreferredRequired || hasAnyNonK8sRequired)
+
 	if field.Type == nil {
 		// The field has no type? We can't check if it's a pointer.
 		return
 	}
 
 	a.serializationCheck.Check(pass, field, markersAccess, jsonTags, qualifiedFieldName)
+}
+
+// checkK8sRequired checks for +k8s:required marker usage.
+// +k8s:required is for declarative validation and is separate from +required or +kubebuilder:validation:Required markers.
+// If the field has +k8s:required but doesn't have the preferred required marker or any other non-k8s required marker,
+// we suggest adding the preferred one. When preferredRequiredMarker is "k8s:required", having +k8s:required alone is sufficient.
+func (a *analyzer) checkK8sRequired(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, qualifiedFieldName string, hasOtherRequired bool) {
+	if !fieldMarkers.Has(markers.K8sRequiredMarker) {
+		return
+	}
+
+	// If the field already has +required or +kubebuilder:validation:Required, +k8s:required is acceptable alongside them
+	// (e.g., in K/K where both are needed during transition period)
+	if hasOtherRequired {
+		return
+	}
+
+	// If only +k8s:required is present, suggest adding the preferred required marker
+	k8sRequiredMarkers := fieldMarkers.Get(markers.K8sRequiredMarker)
+	for _, marker := range k8sRequiredMarkers {
+		pass.Report(analysis.Diagnostic{
+			Pos:     field.Pos(),
+			Message: fmt.Sprintf("field %s has +%s but should also have +%s marker", qualifiedFieldName, markers.K8sRequiredMarker, a.preferredRequiredMarker),
+			SuggestedFixes: []analysis.SuggestedFix{
+				{
+					Message: fmt.Sprintf("add +%s", a.preferredRequiredMarker),
+					TextEdits: []analysis.TextEdit{
+						{
+							Pos:     marker.Pos,
+							End:     marker.Pos,
+							NewText: fmt.Appendf(nil, "// +%s\n\t", a.preferredRequiredMarker),
+						},
+					},
+				},
+			},
+		})
+	}
 }
 
 func defaultConfig(cfg *RequiredFieldsConfig) {
@@ -129,5 +197,9 @@ func defaultConfig(cfg *RequiredFieldsConfig) {
 
 	if cfg.OmitZero.Policy == "" {
 		cfg.OmitZero.Policy = RequiredFieldsOmitZeroPolicySuggestFix
+	}
+
+	if cfg.PreferredRequiredMarker == "" {
+		cfg.PreferredRequiredMarker = markers.RequiredMarker
 	}
 }

@@ -301,8 +301,9 @@ func hasExplicitZeroMinValidation(pass *analysis.Pass, field *ast.Field, underly
 
 	switch underlying.(type) {
 	case *ast.ArrayType:
-		// Check for explicit MinItems=0
-		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker + "=0")
+		// Check for explicit MinItems=0 (both kubebuilder and k8s declarative validation markers)
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker+"=0") ||
+			fieldMarkers.HasWithValue(markers.K8sMinItemsMarker+"=0")
 	case *ast.MapType:
 		// Check for explicit MinProperties=0
 		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker + "=0")

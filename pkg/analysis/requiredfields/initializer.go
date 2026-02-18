@@ -22,6 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 func init() {
@@ -50,6 +51,12 @@ func validateConfig(rfc *RequiredFieldsConfig, fldPath *field.Path) field.ErrorL
 	}
 
 	fieldErrors := field.ErrorList{}
+
+	switch rfc.PreferredRequiredMarker {
+	case "", markers.RequiredMarker, markers.KubebuilderRequiredMarker, markers.K8sRequiredMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredRequiredMarker"), rfc.PreferredRequiredMarker, fmt.Sprintf("invalid value, must be one of %q, %q, %q or omitted", markers.RequiredMarker, markers.KubebuilderRequiredMarker, markers.K8sRequiredMarker)))
+	}
 
 	fieldErrors = append(fieldErrors, validateRequiredFieldsPointers(rfc.Pointers, fldPath.Child("pointers"))...)
 	fieldErrors = append(fieldErrors, validateRequiredFieldsOmitEmpty(rfc.OmitEmpty, fldPath.Child("omitempty"))...)

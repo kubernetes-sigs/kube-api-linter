@@ -287,27 +287,7 @@ func isInPassPackage(pass *analysis.Pass, namedType *types.Named) bool {
 func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess markershelper.Markers, field *ast.Field) markershelper.MarkerSet {
 	markers := markersAccess.FieldMarkers(field)
 
-	var underlyingType ast.Expr
-
-	switch t := field.Type.(type) {
-	case *ast.Ident:
-		underlyingType = t
-	case *ast.StarExpr:
-		underlyingType = t.X
-	default:
-		return markers
-	}
-
-	ident, ok := underlyingType.(*ast.Ident)
-	if !ok {
-		return markers
-	}
-
-	if IsBasicType(pass, ident) {
-		return markers
-	}
-
-	typeSpec, ok := LookupTypeSpec(pass, ident)
+	typeSpec, ok := lookupFieldTypeSpec(pass, field)
 	if !ok {
 		return markers
 	}
@@ -316,6 +296,32 @@ func TypeAwareMarkerCollectionForField(pass *analysis.Pass, markersAccess marker
 	typeMarkers.Insert(markers.UnsortedList()...)
 
 	return typeMarkers
+}
+
+// lookupFieldTypeSpec resolves the TypeSpec for a field's type,
+// looking through pointer types and skipping basic types.
+func lookupFieldTypeSpec(pass *analysis.Pass, field *ast.Field) (*ast.TypeSpec, bool) {
+	var underlyingType ast.Expr
+
+	switch t := field.Type.(type) {
+	case *ast.Ident:
+		underlyingType = t
+	case *ast.StarExpr:
+		underlyingType = t.X
+	default:
+		return nil, false
+	}
+
+	ident, ok := underlyingType.(*ast.Ident)
+	if !ok {
+		return nil, false
+	}
+
+	if IsBasicType(pass, ident) {
+		return nil, false
+	}
+
+	return LookupTypeSpec(pass, ident)
 }
 
 // IsArrayTypeOrAlias checks if the field type is an array type or an alias to an array type.

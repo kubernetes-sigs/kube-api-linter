@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"go/constant"
+	"go/types"
 	"slices"
 	"strconv"
 	"strings"
@@ -219,12 +221,14 @@ func isIdentZeroValueValid(pass *analysis.Pass, field *ast.Field, ident *ast.Ide
 func isStringZeroValueValid(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers) (bool, bool) {
 	fieldMarkers := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
-	if stringFieldIsEnum(fieldMarkers) {
-		return enumFieldAllowsEmpty(fieldMarkers), true
+	if stringFieldIsEnum(pass, field, fieldMarkers, markersAccess) {
+		return enumFieldAllowsEmpty(pass, field, fieldMarkers, markersAccess), true
 	}
 
-	hasMinLengthMarker := fieldMarkers.Has(markers.KubebuilderMinLengthMarker)
-	minLengthMarkerIsZero := fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinLengthMarker))
+	// Check both kubebuilder and k8s declarative validation markers
+	hasMinLengthMarker := fieldMarkers.Has(markers.KubebuilderMinLengthMarker) || fieldMarkers.Has(markers.K8sMinLengthMarker)
+	minLengthMarkerIsZero := fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.KubebuilderMinLengthMarker)) ||
+		fieldMarkers.HasWithValue(fmt.Sprintf("%s=0", markers.K8sMinLengthMarker))
 
 	return !hasMinLengthMarker || minLengthMarkerIsZero, hasMinLengthMarker
 }
@@ -250,7 +254,8 @@ func isArrayZeroValueValid(pass *analysis.Pass, field *ast.Field, arrayType *ast
 	fieldMarkers := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
 	// For arrays, we can use a zero value if the array is not required to have a minimum number of items.
-	minItems, err := getMarkerNumericValueByName[int](fieldMarkers, markers.KubebuilderMinItemsMarker)
+	// Check both kubebuilder and k8s declarative validation markers.
+	minItems, err := getMarkerNumericValueByNames[int](fieldMarkers, markers.KubebuilderMinItemsMarker, markers.K8sMinItemsMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
 		return false, false
 	}
@@ -258,17 +263,80 @@ func isArrayZeroValueValid(pass *analysis.Pass, field *ast.Field, arrayType *ast
 	return minItems == nil || *minItems == 0, minItems != nil
 }
 
-func stringFieldIsEnum(fieldMarkers markershelper.MarkerSet) bool {
-	// Check if the field has a kubebuilder enum marker.
-	return fieldMarkers.Has(markers.KubebuilderEnumMarker)
+func stringFieldIsEnum(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, markersAccess markershelper.Markers) bool {
+	// kubebuilder enum is a field-level marker.
+	if fieldMarkers.Has(markers.KubebuilderEnumMarker) {
+		return true
+	}
+
+	// +k8s:enum is a type-level marker only, so check via TypeMarkers, not field markers.
+	typeSpec, ok := lookupFieldTypeSpec(pass, field)
+	if !ok {
+		return false
+	}
+
+	return markersAccess.TypeMarkers(typeSpec).Has(markers.K8sEnumMarker)
 }
 
-func enumFieldAllowsEmpty(fieldMarkers markershelper.MarkerSet) bool {
-	// Check if the field has a kubebuilder enum marker with an empty value.
-	enumMarker := fieldMarkers.Get(markers.KubebuilderEnumMarker)
+func enumFieldAllowsEmpty(pass *analysis.Pass, field *ast.Field, fieldMarkers markershelper.MarkerSet, markersAccess markershelper.Markers) bool {
+	// Check kubebuilder enum markers (semicolon-separated format: foo;bar;"")
+	for _, marker := range fieldMarkers.Get(markers.KubebuilderEnumMarker) {
+		if slices.Contains(strings.Split(marker.Payload.Value, ";"), "\"\"") {
+			return true
+		}
+	}
 
-	for _, marker := range enumMarker {
-		return slices.Contains(strings.Split(marker.Payload.Value, ";"), "\"\"")
+	// Check K8s DV enum - need to analyze const values of the type.
+	// +k8s:enum is a type-level marker, so check via TypeMarkers.
+	typeSpec, ok := lookupFieldTypeSpec(pass, field)
+	if ok && markersAccess.TypeMarkers(typeSpec).Has(markers.K8sEnumMarker) {
+		return k8sEnumAllowsEmpty(pass, field)
+	}
+
+	return false
+}
+
+// k8sEnumAllowsEmpty checks if a K8s DV enum type has an empty string const value.
+func k8sEnumAllowsEmpty(pass *analysis.Pass, field *ast.Field) bool {
+	// Get the field's type
+	fieldType := field.Type
+	if star, ok := fieldType.(*ast.StarExpr); ok {
+		fieldType = star.X
+	}
+
+	ident, ok := fieldType.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	// Get the type object
+	typeObj := pass.TypesInfo.Uses[ident]
+	if typeObj == nil {
+		return false
+	}
+
+	// Find all const values of this type and check if any is empty string
+	for _, obj := range pass.TypesInfo.Defs {
+		if obj == nil {
+			continue
+		}
+
+		constObj, ok := obj.(*types.Const)
+		if !ok {
+			continue
+		}
+
+		// Check if this const is of the same type as our field
+		if !types.Identical(constObj.Type(), typeObj.Type()) {
+			continue
+		}
+
+		// Get the const value and check if it's empty string
+		if constObj.Val().Kind() == constant.String {
+			if constant.StringVal(constObj.Val()) == "" {
+				return true
+			}
+		}
 	}
 
 	return false
@@ -286,13 +354,15 @@ type number interface {
 func isNumericZeroValueValid[N number](pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) (bool, bool) {
 	fieldMarkers := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
-	minimum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMinimumMarker)
+	// Check both kubebuilder and k8s declarative validation markers for minimum
+	minimum, err := getMarkerNumericValueByNames[N](fieldMarkers, markers.KubebuilderMinimumMarker, markers.K8sMinimumMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
 		pass.Reportf(field.Pos(), "field %s has an invalid minimum marker: %v", qualifiedFieldName, err)
 		return false, false
 	}
 
-	maximum, err := getMarkerNumericValueByName[N](fieldMarkers, markers.KubebuilderMaximumMarker)
+	// Check both kubebuilder and k8s declarative validation markers for maximum
+	maximum, err := getMarkerNumericValueByNames[N](fieldMarkers, markers.KubebuilderMaximumMarker, markers.K8sMaximumMarker)
 	if err != nil && !errors.Is(err, errMarkerMissingValue) {
 		pass.Reportf(field.Pos(), "field %s has an invalid maximum marker: %v", qualifiedFieldName, err)
 		return false, false
@@ -319,6 +389,23 @@ func getMarkerNumericValueByName[N number](marker markershelper.MarkerSet, marke
 	}
 
 	return &markerValue, nil
+}
+
+// getMarkerNumericValueByNames extracts the numeric value from the first instance of any marker with the given names.
+// This is useful for checking multiple marker formats (e.g., kubebuilder and k8s declarative validation markers).
+func getMarkerNumericValueByNames[N number](marker markershelper.MarkerSet, markerNames ...string) (*N, error) {
+	for _, name := range markerNames {
+		value, err := getMarkerNumericValueByName[N](marker, name)
+		if err != nil && !errors.Is(err, errMarkerMissingValue) {
+			return nil, err
+		}
+
+		if value != nil {
+			return value, nil
+		}
+	}
+
+	return nil, errMarkerMissingValue
 }
 
 // getMarkerNumericValue extracts a numeric value from the default value of a marker.
