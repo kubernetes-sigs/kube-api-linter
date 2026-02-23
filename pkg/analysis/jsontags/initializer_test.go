@@ -50,6 +50,24 @@ var _ = Describe("jsontags initializer", func() {
 				},
 				expectedErr: "",
 			}),
+			Entry("With a valid JSONTagsConfig FieldNameMatch", testCase{
+				config: jsontags.JSONTagsConfig{
+					FieldNameMatch: jsontags.FieldNameMatchPolicyWarn,
+				},
+				expectedErr: "",
+			}),
+			Entry("With a valid JSONTagsConfig FieldNameMatch SuggestFix", testCase{
+				config: jsontags.JSONTagsConfig{
+					FieldNameMatch: jsontags.FieldNameMatchPolicySuggestFix,
+				},
+				expectedErr: "",
+			}),
+			Entry("With an invalid JSONTagsConfig FieldNameMatch", testCase{
+				config: jsontags.JSONTagsConfig{
+					FieldNameMatch: "Invalid",
+				},
+				expectedErr: "jsontags.fieldNameMatch: Invalid value: \"Invalid\": invalid value, must be one of \"SuggestFix\", \"Warn\", \"Ignore\" or omitted",
+			}),
 			Entry("With an invalid JSONTagsConfig JSONTagRegex", testCase{
 				config: jsontags.JSONTagsConfig{
 					JSONTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*",

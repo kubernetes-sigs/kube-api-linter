@@ -445,6 +445,8 @@ The `jsontags` linter checks that all fields in the API types have a `json` tag,
 The `json` tag for a field within a Kubernetes API type should use a camel case version of the field name.
 
 The `jsontags` linter checks the tag name against the regex `"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$"` which allows consecutive upper case characters, to allow for acronyms, e.g. `requestTTL`.
+Optionally, the linter can also validate that the `json` tag name matches the camelCase version of the Go field name.
+This matching check uses identifier word-splitting heuristics and can be disabled when a project intentionally uses different casing.
 
 ### Configuration
 
@@ -452,6 +454,7 @@ The `jsontags` linter checks the tag name against the regex `"^[a-z][a-z0-9]*(?:
 lintersConfig:
   jsontags:
     jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
+    fieldNameMatch: SuggestFix | Warn | Ignore # Check whether json tag names must match camelCase field names. Defaults to Ignore.
 ```
 
 ## MaxLength
