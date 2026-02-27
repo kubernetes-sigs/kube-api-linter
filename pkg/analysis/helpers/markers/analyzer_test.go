@@ -433,3 +433,27 @@ func TestIdentifierFromString(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractKnownMarkerIDArgumentsAndPayload(t *testing.T) {
+	for _, tc := range []struct {
+		id       string
+		input    string
+		expected map[string]string
+	}{
+		{"unionMember", "unionMember,optional", map[string]string{UnnamedArgument: "optional"}},
+		{"unionMember", "unionMember, optional", map[string]string{UnnamedArgument: "optional"}},
+		{"unionMember", "unionMember,Optional", map[string]string{}},
+		{"unionMember", "unionMember,optional,other", map[string]string{}},
+		{"unionMember", "unionMember:optional", map[string]string{}},
+		{"other", "other,optional", map[string]string{}},
+	} {
+		t.Run(tc.input, func(t *testing.T) {
+			g := NewWithT(t)
+			id, arguments, payload := extractKnownMarkerIDArgumentsAndPayload(tc.id, tc.input)
+
+			g.Expect(id).To(Equal(tc.id))
+			g.Expect(arguments).To(Equal(tc.expected))
+			g.Expect(payload).To(Equal(Payload{}))
+		})
+	}
+}

@@ -29,14 +29,14 @@ import (
 	"k8s.io/gengo/v2/codetags"
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
+	markersconsts "sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 // UnnamedArgument is the argument key used
 // when parsing markers that don't have a specific
 // named argument.
 //
-// This is specific to declarative validation markers only.
-// Kubebuilder-style markers either have named arguments or a payload.
+// Legacy +unionMember,optional also stores its bare suffix under this key.
 //
 // An example of a Declarative Validation marker with an unnamed argument
 // is "k8s:ifEnabled(\"my-feature\")=...".
@@ -713,6 +713,13 @@ func markerForTag(tag codetags.Tag, comment *ast.Comment) *Marker {
 
 func extractKnownMarkerIDArgumentsAndPayload(id string, marker string) (string, map[string]string, Payload) {
 	args, payload := extractArgumentsAndPayload(strings.TrimPrefix(marker, id))
+
+	if id == markersconsts.UnionMemberMarker {
+		if suffix, ok := strings.CutPrefix(marker, id+","); ok && strings.TrimSpace(suffix) == "optional" {
+			args[UnnamedArgument] = "optional"
+		}
+	}
+
 	return id, args, payload
 }
 
@@ -834,7 +841,8 @@ type Marker struct {
 
 	// Arguments are the set of named and unnamed arguments that have been specified for the marker.
 	//
-	// For Markers with Type == Kubebuilder, there will only ever be named arguments. The following examples highlight how arguments are extracted:
+	// For Markers with Type == Kubebuilder, arguments are named except for the legacy unionMember optional suffix. Examples:
+	//     - `+unionMember,optional` would result in one unnamed argument with value `optional`.
 	//     - `+kubebuilder:validation:Required` would result in *no* arguments.
 	//     - `+required` would result in *no* arguments.
 	//     - `+kubebuilder:validation:MinLength=10` would result in no arguments`.
