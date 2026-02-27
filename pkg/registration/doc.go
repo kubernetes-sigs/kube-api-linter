@@ -31,6 +31,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/defaultorrequired"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/defaults"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/dependenttags"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/discriminatedunions"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/duplicatemarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/integers"

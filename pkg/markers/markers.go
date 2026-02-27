@@ -22,6 +22,15 @@ const (
 	// RequiredMarker is the marker that indicates that a field is required.
 	RequiredMarker = "required"
 
+	// UnionMarker is the marker that indicates that a struct is a discriminated union.
+	UnionMarker = "union"
+
+	// UnionDiscriminatorMarker is the marker that indicates that a field is the discriminator for a legacy union.
+	UnionDiscriminatorMarker = "unionDiscriminator"
+
+	// UnionMemberMarker is the marker that indicates that a field is a member of a legacy union.
+	UnionMemberMarker = "unionMember"
+
 	// NullableMarker is the marker that indicates that a field can be null.
 	NullableMarker = "nullable"
 
@@ -211,4 +220,10 @@ const (
 
 	// K8sDefaultMarker is the marker that indicates the default value for a field in k8s declarative validation.
 	K8sDefaultMarker = "k8s:default"
+
+	// K8sUnionDiscriminatorMarker is the marker that indicates that a field is the discriminator for a declarative union.
+	K8sUnionDiscriminatorMarker = "k8s:unionDiscriminator"
+
+	// K8sUnionMemberMarker is the marker that indicates that a field is a member of a declarative union.
+	K8sUnionMemberMarker = "k8s:unionMember"
 )

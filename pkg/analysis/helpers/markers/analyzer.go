@@ -743,6 +743,16 @@ func extractArgumentsAndPayload(expressionStr string) (map[string]string, Payloa
 		expressionsMap[key] = value
 	}
 
+	// Some legacy kubebuilder-style markers use a single bare suffix after a comma,
+	// for example `+unionMember,optional`. Preserve that suffix as an unnamed argument
+	// so analyzers can rely on parsed marker arguments instead of raw string matching.
+	if len(expressionsMap) == 0 && payload == (Payload{}) {
+		bareValue := strings.TrimSpace(strings.TrimLeft(expressionStr, ":,"))
+		if bareValue != "" && !strings.Contains(bareValue, "=") && !strings.Contains(bareValue, ",") {
+			expressionsMap[UnnamedArgument] = bareValue
+		}
+	}
+
 	return expressionsMap, payload
 }
 
