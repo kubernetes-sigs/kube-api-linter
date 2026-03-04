@@ -15,9 +15,24 @@ limitations under the License.
 */
 package enums
 
+// KubebuilderEnumPolicy controls whether plain string fields with enum markers are allowed.
+type KubebuilderEnumPolicy string
+
+const (
+	// KubebuilderEnumPolicyRequireTypeAlias enforces that string fields representing enums
+	// must use type aliases instead of plain string types.
+	KubebuilderEnumPolicyRequireTypeAlias KubebuilderEnumPolicy = "RequireTypeAlias"
+	// KubebuilderEnumPolicyAllowPlainString allows plain string types for enum-validated fields.
+	KubebuilderEnumPolicyAllowPlainString KubebuilderEnumPolicy = "AllowPlainString"
+)
+
 // Config is the configuration for the enums linter.
 type Config struct {
 	// Allowlist contains values that are exempt from PascalCase validation.
 	// This is useful for command-line executable names like "kubectl", "docker", etc.
 	Allowlist []string `yaml:"allowlist" json:"allowlist"`
+
+	// KubebuilderEnumPolicy controls whether string fields with enum validation must use type aliases.
+	// RequireTypeAlias (default): enforce type aliases; AllowPlainString: allow plain strings.
+	KubebuilderEnumPolicy KubebuilderEnumPolicy `yaml:"kubebuilderEnumPolicy" json:"kubebuilderEnumPolicy"`
 }

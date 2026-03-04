@@ -23,24 +23,68 @@ provide better validation at the schema level.
 
 # Rules
 
-The linter checks for three main patterns:
-1. Fields must use type aliases, not plain strings: String fields that represent enums should
-use a type alias with an +enum marker rather than a raw string type.
-2. Type aliases must have +enum marker: Type aliases used for enumerated values must be
-annotated with either // +kubebuilder:validation:Enum or // +k8s:enum.
-3. Enum values must be PascalCase: Constant values for enums should follow PascalCase naming
-(e.g., "PhasePending", "StateRunning") rather than lowercase, snake_case, or SCREAMING_SNAKE_CASE.
+1. String type aliases that have associated constants must be annotated with an enum marker:
+  - +enum (plain marker, recommended primary idiom)
+  - +k8s:enum for declarative validation (used in Kubernetes core API types)
+  - +kubebuilder:validation:Enum=Value1;Value2 for CRD validation (used in projects with CustomResourceDefinitions)
+
+2. Enum constant values must follow PascalCase when using auto-discovery mode.
+Valid: "Pending", "Running", "HTTP", "HTTPS" (acronyms allowed).
+Invalid: "pending", "phase_pending", "Phase-Failed" (snake_case/kebab-case).
+
+3. (Optional) When KubebuilderEnumPolicy is RequireTypeAlias: String fields without enum markers
+should use type aliases instead of plain string types.
+
+The linter only flags type aliases that have constants defined, avoiding false positives
+for generic string wrapper types.
+
+# Enum Marker Types
+
+The linter recognizes three enum markers:
+
++enum (Primary Kubernetes idiom):
+- Plain marker, the canonical/recommended approach
+- Auto-discovers constants and validates them as PascalCase
+
++k8s:enum (Declarative validation for core APIs):
+- Used in Kubernetes core API types (in-tree APIs)
+- Auto-discovers constants and validates them as PascalCase
+
++kubebuilder:validation:Enum (CRD OpenAPI schema validation):
+- Used in projects with CustomResourceDefinitions
+- Processed by controller-gen to generate OpenAPI schema validation
+- REQUIRES explicit values: +kubebuilder:validation:Enum=Value1;Value2;Value3
+- Does NOT auto-discover constants
+- The explicit values in the marker are validated as PascalCase
+
+Examples:
+
+Auto-discovery (validates constants):
+
+	// +enum                    ← Primary Kubernetes idiom (recommended)
+	// +k8s:enum                ← Alternative for core APIs
+	type Phase string
+	const (
+		PhasePending Phase = "Pending"  ← These must be PascalCase
+	)
+
+Explicit values (validates marker values, not constants):
+
+	// +kubebuilder:validation:Enum=Pending;Running;Failed  ← For CRD schema validation
+	type Phase string
+	const (
+		helper Phase = "helper"  ← Constants not checked; marker values are validated
+	)
 
 # Examples
 
 Good:
 
-	// +kubebuilder:validation:Enum
+	// +enum  (or // +kubebuilder:validation:Enum for CRDs, // +k8s:enum for core APIs)
 	type Phase string
 	const (
-		PhasePending   Phase = "Pending"
-		PhaseRunning   Phase = "Running"
-		PhaseSucceeded Phase = "Succeeded"
+		PhasePending Phase = "Pending"
+		PhaseRunning Phase = "Running"
 	)
 	type MySpec struct {
 		Phase Phase
@@ -48,33 +92,33 @@ Good:
 
 Bad:
 
-	// Missing +enum marker
+	// String type alias with constants but missing enum marker
 	type Phase string
-	type MySpec struct {
-		// Plain string without type alias
-		Phase string
-	}
-	// Values not PascalCase
 	const (
 		phase_pending Phase = "pending"      // Should be "Pending"
-		PHASE_RUNNING Phase = "RUNNING"      // Should be "Running"
+		phase_running Phase = "phase_running" // Should be "PhaseRunning"
+		Phase_Failed  Phase = "Phase-Failed"  // Should be "PhaseFailed"
 	)
+
+Note: Acronyms (HTTP, HTTPS, API) are allowed. The linter only flags type aliases with
+constants, not all string types.
 
 # Configuration
 
-The linter supports an allowlist for enum values that should be exempt from PascalCase
-validation, such as command-line executable names:
+Configuration options:
 
 	linterConfig:
 	  enums:
+	    # Values exempt from PascalCase validation
 	    allowlist:
 	      - kubectl
 	      - docker
-	      - helm
+	    # Require type aliases (RequireTypeAlias, default) or allow plain strings (AllowPlainString)
+	    kubebuilderEnumPolicy: RequireTypeAlias
 
 # Rationale
 
-Using type aliases for enums instead of raw strings provides several benefits:
+Using type aliases with enum markers instead of raw strings provides several benefits:
 - API schemas can explicitly list valid enum values
 - Better validation at both the schema and runtime level
 - Improved documentation and API evolution
@@ -84,7 +128,11 @@ Using type aliases for enums instead of raw strings provides several benefits:
 The PascalCase convention for enum values aligns with Kubernetes API conventions and
 improves readability and consistency across the ecosystem.
 
-Note: This linter is disabled by default as enum usage is recommended but not strictly
-required for all Kubernetes APIs. Enable it in your configuration to enforce these conventions.
+The distinction between CRD validation markers and declarative validation markers allows
+the linter to work correctly in both CRD-based projects (using controller-gen) and
+Kubernetes core API development (using declarative validation).
+
+Note: This linter is enabled by default to ensure string types with constants follow enum
+conventions. It only flags types that have associated constants, minimizing false positives.
 */
 package enums

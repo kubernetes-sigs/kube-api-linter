@@ -337,11 +337,36 @@ If there are duplicates across fields and their underlying type, the marker on t
 
 ## Enums
 
-The `enums` linter enforces that enumerated fields use type aliases with the `+enum` marker and that enum values follow PascalCase naming conventions.
+The `enums` linter enforces that string type aliases used for enumerated values have proper enum markers.
 
-This provides better API evolution, self-documentation, and validation compared to plain strings.
+**Enum Marker Types:**
+- **Plain marker** (`+enum`): Primary Kubernetes idiom; auto-discovers constants and validates PascalCase.
+- **Declarative Validation Marker** (`+k8s:enum`): Used in Kubernetes core API types; auto-discovers constants.
+- **CRD Validation Marker** (`+kubebuilder:validation:Enum=Value1;Value2`): Used for CRD validation. Requires explicit values (no auto-discovery); marker values are validated for PascalCase.
 
-By default, `enums` is not enabled.
+**Enum Marker Modes:**
+- **Auto-discovery** (`+enum` or `+k8s:enum`): Validates that constants follow PascalCase.
+- **Explicit values** (`+kubebuilder:validation:Enum=Value1;Value2`): Validates the values listed in the marker for PascalCase; constants are not auto-discovered.
+
+**PascalCase allows:** "Pending", "PhaseRunning", "HTTP", "IPv4" (acronyms and digits).  
+**PascalCase rejects:** "pending", "phase_pending", "Phase-Failed".
+
+**Note:** The linter only flags string type aliases that have associated constants (indicating enum usage), avoiding false positives for generic string types.
+
+By default, `enums` is enabled.
+
+### Configuration
+
+```yaml
+linterConfig:
+  enums:
+    # Values exempt from PascalCase validation
+    allowlist:
+      - kubectl
+      - docker
+    # Require type aliases (RequireTypeAlias, default) or allow plain strings (AllowPlainString)
+    kubebuilderEnumPolicy: RequireTypeAlias
+```
 
 ## ForbiddenMarkers
 

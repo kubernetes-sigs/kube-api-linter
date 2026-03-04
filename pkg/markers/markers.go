@@ -27,6 +27,9 @@ const (
 
 	// DefaultMarker is the marker that specifies the default value of a field or type.
 	DefaultMarker = "default"
+
+	// EnumMarker is the marker that indicates that a field has an enum.
+	EnumMarker = "enum"
 )
 
 const (

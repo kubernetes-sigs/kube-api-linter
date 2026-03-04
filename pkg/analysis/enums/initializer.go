@@ -32,9 +32,8 @@ func Initializer() initializer.AnalyzerInitializer {
 	return initializer.NewConfigurableInitializer(
 		name,
 		initAnalyzer,
-		// The enums linter is opt-in as enum usage is not strictly
-		// required for all Kubernetes APIs, though it is recommended.
-		false,
+		// Enabled by default: validates string type aliases with constants have enum markers
+		true,
 		validateConfig,
 	)
 }
@@ -44,11 +43,30 @@ func initAnalyzer(cfg *Config) (*analysis.Analyzer, error) {
 		cfg = &Config{}
 	}
 
+	if cfg.KubebuilderEnumPolicy == "" {
+		cfg.KubebuilderEnumPolicy = KubebuilderEnumPolicyRequireTypeAlias
+	}
+
 	return newAnalyzer(cfg), nil
 }
 
 // validateConfig implements validation of the enums linter config.
 func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
-	// Config is optional, allowlist can be empty
-	return field.ErrorList{}
+	var errs field.ErrorList
+	if cfg == nil {
+		return errs
+	}
+
+	allowlistPath := fldPath.Child("allowlist")
+	seen := make(map[string]bool, len(cfg.Allowlist))
+
+	for i, v := range cfg.Allowlist {
+		if seen[v] {
+			errs = append(errs, field.Duplicate(allowlistPath.Index(i), v))
+		}
+
+		seen[v] = true
+	}
+
+	return errs
 }

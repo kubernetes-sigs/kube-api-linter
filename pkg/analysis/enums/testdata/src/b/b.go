@@ -2,8 +2,8 @@ package b
 
 // Test with allowlist configuration
 
-// Valid enum type with proper marker
-// +kubebuilder:validation:Enum
+// Valid enum type with proper marker (+enum so constants are validated for PascalCase)
+// +enum
 type ExecutableName string
 
 const (
@@ -13,8 +13,8 @@ const (
 	ExecUnknown ExecutableName = "unknown" // want "enum value \"unknown\" should be PascalCase"
 )
 
-// Regular enum with PascalCase (should still work)
-// +kubebuilder:validation:Enum
+// Regular enum with PascalCase
+// +enum
 type Status string
 
 const (
