@@ -28,6 +28,21 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
+func init() {
+	markershelper.DefaultRegistry().Register(
+		markers.KubebuilderMaxLengthMarker,
+		markers.KubebuilderMaxItemsMarker,
+		markers.KubebuilderItemsMaxLengthMarker,
+		markers.KubebuilderEnumMarker,
+		markers.KubebuilderItemsEnumMarker,
+		markers.KubebuilderFormatMarker,
+		markers.KubebuilderItemsFormatMarker,
+		markers.K8sMaxLengthMarker,
+		markers.K8sMaxItemsMarker,
+		markers.K8sEnumMarker,
+	)
+}
+
 const (
 	name = "maxlength"
 )
