@@ -46,6 +46,10 @@ Example:
 				PreferredOptionalMarker: optionalorrequired.OptionalMarker,
 				PreferredRequiredMarker: optionalorrequired.RequiredMarker,
 			},
+			MaxLength: config.MaxLengthConfig{
+				PreferredMaxLengthMarker: markers.KubebuilderMaxLengthMarker,
+				PreferredMaxItemsMarker:  markers.KubebuilderMaxItemsMarker,
+			},
 		},
 	)
 
@@ -55,6 +59,7 @@ or as part of a custom analysis pipeline, eg via the golangci-lint plugin system
 Linters provided by KAL:
   - [commentstart]: Linter to ensure that comments start with the serialized version of the field name.
   - [jsontags]: Linter to ensure that JSON tags are present on struct fields, and that they match a given regex.
+  - [maxlength]: Linter to ensure that all strings formatted fields are marked with a maximum length, and that arrays are marked with max items.
   - [optionalorrequired]: Linter to ensure that all fields are marked as either optional or required.
 
 When adding new linters, ensure that they are added to the registry in the `NewRegistry` function.

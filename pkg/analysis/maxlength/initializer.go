@@ -16,8 +16,13 @@ limitations under the License.
 package maxlength
 
 import (
+	"fmt"
+
+	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
 func init() {
@@ -27,9 +32,37 @@ func init() {
 // Initializer returns the AnalyzerInitializer for this
 // Analyzer so that it can be added to the registry.
 func Initializer() initializer.AnalyzerInitializer {
-	return initializer.NewInitializer(
+	return initializer.NewConfigurableInitializer(
 		name,
-		Analyzer,
+		initAnalyzer,
 		false, // For now, CRD only, and so not on by default.
+		validateConfig,
 	)
+}
+
+func initAnalyzer(config *MaxLengthConfig) (*analysis.Analyzer, error) {
+	return newAnalyzer(config), nil
+}
+
+// validateConfig is used to validate the configuration in the config.MaxLengthConfig struct.
+func validateConfig(config *MaxLengthConfig, fldPath *field.Path) field.ErrorList {
+	if config == nil {
+		return field.ErrorList{}
+	}
+
+	fieldErrors := field.ErrorList{}
+
+	switch config.PreferredMaxLengthMarker {
+	case "", markers.KubebuilderMaxLengthMarker, markers.K8sMaxLengthMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredMaxLengthMarker"), config.PreferredMaxLengthMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.KubebuilderMaxLengthMarker, markers.K8sMaxLengthMarker)))
+	}
+
+	switch config.PreferredMaxItemsMarker {
+	case "", markers.KubebuilderMaxItemsMarker, markers.K8sMaxItemsMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredMaxItemsMarker"), config.PreferredMaxItemsMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.KubebuilderMaxItemsMarker, markers.K8sMaxItemsMarker)))
+	}
+
+	return fieldErrors
 }

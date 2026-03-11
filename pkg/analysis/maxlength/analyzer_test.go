@@ -20,10 +20,30 @@ import (
 
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
+	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
-func TestMaxLength(t *testing.T) {
+func TestDefaultConfiguration(t *testing.T) {
 	testdata := analysistest.TestData()
 
-	analysistest.Run(t, testdata, maxlength.Analyzer, "a")
+	a, err := maxlength.Initializer().Init(&maxlength.MaxLengthConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, a, "a")
+}
+
+func TestK8sMarkerConfiguration(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := maxlength.Initializer().Init(&maxlength.MaxLengthConfig{
+		PreferredMaxLengthMarker: markers.K8sMaxLengthMarker,
+		PreferredMaxItemsMarker:  markers.K8sMaxItemsMarker,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, a, "b")
 }
