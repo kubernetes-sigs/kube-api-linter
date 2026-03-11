@@ -165,6 +165,11 @@ type A struct {
 	// +optional
 	ExternalStructType *externaltypes.StructType `json:"externalStructType,omitempty"` // want "field A.ExternalStructType should be a pointer."
 
+	// ExternalStructWithNonOmittedField is a struct type with non-omitted fields from an external package.
+	// With "Always" pointer preference, this should still require a pointer.
+	// +optional
+	ExternalStructWithNonOmittedField *externaltypes.StructTypeWithNonOmittedField `json:"externalStructWithNonOmittedField,omitempty"` // want "field A.ExternalStructWithNonOmittedField should be a pointer."
+
 	// PointerExternalStringAlias is a pointer to a string alias from an external package.
 	// This is valid - string aliases should be pointers.
 	// +optional

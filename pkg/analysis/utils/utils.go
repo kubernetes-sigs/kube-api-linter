@@ -29,7 +29,10 @@ import (
 	"sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
-const stringTypeName = "string"
+const (
+	stringTypeName       = "string"
+	minMaxValidationHint = "minimum/maximum"
+)
 
 // IsBasicType checks if the type of the given identifier is a basic type.
 // Basic types are types like int, string, bool, etc.
