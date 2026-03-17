@@ -384,3 +384,52 @@ func TestExtractMarker(t *testing.T) {
 		})
 	}
 }
+
+func TestIdentifierFromString(t *testing.T) {
+	// Register markers used by tests
+	DefaultRegistry().Register("listType", "kubebuilder:object:root")
+
+	testcases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "plain identifier without value",
+			input:    "listType",
+			expected: "listType",
+		},
+		{
+			name:     "kubebuilder marker with = value",
+			input:    "listType=atomic",
+			expected: "listType",
+		},
+		{
+			name:     "kubebuilder marker with := value",
+			input:    "kubebuilder:object:root:=true",
+			expected: "kubebuilder:object:root",
+		},
+		{
+			name:     "declarative validation marker with value",
+			input:    "k8s:listType=atomic",
+			expected: "k8s:listType",
+		},
+		{
+			name:     "declarative validation marker without value",
+			input:    "k8s:forbidden",
+			expected: "k8s:forbidden",
+		},
+		{
+			name:     "declarative validation marker with arguments and value",
+			input:    "k8s:ifEnabled(\"my-feature\")=+k8s:forbidden",
+			expected: "k8s:ifEnabled",
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := NewWithT(t)
+			g.Expect(IdentifierFromString(tc.input)).To(Equal(tc.expected))
+		})
+	}
+}
