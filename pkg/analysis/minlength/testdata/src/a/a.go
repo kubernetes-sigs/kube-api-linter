@@ -110,7 +110,7 @@ type MinLength struct {
 
 	StructWithARequiredField StructWithARequiredField `json:"structWithARequiredField"`
 
-	StructWithExactlyOneOf StructWithARequiredField `json:"structWithExactlyOneOf"`
+	StructWithExactlyOneOf StructWithExactlyOneOf `json:"structWithExactlyOneOf"`
 
 	StructWithAtLeastOneOf StructWithAtLeastOneOf `json:"structWithAtLeastOneOf"`
 

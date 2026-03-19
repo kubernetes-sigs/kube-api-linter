@@ -960,6 +960,37 @@ func (ms MarkerSet) HasWithArgumentsAndPayload(identifier string, arguments map[
 	return false
 }
 
+type PayloadFunc func(Payload) bool
+
+func (ms MarkerSet) HasWithPayloadFunc(identifier string, payloadFunc PayloadFunc) bool {
+	markers, ok := ms[identifier]
+	if !ok {
+		return false
+	}
+
+	for _, marker := range markers {
+		if payloadFunc(marker.Payload) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func WithMarkerIdentifier(identifier string) PayloadFunc {
+	return func(p Payload) bool {
+		if p.Marker == nil {
+			return false
+		}
+
+		if p.Marker.Identifier == identifier {
+			return true
+		}
+
+		return false
+	}
+}
+
 // Get returns the markers associated with the given identifier.
 // If no markers are found, an empty slice is returned.
 // The returned slice may contain multiple markers with the same identifier.

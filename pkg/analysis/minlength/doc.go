@@ -45,5 +45,15 @@ For structs, the minimum number of fields can be set using the `kubebuilder:vali
 For arrays of strings, the minimum length of each string can be set using the `kubebuilder:validation:items:MinLength` tag,
 on the array field itself.
 Or, if the array uses a string type alias, the `kubebuilder:validation:MinLength` tag can be used on the alias.
+
+This linter suggests fixes and can be configured to prefer either Kubebuilder or Declarative Validation style
+markers in the suggestions that it makes. By default, this linter prefers Kubebuilder style validations.
+
+Configuration options:
+```yaml
+linterConfig:
+  minlength:
+    preferredSuggestionMarkerType: Kubebuilder || DeclarativeValidation
+```
 */
 package minlength

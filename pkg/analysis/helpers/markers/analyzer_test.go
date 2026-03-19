@@ -371,6 +371,27 @@ func TestExtractMarker(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "simple declarative validation marker with chained marker",
+			comment: &ast.Comment{
+				Text: "// +k8s:eachVal=+k8s:minLength=1",
+			},
+			expected: Marker{
+				Type:       MarkerTypeDeclarativeValidation,
+				Identifier: "k8s:eachVal",
+				Arguments:  make(map[string]string),
+				Payload: Payload{
+					Marker: &Marker{
+						Type: MarkerTypeDeclarativeValidation,
+						Identifier: "k8s:minLength",
+						Arguments: make(map[string]string),
+						Payload: Payload{
+							Value: "1",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testcases {

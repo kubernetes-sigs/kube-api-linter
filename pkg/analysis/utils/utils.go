@@ -462,9 +462,25 @@ func isTypeBasic(t types.Type) bool {
 // It returns a nil value when the marker is not present, and an error
 // when the marker is present, but malformed.
 func GetMinProperties(markerSet markershelper.MarkerSet) (*int, error) {
-	minProperties, err := getMarkerNumericValueByName[int](markerSet, markers.KubebuilderMinPropertiesMarker)
-	if err != nil && !errors.Is(err, errMarkerMissingValue) {
-		return nil, fmt.Errorf("invalid format for minimum properties marker: %w", err)
+	minPropertyMarkers := []string{
+		markers.K8sMinPropertiesMarker,
+		markers.KubebuilderMinPropertiesMarker,
+	}
+
+	var minProperties *int
+	for _, marker := range minPropertyMarkers {
+		minProps, err := getMarkerNumericValueByName[int](markerSet, marker)
+		if err != nil && errors.Is(err, errMarkerNotFound) {
+			// try the next minProperties marker
+			continue
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("invalid format for minimum properties marker: %w", err)
+		}
+
+		minProperties = minProps
+		break
 	}
 
 	return minProperties, nil

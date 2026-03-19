@@ -188,6 +188,9 @@ const (
 	// K8sMaxItemsMarker is the marker that indicates that a field has a maximum number of items in k8s declarative validation.
 	K8sMaxItemsMarker = "k8s:maxItems"
 
+	// K8sMinPropertiesMarker is the marker that indicates that a field has a minimum number of properties in k8s declarative validation.
+	K8sMinPropertiesMarker = "k8s:minProperties"
+
 	// K8sEnumMarker is the marker that indicates that a field has an enum in k8s declarative validation.
 	K8sEnumMarker = "k8s:enum"
 
@@ -211,4 +214,7 @@ const (
 
 	// K8sDefaultMarker is the marker that indicates the default value for a field in k8s declarative validation.
 	K8sDefaultMarker = "k8s:default"
+
+	// K8sEachValMarker is the marker that indicates a validation for each entry in a map (specifically values, not keys) or list.
+	K8sEachValMarker = "k8s:eachVal"
 )
