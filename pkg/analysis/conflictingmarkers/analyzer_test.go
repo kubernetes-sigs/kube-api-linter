@@ -49,3 +49,36 @@ func TestConflictingMarkersAnalyzer(t *testing.T) {
 
 	analysistest.Run(t, testdata, analyzer, "a")
 }
+
+func TestConflictingMarkersWithValues(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	config := &conflictingmarkers.ConflictingMarkersConfig{
+		Conflicts: []conflictingmarkers.ConflictSet{
+			{
+				Name:        "listType_atomic_consistency",
+				Sets:        [][]string{{"listType=atomic"}, {"k8s:listType=set", "k8s:listType=map"}},
+				Description: "when +k8s:listType is present, its value must match +listType",
+			},
+			{
+				Name:        "listType_set_consistency",
+				Sets:        [][]string{{"listType=set"}, {"k8s:listType=atomic", "k8s:listType=map"}},
+				Description: "when +k8s:listType is present, its value must match +listType",
+			},
+			{
+				Name:        "listType_map_consistency",
+				Sets:        [][]string{{"listType=map"}, {"k8s:listType=atomic", "k8s:listType=set"}},
+				Description: "when +k8s:listType is present, its value must match +listType",
+			},
+		},
+	}
+
+	initializer := conflictingmarkers.Initializer()
+
+	analyzer, err := initializer.Init(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, analyzer, "b")
+}
