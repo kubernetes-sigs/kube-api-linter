@@ -88,7 +88,7 @@ type MinLength struct {
 
 	StringAliasArrayWithoutMinItemsWithMinElementLengthOnAlias []StringAliasWithMinLength // want  "field MinLength.StringAliasArrayWithoutMinItemsWithMinElementLengthOnAlias must have a minimum items, add kubebuilder:validation:MinItems"
 
-	InlineStruct struct { // want "field MinLength.InlineStruct must have a minimum properties, add kubebuilder:validation:MinProperties marker"
+	InlineStruct struct { // want "field MinLength.InlineStruct must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties marker"
 		// +kubebuilder:validation:MinLength:=256
 		StringWithMinLength string
 
@@ -104,7 +104,7 @@ type MinLength struct {
 		StringWithMinLength string
 	} `json:"inlineStructWithARequiredField`
 
-	StructWithoutMinProperties StructWithoutMinProperties `json:"structWithoutMinProperties` // want "field MinLength.StructWithoutMinProperties type StructWithoutMinProperties must have a minimum properties, add kubebuilder:validation:MinProperties marker"
+	StructWithoutMinProperties StructWithoutMinProperties `json:"structWithoutMinProperties` // want "field MinLength.StructWithoutMinProperties type StructWithoutMinProperties must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties marker"
 
 	StructWithMinProperties StructWithMinProperties `json:"structWithMinProperties`
 
@@ -126,7 +126,7 @@ type MinLength struct {
 	StructArrayWithMalformedMinProperties []StructWithMalformedMinProperties `json:"structArrayWithMalformedMinProperties` // want "could not get min properties for struct: invalid format for minimum properties marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"abc\\\": invalid syntax"
 
 	// +kubebuilder:validation:MinItems:=1
-	StructArrayWithoutMinProperties []StructWithoutMinProperties `json:"structArrayWithoutMinProperties` // want "field MinLength.StructArrayWithoutMinProperties array element type StructWithoutMinProperties must have a minimum properties, add kubebuilder:validation:MinProperties marker"
+	StructArrayWithoutMinProperties []StructWithoutMinProperties `json:"structArrayWithoutMinProperties` // want "field MinLength.StructArrayWithoutMinProperties array element type StructWithoutMinProperties must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties marker"
 }
 
 // StringAlias is a string without a MinLength.
