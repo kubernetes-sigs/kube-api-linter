@@ -29,6 +29,34 @@ type TestStructs struct {
 	// +required
 	StructPtrWithMinPropertiesWithOmitEmpty *StructWithMinProperties `json:"structPtrWithMinPropertiesWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithMinPropertiesWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithMinPropertiesWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
 
+	// StructWithExactlyOneOf has a zero value of {}, which is not valid because the ExactlyOneOf marker requires at least one field to be set.
+
+	// +required
+	StructWithExactlyOneOf StructWithExactlyOneOf `json:"structWithExactlyOneOf"` // want "field TestStructs.StructWithExactlyOneOf does not allow the zero value. It must have the omitzero tag."
+
+	// +required
+	StructWithExactlyOneOfWithOmitEmpty StructWithExactlyOneOf `json:"structWithExactlyOneOfWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithExactlyOneOfWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
+
+	// +required
+	StructPtrWithExactlyOneOf *StructWithExactlyOneOf `json:"structPtrWithExactlyOneOf"` // want "field TestStructs.StructPtrWithExactlyOneOf does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithExactlyOneOf does not allow the zero value. The field does not need to be a pointer."
+
+	// +required
+	StructPtrWithExactlyOneOfWithOmitEmpty *StructWithExactlyOneOf `json:"structPtrWithExactlyOneOfWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithExactlyOneOfWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithExactlyOneOfWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+
+	// StructWithAtLeastOneOf has a zero value of {}, which is not valid because the AtLeastOneOf marker requires at least one field to be set.
+
+	// +required
+	StructWithAtLeastOneOf StructWithAtLeastOneOf `json:"structWithAtLeastOneOf"` // want "field TestStructs.StructWithAtLeastOneOf does not allow the zero value. It must have the omitzero tag."
+
+	// +required
+	StructWithAtLeastOneOfWithOmitEmpty StructWithAtLeastOneOf `json:"structWithAtLeastOneOfWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithAtLeastOneOfWithOmitEmpty does not allow the zero value. It must have the omitzero tag."
+
+	// +required
+	StructPtrWithAtLeastOneOf *StructWithAtLeastOneOf `json:"structPtrWithAtLeastOneOf"` // want "field TestStructs.StructPtrWithAtLeastOneOf does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithAtLeastOneOf does not allow the zero value. The field does not need to be a pointer."
+
+	// +required
+	StructPtrWithAtLeastOneOfWithOmitEmpty *StructWithAtLeastOneOf `json:"structPtrWithAtLeastOneOfWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithAtLeastOneOfWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithAtLeastOneOfWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+
 	// StructWithNonOmittedFields has a zero value of {"string":"", "int":0}, which is valid because all fields are required.
 
 	// +required
@@ -143,4 +171,28 @@ type StructWithOneNonOmittedFieldAndMinProperties struct {
 type StructWithOmittedRequiredField struct {
 	// +required
 	String string `json:"string,omitempty"` // want "field StructWithOmittedRequiredField.String has a valid zero value \\(\"\"\\), but the validation is not complete \\(e.g. minimum length\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+}
+
+// Struct with ExactlyOneOf marker.
+// The zero value of the struct is `{}` which is not valid because the ExactlyOneOf marker
+// requires exactly one field to be set.
+// +kubebuilder:validation:ExactlyOneOf=fieldA;fieldB
+type StructWithExactlyOneOf struct {
+	// +optional
+	FieldA *string `json:"fieldA,omitempty"`
+
+	// +optional
+	FieldB *string `json:"fieldB,omitempty"`
+}
+
+// Struct with AtLeastOneOf marker.
+// The zero value of the struct is `{}` which is not valid because the AtLeastOneOf marker
+// requires at least one field to be set.
+// +kubebuilder:validation:AtLeastOneOf=fieldA;fieldB
+type StructWithAtLeastOneOf struct {
+	// +optional
+	FieldA *string `json:"fieldA,omitempty"`
+
+	// +optional
+	FieldB *string `json:"fieldB,omitempty"`
 }

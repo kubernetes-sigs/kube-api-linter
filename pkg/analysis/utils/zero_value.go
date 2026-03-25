@@ -130,8 +130,17 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 		zeroValueValid = false
 	}
 
+	// Check if the struct has ExactlyOneOf or AtLeastOneOf markers.
+	// These markers enforce that at least one field must be set, making `{}` an invalid zero value.
+	structMarkerSet := markersAccess.StructMarkers(structType)
+	hasUnionMarker := structMarkerSet.Has(markers.KubebuilderExactlyOneOf) || structMarkerSet.Has(markers.KubebuilderAtLeastOneOfMarker)
+
+	if hasUnionMarker {
+		zeroValueValid = false
+	}
+
 	var completeStructValidation = true
-	if minProperties == nil && nonOmittedFields == 0 {
+	if !hasUnionMarker && minProperties == nil && nonOmittedFields == 0 {
 		// If the struct has no non-omitted fields, then the zero value of the struct is `{}`.
 		// This generally means that the validation is incomplete as the difference between omitting the field and not omitting is not clear.
 		completeStructValidation = false
