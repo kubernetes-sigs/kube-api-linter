@@ -77,8 +77,11 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 }
 
 func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontags.FieldTagInfo, qualifiedFieldName string) {
+	embedded := false
 	prefix := "field %s"
+
 	if len(field.Names) == 0 || field.Names[0] == nil {
+		embedded = true
 		prefix = "embedded field %s"
 	}
 
@@ -90,11 +93,18 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, tagInfo ext
 	}
 
 	if tagInfo.Inline {
+		if !embedded {
+			pass.Reportf(field.Pos(), "%s has inline json tag, but is not embedded", prefix)
+		}
+
 		return
 	}
 
 	if tagInfo.Name == "" {
-		pass.Reportf(field.Pos(), "%s has empty json tag", prefix)
+		if !embedded {
+			pass.Reportf(field.Pos(), "%s has empty json tag", prefix)
+		}
+
 		return
 	}
 

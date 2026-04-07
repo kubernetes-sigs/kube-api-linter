@@ -12,7 +12,10 @@ type JSONTagTestStruct struct {
 	PascalCaseJSONTag    string `json:"PascalCaseJSONTag"`       // want "field JSONTagTestStruct.PascalCaseJSONTag json tag does not match pattern \"\\^\\[a-z\\]\\[a-z0-9\\]\\*\\(\\?:\\[A-Z\\]\\[a-z0-9\\]\\*\\)\\*\\$\": PascalCaseJSONTag"
 	NonTerminatedJSONTag string `json:"nonTerminatedJSONTag`     // want "field JSONTagTestStruct.NonTerminatedJSONTag is missing json tag"
 	XMLTag               string `xml:"xmlTag"`                   // want "field JSONTagTestStruct.XMLTag is missing json tag"
-	InlineJSONTag        string `json:",inline"`
+	NamedInline          string `json:",inline"`                 // want "field JSONTagTestStruct.NamedInline has inline json tag, but is not embedded"
+	NamedEmptyTag        string `json:""`                        // want "field JSONTagTestStruct.NamedEmptyTag has empty json tag"
+	EmbeddedInline       `json:",inline"`
+	EmbeddedEmptyTag     `json:""`
 	ValidJSONTag         string `json:"validJsonTag"`
 	ValidOptionalJSONTag string `json:"validOptionalJsonTag,omitempty"`
 	JSONTagWithID        string `json:"jsonTagWithID"`
@@ -27,11 +30,11 @@ type JSONTagTestStruct struct {
 
 	A `json:",inline"`
 	B `json:"bar,omitempty"`
-	C             // want "embedded field JSONTagTestStruct.C is missing json tag"
-	D `json:""`   // want "embedded field JSONTagTestStruct.D has empty json tag"
+	C // want "embedded field JSONTagTestStruct.C is missing json tag"
+	D `json:""`
 	E `json:"e-"` // want "embedded field JSONTagTestStruct.E json tag does not match pattern \"\\^\\[a-z\\]\\[a-z0-9\\]\\*\\(\\?:\\[A-Z\\]\\[a-z0-9\\]\\*\\)\\*\\$\": e-"
 
-	metav1.TypeMeta   `json:",inline"`
+	metav1.TypeMeta   `json:""`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 }
 
@@ -46,6 +49,10 @@ type C struct{}
 type D struct{}
 
 type E struct{}
+
+type EmbeddedInline struct{}
+
+type EmbeddedEmptyTag struct{}
 
 type Interface interface {
 	InaccessibleFunction() string
