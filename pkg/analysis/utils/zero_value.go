@@ -91,11 +91,30 @@ func GetTypeMarkerValue(pass *analysis.Pass, field *ast.Field, markersAccess mar
 	return ""
 }
 
+// hasUnionConstraint reports whether the marker set contains a union validation
+// marker that implicitly requires at least one field to be set.
+// TODO: rename KubebuilderExactlyOneOf to KubebuilderExactlyOneOfMarker for
+// consistency with KubebuilderAtLeastOneOfMarker (tracked separately).
+func hasUnionConstraint(markerSet markershelper.MarkerSet) bool {
+	return markerSet.Has(markers.KubebuilderExactlyOneOf) ||
+		markerSet.Has(markers.KubebuilderAtLeastOneOfMarker)
+}
+
+// resolveEffectiveMinProperties returns the effective minProperties constraint.
+// Currently wraps GetMinProperties directly; union constraint handling is layered
+// on top by the caller.
+func resolveEffectiveMinProperties(markerSet markershelper.MarkerSet) (*int, error) {
+	return GetMinProperties(markerSet)
+}
+
 // isStructZeroValueValid checks if the zero value of a struct is valid.
-// It checks if all non-omitted fields within the struct accept their zero values.
-// It also checks if the struct has a minProperties marker, and if so, whether the number of non-omitted fields is greater than or equal to the minProperties value.
-// Special case: If the struct has Type=string marker with string validation markers (MinLength/MaxLength),
-// treat it as a string for validation purposes (e.g., for structs with custom marshalling).
+// It evaluates in order:
+//  1. Whether all non-omitted fields accept their zero values (via areStructFieldZeroValuesValid).
+//  2. Whether the effective minimum-properties constraint is satisfied.
+//  3. Whether validation is complete: a struct with no effective minimum and no
+//     non-omitted fields has incomplete validation (completeStructValidation=false).
+//
+// Special case: structs with a Type=string marker are validated as strings.
 func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *ast.StructType, markersAccess markershelper.Markers, considerOmitzero bool, qualifiedFieldName string) (bool, bool) {
 	if structType == nil {
 		return false, false
@@ -119,21 +138,19 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 
 	markerSet := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
-	minProperties, err := GetMinProperties(markerSet)
+	effectiveMin, err := resolveEffectiveMinProperties(markerSet)
 	if err != nil {
 		pass.Reportf(field.Pos(), "struct %s has an invalid minProperties marker: %v", FieldName(field), err)
 		return false, false
 	}
 
-	if minProperties != nil && *minProperties > nonOmittedFields {
-		// The struct requires more properties than would be marshalled in the zero value of the struct.
+	if effectiveMin != nil && *effectiveMin > nonOmittedFields {
 		zeroValueValid = false
 	}
 
 	var completeStructValidation = true
-	if minProperties == nil && nonOmittedFields == 0 {
-		// If the struct has no non-omitted fields, then the zero value of the struct is `{}`.
-		// This generally means that the validation is incomplete as the difference between omitting the field and not omitting is not clear.
+	if effectiveMin == nil && nonOmittedFields == 0 {
+		// No structural constraint prevents {} — validation is incomplete.
 		completeStructValidation = false
 	}
 
