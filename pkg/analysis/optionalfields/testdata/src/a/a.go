@@ -112,6 +112,43 @@ type A struct {
 	// StringAliasWithEnumNoOmitEmpty is a string alias field with enum validation and no omitempty.
 	// +optional
 	StringAliasWithEnumNoOmitEmpty *StringAliasWithEnum `json:"stringAliasWithEnumNoOmitEmpty"` // want "field A.StringAliasWithEnumNoOmitEmpty should have the omitempty tag."
+
+	// nonOmittedStructWithExactlyOneOfOnStruct is a struct field with ExactlyOneOf on the struct type without omitempty.
+	// +optional
+	NonOmittedStructWithExactlyOneOfOnStruct ExactlyOneOfStruct `json:"nonOmittedStructWithExactlyOneOfOnStruct"` // want "field A.NonOmittedStructWithExactlyOneOfOnStruct should be a pointer." "field A.NonOmittedStructWithExactlyOneOfOnStruct should have the omitempty tag."
+
+	// structWithExactlyOneOfOnStruct is a struct field with ExactlyOneOf on the struct type.
+	// +optional
+	StructWithExactlyOneOfOnStruct ExactlyOneOfStruct `json:"structWithExactlyOneOfOnStruct,omitempty"` // want "field A.StructWithExactlyOneOfOnStruct should be a pointer."
+
+	// pointerStructWithExactlyOneOfOnStruct is a pointer struct field with ExactlyOneOf on the struct type without omitempty.
+	// +optional
+	PointerStructWithExactlyOneOfOnStruct *ExactlyOneOfStruct `json:"pointerStructWithExactlyOneOfOnStruct"` // want "field A.PointerStructWithExactlyOneOfOnStruct should have the omitempty tag."
+
+	// pointerStructWithExactlyOneOfOnStructWithOmitEmpty is a pointer struct field with ExactlyOneOf on the struct type.
+	// +optional
+	PointerStructWithExactlyOneOfOnStructWithOmitEmpty *ExactlyOneOfStruct `json:"pointerStructWithExactlyOneOfOnStructWithOmitEmpty,omitempty"`
+
+	// nonOmittedStructWithAtLeastOneOfOnStruct is a struct field with AtLeastOneOf on the struct type without omitempty.
+	// +optional
+	NonOmittedStructWithAtLeastOneOfOnStruct AtLeastOneOfStruct `json:"nonOmittedStructWithAtLeastOneOfOnStruct"` // want "field A.NonOmittedStructWithAtLeastOneOfOnStruct should be a pointer." "field A.NonOmittedStructWithAtLeastOneOfOnStruct should have the omitempty tag."
+
+	// structWithAtLeastOneOfOnStruct is a struct field with AtLeastOneOf on the struct type.
+	// +optional
+	StructWithAtLeastOneOfOnStruct AtLeastOneOfStruct `json:"structWithAtLeastOneOfOnStruct,omitempty"` // want "field A.StructWithAtLeastOneOfOnStruct should be a pointer."
+
+	// pointerStructWithAtLeastOneOfOnStruct is a pointer struct field with AtLeastOneOf on the struct type without omitempty.
+	// +optional
+	PointerStructWithAtLeastOneOfOnStruct *AtLeastOneOfStruct `json:"pointerStructWithAtLeastOneOfOnStruct"` // want "field A.PointerStructWithAtLeastOneOfOnStruct should have the omitempty tag."
+
+	// pointerStructWithAtLeastOneOfOnStructWithOmitEmpty is a pointer struct field with AtLeastOneOf on the struct type.
+	// +optional
+	PointerStructWithAtLeastOneOfOnStructWithOmitEmpty *AtLeastOneOfStruct `json:"pointerStructWithAtLeastOneOfOnStructWithOmitEmpty,omitempty"`
+
+	// requiredExactlyOneOfField: a +required field with ExactlyOneOf struct type.
+	// optionalfields does not fire on required fields.
+	// +required
+	RequiredExactlyOneOfField ExactlyOneOfStructWithRequired `json:"requiredExactlyOneOfField"`
 }
 
 type B struct {
@@ -148,3 +185,32 @@ type MapAlias map[string]string
 // The zero value ("") is not in the enum, making it invalid.
 // +kubebuilder:validation:Enum=value1;value2
 type StringAliasWithEnum string
+
+// +kubebuilder:validation:ExactlyOneOf=serviceKeyRef;tokenRef
+type ExactlyOneOfStruct struct {
+	// +optional
+	ServiceKeyRef *string `json:"serviceKeyRef,omitempty"`
+
+	// +optional
+	TokenRef *string `json:"tokenRef,omitempty"`
+}
+
+// +kubebuilder:validation:AtLeastOneOf=serviceKeyRef;tokenRef
+type AtLeastOneOfStruct struct {
+	// +optional
+	ServiceKeyRef *string `json:"serviceKeyRef,omitempty"`
+
+	// +optional
+	TokenRef *string `json:"tokenRef,omitempty"`
+}
+
+// StructWithExactlyOneOfAndRequiredField demonstrates that a +required field using an
+// ExactlyOneOf struct type is not subject to the optionalfields linter (which only
+// fires on optional fields).
+// +kubebuilder:validation:ExactlyOneOf=serviceKeyRef;tokenRef
+type ExactlyOneOfStructWithRequired struct {
+	// +optional
+	ServiceKeyRef *string `json:"serviceKeyRef,omitempty"`
+	// +optional
+	TokenRef *string `json:"tokenRef,omitempty"`
+}

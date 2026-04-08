@@ -101,16 +101,29 @@ func hasUnionConstraint(markerSet markershelper.MarkerSet) bool {
 }
 
 // resolveEffectiveMinProperties returns the effective minProperties constraint.
-// Currently wraps GetMinProperties directly; union constraint handling is layered
-// on top by the caller.
+// It unifies explicit +kubebuilder:validation:MinProperties with the implicit
+// minimum-1 requirement enforced by union markers (ExactlyOneOf, AtLeastOneOf).
+// Returns nil when there is no effective minimum.
 func resolveEffectiveMinProperties(markerSet markershelper.MarkerSet) (*int, error) {
-	return GetMinProperties(markerSet)
+	min, err := GetMinProperties(markerSet)
+	if err != nil {
+		return nil, err
+	}
+	// Synthesize minProperties=1 for union markers so completeStructValidation
+	// is correctly set to true when union constraints are present.
+	if min == nil && hasUnionConstraint(markerSet) {
+		min = ptr.To(1)
+	}
+	return min, nil
 }
 
 // isStructZeroValueValid checks if the zero value of a struct is valid.
 // It evaluates in order:
 //  1. Whether all non-omitted fields accept their zero values (via areStructFieldZeroValuesValid).
-//  2. Whether the effective minimum-properties constraint is satisfied.
+//  2. Whether the effective minimum-properties constraint is satisfied. Union markers
+//     (ExactlyOneOf, AtLeastOneOf) make the zero value unconditionally invalid: CEL
+//     has(field) returns false for null/absent fields, so no union member is "set"
+//     at zero value regardless of non-union field presence.
 //  3. Whether validation is complete: a struct with no effective minimum and no
 //     non-omitted fields has incomplete validation (completeStructValidation=false).
 //
@@ -144,7 +157,15 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 		return false, false
 	}
 
-	if effectiveMin != nil && *effectiveMin > nonOmittedFields {
+	switch {
+	case hasUnionConstraint(markerSet):
+		// CEL has(field) returns false for null values (Kubernetes docs: "Null valued
+		// fields are treated as absent fields in CEL expressions"). At zero value, all
+		// union member fields are nil (pointer) or zero (value type) — neither satisfies
+		// ExactlyOneOf/AtLeastOneOf. This holds regardless of non-union non-omitted
+		// fields, which do not contribute to satisfying the union constraint.
+		zeroValueValid = false
+	case effectiveMin != nil && *effectiveMin > nonOmittedFields:
 		zeroValueValid = false
 	}
 
