@@ -38,7 +38,7 @@ name: golangci-lint-kube-api-linter
 destination: ./bin
 plugins:
 - module: 'sigs.k8s.io/kube-api-linter'
-  version: 'v0.0.0-20251029102002-9992248f8813'
+  version: 'v0.0.0-20260416084302-2b3d1fe14578'
 ```
 
 **Important - Version Format**: Since this repository does not have releases yet, you must use a [pseudo-version](https://go.dev/ref/mod#pseudo-versions) in the format `v0.0.0-YYYYMMDDHHMMSS-commithash`.
