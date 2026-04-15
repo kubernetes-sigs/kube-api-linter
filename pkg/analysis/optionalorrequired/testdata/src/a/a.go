@@ -88,6 +88,8 @@ type OptionalOrRequiredTestStruct struct {
 
 	// +optional
 	C `json:"c,omitempty"`
+
+	Embedded `json:""`
 }
 
 type A struct{}
@@ -102,3 +104,5 @@ type C struct{}
 type Interface interface {
 	InaccessibleFunction() string
 }
+
+type Embedded struct{}

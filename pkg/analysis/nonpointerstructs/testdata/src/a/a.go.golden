@@ -49,6 +49,8 @@ type A struct {
 	WithOptionalField                  `json:",inline"`
 	WithRequiredAndOptionalField       `json:",inline"`
 	WithOptionalFieldsAndMinProperties `json:",inline"`
+	WithRequiredFieldEmbedded          `json:""`
+	WithOptionalFieldEmbedded          `json:""`
 }
 
 type WithRequiredField struct {
@@ -71,5 +73,15 @@ type WithRequiredAndOptionalField struct {
 // +kubebuilder:validation:MinProperties=1
 type WithOptionalFieldsAndMinProperties struct {
 	// +k8s:optional
+	OptionalField string `json:"optionalField"`
+}
+
+type WithRequiredFieldEmbedded struct {
+	// +required
+	RequiredField string `json:"requiredField"`
+}
+
+type WithOptionalFieldEmbedded struct {
+	// +optional
 	OptionalField string `json:"optionalField"`
 }
