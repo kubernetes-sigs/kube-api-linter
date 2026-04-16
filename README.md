@@ -33,7 +33,7 @@ If you do not have `golangci-lint` installed, review the `golangci-lint` [instal
 You will need to create a `.custom-gcl.yml` file to describe the custom linters you want to run. The following is an example of a `.custom-gcl.yml` file:
 
 ```yaml
-version: v2.5.0
+version: v2.11.0 # golangci-lint version
 name: golangci-lint-kube-api-linter
 destination: ./bin
 plugins:
