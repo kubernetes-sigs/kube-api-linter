@@ -35,6 +35,35 @@
 | [UniqueMarkers](#uniquemarkers) | Ensures unique marker definitions | True | Native, CRD |
 
 [^1]: Some linters are applicable only to Native (in-tree, go-validated APIs) or only to CRD (Custom Resource Definitions) APIs.
+- [ArrayOfStruct](#arrayofstruct) - Ensures arrays of structs have at least one required field
+- [Conditions](#conditions) - Checks that `Conditions` fields are correctly formatted
+- [CommentStart](#commentstart) - Ensures comments start with the serialized form of the type
+- [ConflictingMarkers](#conflictingmarkers) - Detects mutually exclusive markers on the same field
+- [DefaultOrRequired](#defaultorrequired) - Ensures fields marked as required do not have default values
+- [DuplicateMarkers](#duplicatemarkers) - Checks for exact duplicates of markers
+- [Enums](#enums) - Enforces proper usage of enumerated fields with type aliases and +enum marker
+- [DependentTags](#dependenttags) - Enforces dependencies between markers
+- [ForbiddenMarkers](#forbiddenmarkers) - Checks that no forbidden markers are present on types/fields.
+- [Integers](#integers) - Validates usage of supported integer types
+- [JSONTags](#jsontags) - Ensures proper JSON tag formatting
+- [MaxLength](#maxlength) - Checks for maximum length constraints on strings and arrays
+- [NamingConventions](#namingconventions) - Ensures field names adhere to user-defined naming conventions
+- [NoBools](#nobools) - Prevents usage of boolean types
+- [NoDurations](#nodurations) - Prevents usage of duration types
+- [NoFloats](#nofloats) - Prevents usage of floating-point types
+- [Nomaps](#nomaps) - Restricts usage of map types
+- [NoNullable](#nonullable) - Prevents usage of the nullable marker
+- [Nophase](#nophase) - Prevents usage of 'Phase' fields
+- [Notimestamp](#notimestamp) - Prevents usage of 'TimeStamp' fields
+- [OptionalFields](#optionalfields) - Validates optional field conventions
+- [OptionalOrRequired](#optionalorrequired) - Ensures fields are explicitly marked as optional or required
+- [NoReferences](#noreferences) - Ensures field names use Ref/Refs instead of Reference/References
+- [PreferredMarkers](#preferredmarkers) - Ensures preferred markers are used instead of equivalent markers
+- [RequiredFields](#requiredfields) - Validates required field conventions
+- [SSATags](#ssatags) - Ensures proper Server-Side Apply (SSA) tags on array fields
+- [StatusOptional](#statusoptional) - Ensures status fields are marked as optional
+- [StatusSubresource](#statussubresource) - Validates status subresource configuration
+- [UniqueMarkers](#uniquemarkers) - Ensures unique marker definitions
 
 ## ArrayOfStruct
 
@@ -305,6 +334,39 @@ will not.
 
 The `duplicatemarkers` linter can automatically fix all markers that are exact match to another markers.
 If there are duplicates across fields and their underlying type, the marker on the type will be preferred and the marker on the field will be removed.
+
+## Enums
+
+The `enums` linter enforces that string type aliases used for enumerated values have proper enum markers.
+
+**Enum Marker Types:**
+- **Plain marker** (`+enum`): Primary Kubernetes idiom; auto-discovers constants and validates PascalCase.
+- **Declarative Validation Marker** (`+k8s:enum`): Used in Kubernetes core API types; auto-discovers constants.
+- **CRD Validation Marker** (`+kubebuilder:validation:Enum=Value1;Value2`): Used for CRD validation. Requires explicit values (no auto-discovery); marker values are validated for PascalCase.
+
+**Enum Marker Modes:**
+- **Auto-discovery** (`+enum` or `+k8s:enum`): Validates that constants follow PascalCase.
+- **Explicit values** (`+kubebuilder:validation:Enum=Value1;Value2`): Validates the values listed in the marker for PascalCase; constants are not auto-discovered.
+
+**PascalCase allows:** "Pending", "PhaseRunning", "HTTP", "IPv4" (acronyms and digits).  
+**PascalCase rejects:** "pending", "phase_pending", "Phase-Failed".
+
+**Note:** The linter only flags string type aliases that have associated constants (indicating enum usage), avoiding false positives for generic string types.
+
+By default, `enums` is enabled.
+
+### Configuration
+
+```yaml
+linterConfig:
+  enums:
+    # Values exempt from PascalCase validation
+    allowlist:
+      - kubectl
+      - docker
+    # Require type aliases (RequireTypeAlias, default) or allow plain strings (AllowPlainString)
+    kubebuilderEnumPolicy: RequireTypeAlias
+```
 
 ## ForbiddenMarkers
 
