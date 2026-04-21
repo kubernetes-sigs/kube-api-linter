@@ -23,7 +23,7 @@ jobs:
         with:
           go-version: stable
       - name: Run GoReleaser (on tags)
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3
         if: github.event_name == 'push'
         with:
           # either 'goreleaser' (default) or 'goreleaser-pro'
