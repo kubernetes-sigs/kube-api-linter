@@ -34,7 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser (on pull requests)
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3
         if: github.event_name == 'pull_request'
         with:
           # either 'goreleaser' (default) or 'goreleaser-pro'
