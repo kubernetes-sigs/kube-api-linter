@@ -252,25 +252,38 @@ func isStructZeroValueValid(pass *analysis.Pass, field *ast.Field, structType *a
 
 	markerSet := TypeAwareMarkerCollectionForField(pass, markersAccess, field)
 
+	structZeroValid, completeStructValidation := checkStructMinProperties(pass, field, markerSet, structType, markersAccess, nonOmittedFields)
+	if !structZeroValid {
+		zeroValueValid = false
+	}
+
+	return zeroValueValid, completeStructValidation
+}
+
+// checkStructMinProperties checks if the struct's zero value satisfies min-properties constraints.
+// It considers both explicit minProperties markers and union markers (ExactlyOneOf/AtLeastOneOf),
+// which implicitly require at least one field to be set.
+// Returns (zeroValueValid, completeValidation).
+func checkStructMinProperties(pass *analysis.Pass, field *ast.Field, markerSet markershelper.MarkerSet, structType *ast.StructType, markersAccess markershelper.Markers, nonOmittedFields int) (bool, bool) {
 	minProperties, err := GetMinProperties(markerSet)
 	if err != nil {
 		pass.Reportf(field.Pos(), "struct %s has an invalid minProperties marker: %v", FieldName(field), err)
 		return false, false
 	}
 
-	if minProperties != nil && *minProperties > nonOmittedFields {
-		// The struct requires more properties than would be marshalled in the zero value of the struct.
-		zeroValueValid = false
+	// Union markers (ExactlyOneOf/AtLeastOneOf) implicitly require at least one field,
+	// equivalent to minProperties=1.
+	structMarkerSet := markersAccess.StructMarkers(structType)
+	if minProperties == nil && (structMarkerSet.Has(markers.KubebuilderExactlyOneOf) || structMarkerSet.Has(markers.KubebuilderAtLeastOneOfMarker)) {
+		minProperties = ptr.To(1)
 	}
 
-	var completeStructValidation = true
-	if minProperties == nil && nonOmittedFields == 0 {
-		// If the struct has no non-omitted fields, then the zero value of the struct is `{}`.
-		// This generally means that the validation is incomplete as the difference between omitting the field and not omitting is not clear.
-		completeStructValidation = false
-	}
+	zeroValueValid := minProperties == nil || *minProperties <= nonOmittedFields
+	// If the struct has no non-omitted fields and no min-properties constraint, then the zero value
+	// is `{}` and the validation is incomplete.
+	completeValidation := minProperties != nil || nonOmittedFields > 0
 
-	return zeroValueValid, completeStructValidation
+	return zeroValueValid, completeValidation
 }
 
 // areStructFieldZeroValuesValid checks if all non-omitted fields within a struct accept their zero values.
