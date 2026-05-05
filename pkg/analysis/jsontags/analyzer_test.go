@@ -30,7 +30,7 @@ func TestDefaultConfiguration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	analysistest.Run(t, testdata, a, "a")
+	analysistest.Run(t, testdata, a, "a", "c")
 }
 
 func TestAlternativeRegex(t *testing.T) {
@@ -44,4 +44,43 @@ func TestAlternativeRegex(t *testing.T) {
 	}
 
 	analysistest.Run(t, testdata, a, "b")
+}
+
+func TestFieldNameMatchIgnored(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := jsontags.Initializer().Init(&jsontags.JSONTagsConfig{
+		FieldNameMatch: jsontags.FieldNameMatchPolicyIgnore,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, a, "c")
+}
+
+func TestFieldNameMatchWarn(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := jsontags.Initializer().Init(&jsontags.JSONTagsConfig{
+		FieldNameMatch: jsontags.FieldNameMatchPolicyWarn,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.Run(t, testdata, a, "d", "e")
+}
+
+func TestFieldNameMatchSuggestFixSuggestedFixes(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := jsontags.Initializer().Init(&jsontags.JSONTagsConfig{
+		FieldNameMatch: jsontags.FieldNameMatchPolicySuggestFix,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "d")
 }
