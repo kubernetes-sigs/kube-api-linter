@@ -1,5 +1,7 @@
 package a
 
+import "externaltypes"
+
 type A struct {
 	// required field should not be picked up.
 	// +required
@@ -112,6 +114,81 @@ type A struct {
 	// StringAliasWithEnumNoOmitEmpty is a string alias field with enum validation and no omitempty.
 	// +optional
 	StringAliasWithEnumNoOmitEmpty *StringAliasWithEnum `json:"stringAliasWithEnumNoOmitEmpty,omitempty"` // want "field A.StringAliasWithEnumNoOmitEmpty should have the omitempty tag."
+
+	// ExternalResourceList is a named map type from an external package.
+	// This should NOT require a pointer since the underlying type is a map.
+	// +optional
+	ExternalResourceList externaltypes.ResourceList `json:"externalResourceList,omitempty"`
+
+	// ExternalStringSlice is a named slice type from an external package.
+	// This should NOT require a pointer since the underlying type is a slice.
+	// +optional
+	ExternalStringSlice externaltypes.StringSlice `json:"externalStringSlice,omitempty"`
+
+	// ExternalStringMap is a named map type from an external package.
+	// This should NOT require a pointer since the underlying type is a map.
+	// +optional
+	ExternalStringMap externaltypes.StringMap `json:"externalStringMap,omitempty"`
+
+	// PointerExternalResourceList is a pointer to a named map type from an external package.
+	// This should report that the pointer is unnecessary since the underlying type is a map.
+	// +optional
+	PointerExternalResourceList externaltypes.ResourceList `json:"pointerExternalResourceList,omitempty"` // want "field A.PointerExternalResourceList underlying type does not need to be a pointer. The pointer should be removed."
+
+	// PointerExternalStringSlice is a pointer to a named slice type from an external package.
+	// This should report that the pointer is unnecessary since the underlying type is a slice.
+	// +optional
+	PointerExternalStringSlice externaltypes.StringSlice `json:"pointerExternalStringSlice,omitempty"` // want "field A.PointerExternalStringSlice underlying type does not need to be a pointer. The pointer should be removed."
+
+	// ExternalStringAlias is a string alias from an external package.
+	// This should require a pointer since the underlying type is a string.
+	// +optional
+	ExternalStringAlias *externaltypes.StringAlias `json:"externalStringAlias,omitempty"` // want "field A.ExternalStringAlias should be a pointer."
+
+	// ExternalIntAlias is an int alias from an external package.
+	// This should require a pointer since the underlying type is an int.
+	// +optional
+	ExternalIntAlias *externaltypes.IntAlias `json:"externalIntAlias,omitempty"` // want "field A.ExternalIntAlias should be a pointer."
+
+	// ExternalBoolAlias is a bool alias from an external package.
+	// This should require a pointer since the underlying type is a bool.
+	// +optional
+	ExternalBoolAlias *externaltypes.BoolAlias `json:"externalBoolAlias,omitempty"` // want "field A.ExternalBoolAlias should be a pointer."
+
+	// ExternalFloatAlias is a float alias from an external package.
+	// This should require a pointer since the underlying type is a float.
+	// +optional
+	ExternalFloatAlias *externaltypes.FloatAlias `json:"externalFloatAlias,omitempty"` // want "field A.ExternalFloatAlias should be a pointer."
+
+	// ExternalStructType is a struct type from an external package.
+	// This should require a pointer since the underlying type is a struct.
+	// +optional
+	ExternalStructType *externaltypes.StructType `json:"externalStructType,omitempty"` // want "field A.ExternalStructType should be a pointer."
+
+	// ExternalStructWithNonOmittedField is a struct type with non-omitted fields from an external package.
+	// With "Always" pointer preference, this should still require a pointer.
+	// +optional
+	ExternalStructWithNonOmittedField *externaltypes.StructTypeWithNonOmittedField `json:"externalStructWithNonOmittedField,omitempty"` // want "field A.ExternalStructWithNonOmittedField should be a pointer."
+
+	// PointerExternalStringAlias is a pointer to a string alias from an external package.
+	// This is valid - string aliases should be pointers.
+	// +optional
+	PointerExternalStringAlias *externaltypes.StringAlias `json:"pointerExternalStringAlias,omitempty"`
+
+	// PointerExternalIntAlias is a pointer to an int alias from an external package.
+	// This is valid - int aliases should be pointers.
+	// +optional
+	PointerExternalIntAlias *externaltypes.IntAlias `json:"pointerExternalIntAlias,omitempty"`
+
+	// PointerExternalBoolAlias is a pointer to a bool alias from an external package.
+	// This is valid - bool aliases should be pointers.
+	// +optional
+	PointerExternalBoolAlias *externaltypes.BoolAlias `json:"pointerExternalBoolAlias,omitempty"`
+
+	// PointerExternalStructType is a pointer to a struct type from an external package.
+	// This is valid - struct types should be pointers.
+	// +optional
+	PointerExternalStructType *externaltypes.StructType `json:"pointerExternalStructType,omitempty"`
 }
 
 type B struct {
