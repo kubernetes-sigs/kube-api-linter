@@ -179,6 +179,7 @@ func expectedJSONTagName(fieldName string) string {
 	var b strings.Builder
 
 	b.WriteString(words[0])
+
 	for _, word := range words[1:] {
 		r := []rune(word)
 		if len(r) == 0 {
@@ -196,6 +197,7 @@ func jsonTagMatchesFieldName(fieldName, jsonTagName string) bool {
 	return slices.Equal(splitIdentifierWords(fieldName), splitIdentifierWords(jsonTagName))
 }
 
+//nolint:cyclop
 func splitIdentifierWords(in string) []string {
 	if in == "" {
 		return nil
@@ -218,12 +220,15 @@ func splitIdentifierWords(in string) []string {
 		curr := runes[i]
 
 		var next rune
+
 		hasNext := i+1 < len(runes)
+
 		if hasNext {
 			next = runes[i+1]
 		}
 
 		boundary := false
+
 		switch {
 		case unicode.IsLower(prev) && unicode.IsUpper(curr):
 			boundary = true

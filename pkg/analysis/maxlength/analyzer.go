@@ -266,15 +266,24 @@ func (a *analyzer) needsStringMaxLength(markerSet markershelper.MarkerSet) bool 
 	return true
 }
 
-// needsByteSliceMaxLength is like needsStringMaxLength but also accepts +k8s:maxBytes,
-// which is the DV-correct marker for byte-length constraints on []byte fields.
-// (+k8s:maxLength counts Unicode characters; +k8s:maxBytes counts raw bytes.)
+// needsByteSliceMaxLength is like needsStringMaxLength but enforces that for DV markers,
+// +k8s:maxBytes is used instead of +k8s:maxLength (which counts characters).
 func (a *analyzer) needsByteSliceMaxLength(markerSet markershelper.MarkerSet) bool {
-	if markerSet.Has(markers.K8sMaxBytesMarker) {
+	switch {
+	case markerSet.Has(markers.KubebuilderMaxLengthMarker),
+		markerSet.Has(markers.K8sMaxBytesMarker),
+		markerSet.Has(markers.KubebuilderEnumMarker),
+		markerSet.Has(markers.K8sEnumMarker),
+		markerSet.HasWithValue(kubebuilderFormatWithValue("date")),
+		markerSet.HasWithValue(kubebuilderFormatWithValue("date-time")),
+		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")),
+		markerSet.HasWithValue(k8sFormatWithValue("date")),
+		markerSet.HasWithValue(k8sFormatWithValue("date-time")),
+		markerSet.HasWithValue(k8sFormatWithValue("duration")):
 		return false
 	}
 
-	return a.needsStringMaxLength(markerSet)
+	return true
 }
 
 func (a *analyzer) needsItemsMaxLength(markerSet markershelper.MarkerSet) bool {
@@ -299,5 +308,5 @@ func kubebuilderItemsFormatWithValue(value string) string {
 }
 
 func k8sFormatWithValue(value string) string {
-	return fmt.Sprintf("%s:=%s", markers.K8sFormatMarker, value)
+	return fmt.Sprintf("%s=%s", markers.K8sFormatMarker, value)
 }
