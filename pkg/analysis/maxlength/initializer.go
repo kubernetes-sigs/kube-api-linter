@@ -64,5 +64,17 @@ func validateConfig(config *MaxLengthConfig, fldPath *field.Path) field.ErrorLis
 		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredMaxItemsMarker"), config.PreferredMaxItemsMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.KubebuilderMaxItemsMarker, markers.K8sMaxItemsMarker)))
 	}
 
+	switch config.PreferredMaxPropertiesMarker {
+	case "", markers.KubebuilderMaxPropertiesMarker, markers.K8sMaxPropertiesMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredMaxPropertiesMarker"), config.PreferredMaxPropertiesMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.KubebuilderMaxPropertiesMarker, markers.K8sMaxPropertiesMarker)))
+	}
+
+	switch config.PreferredMaximumMarker {
+	case "", markers.KubebuilderMaximumMarker, markers.K8sMaximumMarker:
+	default:
+		fieldErrors = append(fieldErrors, field.Invalid(fldPath.Child("preferredMaximumMarker"), config.PreferredMaximumMarker, fmt.Sprintf("invalid value, must be one of %q, %q or omitted", markers.KubebuilderMaximumMarker, markers.K8sMaximumMarker)))
+	}
+
 	return fieldErrors
 }

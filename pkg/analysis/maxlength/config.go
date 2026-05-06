@@ -15,6 +15,8 @@ limitations under the License.
 */
 package maxlength
 
+import "sigs.k8s.io/kube-api-linter/pkg/markers"
+
 // MaxLengthConfig contains configuration for the maxlength linter.
 type MaxLengthConfig struct {
 	// PreferredMaxLengthMarker is the preferred marker identifier to use for maximum length on strings.
@@ -26,4 +28,32 @@ type MaxLengthConfig struct {
 	// If this field is not set, the default value is "kubebuilder:validation:MaxItems".
 	// Valid values are "kubebuilder:validation:MaxItems" and "k8s:maxItems".
 	PreferredMaxItemsMarker string `json:"preferredMaxItemsMarker"`
+
+	// PreferredMaxPropertiesMarker is the preferred marker identifier to use for maximum properties on maps.
+	// If this field is not set, the default value is "kubebuilder:validation:MaxProperties".
+	// Valid values are "kubebuilder:validation:MaxProperties" and "k8s:maxProperties".
+	PreferredMaxPropertiesMarker string `json:"preferredMaxPropertiesMarker"`
+
+	// PreferredMaximumMarker is the preferred marker identifier to use for maximum value on numbers.
+	// If this field is not set, the default value is "kubebuilder:validation:Maximum".
+	// Valid values are "kubebuilder:validation:Maximum" and "k8s:maximum".
+	PreferredMaximumMarker string `json:"preferredMaximumMarker"`
+}
+
+func defaultConfig(cfg *MaxLengthConfig) {
+	if cfg.PreferredMaxLengthMarker == "" {
+		cfg.PreferredMaxLengthMarker = markers.KubebuilderMaxLengthMarker
+	}
+
+	if cfg.PreferredMaxItemsMarker == "" {
+		cfg.PreferredMaxItemsMarker = markers.KubebuilderMaxItemsMarker
+	}
+
+	if cfg.PreferredMaxPropertiesMarker == "" {
+		cfg.PreferredMaxPropertiesMarker = markers.KubebuilderMaxPropertiesMarker
+	}
+
+	if cfg.PreferredMaximumMarker == "" {
+		cfg.PreferredMaximumMarker = markers.KubebuilderMaximumMarker
+	}
 }
