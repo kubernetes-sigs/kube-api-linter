@@ -9,6 +9,7 @@
 | [DefaultOrRequired](#defaultorrequired) | Ensures fields marked as required do not have default values | True | Native, CRD |
 | [Defaults](#defaults) | Checks that fields with default markers are configured correctly | True | Native, CRD |
 | [DependentTags](#dependenttags) | Enforces dependencies between markers | False | Native, CRD |
+| [DiscriminatedUnions](#discriminatedunions) | Validates discriminated union marker structure | False | Native, CRD |
 | [DuplicateMarkers](#duplicatemarkers) | Checks for exact duplicates of markers | True | Native, CRD |
 | [ForbiddenMarkers](#forbiddenmarkers) | Checks that no forbidden markers are present on types/fields. | False | Native, CRD |
 | [Integers](#integers) | Validates usage of supported integer types | True | Native, CRD |
@@ -137,6 +138,33 @@ This linter only checks for the presence or absence of markers; it does not insp
 - **Values:** The linter does not care about the values of the `identifier` or `dependent` markers. It only verifies if the markers themselves are present.
 - **Fixes:** This linter does not provide automatic fixes. It only reports violations.
 - **Same/Different Values:** Whether you want the same or different values between dependent markers is outside the scope of this linter. You would need other validation mechanisms (e.g., CEL validation) to enforce value-based dependencies.
+
+## DiscriminatedUnions
+
+The `discriminatedunions` linter validates discriminated union definitions across legacy markers (`+union`, `+unionDiscriminator`, `+unionMember`) and declarative markers (`+k8s:unionDiscriminator`, `+k8s:unionMember`).
+Union detection is triggered when a struct has either:
+- A type-level `+union` marker.
+- One or more union field markers (`+unionDiscriminator`/`+unionMember` or `+k8s:unionDiscriminator`/`+k8s:unionMember`).
+
+The linter enforces:
+
+- Exactly one discriminator field.
+- A required discriminator field.
+- Optional member fields (including support for `+unionMember,optional`).
+- Optional forbidding of non-member fields.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  discriminatedunions:
+    nonMemberFields: Forbid | Allow # Defaults to `Forbid`.
+```
+
+### Behavior
+
+- **Default:** Disabled by default; enable explicitly.
+- **Scope:** Structure-only validation in this linter implementation.
 
 ## CommentStart
 

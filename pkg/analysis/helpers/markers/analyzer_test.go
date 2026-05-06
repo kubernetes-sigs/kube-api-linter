@@ -433,3 +433,15 @@ func TestIdentifierFromString(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractKnownMarkerIDArgumentsAndPayload(t *testing.T) {
+	g := NewWithT(t)
+
+	id, arguments, payload := extractKnownMarkerIDArgumentsAndPayload("unionMember", "unionMember,optional")
+
+	g.Expect(id).To(Equal("unionMember"))
+	g.Expect(arguments).To(Equal(map[string]string{
+		UnnamedArgument: "optional",
+	}))
+	g.Expect(payload).To(Equal(Payload{}))
+}
