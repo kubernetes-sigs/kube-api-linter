@@ -16,11 +16,13 @@ limitations under the License.
 package utils
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
+	"iter"
 	"slices"
 	"strings"
 
@@ -577,4 +579,72 @@ func getFieldTypeName(field *ast.Field) string {
 	}
 
 	return ""
+}
+
+// Underlying unwraps pointer, named, slice, array, and map types to get the underlying element type.
+// For pointer types, it returns the element type.
+// For named types, it returns the underlying type.
+// For slice and array types, it returns the element type.
+// For map types, it returns the value type.
+// Otherwise, it returns the type as-is.
+func Underlying(t types.Type) types.Type {
+	// Unwrap pointer types
+	if ptr, ok := t.(*types.Pointer); ok {
+		t = ptr.Elem()
+	}
+
+	// Unwrap named types to get underlying type
+	if named, ok := t.(*types.Named); ok {
+		t = named.Underlying()
+	}
+
+	// Unwrap slice, array, and map types to get element/value type
+	switch ut := t.Underlying().(type) {
+	case *types.Slice:
+		return ut.Elem()
+	case *types.Array:
+		return ut.Elem()
+	case *types.Map:
+		return ut.Elem()
+	}
+
+	return t
+}
+
+// ExtractIdent extracts an *ast.Ident from an ast.Expr, unwrapping pointers, arrays, and maps.
+func ExtractIdent(expr ast.Expr) *ast.Ident {
+	switch e := expr.(type) {
+	case *ast.Ident:
+		return e
+	case *ast.StarExpr:
+		return ExtractIdent(e.X)
+	case *ast.ArrayType:
+		return ExtractIdent(e.Elt)
+	case *ast.MapType:
+		return ExtractIdent(e.Value)
+	default:
+		return nil
+	}
+}
+
+// SortedMarkers returns an iterator that yields markers sorted by their position.
+// This ensures consistent ordering when processing markers.
+func SortedMarkers(markerSet markershelper.MarkerSet) iter.Seq[markershelper.Marker] {
+	return func(yield func(markershelper.Marker) bool) {
+		markers := slices.Clone(markerSet.UnsortedList())
+		slices.SortFunc(markers, func(a, b markershelper.Marker) int {
+			return cmp.Compare(a.Pos, b.Pos)
+		})
+
+		for _, m := range markers {
+			if !yield(m) {
+				return
+			}
+		}
+	}
+}
+
+// RawMarkerLine returns the raw marker comment line with a trailing newline.
+func RawMarkerLine(marker markershelper.Marker) string {
+	return marker.RawComment + "\n"
 }
