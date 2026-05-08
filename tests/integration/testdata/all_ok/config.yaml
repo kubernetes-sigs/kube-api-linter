@@ -1,3 +1,5 @@
 linters:
-  enabled:
-  - "*"
+            enable: []
+          lintersConfig:
+            enums:
+              kubebuilderEnumPolicy: AllowPlainString

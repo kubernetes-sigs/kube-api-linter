@@ -388,6 +388,7 @@ type PodReadinessGate struct {
 }
 
 // PodConditionType is a valid value for PodCondition.Type
+// +kubebuilder:validation:Enum=ContainersReady;Initialized;Ready;PodScheduled;DisruptionTarget;PodReadyToStartContainers;PodResizePending;PodResizeInProgress
 type PodConditionType string
 
 // These are built-in conditions of pod. An application may use a custom condition not listed here.
@@ -420,6 +421,7 @@ const (
 	PodResizeInProgress PodConditionType = "PodResizeInProgress"
 )
 
+// +kubebuilder:validation:Enum=linux;windows
 // OSName is the set of OS'es that can be used in OS.
 type OSName string
 
