@@ -179,6 +179,7 @@ func expectedJSONTagName(fieldName string) string {
 	var b strings.Builder
 
 	b.WriteString(words[0])
+
 	for _, word := range words[1:] {
 		r := []rune(word)
 		if len(r) == 0 {
@@ -214,30 +215,7 @@ func splitIdentifierWords(in string) []string {
 	}
 
 	for i := 1; i < len(runes); i++ {
-		prev := runes[i-1]
-		curr := runes[i]
-
-		var next rune
-		hasNext := i+1 < len(runes)
-		if hasNext {
-			next = runes[i+1]
-		}
-
-		boundary := false
-		switch {
-		case unicode.IsLower(prev) && unicode.IsUpper(curr):
-			boundary = true
-		case unicode.IsLetter(prev) && unicode.IsDigit(curr):
-			boundary = true
-		case unicode.IsDigit(prev) && unicode.IsUpper(curr):
-			boundary = true
-		case unicode.IsUpper(prev) && unicode.IsUpper(curr) && hasNext && unicode.IsLower(next) && i-start > 1:
-			// Keep pluralized acronyms together: WWIDs -> wwids, WWIDsBad -> wwidsBad, URLs -> urls.
-			pluralizedAcronym := next == 's' && (i+2 == len(runes) || unicode.IsUpper(runes[i+2]))
-			boundary = !pluralizedAcronym
-		}
-
-		if !boundary {
+		if !isWordBoundary(runes, i, start) {
 			continue
 		}
 
@@ -248,4 +226,39 @@ func splitIdentifierWords(in string) []string {
 	appendWord(len(runes))
 
 	return words
+}
+
+func isWordBoundary(runes []rune, i, start int) bool {
+	prev := runes[i-1]
+	curr := runes[i]
+
+	switch {
+	case unicode.IsLower(prev) && unicode.IsUpper(curr):
+		return true
+	case unicode.IsLetter(prev) && unicode.IsDigit(curr):
+		return true
+	case unicode.IsDigit(prev) && unicode.IsUpper(curr):
+		return true
+	case unicode.IsUpper(prev) && unicode.IsUpper(curr):
+		return isAcronymBoundary(runes, i, start)
+	}
+
+	return false
+}
+
+func isAcronymBoundary(runes []rune, i, start int) bool {
+	if i+1 >= len(runes) {
+		return false
+	}
+
+	next := runes[i+1]
+
+	if !unicode.IsLower(next) || i-start <= 1 {
+		return false
+	}
+
+	// Keep pluralized acronyms together: WWIDs -> wwids, WWIDsBad -> wwidsBad, URLs -> urls.
+	pluralizedAcronym := next == 's' && (i+2 == len(runes) || unicode.IsUpper(runes[i+2]))
+
+	return !pluralizedAcronym
 }
