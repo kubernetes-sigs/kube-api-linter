@@ -35,6 +35,7 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/forbiddenmarkers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/integers"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
+	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/markerscope"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/maxlength"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/minlength"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/namingconventions"

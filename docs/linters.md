@@ -13,6 +13,7 @@
 | [ForbiddenMarkers](#forbiddenmarkers) | Checks that no forbidden markers are present on types/fields. | False | Native, CRD |
 | [Integers](#integers) | Validates usage of supported integer types | True | Native, CRD |
 | [JSONTags](#jsontags) | Ensures proper JSON tag formatting | True | Native, CRD |
+| [MarkerScope](#markerscope) | Validates that markers are applied in the correct scope | True | Native, CRD |
 | [MaxLength](#maxlength) | Checks for maximum length constraints on strings and arrays | False | CRD |
 | [MinLength](#minlength) | Checks for minium length constraints on strings, arrays, maps and structs | False | CRD |
 | [NamingConventions](#namingconventions) | Ensures field names adhere to user-defined naming conventions | False | Native, CRD |
@@ -456,6 +457,271 @@ lintersConfig:
     jsonTagRegex: "^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$" # Provide a custom regex, which the json tag must match.
     fieldNameMatch: SuggestFix | Warn | Ignore # Check whether json tag names must match camelCase field names. Defaults to Ignore.
 ```
+
+## MarkerScope
+
+The `markerscope` linter validates that markers are applied in the correct scope and to the correct types. It ensures that markers are placed on appropriate Go language constructs (types, fields) and applied to compatible data types according to their intended usage.
+
+The linter performs two levels of validation:
+
+1. **Scope validation**: Ensures markers are placed on the correct location (field vs type)
+2. **Type constraint validation**: Ensures markers are applied to compatible data types (e.g., numeric markers on numeric types only)
+
+### Scope Types
+
+The linter defines different scope types for markers:
+
+- **FieldScope**: Can only be applied to struct fields (e.g., `optional`, `required`, `nullable`)
+- **TypeScope**: Can only be applied to type definitions (e.g., `kubebuilder:validation:items:ExactlyOneOf`)
+- **Field and Type**: Markers that can be applied to both fields and type definitions (e.g., `kubebuilder:validation:Minimum`, `kubebuilder:validation:Pattern`)
+
+### Type Constraints
+
+The linter validates that markers are applied to compatible OpenAPI schema types. By default, the schema type is determined by the Go type, but you can override this using the `kubebuilder:validation:Type` marker (or `kubebuilder:validation:items:Type` for array element types). This allows advanced use cases like treating a `[]byte` as an array instead of a string, or validating an `int32` field as a string with pattern validation.
+
+- **Numeric markers** (`Minimum`, `Maximum`, `MultipleOf`): Only for `integer` and `number` types
+- **String markers** (`Pattern`, `MinLength`, `MaxLength`): Only for `string` types
+- **Array markers** (`MinItems`, `MaxItems`, `UniqueItems`): Only for `array` types
+- **Object markers** (`MinProperties`, `MaxProperties`): Only for `object` types (struct/map)
+- **Array items markers** (`items:Minimum`, `items:Pattern`, etc.): Apply constraints to array element types
+
+OpenAPI schema types map to Go types as follows:
+- `integer`: int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64
+- `number`: float32, float64
+- `string`: string
+- `boolean`: bool
+- `array`: []T, [N]T (slices and arrays)
+- `object`: struct, map[K]V
+
+**Special case:** `[]byte` is treated as `string` type in OpenAPI (with format: byte for base64 encoding). This matches the standard OpenAPI representation where byte arrays are encoded as base64 strings. However, you can override this behavior using the `kubebuilder:validation:Type=array` marker to treat `[]byte` as an actual array type.
+
+#### Named Type Constraints
+
+For markers that can be applied to both fields and types with type constraints, the `namedTypePreference` field controls where the marker should be declared when used with named types.
+
+**Valid values:**
+- `AllowTypeOrField` (default, also used when empty): The marker can be declared on either the field or the type definition.
+- `OnTypeOnly`: The marker must be declared on the type definition, not on fields using that type.
+
+Example with `namedTypePreference: OnTypeOnly`:
+
+```go
+// ✅ Valid: marker on type definition
+// +kubebuilder:validation:Minimum=0
+type Port int32
+
+type Service struct {
+    Port Port `json:"port"`
+}
+
+// ❌ Invalid: marker on field using named type
+type Port int32
+
+type Service struct {
+    // +kubebuilder:validation:Minimum=0 // Error: should be on Port type definition
+    Port Port `json:"port"`
+}
+```
+
+Most built-in kubebuilder validation markers use `namedTypePreference: OnTypeOnly` to encourage consistent marker placement on type definitions.
+
+**Note:** These are the only two valid values for `namedTypePreference`. The `OnTypeOnly` value can only be used when `TypeScope` is included in the marker's allowed scopes.
+
+**Global vs Per-Marker Settings:**
+- The per-marker `namedTypePreference` takes precedence over the global `namedTypePreference` setting
+- If `namedTypePreference` is not specified for a marker, it inherits the value from the global setting
+- If neither is set, the default behavior is `AllowTypeOrField`
+- Use the global `namedTypePreference` for uniform behavior across all markers; use per-marker `namedTypePreference` for marker-specific overrides
+
+#### Type Override Examples
+
+You can override the default schema type using the `kubebuilder:validation:Type` marker.
+
+**Example 1: `json.RawMessage` with `Type=object`**
+
+`json.RawMessage` stores arbitrary JSON configuration data. Since it doesn't have a known schema, use `Type=object` to override:
+
+```go
+type MyStruct struct {
+    // +kubebuilder:validation:Schemaless
+    // +kubebuilder:pruning:PreserveUnknownFields
+    // +kubebuilder:validation:Type=object
+    // +optional
+    Config json.RawMessage `json:"config,omitempty"`
+}
+```
+
+**Example 2: `metav1.Duration` with `Type=string`**
+
+`metav1.Duration` is serialized as a string (e.g., `"1m"`, `"30s"`). Use `Type=string` to enable string validation markers like `Pattern`:
+
+```go
+type MyStruct struct {
+    // +kubebuilder:validation:Type=string
+    // +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ms|s|m|h))+$"
+    // +kubebuilder:default:="1m"
+    // +optional
+    Interval *metav1.Duration `json:"interval,omitempty"`
+}
+```
+
+### Default Marker Rules
+
+The linter includes built-in rules for all standard kubebuilder markers and k8s declarative validation markers. Examples:
+
+**Field-only markers:**
+- `optional`, `required`, `nullable`
+- `kubebuilder:default`, `kubebuilder:validation:Example`
+
+**Type-only markers:**
+- `kubebuilder:validation:items:ExactlyOneOf`
+- `kubebuilder:validation:items:AtMostOneOf`
+- `kubebuilder:validation:items:AtLeastOneOf`
+
+**Field and Type markers with type constraints:**
+- `kubebuilder:validation:Minimum` (integer and number types)
+- `kubebuilder:validation:Pattern` (string types only)
+- `kubebuilder:validation:MinItems` (array types only)
+- `kubebuilder:validation:MinProperties` (object types only)
+
+**Field and Type markers without type constraints:**
+- `kubebuilder:validation:Enum`, `kubebuilder:validation:Format`
+- `kubebuilder:pruning:PreserveUnknownFields`, `kubebuilder:title`
+
+### Configuration
+
+You can customize marker rules or add support for custom markers.
+
+**Scope values:**
+
+The `scopes` field accepts an array of scope constraints:
+- `[Field]`: Marker can only be applied to struct fields
+- `[Type]`: Marker can only be applied to type definitions
+- `[Field, Type]`: Marker can be applied to both fields and type definitions
+
+**Type constraints:**
+
+The `typeConstraint` field allows you to restrict which Go types a marker can be applied to. This ensures that markers are only used with compatible data types (e.g., numeric markers like `Minimum` are only applied to integer and number types).
+
+**Type constraint fields:**
+- `allowedSchemaTypes`: List of allowed OpenAPI schema types (`integer`, `number`, `string`, `boolean`, `array`, `object`)
+- `elementConstraint`: Nested constraint for array element types (only valid when `allowedSchemaTypes` includes `array`)
+
+**Named type preference values:**
+- `namedTypePreference`: Controls where markers should be placed when applied to fields using named types
+  - `AllowTypeOrField` (default): Marker can be placed on either the field or the type definition
+  - `OnTypeOnly`: Marker must be placed on the type definition, not on the field
+
+**Configuration example:**
+
+```yaml
+lintersConfig:
+  markerscope:
+    policy: Warn | SuggestFix # The policy for marker scope violations. Defaults to `SuggestFix`.
+
+    # Global preference for markers that support both Type and Field scopes
+    # This provides a convenient way to enforce uniform behavior across all markers
+    # Individual markers can override this with their own namedTypePreference setting
+    namedTypePreference: AllowTypeOrField | OnTypeOnly # Defaults to `AllowTypeOrField`
+
+    # Custom markers can be used for both:
+    # 1. Overriding built-in markers (by using the same identifier)
+    # 2. Adding validation for your own custom markers
+    customMarkers:
+      # Override a built-in marker by using its identifier
+      - identifier: "optional"
+        scopes: [Field, Type]  # Override default [Field] to allow on both
+
+      # Custom marker with scope constraint only
+      - identifier: "mycompany:validation:CustomMarker"
+        scopes: [Field, Type]
+
+      # Custom marker with scope and type constraints
+      # This marker overrides the global namedTypePreference setting
+      - identifier: "mycompany:validation:NumericLimit"
+        scopes: [Field, Type]
+        namedTypePreference: OnTypeOnly # Override: require declaration on type definition for named types
+        typeConstraint:
+          allowedSchemaTypes:
+            - integer
+
+      # Custom array items marker with element type constraint
+      - identifier: "mycompany:validation:items:StringFormat"
+        scopes: [Field, Type]
+        typeConstraint:
+          allowedSchemaTypes:
+            - array
+          elementConstraint:
+            allowedSchemaTypes:
+              - string
+```
+
+**Configuration notes:**
+- Use `customMarkers` to both override built-in markers and add validation for your own custom markers
+- To override a built-in marker, use the same identifier as the built-in marker
+- If a marker is not in the customMarkers list and not in the default rules, no validation is performed
+
+#### Named Type Preference
+
+The `namedTypePreference` field provides a convenient way to enforce uniform behavior across all markers that support both `Type` and `Field` scopes, without having to specify `namedTypePreference` for each individual marker.
+
+**Valid values:**
+- `AllowTypeOrField` (default): Markers can be declared on either fields or type definitions
+- `OnTypeOnly`: Markers must be declared on type definitions, not on fields using named types
+
+**How it works:**
+- The global `namedTypePreference` applies to all markers that have both `Type` and `Field` in their scopes
+- Individual markers can override this global setting by specifying their own `namedTypePreference`
+- If `namedTypePreference` is not set (neither globally nor per-marker), the default behavior is `AllowTypeOrField`
+
+**Example - Enforcing uniform OnTypeOnly behavior:**
+
+```yaml
+lintersConfig:
+  markerscope:
+    policy: SuggestFix
+    namedTypePreference: OnTypeOnly  # Apply uniformly to all Type+Field markers
+    customMarkers:
+      - identifier: "kubebuilder:validation:Enum"
+        scopes: [Type, Field]
+      - identifier: "kubebuilder:validation:Format"
+        scopes: [Type, Field]
+      - identifier: "kubebuilder:validation:Minimum"
+        scopes: [Type, Field]
+```
+
+This is much simpler than specifying `namedTypePreference: OnTypeOnly` for each marker individually.
+
+**Example - Global setting with per-marker override:**
+
+```yaml
+lintersConfig:
+  markerscope:
+    policy: SuggestFix
+    namedTypePreference: OnTypeOnly  # Default for all markers
+    customMarkers:
+      - identifier: "kubebuilder:validation:Enum"
+        scopes: [Type, Field]
+        # Inherits OnTypeOnly from global setting
+
+      - identifier: "mycompany:validation:Flexible"
+        scopes: [Type, Field]
+        namedTypePreference: AllowTypeOrField  # Override: allow on both field and type
+```
+
+### Fixes
+
+When the `policy` is set to `SuggestFix`, the `markerscope` linter provides automatic fix suggestions for marker violations:
+
+1. **Scope violations**: For markers applied to the wrong scope (field vs type), the linter suggests moving the marker to the correct location.
+
+2. **Type constraint violations**: For markers applied to incompatible types, the linter suggests removing the invalid marker.
+
+3. **Named type violations**: For markers that can be applied to both fields and types with type constraints applied to fields using named types, the linter suggests moving the marker to the type definition if the underlying type is compatible with the marker's type constraints.
+
+When the `policy` is set to `Warn`, violations are reported as warnings without suggesting fixes.
+
+**Note**: This linter is not enabled by default and must be explicitly enabled in the configuration. 
 
 ## MaxLength
 
