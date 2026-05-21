@@ -211,4 +211,15 @@ const (
 
 	// K8sDefaultMarker is the marker that indicates the default value for a field in k8s declarative validation.
 	K8sDefaultMarker = "k8s:default"
+
+	// K8sUnionMemberMarker is the marker that indicates that a field is a member of a
+	// declarative-validation union. Validation-gen's union validators enforce that at
+	// least one union member must be set, which makes the parent struct's zero value
+	// invalid for presence-checking purposes.
+	K8sUnionMemberMarker = "k8s:unionMember"
+
+	// K8sUnionDiscriminatorMarker is the marker that indicates that a field is the
+	// discriminator of a declarative-validation union. Its presence on any field of a
+	// struct implies the struct is a union.
+	K8sUnionDiscriminatorMarker = "k8s:unionDiscriminator"
 )

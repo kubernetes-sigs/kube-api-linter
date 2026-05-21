@@ -44,7 +44,7 @@ func newAnalyzer(cfg *Config) *analysis.Analyzer {
 
 	return &analysis.Analyzer{
 		Name:     name,
-		Doc:      "Checks that non-pointer structs that contain required fields are marked as required. Non-pointer structs that contain no required fields are marked as optional.",
+		Doc:      "Checks that non-pointer structs whose zero value is invalid (e.g. contain required fields, declare a union, or set a non-zero minProperties) are marked as required, and that those whose zero value is valid are marked as optional.",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
@@ -115,6 +115,15 @@ func asNonPointerStruct(pass *analysis.Pass, field ast.Expr) (*ast.StructType, b
 func hasRequiredField(structType *ast.StructType, markersAccess markershelper.Markers) bool {
 	for _, field := range structType.Fields.List {
 		if utils.IsFieldRequired(field, markersAccess) {
+			return true
+		}
+
+		// A declarative-validation union member or discriminator on any field implies
+		// the struct is a union. validation-gen's union validators require at least one
+		// member to be set, so the struct's zero value is invalid and the containing
+		// non-pointer field can be treated the same as having a required field.
+		fieldMarkers := markersAccess.FieldMarkers(field)
+		if fieldMarkers.Has(markers.K8sUnionMemberMarker) || fieldMarkers.Has(markers.K8sUnionDiscriminatorMarker) {
 			return true
 		}
 	}

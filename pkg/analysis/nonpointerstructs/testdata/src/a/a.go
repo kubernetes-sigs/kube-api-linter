@@ -20,6 +20,12 @@ type A struct {
 	// +k8s:required
 	WithOptionalFieldsAndMinPropertiesCorrect WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesCorrect"`
 
+	// +k8s:required
+	WithDVUnionCorrectK8sRequired WithDVUnion `json:"withDVUnionCorrectK8sRequired"`
+
+	// +k8s:required
+	WithDVDiscriminatedUnionCorrectK8sRequired WithDVDiscriminatedUnion `json:"withDVDiscriminatedUnionCorrectK8sRequired"`
+
 	// Diagnostic with incorrect markers
 
 	// +kubebuilder:validation:Optional
@@ -33,6 +39,30 @@ type A struct {
 
 	// +kubebuilder:validation:Optional
 	WithOptionalFieldsAndMinPropertiesIncorrect WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesIncorrect"` // want "field A.WithOptionalFieldsAndMinPropertiesIncorrect is a non-pointer struct with required fields. It must be marked as required."
+
+	// +k8s:required on non-pointer structs: warns when the struct has no presence-enforcing validation.
+	// +k8s:required
+	WithOptionalFieldK8sRequiredNoValidation WithOptionalField `json:"withOptionalFieldK8sRequiredNoValidation"` // want "field A.WithOptionalFieldK8sRequiredNoValidation is a non-pointer struct with no required fields. It must be marked as optional."
+
+	// +k8s:required
+	WithOptionalFieldEmbeddedK8sRequiredNoValidation WithOptionalFieldEmbedded `json:"withOptionalFieldEmbeddedK8sRequiredNoValidation"` // want "field A.WithOptionalFieldEmbeddedK8sRequiredNoValidation is a non-pointer struct with no required fields. It must be marked as optional."
+
+	// Unions enforce "at least one set" semantics, so the zero value is invalid
+	// and the containing non-pointer field must be marked as required.
+
+	// Diagnostic when no marker is set on a union-bearing non-pointer struct field.
+
+	WithDVUnion WithDVUnion `json:"withDVUnion"` // want "field A.WithDVUnion is a non-pointer struct with required fields. It must be marked as required."
+
+	WithDVDiscriminatedUnion WithDVDiscriminatedUnion `json:"withDVDiscriminatedUnion"` // want "field A.WithDVDiscriminatedUnion is a non-pointer struct with required fields. It must be marked as required."
+
+	// No diagnostic when correctly marked as required.
+
+	// +required
+	WithDVUnionCorrect WithDVUnion `json:"withDVUnionCorrect"`
+
+	// +required
+	WithDVDiscriminatedUnionCorrect WithDVDiscriminatedUnion `json:"withDVDiscriminatedUnionCorrect"`
 
 	// Pointers are ignored in this linter.
 	WithRequiredFieldAndPointer                  *WithRequiredField                  `json:"withRequiredFieldAndPointer"`
@@ -80,4 +110,24 @@ type WithRequiredFieldEmbedded struct {
 type WithOptionalFieldEmbedded struct {
 	// +optional
 	OptionalField string `json:"optionalField"`
+}
+
+type WithDVUnion struct {
+	// +k8s:optional
+	// +k8s:unionMember
+	A string `json:"a,omitempty"`
+	// +k8s:optional
+	// +k8s:unionMember
+	B string `json:"b,omitempty"`
+}
+
+type WithDVDiscriminatedUnion struct {
+	// +k8s:unionDiscriminator
+	Type string `json:"type"`
+	// +k8s:optional
+	// +k8s:unionMember
+	A string `json:"a,omitempty"`
+	// +k8s:optional
+	// +k8s:unionMember
+	B string `json:"b,omitempty"`
 }
