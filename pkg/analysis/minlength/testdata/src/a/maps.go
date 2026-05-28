@@ -4,14 +4,14 @@ type Maps struct {
 	// +kubebuilder:validation:MinProperties:=1
 	InlineMapWithMinProperties map[string]string `json:"inlineMapWithMinProperties"`
 
-	InlineMapWithoutMinProperties map[string]string `json:"inlineMapWithoutMinProperties"` // want "field Maps.InlineMapWithoutMinProperties must have a minimum properties, add kubebuilder:validation:MinProperties marker"
+	InlineMapWithoutMinProperties map[string]string `json:"inlineMapWithoutMinProperties"` // want "field Maps.InlineMapWithoutMinProperties must have a minimum properties, add kubebuilder:validation:MinProperties or k8s:minProperties marker"
 
 	// +kubebuilder:validation:MinProperties:=0
 	InlineMapWithMinPropertiesZero map[string]string `json:"inlineMapWithMinPropertiesZero"`
 
 	MapWithMinProperties MapWithMinProperties `json:"mapWithMinProperties"`
 
-	MapWithoutMinProperties MapWithoutMinProperties `json:"mapWithoutMinProperties"` // want "field Maps.MapWithoutMinProperties type MapWithoutMinProperties must have a minimum properties, add kubebuilder:validation:MinProperties marker"
+	MapWithoutMinProperties MapWithoutMinProperties `json:"mapWithoutMinProperties"` // want "field Maps.MapWithoutMinProperties type MapWithoutMinProperties must have a minimum properties, add kubebuilder:validation:MinProperties or k8s:minProperties marker"
 
 	MapWithMinPropertiesZero MapWithMinPropertiesZero `json:"mapWithMinPropertiesZero"`
 }

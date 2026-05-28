@@ -45,7 +45,7 @@ type MinLength struct {
 	// +kubebuilder:validation:MinItems:=256
 	ArrayWithMinItems []int
 
-	ArrayWithoutMinItems []int // want "field MinLength.ArrayWithoutMinItems must have a minimum items, add kubebuilder:validation:MinItems"
+	ArrayWithoutMinItems []int // want "field MinLength.ArrayWithoutMinItems must have a minimum items, add kubebuilder:validation:MinItems or k8s:minItems"
 
 	ByteSlice []byte // want "field MinLength.ByteSlice must have a minimum length, add kubebuilder:validation:MinLength marker"
 
@@ -62,33 +62,33 @@ type MinLength struct {
 	// +kubebuilder:validation:MinItems:=128
 	StringArrayWithMinItemsWithoutMinElementLength []string // want "field MinLength.StringArrayWithMinItemsWithoutMinElementLength array element must have a minimum length, add kubebuilder:validation:items:MinLength"
 
-	StringArrayWithoutMinItemsWithoutMinElementLength []string // want "field MinLength.StringArrayWithoutMinItemsWithoutMinElementLength must have a minimum items, add kubebuilder:validation:MinItems" "field MinLength.StringArrayWithoutMinItemsWithoutMinElementLength array element must have a minimum length, add kubebuilder:validation:items:MinLength"
+	StringArrayWithoutMinItemsWithoutMinElementLength []string // want "field MinLength.StringArrayWithoutMinItemsWithoutMinElementLength must have a minimum items, add kubebuilder:validation:MinItems or k8s:minItems" "field MinLength.StringArrayWithoutMinItemsWithoutMinElementLength array element must have a minimum length, add kubebuilder:validation:items:MinLength"
 
 	// +kubebuilder:validation:MinItems:=64
 	// +kubebuilder:validation:items:MinLength:=64
 	StringArrayWithMinItemsAndMinElementLength []string
 
 	// +kubebuilder:validation:items:MinLength:=512
-	StringArrayWithoutMinItemsWithMinElementLength []string // want  "field MinLength.StringArrayWithoutMinItemsWithMinElementLength must have a minimum items, add kubebuilder:validation:MinItems marker"
+	StringArrayWithoutMinItemsWithMinElementLength []string // want  "field MinLength.StringArrayWithoutMinItemsWithMinElementLength must have a minimum items, add kubebuilder:validation:MinItems or k8s:minItems marker"
 
 	// +kubebuilder:validation:MinItems:=128
 	StringAliasArrayWithMinItemsWithoutMinElementLength []StringAlias // want "field MinLength.StringAliasArrayWithMinItemsWithoutMinElementLength array element type StringAlias must have a minimum length, add kubebuilder:validation:MinLength marker"
 
-	StringAliasArrayWithoutMinItemsWithoutMinElementLength []StringAlias // want "field MinLength.StringAliasArrayWithoutMinItemsWithoutMinElementLength must have a minimum items, add kubebuilder:validation:MinItems" "field MinLength.StringAliasArrayWithoutMinItemsWithoutMinElementLength array element type StringAlias must have a minimum length, add kubebuilder:validation:MinLength"
+	StringAliasArrayWithoutMinItemsWithoutMinElementLength []StringAlias // want "field MinLength.StringAliasArrayWithoutMinItemsWithoutMinElementLength must have a minimum items, add kubebuilder:validation:MinItems or k8s:minItems" "field MinLength.StringAliasArrayWithoutMinItemsWithoutMinElementLength array element type StringAlias must have a minimum length, add kubebuilder:validation:MinLength"
 
 	// +kubebuilder:validation:MinItems:=64
 	// +kubebuilder:validation:items:MinLength:=64
 	StringAliasArrayWithMinItemsAndMinElementLength []StringAlias
 
 	// +kubebuilder:validation:items:MinLength:=512
-	StringAliasArrayWithoutMinItemsWithMinElementLength []StringAlias // want  "field MinLength.StringAliasArrayWithoutMinItemsWithMinElementLength must have a minimum items, add kubebuilder:validation:MinItems"
+	StringAliasArrayWithoutMinItemsWithMinElementLength []StringAlias // want  "field MinLength.StringAliasArrayWithoutMinItemsWithMinElementLength must have a minimum items, add kubebuilder:validation:MinItems or k8s:minItems"
 
 	// +kubebuilder:validation:MinItems:=64
 	StringAliasArrayWithMinItemsAndMinElementLengthOnAlias []StringAliasWithMinLength
 
-	StringAliasArrayWithoutMinItemsWithMinElementLengthOnAlias []StringAliasWithMinLength // want  "field MinLength.StringAliasArrayWithoutMinItemsWithMinElementLengthOnAlias must have a minimum items, add kubebuilder:validation:MinItems"
+	StringAliasArrayWithoutMinItemsWithMinElementLengthOnAlias []StringAliasWithMinLength // want  "field MinLength.StringAliasArrayWithoutMinItemsWithMinElementLengthOnAlias must have a minimum items, add kubebuilder:validation:MinItems or k8s:minItems"
 
-	InlineStruct struct { // want "field MinLength.InlineStruct must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties marker"
+	InlineStruct struct { // want "field MinLength.InlineStruct must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties or k8s:minProperties marker"
 		// +kubebuilder:validation:MinLength:=256
 		StringWithMinLength string
 
@@ -104,7 +104,7 @@ type MinLength struct {
 		StringWithMinLength string
 	} `json:"inlineStructWithARequiredField`
 
-	StructWithoutMinProperties StructWithoutMinProperties `json:"structWithoutMinProperties` // want "field MinLength.StructWithoutMinProperties type StructWithoutMinProperties must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties marker"
+	StructWithoutMinProperties StructWithoutMinProperties `json:"structWithoutMinProperties` // want "field MinLength.StructWithoutMinProperties type StructWithoutMinProperties must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties or k8s:minProperties marker"
 
 	StructWithMinProperties StructWithMinProperties `json:"structWithMinProperties`
 
@@ -126,7 +126,7 @@ type MinLength struct {
 	StructArrayWithMalformedMinProperties []StructWithMalformedMinProperties `json:"structArrayWithMalformedMinProperties` // want "could not get min properties for struct: invalid format for minimum properties marker: error getting marker value: error converting value to number: strconv.ParseFloat: parsing \\\"abc\\\": invalid syntax"
 
 	// +kubebuilder:validation:MinItems:=1
-	StructArrayWithoutMinProperties []StructWithoutMinProperties `json:"structArrayWithoutMinProperties` // want "field MinLength.StructArrayWithoutMinProperties array element type StructWithoutMinProperties must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties marker"
+	StructArrayWithoutMinProperties []StructWithoutMinProperties `json:"structArrayWithoutMinProperties` // want "field MinLength.StructArrayWithoutMinProperties array element type StructWithoutMinProperties must have either a required field or a minimum properties, add kubebuilder:validation:MinProperties or k8s:minProperties marker"
 }
 
 // StringAlias is a string without a MinLength.
