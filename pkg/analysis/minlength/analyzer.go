@@ -32,6 +32,11 @@ const (
 	name = "minlength"
 )
 
+var kubebuilderToK8sMarker = map[string]string{
+	markers.KubebuilderMinLengthMarker:     markers.K8sMinLengthMarker,
+	markers.KubebuilderItemsMinLengthMarker: markers.K8sItemsMinLengthMarker,
+}
+
 // Analyzer is the analyzer for the minlength package.
 // It checks that strings and arrays have minimum lengths and minimum items respectively.
 var Analyzer = &analysis.Analyzer{
@@ -83,7 +88,11 @@ func checkString(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases [
 	markers := getCombinedMarkers(markersAccess, node, aliases)
 
 	if needsMinLength(markers) {
-		pass.Reportf(node.Pos(), "%s must have a minimum length, add %s marker", prefix, marker)
+		k8sMarker, ok := kubebuilderToK8sMarker[marker]
+		if !ok {
+			k8sMarker = marker
+		}
+		pass.Reportf(node.Pos(), "%s must have a minimum length, add %s or %s marker", prefix, marker, k8sMarker)
 	}
 }
 
@@ -141,8 +150,13 @@ func checkArrayType(pass *analysis.Pass, arrayType *ast.ArrayType, node ast.Node
 
 func checkArrayElementIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markershelper.Markers, prefix string) {
 	if ident.Obj == nil { // Built-in type
-		checkString(pass, ident, node, aliases, markersAccess, prefix, markers.KubebuilderItemsMinLengthMarker, needsItemsMinLength)
-
+		if ident.Name != "string" {
+			return
+		}
+		markerSet := getCombinedMarkers(markersAccess, node, aliases)
+		if needsItemsMinLength(markerSet) {
+			pass.Reportf(node.Pos(), "%s must have a minimum length, add %s or %s marker", prefix, markers.KubebuilderItemsMinLengthMarker, markers.K8sItemsMinLengthMarker)
+		}
 		return
 	}
 
@@ -244,10 +258,15 @@ func needsStringMinLength(markerSet markershelper.MarkerSet) bool {
 func needsItemsMinLength(markerSet markershelper.MarkerSet) bool {
 	switch {
 	case markerSet.Has(markers.KubebuilderItemsMinLengthMarker),
+		markerSet.Has(markers.K8sItemsMinLengthMarker),
 		markerSet.Has(markers.KubebuilderItemsEnumMarker),
+		markerSet.Has(markers.K8sItemsEnumMarker),
 		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("date")),
 		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("date-time")),
-		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("duration")):
+		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("duration")),
+		markerSet.HasWithValue(k8sItemsFormatWithValue("date")),
+		markerSet.HasWithValue(k8sItemsFormatWithValue("date-time")),
+		markerSet.HasWithValue(k8sItemsFormatWithValue("duration")):
 		return false
 	}
 
@@ -264,4 +283,8 @@ func k8sFormatWithValue(value string) string {
 
 func kubebuilderItemsFormatWithValue(value string) string {
 	return fmt.Sprintf("%s:=%s", markers.KubebuilderItemsFormatMarker, value)
+}
+
+func k8sItemsFormatWithValue(value string) string {
+	return fmt.Sprintf("%s:=%s", markers.K8sItemsFormatMarker, value)
 }
