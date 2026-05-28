@@ -60,9 +60,9 @@ func checkField(pass *analysis.Pass, field *ast.Field, markersAccess markershelp
 	checkTypeExpr(pass, field.Type, field, nil, markersAccess, prefix, markers.KubebuilderMinLengthMarker, needsStringMinLength)
 }
 
-func checkIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markershelper.Markers, prefix, marker string, needsMaxLength func(markershelper.MarkerSet) bool) {
+func checkIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markershelper.Markers, prefix, marker string, needsMinLength func(markershelper.MarkerSet) bool) {
 	if utils.IsBasicType(pass, ident) { // Built-in type
-		checkString(pass, ident, node, aliases, markersAccess, prefix, marker, needsMaxLength)
+		checkString(pass, ident, node, aliases, markersAccess, prefix, marker, needsMinLength)
 
 		return
 	}
@@ -72,7 +72,7 @@ func checkIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []
 		return
 	}
 
-	checkTypeSpec(pass, tSpec, node, append(aliases, tSpec), markersAccess, fmt.Sprintf("%s type", prefix), marker, needsMaxLength)
+	checkTypeSpec(pass, tSpec, node, append(aliases, tSpec), markersAccess, fmt.Sprintf("%s type", prefix), marker, needsMinLength)
 }
 
 func checkString(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markershelper.Markers, prefix, marker string, needsMinLength func(markershelper.MarkerSet) bool) {
@@ -134,8 +134,8 @@ func checkArrayType(pass *analysis.Pass, arrayType *ast.ArrayType, node ast.Node
 
 	markerSet := getCombinedMarkers(markersAccess, node, aliases)
 
-	if !markerSet.Has(markers.KubebuilderMinItemsMarker) {
-		pass.Reportf(node.Pos(), "%s must have a minimum items, add %s marker", prefix, markers.KubebuilderMinItemsMarker)
+	if !markerSet.Has(markers.KubebuilderMinItemsMarker) && !markerSet.Has(markers.K8sMinItemsMarker) {
+		pass.Reportf(node.Pos(), "%s must have a minimum items, add %s or %s marker", prefix, markers.KubebuilderMinItemsMarker, markers.K8sMinItemsMarker)
 	}
 }
 
@@ -161,8 +161,8 @@ func checkArrayElementIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node
 func checkMapType(pass *analysis.Pass, node ast.Node, aliases []*ast.TypeSpec, markersAccess markershelper.Markers, prefix string) {
 	markerSet := getCombinedMarkers(markersAccess, node, aliases)
 
-	if !markerSet.Has(markers.KubebuilderMinPropertiesMarker) {
-		pass.Reportf(node.Pos(), "%s must have a minimum properties, add %s marker", prefix, markers.KubebuilderMinPropertiesMarker)
+	if !markerSet.Has(markers.KubebuilderMinPropertiesMarker) && !markerSet.Has(markers.K8sMinPropertiesMarker) {
+		pass.Reportf(node.Pos(), "%s must have a minimum properties, add %s or %s marker", prefix, markers.KubebuilderMinPropertiesMarker, markers.K8sMinPropertiesMarker)
 	}
 }
 
@@ -196,7 +196,7 @@ func checkStructType(pass *analysis.Pass, structType *ast.StructType, node ast.N
 	}
 
 	// The field does not have a min properties, and does not have any required fields.
-	pass.Reportf(node.Pos(), "%s must have either a required field or a minimum properties, add %s marker", prefix, markers.KubebuilderMinPropertiesMarker)
+	pass.Reportf(node.Pos(), "%s must have either a required field or a minimum properties, add %s or %s marker", prefix, markers.KubebuilderMinPropertiesMarker, markers.K8sMinPropertiesMarker)
 }
 
 func getCombinedMarkers(markersAccess markershelper.Markers, node ast.Node, aliases []*ast.TypeSpec) markershelper.MarkerSet {
@@ -226,10 +226,15 @@ func getMarkers(markersAccess markershelper.Markers, node ast.Node) markershelpe
 func needsStringMinLength(markerSet markershelper.MarkerSet) bool {
 	switch {
 	case markerSet.Has(markers.KubebuilderMinLengthMarker),
+		markerSet.Has(markers.K8sMinLengthMarker),
 		markerSet.Has(markers.KubebuilderEnumMarker),
+		markerSet.Has(markers.K8sEnumMarker),
 		markerSet.HasWithValue(kubebuilderFormatWithValue("date")),
 		markerSet.HasWithValue(kubebuilderFormatWithValue("date-time")),
-		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")):
+		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")),
+		markerSet.HasWithValue(k8sFormatWithValue("date")),
+		markerSet.HasWithValue(k8sFormatWithValue("date-time")),
+		markerSet.HasWithValue(k8sFormatWithValue("duration")):
 		return false
 	}
 
@@ -251,6 +256,10 @@ func needsItemsMinLength(markerSet markershelper.MarkerSet) bool {
 
 func kubebuilderFormatWithValue(value string) string {
 	return fmt.Sprintf("%s:=%s", markers.KubebuilderFormatMarker, value)
+}
+
+func k8sFormatWithValue(value string) string {
+	return fmt.Sprintf("%s:=%s", markers.K8sFormatMarker, value)
 }
 
 func kubebuilderItemsFormatWithValue(value string) string {

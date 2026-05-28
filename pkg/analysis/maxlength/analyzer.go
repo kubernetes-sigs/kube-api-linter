@@ -130,8 +130,8 @@ func checkArrayType(pass *analysis.Pass, arrayType *ast.ArrayType, node ast.Node
 
 	markerSet := getCombinedMarkers(markersAccess, node, aliases)
 
-	if !markerSet.Has(markers.KubebuilderMaxItemsMarker) {
-		pass.Reportf(node.Pos(), "%s must have a maximum items, add %s marker", prefix, markers.KubebuilderMaxItemsMarker)
+	if !markerSet.Has(markers.KubebuilderMaxItemsMarker) && !markerSet.Has(markers.K8sMaxItemsMarker) {
+		pass.Reportf(node.Pos(), "%s must have a maximum items, add %s or %s marker", prefix, markers.KubebuilderMaxItemsMarker, markers.K8sMaxItemsMarker)
 	}
 }
 
@@ -181,10 +181,15 @@ func getMarkers(markersAccess markershelper.Markers, node ast.Node) markershelpe
 func needsStringMaxLength(markerSet markershelper.MarkerSet) bool {
 	switch {
 	case markerSet.Has(markers.KubebuilderMaxLengthMarker),
+		markerSet.Has(markers.K8sMaxLengthMarker),
 		markerSet.Has(markers.KubebuilderEnumMarker),
+		markerSet.Has(markers.K8sEnumMarker),
 		markerSet.HasWithValue(kubebuilderFormatWithValue("date")),
 		markerSet.HasWithValue(kubebuilderFormatWithValue("date-time")),
-		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")):
+		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")),
+		markerSet.HasWithValue(k8sFormatWithValue("date")),
+		markerSet.HasWithValue(k8sFormatWithValue("date-time")),
+		markerSet.HasWithValue(k8sFormatWithValue("duration")):
 		return false
 	}
 
@@ -206,6 +211,10 @@ func needsItemsMaxLength(markerSet markershelper.MarkerSet) bool {
 
 func kubebuilderFormatWithValue(value string) string {
 	return fmt.Sprintf("%s:=%s", markers.KubebuilderFormatMarker, value)
+}
+
+func k8sFormatWithValue(value string) string {
+	return fmt.Sprintf("%s:=%s", markers.K8sFormatMarker, value)
 }
 
 func kubebuilderItemsFormatWithValue(value string) string {
