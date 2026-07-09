@@ -47,6 +47,16 @@ func TestAnalyzer(t *testing.T) {
 				Type:       dependenttags.DependencyTypeAll,
 				DependsOn:  []string{"listMapKey"},
 			},
+			{
+				Identifier: "k8s:monotonic",
+				Type:       dependenttags.DependencyTypeAll,
+				DependsOn:  []string{"k8s:minimum"},
+			},
+			{
+				Identifier: "k8s:monotonic",
+				Type:       dependenttags.DependencyTypeAny,
+				DependsOn:  []string{"k8s:required", "k8s:update=NoUnset"},
+			},
 		},
 	}
 	analyzer, err := dependenttags.Initializer().Init(&cfg)
