@@ -616,8 +616,16 @@ This linter is NOT intended to be used to check for CRD types.
 The advice of this linter may be applied to CRD types, but it is not necessary for CRD types due to optionality being validated by openapi and no native Go code.
 For CRD types, the optionalfields and requiredfields linters should be used instead.
 
-If a struct is marked required, this can only be validated by having a required field within it.
-If there are no required fields, the struct is implicitly optional and must be marked as so.
+If a struct is marked required, this can only be validated by having something within it that makes the zero
+value invalid. The linter recognises the following presence-enforcing signals:
+
+- A field marked `+required`, `+kubebuilder:validation:Required`, or `+k8s:required`.
+- A non-zero `+kubebuilder:validation:MinProperties` marker on the struct.
+- A `+kubebuilder:validation:ExactlyOneOf` or `+kubebuilder:validation:AtLeastOneOf` marker on the struct.
+- Any field of the struct carrying `+k8s:unionMember` or `+k8s:unionDiscriminator` (a declarative-validation
+  union, whose validators require at least one member to be set).
+
+If none of these apply, the struct is implicitly optional and must be marked as so.
 
 To have an optional struct field that includes required fields, the struct must be a pointer.
 To have a required struct field that includes no required fields, the struct must be a pointer.

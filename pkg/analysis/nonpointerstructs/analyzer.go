@@ -44,7 +44,7 @@ func newAnalyzer(cfg *Config) *analysis.Analyzer {
 
 	return &analysis.Analyzer{
 		Name:     name,
-		Doc:      "Checks that non-pointer structs that contain required fields are marked as required. Non-pointer structs that contain no required fields are marked as optional.",
+		Doc:      "Checks that non-pointer structs whose zero value is invalid (e.g. contain required fields, declare a union, or set a non-zero minProperties) are marked as required, and that those whose zero value is valid are marked as optional.",
 		Run:      a.run,
 		Requires: []*analysis.Analyzer{inspector.Analyzer},
 	}
@@ -91,6 +91,8 @@ func (a *analyzer) checkField(pass *analysis.Pass, field *ast.Field, markersAcce
 		// This is the desired case.
 	case hasRequiredField:
 		a.handleShouldBeRequired(pass, field, markersAccess, qualifiedFieldName)
+	case !hasRequiredField && hasK8sRequiredMarker(field, markersAccess):
+		a.handleK8sRequiredWithoutValidation(pass, field, markersAccess, qualifiedFieldName)
 	case !hasRequiredField:
 		a.handleShouldBeOptional(pass, field, markersAccess, qualifiedFieldName)
 	}
@@ -117,6 +119,15 @@ func hasRequiredField(structType *ast.StructType, markersAccess markershelper.Ma
 		if utils.IsFieldRequired(field, markersAccess) {
 			return true
 		}
+
+		// A declarative-validation union member or discriminator on any field implies
+		// the struct is a union. validation-gen's union validators require at least one
+		// member to be set, so the struct's zero value is invalid and the containing
+		// non-pointer field can be treated the same as having a required field.
+		fieldMarkers := markersAccess.FieldMarkers(field)
+		if fieldMarkers.Has(markers.K8sUnionMemberMarker) || fieldMarkers.Has(markers.K8sUnionDiscriminatorMarker) {
+			return true
+		}
 	}
 
 	structMarkers := markersAccess.StructMarkers(structType)
@@ -127,7 +138,18 @@ func hasRequiredField(structType *ast.StructType, markersAccess markershelper.Ma
 		return true
 	}
 
+	// Kubebuilder union markers (ExactlyOneOf / AtLeastOneOf) on the struct imply that
+	// at least one field must be set, equivalent to minProperties>=1. This mirrors the
+	// convention in pkg/analysis/utils/zero_value.go's checkStructMinProperties.
+	if structMarkers.Has(markers.KubebuilderExactlyOneOf) || structMarkers.Has(markers.KubebuilderAtLeastOneOfMarker) {
+		return true
+	}
+
 	return false
+}
+
+func hasK8sRequiredMarker(field *ast.Field, markersAccess markershelper.Markers) bool {
+	return markersAccess.FieldMarkers(field).Has(markers.K8sRequiredMarker)
 }
 
 func defaultConfig(cfg *Config) {
@@ -198,6 +220,38 @@ func (a *analyzer) handleShouldBeOptional(pass *analysis.Pass, field *ast.Field,
 	pass.Report(analysis.Diagnostic{
 		Pos:     field.Pos(),
 		Message: fmt.Sprintf("field %s is a non-pointer struct with no required fields. It must be marked as optional.", qualifiedFieldName),
+		SuggestedFixes: []analysis.SuggestedFix{
+			{
+				Message:   "should mark the field as optional",
+				TextEdits: textEdits,
+			},
+		},
+	})
+}
+
+func (a *analyzer) handleK8sRequiredWithoutValidation(pass *analysis.Pass, field *ast.Field, markersAccess markershelper.Markers, qualifiedFieldName string) {
+	fieldMarkers := markersAccess.FieldMarkers(field)
+
+	textEdits := []analysis.TextEdit{}
+
+	for _, m := range fieldMarkers.Get(markers.K8sRequiredMarker) {
+		textEdits = append(textEdits, analysis.TextEdit{
+			Pos:     m.Pos,
+			End:     m.End + 1, // Add 1 to include the newline character
+			NewText: nil,
+		})
+	}
+
+	textEdits = append(textEdits, analysis.TextEdit{
+		Pos:     field.Pos(),
+		End:     field.Pos(),
+		NewText: fmt.Appendf(nil, "// +%s\n", a.preferredOptionalMarker),
+	})
+
+	pass.Report(analysis.Diagnostic{
+		Pos:     field.Pos(),
+		End:     field.Pos(),
+		Message: fmt.Sprintf("field %s is marked as +k8s:required but the struct has a valid zero value; the marker is documentation-only because the struct contains no presence-enforcing validation (required fields, union markers, or minProperties)", qualifiedFieldName),
 		SuggestedFixes: []analysis.SuggestedFix{
 			{
 				Message:   "should mark the field as optional",

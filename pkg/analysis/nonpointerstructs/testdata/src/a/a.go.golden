@@ -24,6 +24,12 @@ type A struct {
 	// +k8s:required
 	WithOptionalFieldsAndMinPropertiesCorrect WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesCorrect"`
 
+	// +k8s:required
+	WithDVUnionCorrectK8sRequired WithDVUnion `json:"withDVUnionCorrectK8sRequired"`
+
+	// +k8s:required
+	WithDVDiscriminatedUnionCorrectK8sRequired WithDVDiscriminatedUnion `json:"withDVDiscriminatedUnionCorrectK8sRequired"`
+
 	// Diagnostic with incorrect markers
 
 	// +required
@@ -37,6 +43,44 @@ type A struct {
 
 	// +required
 	WithOptionalFieldsAndMinPropertiesIncorrect WithOptionalFieldsAndMinProperties `json:"withOptionalFieldsAndMinPropertiesIncorrect"` // want "field A.WithOptionalFieldsAndMinPropertiesIncorrect is a non-pointer struct with required fields. It must be marked as required."
+
+	// +k8s:required on non-pointer structs: warns when the struct has no presence-enforcing validation.
+	// +optional
+	WithOptionalFieldK8sRequiredNoValidation WithOptionalField `json:"withOptionalFieldK8sRequiredNoValidation"` // want "field A.WithOptionalFieldK8sRequiredNoValidation is marked as .k8s:required but the struct has a valid zero value.*"
+
+	// +optional
+	WithOptionalFieldEmbeddedK8sRequiredNoValidation WithOptionalFieldEmbedded `json:"withOptionalFieldEmbeddedK8sRequiredNoValidation"` // want "field A.WithOptionalFieldEmbeddedK8sRequiredNoValidation is marked as .k8s:required but the struct has a valid zero value.*"
+
+	// Unions enforce "at least one set" semantics, so the zero value is invalid
+	// and the containing non-pointer field must be marked as required.
+
+	// Diagnostic when no marker is set on a union-bearing non-pointer struct field.
+
+	// +required
+	WithKubebuilderExactlyOneOfUnion WithKubebuilderExactlyOneOfUnion `json:"withKubebuilderExactlyOneOfUnion"` // want "field A.WithKubebuilderExactlyOneOfUnion is a non-pointer struct with required fields. It must be marked as required."
+
+	// +required
+	WithKubebuilderAtLeastOneOfUnion WithKubebuilderAtLeastOneOfUnion `json:"withKubebuilderAtLeastOneOfUnion"` // want "field A.WithKubebuilderAtLeastOneOfUnion is a non-pointer struct with required fields. It must be marked as required."
+
+	// +required
+	WithDVUnion WithDVUnion `json:"withDVUnion"` // want "field A.WithDVUnion is a non-pointer struct with required fields. It must be marked as required."
+
+	// +required
+	WithDVDiscriminatedUnion WithDVDiscriminatedUnion `json:"withDVDiscriminatedUnion"` // want "field A.WithDVDiscriminatedUnion is a non-pointer struct with required fields. It must be marked as required."
+
+	// No diagnostic when correctly marked as required.
+
+	// +required
+	WithKubebuilderExactlyOneOfUnionCorrect WithKubebuilderExactlyOneOfUnion `json:"withKubebuilderExactlyOneOfUnionCorrect"`
+
+	// +required
+	WithKubebuilderAtLeastOneOfUnionCorrect WithKubebuilderAtLeastOneOfUnion `json:"withKubebuilderAtLeastOneOfUnionCorrect"`
+
+	// +required
+	WithDVUnionCorrect WithDVUnion `json:"withDVUnionCorrect"`
+
+	// +required
+	WithDVDiscriminatedUnionCorrect WithDVDiscriminatedUnion `json:"withDVDiscriminatedUnionCorrect"`
 
 	// Pointers are ignored in this linter.
 	WithRequiredFieldAndPointer                  *WithRequiredField                  `json:"withRequiredFieldAndPointer"`
@@ -84,4 +128,40 @@ type WithRequiredFieldEmbedded struct {
 type WithOptionalFieldEmbedded struct {
 	// +optional
 	OptionalField string `json:"optionalField"`
+}
+
+// +kubebuilder:validation:ExactlyOneOf=[a;b]
+type WithKubebuilderExactlyOneOfUnion struct {
+	// +optional
+	A string `json:"a,omitempty"`
+	// +optional
+	B string `json:"b,omitempty"`
+}
+
+// +kubebuilder:validation:AtLeastOneOf=[a;b]
+type WithKubebuilderAtLeastOneOfUnion struct {
+	// +optional
+	A string `json:"a,omitempty"`
+	// +optional
+	B string `json:"b,omitempty"`
+}
+
+type WithDVUnion struct {
+	// +k8s:optional
+	// +k8s:unionMember
+	A string `json:"a,omitempty"`
+	// +k8s:optional
+	// +k8s:unionMember
+	B string `json:"b,omitempty"`
+}
+
+type WithDVDiscriminatedUnion struct {
+	// +k8s:unionDiscriminator
+	Type string `json:"type"`
+	// +k8s:optional
+	// +k8s:unionMember
+	A string `json:"a,omitempty"`
+	// +k8s:optional
+	// +k8s:unionMember
+	B string `json:"b,omitempty"`
 }
