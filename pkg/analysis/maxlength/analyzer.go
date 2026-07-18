@@ -32,6 +32,11 @@ const (
 	name = "maxlength"
 )
 
+var kubebuilderToK8sMarker = map[string]string{
+	markers.KubebuilderMaxLengthMarker:     markers.K8sMaxLengthMarker,
+	markers.KubebuilderItemsMaxLengthMarker: markers.K8sItemsMaxLengthMarker,
+}
+
 // Analyzer is the analyzer for the maxlength package.
 // It checks that strings and arrays have maximum lengths and maximum items respectively.
 var Analyzer = &analysis.Analyzer{
@@ -83,7 +88,11 @@ func checkString(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases [
 	markers := getCombinedMarkers(markersAccess, node, aliases)
 
 	if needsMaxLength(markers) {
-		pass.Reportf(node.Pos(), "%s must have a maximum length, add %s marker", prefix, marker)
+		k8sMarker, ok := kubebuilderToK8sMarker[marker]
+		if !ok {
+			k8sMarker = marker
+		}
+		pass.Reportf(node.Pos(), "%s must have a maximum length, add %s or %s marker", prefix, marker, k8sMarker)
 	}
 }
 
@@ -130,15 +139,20 @@ func checkArrayType(pass *analysis.Pass, arrayType *ast.ArrayType, node ast.Node
 
 	markerSet := getCombinedMarkers(markersAccess, node, aliases)
 
-	if !markerSet.Has(markers.KubebuilderMaxItemsMarker) {
-		pass.Reportf(node.Pos(), "%s must have a maximum items, add %s marker", prefix, markers.KubebuilderMaxItemsMarker)
+	if !markerSet.Has(markers.KubebuilderMaxItemsMarker) && !markerSet.Has(markers.K8sMaxItemsMarker) {
+		pass.Reportf(node.Pos(), "%s must have a maximum items, add %s or %s marker", prefix, markers.KubebuilderMaxItemsMarker, markers.K8sMaxItemsMarker)
 	}
 }
 
 func checkArrayElementIdent(pass *analysis.Pass, ident *ast.Ident, node ast.Node, aliases []*ast.TypeSpec, markersAccess markershelper.Markers, prefix string) {
 	if ident.Obj == nil { // Built-in type
-		checkString(pass, ident, node, aliases, markersAccess, prefix, markers.KubebuilderItemsMaxLengthMarker, needsItemsMaxLength)
-
+		if ident.Name != "string" {
+			return
+		}
+		markerSet := getCombinedMarkers(markersAccess, node, aliases)
+		if needsItemsMaxLength(markerSet) {
+			pass.Reportf(node.Pos(), "%s must have a maximum length, add %s or %s marker", prefix, markers.KubebuilderItemsMaxLengthMarker, markers.K8sItemsMaxLengthMarker)
+		}
 		return
 	}
 
@@ -181,10 +195,15 @@ func getMarkers(markersAccess markershelper.Markers, node ast.Node) markershelpe
 func needsStringMaxLength(markerSet markershelper.MarkerSet) bool {
 	switch {
 	case markerSet.Has(markers.KubebuilderMaxLengthMarker),
+		markerSet.Has(markers.K8sMaxLengthMarker),
 		markerSet.Has(markers.KubebuilderEnumMarker),
+		markerSet.Has(markers.K8sEnumMarker),
 		markerSet.HasWithValue(kubebuilderFormatWithValue("date")),
 		markerSet.HasWithValue(kubebuilderFormatWithValue("date-time")),
-		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")):
+		markerSet.HasWithValue(kubebuilderFormatWithValue("duration")),
+		markerSet.HasWithValue(k8sFormatWithValue("date")),
+		markerSet.HasWithValue(k8sFormatWithValue("date-time")),
+		markerSet.HasWithValue(k8sFormatWithValue("duration")):
 		return false
 	}
 
@@ -194,10 +213,15 @@ func needsStringMaxLength(markerSet markershelper.MarkerSet) bool {
 func needsItemsMaxLength(markerSet markershelper.MarkerSet) bool {
 	switch {
 	case markerSet.Has(markers.KubebuilderItemsMaxLengthMarker),
+		markerSet.Has(markers.K8sItemsMaxLengthMarker),
 		markerSet.Has(markers.KubebuilderItemsEnumMarker),
+		markerSet.Has(markers.K8sItemsEnumMarker),
 		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("date")),
 		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("date-time")),
-		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("duration")):
+		markerSet.HasWithValue(kubebuilderItemsFormatWithValue("duration")),
+		markerSet.HasWithValue(k8sItemsFormatWithValue("date")),
+		markerSet.HasWithValue(k8sItemsFormatWithValue("date-time")),
+		markerSet.HasWithValue(k8sItemsFormatWithValue("duration")):
 		return false
 	}
 
@@ -208,6 +232,14 @@ func kubebuilderFormatWithValue(value string) string {
 	return fmt.Sprintf("%s:=%s", markers.KubebuilderFormatMarker, value)
 }
 
+func k8sFormatWithValue(value string) string {
+	return fmt.Sprintf("%s:=%s", markers.K8sFormatMarker, value)
+}
+
 func kubebuilderItemsFormatWithValue(value string) string {
 	return fmt.Sprintf("%s:=%s", markers.KubebuilderItemsFormatMarker, value)
+}
+
+func k8sItemsFormatWithValue(value string) string {
+	return fmt.Sprintf("%s:=%s", markers.K8sItemsFormatMarker, value)
 }

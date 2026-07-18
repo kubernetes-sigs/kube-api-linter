@@ -496,6 +496,15 @@ func GetMinProperties(markerSet markershelper.MarkerSet) (*int, error) {
 		return nil, fmt.Errorf("invalid format for minimum properties marker: %w", err)
 	}
 
+	if minProperties != nil {
+		return minProperties, nil
+	}
+
+	minProperties, err = getMarkerNumericValueByName[int](markerSet, markers.K8sMinPropertiesMarker)
+	if err != nil && !errors.Is(err, errMarkerMissingValue) {
+		return nil, fmt.Errorf("invalid format for minimum properties marker: %w", err)
+	}
+
 	return minProperties, nil
 }
 
