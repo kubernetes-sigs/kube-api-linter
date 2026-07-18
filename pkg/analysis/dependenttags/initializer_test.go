@@ -54,6 +54,30 @@ var _ = Describe("dependenttags initializer", func() {
 				},
 				expectedErr: "",
 			}),
+			Entry("with a valid config containing a value-bearing dependsOn entry", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Identifier: "k8s:monotonic",
+							Type:       dependenttags.DependencyTypeAny,
+							DependsOn:  []string{"k8s:update=NoUnset", "k8s:required"},
+						},
+					},
+				},
+				expectedErr: "",
+			}),
+			Entry("with a dependsOn entry that cannot be parsed", testCase{
+				config: dependenttags.Config{
+					Rules: []dependenttags.Rule{
+						{
+							Identifier: "k8s:monotonic",
+							Type:       dependenttags.DependencyTypeAny,
+							DependsOn:  []string{"k8s:update="},
+						},
+					},
+				},
+				expectedErr: "dependenttags.rules[0].dependsOn[0]: Invalid value: \"k8s:update=\": marker cannot be parsed: unexpected end of input",
+			}),
 			Entry("with missing type", testCase{
 				config: dependenttags.Config{
 					Rules: []dependenttags.Rule{

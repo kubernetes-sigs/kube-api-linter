@@ -66,3 +66,30 @@ type ListMap struct {
 	// +listMapKey
 	ValidListMap []string
 }
+
+type Monotonic struct {
+	// +k8s:monotonic
+	InvalidNoDeps int64 // want "field Monotonic.InvalidNoDeps with marker \\+k8s:monotonic is missing required marker\\(s\\): \\+k8s:minimum" "field Monotonic.InvalidNoDeps with marker \\+k8s:monotonic requires at least one of the following markers, but none were found: \\+k8s:update=NoUnset, \\+k8s:required"
+
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:optional
+	InvalidNoUpdatePolicy int64 // want "field Monotonic.InvalidNoUpdatePolicy with marker \\+k8s:monotonic requires at least one of the following markers, but none were found: \\+k8s:update=NoUnset, \\+k8s:required"
+
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:optional
+	// +k8s:update=SomethingElse
+	InvalidWrongUpdateValue int64 // want "field Monotonic.InvalidWrongUpdateValue with marker \\+k8s:monotonic requires at least one of the following markers, but none were found: \\+k8s:update=NoUnset, \\+k8s:required"
+
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:optional
+	// +k8s:update=NoUnset
+	ValidOptionalNoUnset int64
+
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:required
+	ValidRequired int64
+}

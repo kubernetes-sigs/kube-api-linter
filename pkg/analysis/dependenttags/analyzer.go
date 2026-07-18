@@ -92,7 +92,7 @@ func handleAll(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 	missing := make([]string, 0, len(rule.DependsOn))
 
 	for _, dependent := range rule.DependsOn {
-		if _, depOk := fieldMarkers[dependent]; !depOk {
+		if !hasDependent(fieldMarkers, dependent) {
 			missing = append(missing, fmt.Sprintf("+%s", dependent))
 		}
 	}
@@ -106,7 +106,7 @@ func handleAny(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 	found := false
 
 	for _, dependent := range rule.DependsOn {
-		if _, depOk := fieldMarkers[dependent]; depOk {
+		if hasDependent(fieldMarkers, dependent) {
 			found = true
 			break
 		}
@@ -120,4 +120,15 @@ func handleAny(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 
 		pass.Reportf(field.Pos(), "field %s with marker +%s requires at least one of the following markers, but none were found: %s", qualifiedFieldName, rule.Identifier, strings.Join(dependsOn, ", "))
 	}
+}
+
+// hasDependent returns whether the dependent marker is present on the field.
+// A dependent that carries a value (e.g. "k8s:update=NoUnset") only matches
+// a marker with that exact value; a bare identifier matches on presence alone.
+func hasDependent(fieldMarkers markers.MarkerSet, dependent string) bool {
+	if markers.IdentifierFromString(dependent) != dependent {
+		return fieldMarkers.HasWithValue(dependent)
+	}
+
+	return fieldMarkers.Has(dependent)
 }

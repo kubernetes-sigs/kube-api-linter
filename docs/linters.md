@@ -128,13 +128,16 @@ lintersConfig:
         dependsOn:
           - "dep1"
           - "dep2"
+      - identifier: "k8s:monotonic"
+        type: "Any"
+        dependsOn:
+          - "k8s:update=NoUnset"
+          - "k8s:required"
 ```
 
 ### Behavior
 
-This linter only checks for the presence or absence of markers; it does not inspect or enforce specific values within those markers. Therefore:
-
-- **Values:** The linter does not care about the values of the `identifier` or `dependent` markers. It only verifies if the markers themselves are present.
+- **Values:** A dependent marker given as a bare identifier (e.g. `k8s:optional`) matches on presence alone, regardless of any value the marker carries. A dependent marker given with a value (e.g. `k8s:update=NoUnset`) only matches a marker with that exact value. The `identifier` marker is always matched by name only.
 - **Fixes:** This linter does not provide automatic fixes. It only reports violations.
 - **Same/Different Values:** Whether you want the same or different values between dependent markers is outside the scope of this linter. You would need other validation mechanisms (e.g., CEL validation) to enforce value-based dependencies.
 
