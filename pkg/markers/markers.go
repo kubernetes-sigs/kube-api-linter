@@ -188,6 +188,14 @@ const (
 	// K8sMaxItemsMarker is the marker that indicates that a field has a maximum number of items in k8s declarative validation.
 	K8sMaxItemsMarker = "k8s:maxItems"
 
+	// K8sMaxPropertiesMarker is the marker that indicates that a field has a maximum number of
+	// properties in k8s declarative validation.
+	K8sMaxPropertiesMarker = "k8s:maxProperties"
+
+	// K8sMaxBytesMarker is the marker that indicates that a field has a maximum byte length in
+	// k8s declarative validation.
+	K8sMaxBytesMarker = "k8s:maxBytes"
+
 	// K8sEnumMarker is the marker that indicates that a field has an enum in k8s declarative validation.
 	K8sEnumMarker = "k8s:enum"
 
