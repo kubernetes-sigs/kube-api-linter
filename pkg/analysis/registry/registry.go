@@ -54,7 +54,9 @@ type Registry interface {
 
 	// InitializeLinters returns a set of newly initialized linters based on the
 	// provided configuration.
-	InitializeLinters(config.Linters, config.LintersConfig) ([]*analysis.Analyzer, error)
+	// presetLinters is the list of linter names from the active preset.
+	// When nil, the per-linter Default() is used as fallback.
+	InitializeLinters(config.Linters, config.LintersConfig, []string) ([]*analysis.Analyzer, error)
 }
 
 type registry struct {
@@ -116,18 +118,18 @@ func (r *registry) allLinters() sets.Set[string] {
 }
 
 // InitializeLinters returns a list of initialized linters based on the provided config.
-func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.LintersConfig) ([]*analysis.Analyzer, error) {
+func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.LintersConfig, presetLinters []string) ([]*analysis.Analyzer, error) {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
-	if errs := r.validateLintersConfig(cfg, lintersCfg, field.NewPath("lintersConfig")); len(errs) > 0 {
+	if errs := r.validateLintersConfig(cfg, lintersCfg, presetLinters, field.NewPath("lintersConfig")); len(errs) > 0 {
 		return nil, fmt.Errorf("error validating linters config: %w", errs.ToAggregate())
 	}
 
 	analyzers := []*analysis.Analyzer{}
 	errs := []error{}
 
-	for _, init := range r.getEnabledInitializers(cfg) {
+	for _, init := range r.getEnabledInitializers(cfg, presetLinters) {
 		var linterConfig any
 
 		if ci, ok := isConfigurable(init); ok {
@@ -153,11 +155,11 @@ func (r *registry) InitializeLinters(cfg config.Linters, lintersCfg config.Linte
 
 // validateLintersConfig validates the provided linters config
 // against the set or registered linters.
-func (r *registry) validateLintersConfig(cfg config.Linters, lintersCfg config.LintersConfig, fieldPath *field.Path) field.ErrorList {
+func (r *registry) validateLintersConfig(cfg config.Linters, lintersCfg config.LintersConfig, presetLinters []string, fieldPath *field.Path) field.ErrorList {
 	fieldErrors := field.ErrorList{}
 	validatedLinters := sets.New[string]()
 
-	for _, init := range r.getEnabledInitializers(cfg) {
+	for _, init := range r.getEnabledInitializers(cfg, presetLinters) {
 		if ci, ok := isConfigurable(init); ok {
 			linterConfig, err := getLinterTypedConfig(ci, lintersCfg)
 			if err != nil {
@@ -189,19 +191,34 @@ func (r *registry) allConfigurableLinters() sets.Set[string] {
 	return configurableLinters
 }
 
+// isDefaultLinter returns whether a linter should be treated as enabled by default.
+// When a preset is active, the preset list replaces the per-linter Default() flag.
+func isDefaultLinter(init initializer.AnalyzerInitializer, presetSet sets.Set[string]) bool {
+	if presetSet != nil {
+		return presetSet.Has(init.Name())
+	}
+
+	return init.Default()
+}
+
 // getEnabledInitializers returns the initializers that are enabled by the config.
 // It returns a list of initializers that are enabled by the config.
-func (r *registry) getEnabledInitializers(cfg config.Linters) []initializer.AnalyzerInitializer {
+func (r *registry) getEnabledInitializers(cfg config.Linters, presetLinters []string) []initializer.AnalyzerInitializer {
 	enabled := sets.New(cfg.Enable...)
 	disabled := sets.New(cfg.Disable...)
 
 	allEnabled := enabled.Len() == 1 && enabled.Has(config.Wildcard)
 	allDisabled := disabled.Len() == 1 && disabled.Has(config.Wildcard)
 
+	var presetSet sets.Set[string]
+	if presetLinters != nil {
+		presetSet = sets.New(presetLinters...)
+	}
+
 	initializers := []initializer.AnalyzerInitializer{}
 
 	for _, init := range r.initializers {
-		if !disabled.Has(init.Name()) && (allEnabled || enabled.Has(init.Name()) || !allDisabled && init.Default()) {
+		if !disabled.Has(init.Name()) && (allEnabled || enabled.Has(init.Name()) || !allDisabled && isDefaultLinter(init, presetSet)) {
 			initializers = append(initializers, init)
 		}
 	}

@@ -37,3 +37,30 @@ var _ = It("With default configurations", func() {
 
 	runner.RunTestsFromDir("testdata/default_configurations")
 })
+
+var _ = It("With CustomResource preset", func() {
+	runner := runner.NewRunnerBuilder().
+		WithBinPath(binPath).
+		WithExitCode(1).
+		Runner()
+
+	runner.RunTestsFromDir("testdata/preset_custom_resource")
+})
+
+var _ = It("With custom preset in fork binary", func() {
+	runner := runner.NewRunnerBuilder().
+		WithBinPath(customBinPath).
+		WithExitCode(1).
+		Runner()
+
+	runner.RunTestsFromDir("testdata/preset_custom")
+})
+
+var _ = It("With custom preset and enable/disable overrides", func() {
+	runner := runner.NewRunnerBuilder().
+		WithBinPath(customBinPath).
+		WithExitCode(1).
+		Runner()
+
+	runner.RunTestsFromDir("testdata/preset_custom_with_overrides")
+})

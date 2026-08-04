@@ -1,0 +1,6 @@
+preset: TestOnlyJSONTags
+          linters:
+            enable:
+            - maxlength
+            disable:
+            - jsontags
