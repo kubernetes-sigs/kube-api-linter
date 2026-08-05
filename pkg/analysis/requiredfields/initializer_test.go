@@ -129,6 +129,30 @@ var _ = Describe("requiredfields initializer", func() {
 				},
 				expectedErr: "requiredfields.omitzero.policy: Invalid value: \"invalid\": invalid value, must be one of \"SuggestFix\", \"Warn\", \"Forbid\" or omitted",
 			}),
+			Entry("With a valid RequiredFieldsConfig: PreferredRequiredMarker: required", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					PreferredRequiredMarker: "required",
+				},
+				expectedErr: "",
+			}),
+			Entry("With a valid RequiredFieldsConfig: PreferredRequiredMarker: kubebuilder:validation:Required", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					PreferredRequiredMarker: "kubebuilder:validation:Required",
+				},
+				expectedErr: "",
+			}),
+			Entry("With a valid RequiredFieldsConfig: PreferredRequiredMarker: k8s:required", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					PreferredRequiredMarker: "k8s:required",
+				},
+				expectedErr: "",
+			}),
+			Entry("With an invalid RequiredFieldsConfig: PreferredRequiredMarker: invalid", testCase{
+				config: requiredfields.RequiredFieldsConfig{
+					PreferredRequiredMarker: "invalid",
+				},
+				expectedErr: `requiredfields.preferredRequiredMarker: Invalid value: "invalid": invalid value, must be one of "required", "kubebuilder:validation:Required", "k8s:required" or omitted`,
+			}),
 		)
 	})
 })
