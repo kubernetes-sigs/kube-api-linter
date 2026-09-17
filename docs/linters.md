@@ -149,6 +149,24 @@ The `commentstart` linter can automatically fix comments that do not start with 
 
 When the `json` tag is present, and matches the first word of the field comment in all but casing, the linter will suggest that the comment be updated to match the `json` tag.
 
+### Excluded Prefixes
+
+By default, certain standard Go comment prefixes are excluded from the commentstart check:
+
+- `Deprecated:` — Follows the [Go deprecation convention](https://go.dev/wiki/Deprecated). Fields with `// Deprecated: ...` comments will not trigger a commentstart violation.
+
+Additional prefixes can be configured using the `excludePrefixes` option.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  commentstart:
+    excludePrefixes:
+      - "TODO:"
+      - "NOTE:"
+```
+
 ## ConflictingMarkers
 
 The `conflictingmarkers` linter detects and reports when mutually exclusive markers are used on the same field.
