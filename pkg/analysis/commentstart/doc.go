@@ -31,5 +31,26 @@ In this case, the comment should start with the json tag, like so:
 
 This ensures that for any generated documentation, the documentation refers to the serialized field name.
 We expect most readers of Kubernetes API documentation will be more familiar with the serialized field names than the Go field names.
+
+## Excluded Prefixes
+
+Certain standard Go comment prefixes are excluded from this check.
+By default, comments starting with `// Deprecated:` are allowed without requiring
+the JSON field name prefix, following Go's standard deprecation convention:
+
+	// Deprecated: This field is no longer used.
+	OldField string `json:"oldField"`
+
+Additional prefixes can be configured via the `excludePrefixes` option.
+
+## Configuration
+
+Example configuration to add custom excluded prefixes:
+
+	lintersConfig:
+	  commentstart:
+	    excludePrefixes:
+	      - "TODO:"
+	      - "NOTE:"
 */
 package commentstart

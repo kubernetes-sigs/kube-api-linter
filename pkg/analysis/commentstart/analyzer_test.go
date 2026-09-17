@@ -24,5 +24,24 @@ import (
 
 func Test(t *testing.T) {
 	testdata := analysistest.TestData()
-	analysistest.RunWithSuggestedFixes(t, testdata, commentstart.Analyzer, "a/...")
+
+	a, err := commentstart.Initializer().Init(&commentstart.Config{})
+	if err != nil {
+		t.Fatalf("failed to initialize analyzer: %v", err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "a/...")
+}
+
+func TestWithCustomExcludePrefixes(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := commentstart.Initializer().Init(&commentstart.Config{
+		ExcludePrefixes: []string{"TODO:", "NOTE:"},
+	})
+	if err != nil {
+		t.Fatalf("failed to initialize analyzer: %v", err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "b")
 }

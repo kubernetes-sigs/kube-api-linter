@@ -54,6 +54,12 @@ type CommentStartTestStruct struct {
 
 	// This comment just isn't correct at all, doesn't even start with anything resembling the field names. // want "godoc for field CommentStartTestStruct.IncorrectComment should start with 'incorrectComment ...'"
 	IncorrectComment string `json:"incorrectComment"`
+
+	// Deprecated: This field is no longer used.
+	DeprecatedField string `json:"deprecatedField"`
+
+	// Deprecated: use NewField instead.
+	DeprecatedWithReplacement string `json:"deprecatedWithReplacement"`
 }
 
 // DoNothing is used to check that the analyser doesn't report on methods.

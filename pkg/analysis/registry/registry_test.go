@@ -21,6 +21,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
+	"sigs.k8s.io/kube-api-linter/pkg/analysis/commentstart"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/conditions"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/jsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/nobools"
@@ -41,6 +42,7 @@ var _ = Describe("Registry", func() {
 		r.RegisterLinter(jsontags.Initializer())
 		r.RegisterLinter(optionalorrequired.Initializer())
 		r.RegisterLinter(nobools.Initializer())
+		r.RegisterLinter(commentstart.Initializer())
 	})
 
 	Context("DefaultLinters", func() {
@@ -49,6 +51,7 @@ var _ = Describe("Registry", func() {
 				"conditions",
 				"jsontags",
 				"optionalorrequired",
+				"commentstart",
 			))
 		})
 	})
@@ -60,6 +63,7 @@ var _ = Describe("Registry", func() {
 				"jsontags",
 				"optionalorrequired",
 				"nobools",
+				"commentstart",
 			))
 		})
 	})
@@ -91,14 +95,14 @@ var _ = Describe("Registry", func() {
 			Entry("Empty config", initLintersTableInput{
 				config:          config.Linters{},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired"},
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired", "commentstart"},
 			}),
 			Entry("With wildcard enabled linters", initLintersTableInput{
 				config: config.Linters{
 					Enable: []string{config.Wildcard},
 				},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired", "nobools"},
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired", "nobools", "commentstart"},
 			}),
 			Entry("With wildcard enabled linters and a disabled linter", initLintersTableInput{
 				config: config.Linters{
@@ -106,7 +110,7 @@ var _ = Describe("Registry", func() {
 					Disable: []string{"jsontags"},
 				},
 				lintersConfig:   config.LintersConfig{},
-				expectedLinters: []string{"conditions", "optionalorrequired", "nobools"},
+				expectedLinters: []string{"conditions", "optionalorrequired", "nobools", "commentstart"},
 			}),
 			Entry("With wildcard disabled linters", initLintersTableInput{
 				config: config.Linters{
@@ -178,6 +182,31 @@ var _ = Describe("Registry", func() {
 					},
 				},
 				expectedErr: "error validating linters config: lintersConfig.jsontags.jsonTagRegex: Invalid value: \"^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*\": invalid regex: error parsing regexp: missing closing ): `^[a-z][a-z0-9]*(?:[A-Z][a-z0-9]*`",
+			}),
+
+			Entry("With a valid CommentStartConfig", validateLintersConfigTableInput{
+				linters: config.Linters{},
+				config: config.LintersConfig{
+					"commentstart": commentstart.Config{
+						ExcludePrefixes: []string{"TODO:"},
+					},
+				},
+			}),
+			Entry("With an invalid CommentStartConfig - duplicate prefix", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"commentstart": commentstart.Config{
+						ExcludePrefixes: []string{"TODO:", "TODO:"},
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.commentstart.excludePrefixes[1]: Duplicate value: \"TODO:\"",
+			}),
+			Entry("With an invalid CommentStartConfig - duplicates built-in default", validateLintersConfigTableInput{
+				config: config.LintersConfig{
+					"commentstart": commentstart.Config{
+						ExcludePrefixes: []string{"Deprecated:"},
+					},
+				},
+				expectedErr: "error validating linters config: lintersConfig.commentstart.excludePrefixes[0]: Invalid value: \"Deprecated:\": is already a built-in default prefix",
 			}),
 
 			Entry("With a valid OptionalOrRequiredConfig (legacy field name)", validateLintersConfigTableInput{
