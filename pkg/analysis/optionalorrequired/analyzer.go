@@ -92,13 +92,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
-		a.checkField(pass, field, markersAccess.FieldMarkers(field), jsonTagInfo, qualifiedFieldName)
-	})
+	for f := range inspect.Fields() {
+		a.checkField(pass, f.Field, f.Markers.FieldMarkers(f.Field), f.JSONTagInfo, f.QualifiedFieldName)
+	}
 
-	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markershelper.Markers) {
-		a.checkTypeSpec(pass, typeSpec, markersAccess)
-	})
+	for ts := range inspect.TypeSpecs() {
+		a.checkTypeSpec(pass, ts.TypeSpec, ts.Markers)
+	}
 
 	return nil, nil //nolint:nilnil
 }

@@ -67,9 +67,9 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
-		a.checkField(pass, field, markersAccess, qualifiedFieldName)
-	})
+	for f := range inspect.Fields() {
+		a.checkField(pass, f.Field, f.Markers, f.QualifiedFieldName)
+	}
 
 	return nil, nil //nolint:nilnil
 }

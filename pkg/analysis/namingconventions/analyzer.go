@@ -26,7 +26,6 @@ import (
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
@@ -59,9 +58,9 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTags extractjsontags.FieldTagInfo, _ markers.Markers, qualifiedFieldName string) {
-		checkField(pass, field, jsonTags, qualifiedFieldName, a.conventions...)
-	})
+	for f := range inspect.Fields() {
+		checkField(pass, f.Field, f.JSONTagInfo, f.QualifiedFieldName, a.conventions...)
+	}
 
 	return nil, nil //nolint:nilnil
 }

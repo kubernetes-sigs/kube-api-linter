@@ -24,7 +24,6 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 )
@@ -83,13 +82,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
-		checkField(pass, field, markersAccess, a.equivalentToPreferred, a.preferredToMessage, qualifiedFieldName)
-	})
+	for f := range inspect.Fields() {
+		checkField(pass, f.Field, f.Markers, a.equivalentToPreferred, a.preferredToMessage, f.QualifiedFieldName)
+	}
 
-	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers) {
-		checkType(pass, typeSpec, markersAccess, a.equivalentToPreferred, a.preferredToMessage)
-	})
+	for ts := range inspect.TypeSpecs() {
+		checkType(pass, ts.TypeSpec, ts.Markers, a.equivalentToPreferred, a.preferredToMessage)
+	}
 
 	return nil, nil //nolint:nilnil
 }

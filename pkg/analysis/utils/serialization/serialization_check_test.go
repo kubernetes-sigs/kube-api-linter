@@ -17,14 +17,12 @@ package serialization_test
 
 import (
 	"errors"
-	"go/ast"
 	"testing"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/analysistest"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
-	markershelper "sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils/serialization"
 )
 
@@ -123,9 +121,9 @@ func testSerializationAnalyzer(cfg *serialization.Config) *analysis.Analyzer {
 				return nil, errCouldNotGetInspector
 			}
 
-			inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, qualifiedFieldName string) {
-				serialization.New(cfg).Check(pass, field, markersAccess, jsonTagInfo, qualifiedFieldName)
-			})
+			for f := range inspect.Fields() {
+				serialization.New(cfg).Check(pass, f.Field, f.Markers, f.JSONTagInfo, f.QualifiedFieldName)
+			}
 
 			return nil, nil
 		},

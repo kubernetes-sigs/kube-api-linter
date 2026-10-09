@@ -22,9 +22,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
@@ -64,13 +62,13 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 
 	typeChecker := utils.NewTypeChecker(isMap, a.checkMap)
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, _ markers.Markers, _ string) {
-		typeChecker.CheckNode(pass, field)
-	})
+	for f := range inspect.Fields() {
+		typeChecker.CheckNode(pass, f.Field)
+	}
 
-	inspect.InspectTypeSpec(func(typeSpec *ast.TypeSpec, _ markers.Markers) {
-		typeChecker.CheckNode(pass, typeSpec)
-	})
+	for ts := range inspect.TypeSpecs() {
+		typeChecker.CheckNode(pass, ts.TypeSpec)
+	}
 
 	return nil, nil //nolint:nilnil
 }

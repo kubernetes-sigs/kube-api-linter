@@ -79,14 +79,14 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetJSONTags
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markershelper.Markers, _ string) {
-		if jsonTagInfo.Name != statusJSONTag {
-			return
+	for f := range inspect.Fields() {
+		if f.JSONTagInfo.Name != statusJSONTag {
+			continue
 		}
 
-		statusStructType := getStructFromField(pass, field)
-		a.checkStatusStruct(pass, statusStructType, markersAccess, jsonTags)
-	})
+		statusStructType := getStructFromField(pass, f.Field)
+		a.checkStatusStruct(pass, statusStructType, f.Markers, jsonTags)
+	}
 
 	return nil, nil //nolint:nilnil
 }

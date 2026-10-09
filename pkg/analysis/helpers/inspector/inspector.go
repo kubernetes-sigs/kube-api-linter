@@ -20,6 +20,7 @@ import (
 	"go/ast"
 	"go/token"
 	"go/types"
+	"iter"
 
 	astinspector "golang.org/x/tools/go/ast/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
@@ -28,16 +29,42 @@ import (
 	markersconsts "sigs.k8s.io/kube-api-linter/pkg/markers"
 )
 
+// Field is the data yielded for each struct field during inspection.
+type Field struct {
+	// Field is the AST node of the field being inspected.
+	Field *ast.Field
+
+	// JSONTagInfo holds the parsed JSON tag information for the field.
+	JSONTagInfo extractjsontags.FieldTagInfo
+
+	// Markers provides access to the markers for the package being inspected.
+	Markers markers.Markers
+
+	// QualifiedFieldName is the field name qualified with its struct name (e.g. "MyStruct.MyField").
+	QualifiedFieldName string
+}
+
+// TypeSpec is the data yielded for each type spec during inspection.
+type TypeSpec struct {
+	// TypeSpec is the AST node of the type spec being inspected.
+	TypeSpec *ast.TypeSpec
+
+	// Markers provides access to the markers for the package being inspected.
+	Markers markers.Markers
+}
+
 // Inspector is an interface that allows for the inspection of fields in structs.
 type Inspector interface {
-	// InspectFields is a function that iterates over fields in structs.
-	InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string))
+	// Fields returns an iterator over fields in structs, ignoring any struct that is not a type
+	// declaration, and any field that is ignored and therefore would not be included in the CRD spec.
+	Fields() iter.Seq[Field]
 
-	// InspectFieldsIncludingListTypes is a function that iterates over fields in structs, including list types.
-	InspectFieldsIncludingListTypes(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string))
+	// FieldsIncludingListTypes returns an iterator over fields in structs, including list types.
+	// Unlike Fields, it does not skip fields in list type structs.
+	FieldsIncludingListTypes() iter.Seq[Field]
 
-	// InspectTypeSpec is a function that inspects the type spec and calls the provided inspectTypeSpec function.
-	InspectTypeSpec(func(typeSpec *ast.TypeSpec, markersAccess markers.Markers))
+	// TypeSpecs returns an iterator over the type specs in the package.
+	TypeSpecs() iter.Seq[TypeSpec]
 }
 
 // inspector implements the Inspector interface.
@@ -56,91 +83,101 @@ func newInspector(astinspector *astinspector.Inspector, jsonTags extractjsontags
 	}
 }
 
-// InspectFields iterates over fields in structs, ignoring any struct that is not a type declaration, and any field that is ignored and
-// therefore would not be included in the CRD spec.
-// For the remaining fields, it calls the provided inspectField function to apply analysis logic.
-func (i *inspector) InspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string)) {
-	i.inspectFields(inspectField, true)
+// Fields returns an iterator over fields in structs, ignoring any struct that is not a type declaration,
+// and any field that is ignored and therefore would not be included in the CRD spec.
+func (i *inspector) Fields() iter.Seq[Field] {
+	return i.fields(true)
 }
 
-// InspectFieldsIncludingListTypes iterates over fields in structs, including list types.
-// Unlike InspectFields, this method does not skip fields in list type structs.
-func (i *inspector) InspectFieldsIncludingListTypes(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string)) {
-	i.inspectFields(inspectField, false)
+// FieldsIncludingListTypes returns an iterator over fields in structs, including list types.
+// Unlike Fields, it does not skip fields in list type structs.
+func (i *inspector) FieldsIncludingListTypes() iter.Seq[Field] {
+	return i.fields(false)
 }
 
-// inspectFields is a shared implementation for field iteration.
+// fields is a shared implementation for field iteration.
 // The skipListTypes parameter controls whether list type structs should be skipped.
-func (i *inspector) inspectFields(inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string), skipListTypes bool) {
-	// Filter to fields so that we can iterate over fields in a struct.
-	nodeFilter := []ast.Node{
-		(*ast.Field)(nil),
+func (i *inspector) fields(skipListTypes bool) iter.Seq[Field] {
+	return func(yield func(Field) bool) {
+		// Cursor.Preorder yields a Cursor per field, which provides O(1) access to enclosing
+		// nodes (Parent/Enclosing) without manual stack bookkeeping.
+		for c := range i.inspector.Root().Preorder((*ast.Field)(nil)) {
+			field, ok := c.Node().(*ast.Field)
+			if !ok {
+				continue
+			}
+
+			// The field's parent is the enclosing *ast.FieldList; its parent is the type
+			// (struct, interface, func signature, ...) that owns the field.
+			structCursor := c.Parent().Parent()
+
+			structType, ok := structCursor.Node().(*ast.StructType)
+			if !ok || !isTopLevelTypeDecl(c) {
+				continue
+			}
+
+			if skipListTypes && utils.IsKubernetesListType(structType, "") {
+				continue
+			}
+
+			// Skip ignored or schemaless fields, as well as any field nested within one.
+			if i.isFieldSkipped(c) {
+				continue
+			}
+
+			if !i.yieldFieldWithRecovery(field, qualifiedFieldName(field, structCursor), yield) {
+				return
+			}
+		}
+	}
+}
+
+// isFieldSkipped reports whether the field at the cursor, or any field enclosing it,
+// should be skipped (ignored or schemaless). Fields nested within a skipped field are
+// themselves skipped, matching a traversal that prunes skipped subtrees.
+func (i *inspector) isFieldSkipped(c astinspector.Cursor) bool {
+	for fc := range c.Enclosing((*ast.Field)(nil)) {
+		field, ok := fc.Node().(*ast.Field)
+		if ok && i.shouldSkipField(field) {
+			return true
+		}
 	}
 
-	i.inspector.WithStack(nodeFilter, func(n ast.Node, push bool, stack []ast.Node) (proceed bool) {
-		if !push {
+	return false
+}
+
+// isTopLevelTypeDecl reports whether the cursor is enclosed by a top-level type declaration,
+// i.e. a `type` GenDecl that is a direct child of the file. This excludes types declared
+// within functions or non-type (var/const) declarations.
+func isTopLevelTypeDecl(c astinspector.Cursor) bool {
+	for genDecl := range c.Enclosing((*ast.GenDecl)(nil)) {
+		decl, ok := genDecl.Node().(*ast.GenDecl)
+		if !ok || decl.Tok != token.TYPE {
 			return false
 		}
 
-		field, ok := n.(*ast.Field)
-		if !ok || !i.shouldProcessField(stack, skipListTypes) {
-			return ok
-		}
+		_, ok = genDecl.Parent().Node().(*ast.File)
 
-		if i.shouldSkipField(field) {
-			return false
-		}
+		return ok
+	}
 
-		var structName string
-
-		qualifiedFieldName := utils.FieldName(field)
-		if qualifiedFieldName == "" {
-			qualifiedFieldName = types.ExprString(field.Type)
-		}
-
-		// The 0th node in the stack is the *ast.File.
-		file, ok := stack[0].(*ast.File)
-		if ok {
-			structName = utils.GetStructNameFromFile(file, field)
-		}
-
-		if structName != "" {
-			qualifiedFieldName = fmt.Sprintf("%s.%s", structName, qualifiedFieldName)
-		}
-
-		i.processFieldWithRecovery(field, qualifiedFieldName, inspectField)
-
-		return true
-	})
+	return false
 }
 
-// shouldProcessField checks if the field should be processed.
-// The skipListTypes parameter controls whether list type structs should be skipped.
-func (i *inspector) shouldProcessField(stack []ast.Node, skipListTypes bool) bool {
-	if len(stack) < 3 {
-		return false
+// qualifiedFieldName returns the field name qualified with its struct name (e.g. "MyStruct.MyField").
+// The struct name is taken from the enclosing *ast.TypeSpec when the struct is a named type;
+// fields of anonymous (inline) structs are left unqualified.
+func qualifiedFieldName(field *ast.Field, structCursor astinspector.Cursor) string {
+	name := utils.FieldName(field)
+	if name == "" {
+		name = types.ExprString(field.Type)
 	}
 
-	// The 0th node in the stack is the *ast.File.
-	// The 1st node in the stack is the *ast.GenDecl.
-	decl, ok := stack[1].(*ast.GenDecl)
-	if !ok || decl.Tok != token.TYPE {
-		// Make sure that we don't inspect structs within a function or non-type declarations.
-		return false
+	if typeSpec, ok := structCursor.Parent().Node().(*ast.TypeSpec); ok {
+		name = fmt.Sprintf("%s.%s", typeSpec.Name.Name, name)
 	}
 
-	structType, ok := stack[len(stack)-3].(*ast.StructType)
-	if !ok {
-		// Not in a struct.
-		return false
-	}
-
-	if skipListTypes && utils.IsKubernetesListType(structType, "") {
-		// Skip list types if requested.
-		return false
-	}
-
-	return true
+	return name
 }
 
 // shouldSkipField checks if a field should be skipped.
@@ -155,35 +192,37 @@ func (i *inspector) shouldSkipField(field *ast.Field) bool {
 	return isSchemalessType(markerSet)
 }
 
-// processFieldWithRecovery processes a field with panic recovery.
-func (i *inspector) processFieldWithRecovery(field *ast.Field, qualifiedFieldName string, inspectField func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string)) {
+// yieldFieldWithRecovery yields a field to the consumer with panic recovery.
+// It returns whether the iteration should proceed.
+func (i *inspector) yieldFieldWithRecovery(field *ast.Field, qualifiedFieldName string, yield func(Field) bool) (proceed bool) {
 	tagInfo := i.jsonTags.FieldTags(field)
 
 	defer func() {
 		if r := recover(); r != nil {
-			// If the inspectField function panics, we recover and log information that will help identify the issue.
+			// If the consumer panics, we recover and log information that will help identify the issue.
 			debug := printDebugInfo(field)
 			panic(fmt.Sprintf("%s %v", debug, r)) // Re-panic to propagate the error.
 		}
 	}()
 
-	inspectField(field, tagInfo, i.markers, qualifiedFieldName)
+	return yield(Field{
+		Field:              field,
+		JSONTagInfo:        tagInfo,
+		Markers:            i.markers,
+		QualifiedFieldName: qualifiedFieldName,
+	})
 }
 
-// InspectTypeSpec inspects the type spec and calls the provided inspectTypeSpec function.
-func (i *inspector) InspectTypeSpec(inspectTypeSpec func(typeSpec *ast.TypeSpec, markersAccess markers.Markers)) {
-	nodeFilter := []ast.Node{
-		(*ast.TypeSpec)(nil),
-	}
-
-	i.inspector.Preorder(nodeFilter, func(n ast.Node) {
-		typeSpec, ok := n.(*ast.TypeSpec)
-		if !ok {
-			return
+// TypeSpecs returns an iterator over the type specs in the package.
+func (i *inspector) TypeSpecs() iter.Seq[TypeSpec] {
+	return func(yield func(TypeSpec) bool) {
+		// All yields *ast.TypeSpec nodes directly, so no node-type assertion is needed.
+		for typeSpec := range astinspector.All[*ast.TypeSpec](i.inspector) {
+			if !yield(TypeSpec{TypeSpec: typeSpec, Markers: i.markers}) {
+				return
+			}
 		}
-
-		inspectTypeSpec(typeSpec, i.markers)
-	})
+	}
 }
 
 func isSchemalessType(markerSet markers.MarkerSet) bool {

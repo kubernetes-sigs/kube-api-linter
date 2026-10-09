@@ -23,7 +23,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/sets"
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
@@ -67,9 +66,9 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, _ extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
-		checkField(pass, field, markersAccess, a.conflictSets, qualifiedFieldName)
-	})
+	for f := range inspect.Fields() {
+		checkField(pass, f.Field, f.Markers, a.conflictSets, f.QualifiedFieldName)
+	}
 
 	return nil, nil //nolint:nilnil
 }

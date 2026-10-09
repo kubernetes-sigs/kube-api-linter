@@ -24,7 +24,6 @@ import (
 	"golang.org/x/tools/go/analysis"
 
 	kalerrors "sigs.k8s.io/kube-api-linter/pkg/analysis/errors"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
@@ -65,26 +64,26 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		return nil, kalerrors.ErrCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, markersAccess markers.Markers, qualifiedFieldName string) {
-		if field.Doc == nil {
-			return
+	for f := range inspect.Fields() {
+		if f.Field.Doc == nil {
+			continue
 		}
 
-		fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, markersAccess, field)
+		fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, f.Markers, f.Field)
 
 		for _, rule := range a.cfg.Rules {
 			if _, ok := fieldMarkers[rule.Identifier]; ok {
 				switch rule.Type {
 				case DependencyTypeAny:
-					handleAny(pass, field, rule, fieldMarkers, qualifiedFieldName)
+					handleAny(pass, f.Field, rule, fieldMarkers, f.QualifiedFieldName)
 				case DependencyTypeAll:
-					handleAll(pass, field, rule, fieldMarkers, qualifiedFieldName)
+					handleAll(pass, f.Field, rule, fieldMarkers, f.QualifiedFieldName)
 				default:
 					panic(fmt.Sprintf("unknown dependency type %s", rule.Type))
 				}
 			}
 		}
-	})
+	}
 
 	return nil, nil //nolint:nilnil
 }

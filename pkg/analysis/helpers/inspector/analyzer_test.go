@@ -17,14 +17,11 @@ package inspector_test
 
 import (
 	"errors"
-	"go/ast"
 	"testing"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/analysistest"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/extractjsontags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/inspector"
-	"sigs.k8s.io/kube-api-linter/pkg/analysis/helpers/markers"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/utils"
 )
 
@@ -49,13 +46,13 @@ func run(pass *analysis.Pass) (any, error) {
 		return nil, errCouldNotGetInspector
 	}
 
-	inspect.InspectFields(func(field *ast.Field, jsonTagInfo extractjsontags.FieldTagInfo, _ markers.Markers, _ string) {
-		pass.Reportf(field.Pos(), "field: %v", utils.FieldName(field))
+	for f := range inspect.Fields() {
+		pass.Reportf(f.Field.Pos(), "field: %v", utils.FieldName(f.Field))
 
-		if jsonTagInfo.Name != "" {
-			pass.Reportf(field.Pos(), "json tag: %v", jsonTagInfo.Name)
+		if f.JSONTagInfo.Name != "" {
+			pass.Reportf(f.Field.Pos(), "json tag: %v", f.JSONTagInfo.Name)
 		}
-	})
+	}
 
 	return nil, nil //nolint:nilnil
 }
