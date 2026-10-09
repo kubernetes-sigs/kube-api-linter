@@ -13,19 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package config
+package presets_test
 
-// GolangCIConfig is the complete configuration for the KAL
-// linter when built as an integration into golangci-lint.
-type GolangCIConfig struct {
-	// Preset selects a named configuration profile that determines
-	// which linters are enabled by default.
-	Preset string `mapstructure:"preset"`
+import (
+	"testing"
 
-	// Linters allows the user to configure which linters should,
-	// and should not be enabled.
-	Linters Linters `mapstructure:"linters"`
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
 
-	// LintersConfig contains configuration for individual linters.
-	LintersConfig LintersConfig `mapstructure:"lintersConfig"`
+func TestPresets(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Presets")
 }

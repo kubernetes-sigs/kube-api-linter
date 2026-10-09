@@ -13,19 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package config
 
-// GolangCIConfig is the complete configuration for the KAL
-// linter when built as an integration into golangci-lint.
-type GolangCIConfig struct {
-	// Preset selects a named configuration profile that determines
-	// which linters are enabled by default.
-	Preset string `mapstructure:"preset"`
+// Package testpreset simulates a fork maintainer registering a custom preset.
+package testpreset
 
-	// Linters allows the user to configure which linters should,
-	// and should not be enabled.
-	Linters Linters `mapstructure:"linters"`
+import (
+	"sigs.k8s.io/kube-api-linter/pkg/config/presets"
+)
 
-	// LintersConfig contains configuration for individual linters.
-	LintersConfig LintersConfig `mapstructure:"lintersConfig"`
+func init() {
+	presets.DefaultRegistry().Register("TestOnlyJSONTags", presets.Preset{
+		"jsontags",
+	})
 }

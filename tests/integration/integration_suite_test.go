@@ -27,8 +27,9 @@ import (
 )
 
 var (
-	ctx     = context.Background()
-	binPath string
+	ctx           = context.Background()
+	binPath       string
+	customBinPath string
 )
 
 func TestIntegration(t *testing.T) {
@@ -43,5 +44,10 @@ var _ = BeforeSuite(func() {
 	binPath = filepath.Join(tempDir, "golangci-lint")
 
 	_, err = exec.CommandContext(ctx, "go", "build", "-o", binPath, "../../cmd/golangci-lint-kube-api-linter/").CombinedOutput()
+	Expect(err).ToNot(HaveOccurred())
+
+	customBinPath = filepath.Join(tempDir, "golangci-lint-custom")
+
+	_, err = exec.CommandContext(ctx, "go", "build", "-o", customBinPath, "./testbin/").CombinedOutput()
 	Expect(err).ToNot(HaveOccurred())
 })
