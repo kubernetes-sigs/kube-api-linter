@@ -18,9 +18,11 @@ package dependenttags
 
 import (
 	"fmt"
+	"strings"
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/gengo/v2/codetags"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/initializer"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 )
@@ -66,25 +68,55 @@ func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 	}
 
 	for i, rule := range cfg.Rules {
-		if rule.Identifier == "" {
-			errs = append(errs, field.Invalid(rulesPath.Index(i).Child("identifier"), rule.Identifier, "identifier marker cannot be empty"))
-		}
+		errs = append(errs, validateRule(rule, rulesPath.Index(i))...)
+	}
 
-		if len(rule.DependsOn) == 0 {
-			errs = append(errs, field.Invalid(rulesPath.Index(i).Child("dependsOn"), rule.DependsOn, "dependsOn list cannot be empty"))
-		}
+	return errs
+}
 
-		if rule.Type == "" {
-			errs = append(errs, field.Required(rulesPath.Index(i).Child("type"), fmt.Sprintf("type must be explicitly set to '%s' or '%s'", DependencyTypeAll, DependencyTypeAny)))
-		} else {
-			switch rule.Type {
-			case DependencyTypeAll, DependencyTypeAny:
-				// valid
-			default:
-				errs = append(errs, field.Invalid(rulesPath.Index(i).Child("type"), rule.Type, fmt.Sprintf("type must be '%s' or '%s'", DependencyTypeAll, DependencyTypeAny)))
-			}
+// validateRule validates a single dependency rule.
+func validateRule(rule Rule, rulePath *field.Path) field.ErrorList {
+	var errs field.ErrorList
+
+	if rule.Identifier == "" {
+		errs = append(errs, field.Invalid(rulePath.Child("identifier"), rule.Identifier, "identifier marker cannot be empty"))
+	}
+
+	if len(rule.DependsOn) == 0 {
+		errs = append(errs, field.Invalid(rulePath.Child("dependsOn"), rule.DependsOn, "dependsOn list cannot be empty"))
+	}
+
+	for j, dep := range rule.DependsOn {
+		if err := validateDeclarativeValidationMarker(dep); err != nil {
+			errs = append(errs, field.Invalid(rulePath.Child("dependsOn").Index(j), dep, err.Error()))
+		}
+	}
+
+	if rule.Type == "" {
+		errs = append(errs, field.Required(rulePath.Child("type"), fmt.Sprintf("type must be explicitly set to '%s' or '%s'", DependencyTypeAll, DependencyTypeAny)))
+	} else {
+		switch rule.Type {
+		case DependencyTypeAll, DependencyTypeAny:
+			// valid
+		default:
+			errs = append(errs, field.Invalid(rulePath.Child("type"), rule.Type, fmt.Sprintf("type must be '%s' or '%s'", DependencyTypeAll, DependencyTypeAny)))
 		}
 	}
 
 	return errs
+}
+
+// validateDeclarativeValidationMarker ensures that a declarative validation
+// (k8s: prefixed) marker string can be parsed. Entries that cannot be parsed
+// would otherwise never match any marker, silently disabling the rule.
+func validateDeclarativeValidationMarker(marker string) error {
+	if !strings.HasPrefix(marker, "k8s:") {
+		return nil
+	}
+
+	if _, err := codetags.Parse(marker); err != nil {
+		return fmt.Errorf("marker cannot be parsed: %w", err)
+	}
+
+	return nil
 }

@@ -30,7 +30,10 @@ limitations under the License.
 // - `All`: all dependent markers are required.
 // - `Any`: at least one of the dependent markers is required.
 //
-// This linter only checks for the presence or absence of markers; it does not inspect or enforce specific values within those markers. It also does not provide automatic fixes.
+// A dependent marker given as a bare identifier (e.g. `k8s:optional`) matches on presence alone,
+// regardless of any value the marker carries. A dependent marker given with a value
+// (e.g. `k8s:update=NoUnset`) only matches a marker with that exact value.
+// The identifier is always matched by name only. The linter does not provide automatic fixes.
 //
 //	linters:
 //	  dependenttags:
@@ -48,4 +51,9 @@ limitations under the License.
 //	      dependsOn:
 //	      - "dep1"
 //	      - "dep2"
+//	    - identifier: "k8s:monotonic"
+//	      type: "Any"
+//	      dependsOn:
+//	      - "k8s:update=NoUnset"
+//	      - "k8s:required"
 package dependenttags
