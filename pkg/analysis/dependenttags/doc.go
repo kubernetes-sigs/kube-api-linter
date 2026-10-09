@@ -30,7 +30,9 @@ limitations under the License.
 // - `All`: all dependent markers are required.
 // - `Any`: at least one of the dependent markers is required.
 //
-// This linter only checks for the presence or absence of markers; it does not inspect or enforce specific values within those markers. It also does not provide automatic fixes.
+// This linter checks for the presence of configured markers. Dependency rules may specify
+// value-qualified markers (for example, `+k8s:update=NoUnset`), which are matched by value.
+// It does not provide automatic fixes.
 //
 //	linters:
 //	  dependenttags:

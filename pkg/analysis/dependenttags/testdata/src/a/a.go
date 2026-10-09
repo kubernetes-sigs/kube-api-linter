@@ -66,3 +66,33 @@ type ListMap struct {
 	// +listMapKey
 	ValidListMap []string
 }
+
+type Monotonic struct {
+	// FAIL: missing both k8s:minimum and the any-dep
+	// +k8s:monotonic
+	MissingAll int64 // want "field Monotonic.MissingAll with marker \\+k8s:monotonic is missing required marker\\(s\\): \\+k8s:minimum" "field Monotonic.MissingAll with marker \\+k8s:monotonic requires at least one of the following markers, but none were found: \\+k8s:required, \\+k8s:update=NoUnset"
+
+	// FAIL: has k8s:minimum but wrong update value — any-dep is absent
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:update=SomethingElse
+	WrongUpdateValue *int64 // want "field Monotonic.WrongUpdateValue with marker \\+k8s:monotonic requires at least one of the following markers, but none were found: \\+k8s:required, \\+k8s:update=NoUnset"
+
+	// PASS: k8s:minimum present, k8s:required satisfies any-dep
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:required
+	ValidWithRequired int64
+
+	// PASS: k8s:minimum present, k8s:update=NoUnset satisfies any-dep
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:update=NoUnset
+	ValidWithUpdateNoUnset *int64
+
+	// FAIL: bare k8s:update should NOT satisfy k8s:update=NoUnset
+	// +k8s:monotonic
+	// +k8s:minimum=0
+	// +k8s:update
+	WrongUpdateNoValue *int64 // want "field Monotonic.WrongUpdateNoValue with marker \\+k8s:monotonic requires at least one of the following markers, but none were found: \\+k8s:required, \\+k8s:update=NoUnset"
+}

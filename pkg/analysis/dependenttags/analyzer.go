@@ -57,6 +57,20 @@ func newAnalyzer(cfg Config) *analysis.Analyzer {
 	}
 }
 
+// markerSetHas returns true if the MarkerSet contains the given marker.
+// When the marker string contains "=", it uses HasWithValue to match both
+// the identifier and the value (e.g. "k8s:update=NoUnset" or "listType=map").
+// Otherwise it falls back to a direct key lookup by identifier.
+func markerSetHas(ms markers.MarkerSet, marker string) bool {
+	if strings.Contains(marker, "=") {
+		return ms.HasWithValue(marker)
+	}
+
+	_, ok := ms[marker]
+
+	return ok
+}
+
 // run is the main function for the analyzer.
 func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 	inspect, ok := pass.ResultOf[inspector.Analyzer].(inspector.Inspector)
@@ -72,7 +86,7 @@ func (a *analyzer) run(pass *analysis.Pass) (any, error) {
 		fieldMarkers := utils.TypeAwareMarkerCollectionForField(pass, f.Markers, f.Field)
 
 		for _, rule := range a.cfg.Rules {
-			if _, ok := fieldMarkers[rule.Identifier]; ok {
+			if markerSetHas(fieldMarkers, rule.Identifier) {
 				switch rule.Type {
 				case DependencyTypeAny:
 					handleAny(pass, f.Field, rule, fieldMarkers, f.QualifiedFieldName)
@@ -91,7 +105,7 @@ func handleAll(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 	missing := make([]string, 0, len(rule.DependsOn))
 
 	for _, dependent := range rule.DependsOn {
-		if _, depOk := fieldMarkers[dependent]; !depOk {
+		if !markerSetHas(fieldMarkers, dependent) {
 			missing = append(missing, fmt.Sprintf("+%s", dependent))
 		}
 	}
@@ -105,7 +119,7 @@ func handleAny(pass *analysis.Pass, field *ast.Field, rule Rule, fieldMarkers ma
 	found := false
 
 	for _, dependent := range rule.DependsOn {
-		if _, depOk := fieldMarkers[dependent]; depOk {
+		if markerSetHas(fieldMarkers, dependent) {
 			found = true
 			break
 		}
