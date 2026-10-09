@@ -69,7 +69,7 @@ var _ = Describe("dependenttags initializer", func() {
 				config: dependenttags.Config{
 					Rules: []dependenttags.Rule{},
 				},
-				expectedErr: "dependenttags.rules: Invalid value: []dependenttags.Rule{}: rules cannot be empty",
+				expectedErr: "dependenttags.rules: Invalid value: []: rules cannot be empty",
 			}),
 			Entry("with missing identifier", testCase{
 				config: dependenttags.Config{
@@ -91,7 +91,7 @@ var _ = Describe("dependenttags initializer", func() {
 						},
 					},
 				},
-				expectedErr: "dependenttags.rules[0].dependsOn: Invalid value: []string(nil): dependsOn list cannot be empty",
+				expectedErr: "dependenttags.rules[0].dependsOn: Invalid value: null: dependsOn list cannot be empty",
 			}),
 			Entry("with invalid type", testCase{
 				config: dependenttags.Config{

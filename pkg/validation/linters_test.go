@@ -50,7 +50,7 @@ var _ = Describe("Linters", func() {
 			config: config.Linters{
 				Enable: []string{"jsontags", "jsontags"},
 			},
-			expectedErr: "linters.enable: Invalid value: []string{\"jsontags\", \"jsontags\"}: values in 'enable' must be unique",
+			expectedErr: "linters.enable: Invalid value: [\"jsontags\",\"jsontags\"]: values in 'enable' must be unique",
 		}),
 		Entry("With a wildcard enable value", validateLintersTableInput{
 			config: config.Linters{
@@ -69,7 +69,7 @@ var _ = Describe("Linters", func() {
 			config: config.Linters{
 				Enable: []string{"*", "jsontags"},
 			},
-			expectedErr: "linters.enable: Invalid value: []string{\"*\", \"jsontags\"}: wildcard ('*') must not be specified with other values",
+			expectedErr: "linters.enable: Invalid value: [\"*\",\"jsontags\"]: wildcard ('*') must not be specified with other values",
 		}),
 		Entry("With valid enabled linter names", validateLintersTableInput{
 			config: config.Linters{
@@ -81,14 +81,14 @@ var _ = Describe("Linters", func() {
 			config: config.Linters{
 				Enable: []string{"jsontags", "invalid"},
 			},
-			expectedErr: "linters.enable: Invalid value: []string{\"jsontags\", \"invalid\"}: unknown linters: invalid",
+			expectedErr: "linters.enable: Invalid value: [\"jsontags\",\"invalid\"]: unknown linters: invalid",
 		}),
 
 		Entry("With duplicate disabled linter names", validateLintersTableInput{
 			config: config.Linters{
 				Disable: []string{"jsontags", "jsontags"},
 			},
-			expectedErr: "linters.disable: Invalid value: []string{\"jsontags\", \"jsontags\"}: values in 'disable' must be unique",
+			expectedErr: "linters.disable: Invalid value: [\"jsontags\",\"jsontags\"]: values in 'disable' must be unique",
 		}),
 		Entry("With a wildcard disable value", validateLintersTableInput{
 			config: config.Linters{
@@ -107,7 +107,7 @@ var _ = Describe("Linters", func() {
 			config: config.Linters{
 				Disable: []string{"*", "jsontags"},
 			},
-			expectedErr: "linters.disable: Invalid value: []string{\"*\", \"jsontags\"}: wildcard ('*') must not be specified with other values",
+			expectedErr: "linters.disable: Invalid value: [\"*\",\"jsontags\"]: wildcard ('*') must not be specified with other values",
 		}),
 		Entry("With valid disable linter names", validateLintersTableInput{
 			config: config.Linters{
@@ -119,14 +119,14 @@ var _ = Describe("Linters", func() {
 			config: config.Linters{
 				Disable: []string{"jsontags", "invalid"},
 			},
-			expectedErr: "linters.disable: Invalid value: []string{\"jsontags\", \"invalid\"}: unknown linters: invalid",
+			expectedErr: "linters.disable: Invalid value: [\"jsontags\",\"invalid\"]: unknown linters: invalid",
 		}),
 		Entry("With a value in both enable and disable", validateLintersTableInput{
 			config: config.Linters{
 				Enable:  []string{"jsontags"},
 				Disable: []string{"jsontags"},
 			},
-			expectedErr: "linters: Invalid value: config.Linters{Enable:[]string{\"jsontags\"}, Disable:[]string{\"jsontags\"}}: values in 'enable' and 'disable may not overlap, overlapping values: jsontags",
+			expectedErr: "linters: Invalid value: {\"Enable\":[\"jsontags\"],\"Disable\":[\"jsontags\"]}: values in 'enable' and 'disable may not overlap, overlapping values: jsontags",
 		}),
 	)
 })

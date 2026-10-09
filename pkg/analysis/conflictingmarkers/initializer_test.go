@@ -135,7 +135,7 @@ var _ = Describe("conflictingmarkers initializer", func() {
 						},
 					},
 				},
-				expectedErr: "conflictingmarkers.conflicts[0].sets: Invalid value: conflictingmarkers.ConflictSet{Name:\"test_conflict\", Sets:[][]string{[]string{\"marker1\", \"marker2\"}, []string{\"marker2\", \"marker3\"}}, Description:\"Test conflict\"}: sets 1 and 2 cannot contain overlapping markers: [marker2]",
+				expectedErr: "conflictingmarkers.conflicts[0].sets: Invalid value: {\"name\":\"test_conflict\",\"sets\":[[\"marker1\",\"marker2\"],[\"marker2\",\"marker3\"]],\"description\":\"Test conflict\"}: sets 1 and 2 cannot contain overlapping markers: [marker2]",
 			}),
 			Entry("With duplicate conflict names", testCase{
 				config: conflictingmarkers.ConflictingMarkersConfig{
