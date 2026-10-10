@@ -9,6 +9,7 @@
 | [DefaultOrRequired](#defaultorrequired) | Ensures fields marked as required do not have default values | True | Native, CRD |
 | [Defaults](#defaults) | Checks that fields with default markers are configured correctly | True | Native, CRD |
 | [DependentTags](#dependenttags) | Enforces dependencies between markers | False | Native, CRD |
+| [DiscriminatedUnions](#discriminatedunions) | Validates discriminated union structure and optional CEL membership rules | False | Native, CRD |
 | [DuplicateMarkers](#duplicatemarkers) | Checks for exact duplicates of markers | True | Native, CRD |
 | [ForbiddenMarkers](#forbiddenmarkers) | Checks that no forbidden markers are present on types/fields. | False | Native, CRD |
 | [Integers](#integers) | Validates usage of supported integer types | True | Native, CRD |
@@ -137,6 +138,48 @@ This linter only checks for the presence or absence of markers; it does not insp
 - **Values:** The linter does not care about the values of the `identifier` or `dependent` markers. It only verifies if the markers themselves are present.
 - **Fixes:** This linter does not provide automatic fixes. It only reports violations.
 - **Same/Different Values:** Whether you want the same or different values between dependent markers is outside the scope of this linter. You would need other validation mechanisms (e.g., CEL validation) to enforce value-based dependencies.
+
+## DiscriminatedUnions
+
+The `discriminatedunions` linter checks that each discriminated union has exactly one required discriminator field and optional member fields.
+Fields without union markers are forbidden unless `nonMemberFields` is set to `Allow`.
+
+Unions are identified by `+union`, legacy field markers (`+unionDiscriminator`, `+unionMember`), or `+k8s:unionDiscriminator`.
+Declarative markers with a `union` argument are checked separately by name.
+Groups containing only `+k8s:unionMember` markers are skipped unless the struct has a `+union` marker.
+
+This linter is disabled by default and does not provide automatic fixes.
+
+### Configuration
+
+```yaml
+lintersConfig:
+  discriminatedunions:
+    nonMemberFields: Forbid | Allow # Defaults to `Forbid`.
+    preferredOptionalMarker: optional | kubebuilder:validation:Optional | k8s:optional # The marker recommended in diagnostics. Defaults to `optional`.
+    enforceCel: false # Whether to require CEL membership rules for CRD types. Defaults to `false`.
+```
+
+### CEL Membership Rules
+
+When `enforceCel` is enabled, unions used by CRD roots (`+kubebuilder:object:root=true`) must have type-level `XValidation` rules for their members.
+This includes nested types in the same package. Unexported, ignored (`json:"-"`) and schemaless fields are skipped.
+Without a CRD root, only structural checks run.
+
+The linter recognizes two patterns:
+
+```go
+// +kubebuilder:validation:XValidation:rule="has(self.kind) && self.kind == 'Foo' ? has(self.foo) : !has(self.foo)"
+// +kubebuilder:validation:XValidation:rule="has(self.kind) && self.kind == 'Bar' ? true : !has(self.bar)"
+```
+
+The first requires `foo` when selected and forbids it otherwise.
+The second is for legacy `+unionMember,optional`: `bar` may be absent when selected, but is forbidden otherwise.
+Both members still need a field-level optional marker such as `+optional` or `+k8s:optional`.
+
+CEL field references use JSON names. The comparison value defaults to the Go field name, or the declarative marker's `memberName` when supplied.
+The `rule` argument must be quoted. Formatting differences within the expression are accepted, but other logically equivalent patterns are not.
+Diagnostics include the expected expression.
 
 ## CommentStart
 
