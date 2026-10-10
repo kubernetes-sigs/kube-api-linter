@@ -37,3 +37,15 @@ type StructTypeWithNonOmittedField struct {
 	// Description is an optional field with omitempty.
 	Description string `json:"description,omitempty"`
 }
+
+// StructTypeWithIsZero is a named struct type that can be omitted with omitzero.
+// This simulates types like metav1.Time.
+type StructTypeWithIsZero struct {
+	// Field is an omitted field.
+	Field string `json:"field,omitempty"`
+}
+
+// IsZero reports whether the struct is zero.
+func (StructTypeWithIsZero) IsZero() bool {
+	return true
+}
