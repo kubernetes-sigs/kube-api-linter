@@ -16,14 +16,23 @@ limitations under the License.
 package base
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/golangci/plugin-module-register/register"
 	"golang.org/x/tools/go/analysis"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/analysis/registry"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
+	"sigs.k8s.io/kube-api-linter/pkg/config/presets"
 	"sigs.k8s.io/kube-api-linter/pkg/validation"
+)
+
+var (
+	errUnknownPreset        = errors.New("unknown preset")
+	errPresetUnknownLinters = errors.New("preset references unknown linters")
 )
 
 func init() {
@@ -54,7 +63,25 @@ func (f *GolangCIPlugin) BuildAnalyzers() ([]*analysis.Analyzer, error) {
 		return nil, fmt.Errorf("error in KAL configuration: %w", err)
 	}
 
-	analyzers, err := registry.DefaultRegistry().InitializeLinters(f.config.Linters, f.config.LintersConfig)
+	var presetLinters []string
+
+	if f.config.Preset != "" {
+		p, ok := presets.DefaultRegistry().Get(f.config.Preset)
+		if !ok {
+			return nil, fmt.Errorf("%w %q, available presets: %s", errUnknownPreset, f.config.Preset, strings.Join(presets.DefaultRegistry().All(), ", "))
+		}
+
+		presetLinters = []string(p)
+
+		allLinters := registry.DefaultRegistry().AllLinters()
+		unknown := sets.New(presetLinters...).Difference(allLinters)
+
+		if unknown.Len() > 0 {
+			return nil, fmt.Errorf("%w: preset %q references: %s", errPresetUnknownLinters, f.config.Preset, strings.Join(unknown.UnsortedList(), ", "))
+		}
+	}
+
+	analyzers, err := registry.DefaultRegistry().InitializeLinters(f.config.Linters, f.config.LintersConfig, presetLinters)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing analyzers: %w", err)
 	}

@@ -18,6 +18,10 @@ package config
 // GolangCIConfig is the complete configuration for the KAL
 // linter when built as an integration into golangci-lint.
 type GolangCIConfig struct {
+	// Preset selects a named configuration profile that determines
+	// which linters are enabled by default.
+	Preset string `mapstructure:"preset"`
+
 	// Linters allows the user to configure which linters should,
 	// and should not be enabled.
 	Linters Linters `mapstructure:"linters"`
