@@ -1,11 +1,15 @@
 package a
 
+import "externaltypes"
+
 type TestStructs struct {
 	// StructWithAllOptionalFields has a zero value of {}, which is valid because all fields are optional.
 
 	StructWithAllOptionalFields StructWithAllOptionalFields `json:"structWithAllOptionalFields"` // want "field TestStructs.StructWithAllOptionalFields should have the omitempty tag." "field TestStructs.StructWithAllOptionalFields has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
 
 	StructWithAllOptionalFieldsWithOmitEmpty StructWithAllOptionalFields `json:"structWithAllOptionalFieldsWithOmitEmpty,omitempty"` // want "field TestStructs.StructWithAllOptionalFieldsWithOmitEmpty has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer."
+
+	StructWithAllOptionalFieldsWithOmitZero StructWithAllOptionalFields `json:"structWithAllOptionalFieldsWithOmitZero,omitzero"` // want "field TestStructs.StructWithAllOptionalFieldsWithOmitZero has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field TestStructs.StructWithAllOptionalFieldsWithOmitZero should have the omitempty tag."
 
 	StructPtrWithAllOptionalFields *StructWithAllOptionalFields `json:"structPtrWithAllOptionalFields"` // want "field TestStructs.StructPtrWithAllOptionalFields should have the omitempty tag."
 
@@ -60,6 +64,15 @@ type TestStructs struct {
 	StructPtrWithOmittedRequiredField *StructWithOmittedRequiredField `json:"structPtrWithOmittedRequiredField"` // want "field TestStructs.StructPtrWithOmittedRequiredField does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithOmittedRequiredField does not allow the zero value. The field does not need to be a pointer."
 
 	StructPtrWithOmittedRequiredFieldWithOmitEmpty *StructWithOmittedRequiredField `json:"structPtrWithOmittedRequiredFieldWithOmitEmpty,omitempty"` // want "field TestStructs.StructPtrWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. It must have the omitzero tag." "field TestStructs.StructPtrWithOmittedRequiredFieldWithOmitEmpty does not allow the zero value. The field does not need to be a pointer."
+
+	// ExternalStructWithOmitZero is an external struct with omitzero.
+	ExternalStructWithOmitZero externaltypes.StructType `json:"externalStructWithOmitZero,omitzero"`
+
+	// ExternalStructWithIsZeroWithOmitZero is an external struct with IsZero and omitzero.
+	ExternalStructWithIsZeroWithOmitZero externaltypes.StructTypeWithIsZero `json:"externalStructWithIsZeroWithOmitZero,omitzero"`
+
+	// ExternalStructWithIsZeroWithoutOmitZero confirms IsZero alone does not make the zero value invalid.
+	ExternalStructWithIsZeroWithoutOmitZero externaltypes.StructTypeWithIsZero `json:"externalStructWithIsZeroWithoutOmitZero"` // want "field TestStructs.ExternalStructWithIsZeroWithoutOmitZero has a valid zero value \\({}\\), but the validation is not complete \\(e.g. min properties/adding required fields\\). The field should be a pointer to allow the zero value to be set. If the zero value is not a valid use case, complete the validation and remove the pointer." "field TestStructs.ExternalStructWithIsZeroWithoutOmitZero should have the omitempty tag."
 }
 
 type StructWithAllOptionalFields struct {
