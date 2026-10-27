@@ -36,6 +36,16 @@ type RequiredFieldsConfig struct {
 	// Note, `omitzero` tag is supported in go version starting from go 1.24.
 	// Note, Configure omitzero policy to 'Forbid', if using with go version less than go 1.24.
 	OmitZero RequiredFieldsOmitZero `json:"omitzero"`
+
+	// preferredRequiredMarker is the preferred marker to use for required fields.
+	// Valid values are "required", "kubebuilder:validation:Required" and "k8s:required".
+	// When set to "required", the linter will suggest using "+required" marker.
+	// When set to "kubebuilder:validation:Required", the linter will suggest using "+kubebuilder:validation:Required" marker.
+	// When set to "k8s:required", the linter will not suggest adding any additional required marker
+	// when "+k8s:required" is already present.
+	// When a field has "+k8s:required" but not the preferred marker, the linter will suggest adding the preferred marker.
+	// Default is "required".
+	PreferredRequiredMarker string `json:"preferredRequiredMarker"`
 }
 
 // RequiredFieldsPointers is the configuration for pointers in required fields.

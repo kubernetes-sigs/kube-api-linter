@@ -33,6 +33,32 @@ func TestDefaultConfiguration(t *testing.T) {
 	analysistest.RunWithSuggestedFixes(t, testdata, a, "a")
 }
 
+func TestWithPreferredRequiredMarkerKubebuilder(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := requiredfields.Initializer().Init(&requiredfields.RequiredFieldsConfig{
+		PreferredRequiredMarker: "kubebuilder:validation:Required",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "c")
+}
+
+func TestWithPreferredRequiredMarkerK8s(t *testing.T) {
+	testdata := analysistest.TestData()
+
+	a, err := requiredfields.Initializer().Init(&requiredfields.RequiredFieldsConfig{
+		PreferredRequiredMarker: "k8s:required",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	analysistest.RunWithSuggestedFixes(t, testdata, a, "d")
+}
+
 func TestWithOmitEmptyPolicyIgnore(t *testing.T) {
 	testdata := analysistest.TestData()
 

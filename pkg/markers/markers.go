@@ -185,6 +185,9 @@ const (
 	// K8sMinItemsMarker is the marker that indicates that a field has a minimum number of items in k8s declarative validation.
 	K8sMinItemsMarker = "k8s:minItems"
 
+	// K8sMinPropertiesMarker is the marker that indicates that a field has a minimum number of properties in k8s declarative validation.
+	K8sMinPropertiesMarker = "k8s:minProperties"
+
 	// K8sMaxItemsMarker is the marker that indicates that a field has a maximum number of items in k8s declarative validation.
 	K8sMaxItemsMarker = "k8s:maxItems"
 

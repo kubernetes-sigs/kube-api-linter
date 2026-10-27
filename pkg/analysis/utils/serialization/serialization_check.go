@@ -302,11 +302,13 @@ func hasExplicitZeroMinValidation(pass *analysis.Pass, field *ast.Field, underly
 
 	switch underlying.(type) {
 	case *ast.ArrayType:
-		// Check for explicit MinItems=0
-		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker + "=0")
+		// Check for explicit MinItems=0 (both kubebuilder and k8s declarative validation markers)
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker+"=0") ||
+			fieldMarkers.HasWithValue(markers.K8sMinItemsMarker+"=0")
 	case *ast.MapType:
-		// Check for explicit MinProperties=0
-		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker + "=0")
+		// Check for explicit MinProperties=0 (both kubebuilder and k8s declarative validation markers)
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker+"=0") ||
+			fieldMarkers.HasWithValue(markers.K8sMinPropertiesMarker+"=0")
 	case *ast.Ident, *ast.SelectorExpr:
 		// For named types (local or from external packages), check if the underlying type is a slice or map.
 		return hasExplicitZeroMinValidationForNamedType(pass, underlying, fieldMarkers)
@@ -330,8 +332,9 @@ func hasExplicitZeroMinValidationForNamedType(pass *analysis.Pass, underlying as
 		// Check for explicit MinItems=0
 		return fieldMarkers.HasWithValue(markers.KubebuilderMinItemsMarker + "=0")
 	case *types.Map:
-		// Check for explicit MinProperties=0
-		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker + "=0")
+		// Check for explicit MinProperties=0 (both kubebuilder and k8s declarative validation markers)
+		return fieldMarkers.HasWithValue(markers.KubebuilderMinPropertiesMarker+"=0") ||
+			fieldMarkers.HasWithValue(markers.K8sMinPropertiesMarker+"=0")
 	}
 
 	return false
