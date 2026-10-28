@@ -40,7 +40,6 @@ var _ = Describe("Linters", func() {
 		} else {
 			Expect(errs).To(HaveLen(0), "No errors were expected")
 		}
-
 	},
 		Entry("Empty config", validateLintersTableInput{
 			config:      config.Linters{},

@@ -17,6 +17,7 @@ package optionalfields
 
 import (
 	"fmt"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -50,10 +51,10 @@ func validateConfig(ofc *OptionalFieldsConfig, fldPath *field.Path) field.ErrorL
 		return field.ErrorList{}
 	}
 
-	fieldErrors := field.ErrorList{}
-
-	fieldErrors = append(fieldErrors, validateOptionFieldsPointers(ofc.Pointers, fldPath.Child("pointers"))...)
-	fieldErrors = append(fieldErrors, validateOptionFieldsOmitEmpty(ofc.OmitEmpty, fldPath.Child("omitEmpty"))...)
+	fieldErrors := slices.Concat(
+		validateOptionFieldsPointers(ofc.Pointers, fldPath.Child("pointers")),
+		validateOptionFieldsOmitEmpty(ofc.OmitEmpty, fldPath.Child("omitEmpty")),
+	)
 
 	return fieldErrors
 }

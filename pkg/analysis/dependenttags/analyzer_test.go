@@ -59,8 +59,8 @@ func TestAnalyzer(t *testing.T) {
 			},
 		},
 	}
-	analyzer, err := dependenttags.Initializer().Init(&cfg)
 
+	analyzer, err := dependenttags.Initializer().Init(&cfg)
 	if err != nil {
 		t.Fatalf("failed to initialize analyzer: %v", err)
 	}

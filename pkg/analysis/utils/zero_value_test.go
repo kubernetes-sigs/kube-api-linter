@@ -76,6 +76,7 @@ func testZeroValueAnalyzer(considerOmitZero bool) *analysis.Analyzer {
 				} else {
 					pass.Reportf(field.Pos(), "zero value is valid")
 				}
+
 				if !complete {
 					pass.Reportf(field.Pos(), "validation is not complete")
 				} else {

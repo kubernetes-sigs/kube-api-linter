@@ -16,6 +16,8 @@ limitations under the License.
 package forbiddenmarkers
 
 import (
+	"slices"
+
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -48,9 +50,7 @@ func validateConfig(cfg *Config, fldPath *field.Path) field.ErrorList {
 		return field.ErrorList{field.Required(fldPath, "configuration is required for the forbiddenmarkers linter when it is enabled")}
 	}
 
-	fieldErrors := field.ErrorList{}
-
-	fieldErrors = append(fieldErrors, validateMarkers(fldPath.Child("markers"), cfg.Markers...)...)
+	fieldErrors := slices.Clone(validateMarkers(fldPath.Child("markers"), cfg.Markers...))
 
 	return fieldErrors
 }

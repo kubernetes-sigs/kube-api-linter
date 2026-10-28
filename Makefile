@@ -1,6 +1,5 @@
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 GOLANGCI_LINT = go tool -modfile tools/go.mod github.com/golangci/golangci-lint/v2/cmd/golangci-lint
-MODERNIZE = go tool -modfile tools/go.mod golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 
 VERSION     ?= $(shell git describe --always --abbrev=7)
 
@@ -35,10 +34,10 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: lint
-lint: golangci-lint modernize
+lint: golangci-lint
 
 .PHONY: lint-fix
-lint-fix: golangci-lint-fix modernize-fix
+lint-fix: golangci-lint-fix
 
 .PHONY: golangci-lint
 golangci-lint: ## Run golangci-lint over the codebase.
@@ -47,14 +46,6 @@ golangci-lint: ## Run golangci-lint over the codebase.
 .PHONY: golangci-lint-fix
 golangci-lint-fix: GOLANGCI_LINT_EXTRA_ARGS := --fix
 golangci-lint-fix: golangci-lint ## Run golangci-lint over the codebase and run auto-fixers if supported by the linter
-
-.PHONY: modernize
-modernize: ## Run modernize on the codebase.
-	${MODERNIZE} -diff ./...
-
-.PHONY: modernize-fix
-modernize-fix: ## Run modernize on the codebase and apply fixes.
-	${MODERNIZE} -fix ./...
 
 .PHONY: test
 test: fmt vet unit ## Run tests.
@@ -67,7 +58,7 @@ unit: ## Run unit tests.
 
 .PHONY: build
 build: ## Build the golangci-lint custom plugin binary.
-	go build -o ./bin ./cmd/golangci-lint-kube-api-linter 
+	go build -o ./bin ./cmd/golangci-lint-kube-api-linter
 
 .PHONY: validate-linter-registration
 validate-linter-registration: ## Validate registration linters.

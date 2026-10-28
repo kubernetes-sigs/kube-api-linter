@@ -275,7 +275,7 @@ func checkStructMinProperties(pass *analysis.Pass, field *ast.Field, markerSet m
 	// equivalent to minProperties=1.
 	structMarkerSet := markersAccess.StructMarkers(structType)
 	if minProperties == nil && (structMarkerSet.Has(markers.KubebuilderExactlyOneOf) || structMarkerSet.Has(markers.KubebuilderAtLeastOneOfMarker)) {
-		minProperties = ptr.To(1)
+		minProperties = new(1)
 	}
 
 	zeroValueValid := minProperties == nil || *minProperties <= nonOmittedFields
