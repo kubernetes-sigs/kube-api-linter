@@ -64,7 +64,7 @@ func analyze(sourcePath string, rawData []byte) {
 
 	Expect(json.Unmarshal(rawData, &reportData)).To(Succeed())
 
-	var failures []string
+	failures := make([]string, 0, len(reportData.Issues))
 	for _, issue := range reportData.Issues {
 		failures = append(failures, checkMessage(want, issue.Pos, "diagnostic", issue.FromLinter, issue.Text)...)
 	}
@@ -110,7 +110,7 @@ func parseComments(sourcePath string, fileData []byte) (map[key][]expectation, e
 
 			text = strings.TrimSpace(text)
 
-			if rest := strings.TrimPrefix(text, keyword); rest != text {
+			if rest, ok := strings.CutPrefix(text, keyword); ok {
 				delta, expects, err := parseExpectations(rest)
 				if err != nil {
 					return nil, err

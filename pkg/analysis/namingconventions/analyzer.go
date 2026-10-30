@@ -20,6 +20,7 @@ import (
 	"go/ast"
 	"go/token"
 	"regexp"
+	"slices"
 	"strings"
 
 	"golang.org/x/tools/go/analysis"
@@ -134,10 +135,10 @@ func reportReplace(pass *analysis.Pass, field *ast.Field, tagInfo extractjsontag
 }
 
 func suggestedFixesForReplacement(field *ast.Field, tagInfo extractjsontags.FieldTagInfo, matcher *regexp.Regexp, replacementStr string) []analysis.SuggestedFix {
-	suggestedFixes := []analysis.SuggestedFix{}
-
-	suggestedFixes = append(suggestedFixes, suggestFixesForGoFieldName(field, matcher, replacementStr)...)
-	suggestedFixes = append(suggestedFixes, suggestFixesForSerializedFieldName(tagInfo, matcher, replacementStr)...)
+	suggestedFixes := slices.Concat(
+		suggestFixesForGoFieldName(field, matcher, replacementStr),
+		suggestFixesForSerializedFieldName(tagInfo, matcher, replacementStr),
+	)
 
 	return suggestedFixes
 }

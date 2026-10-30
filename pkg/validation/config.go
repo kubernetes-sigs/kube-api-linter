@@ -16,6 +16,8 @@ limitations under the License.
 package validation
 
 import (
+	"slices"
+
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"sigs.k8s.io/kube-api-linter/pkg/config"
 )
@@ -27,9 +29,7 @@ func ValidateGolangCIConfig(g config.GolangCIConfig, fldPath *field.Path) error 
 		fldPath = field.NewPath("")
 	}
 
-	var fieldErrors field.ErrorList
-
-	fieldErrors = append(fieldErrors, ValidateLinters(g.Linters, fldPath.Child("linters"))...)
+	fieldErrors := slices.Clone(ValidateLinters(g.Linters, fldPath.Child("linters")))
 
 	return fieldErrors.ToAggregate()
 }

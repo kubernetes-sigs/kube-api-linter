@@ -33,6 +33,7 @@ linters:
     - ineffassign
     - makezero
     - misspell
+    - modernize
     - nakedret
     - nestif
     - nilerr
@@ -51,7 +52,7 @@ linters:
     - wastedassign
     - whitespace
     - wrapcheck
-    - wsl
+    - wsl_v5
   settings:
     goheader:
       values:
@@ -90,6 +91,10 @@ linters:
       dot-import-whitelist:
         - github.com/onsi/ginkgo/v2
         - github.com/onsi/gomega
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
   exclusions:
     generated: lax
     rules:
@@ -100,6 +105,7 @@ linters:
           - gochecknoglobals
           - gocyclo
           - gosec
+          - goconst
         # Exclude some linters from running on tests files.
         path: _test\.go|tests
       - linters:

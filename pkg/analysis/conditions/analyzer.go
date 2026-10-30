@@ -151,7 +151,6 @@ func (a *analyzer) checkField(pass *analysis.Pass, index int, field *ast.Field, 
 
 func checkFieldMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers markers.MarkerSet, usePatchStrategy ConditionsUsePatchStrategy, structName string) {
 	missingMarkers := []string{}
-	additionalMarkers := []markers.Marker{}
 
 	if !fieldMarkers.HasWithValue(listTypeMap) {
 		missingMarkers = append(missingMarkers, listTypeMap)
@@ -163,7 +162,7 @@ func checkFieldMarkers(pass *analysis.Pass, field *ast.Field, fieldMarkers marke
 
 	patchMissingMarkers, patchAdditionalMarkers := checkPatchStrategyMarkers(fieldMarkers, usePatchStrategy)
 	missingMarkers = append(missingMarkers, patchMissingMarkers...)
-	additionalMarkers = append(additionalMarkers, patchAdditionalMarkers...)
+	additionalMarkers := slices.Clone(patchAdditionalMarkers)
 
 	if !fieldMarkers.Has(optional) {
 		missingMarkers = append(missingMarkers, optional)
@@ -243,8 +242,8 @@ func reportMissingMarkers(pass *analysis.Pass, field *ast.Field, missingMarkers 
 }
 
 func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMarkers []markers.Marker, structName string) {
-	suggestedFixes := []analysis.SuggestedFix{}
-	additionalMarkerValues := []string{}
+	suggestedFixes := make([]analysis.SuggestedFix, 0, len(additionalMarkers))
+	additionalMarkerValues := make([]string, 0, len(additionalMarkers))
 
 	for _, marker := range additionalMarkers {
 		additionalMarkerValues = append(additionalMarkerValues, marker.String())
@@ -270,13 +269,13 @@ func reportAdditionalMarkers(pass *analysis.Pass, field *ast.Field, additionalMa
 }
 
 func getNewMarkers(missingMarkers []string) []byte {
-	var out string
+	var out strings.Builder
 
 	for _, marker := range missingMarkers {
-		out += "// +" + marker + "\n"
+		out.WriteString("// +" + marker + "\n")
 	}
 
-	return []byte(out)
+	return []byte(out.String())
 }
 
 func (a *analyzer) checkFieldTags(pass *analysis.Pass, index int, field *ast.Field, structName string) {

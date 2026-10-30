@@ -77,7 +77,7 @@ var _ = Describe("Registry", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			toLinterNames := func(a []*analysis.Analyzer) []string {
-				names := []string{}
+				names := make([]string, 0, len(a))
 
 				for _, linter := range a {
 					names = append(names, linter.Name)

@@ -62,6 +62,7 @@ func NewRegistry() Registry {
 func (r *registry) Register(ids ...string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	r.identifiers.Insert(ids...)
 }
 

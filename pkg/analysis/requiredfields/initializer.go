@@ -17,6 +17,7 @@ package requiredfields
 
 import (
 	"fmt"
+	"slices"
 
 	"golang.org/x/tools/go/analysis"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -49,11 +50,11 @@ func validateConfig(rfc *RequiredFieldsConfig, fldPath *field.Path) field.ErrorL
 		return field.ErrorList{}
 	}
 
-	fieldErrors := field.ErrorList{}
-
-	fieldErrors = append(fieldErrors, validateRequiredFieldsPointers(rfc.Pointers, fldPath.Child("pointers"))...)
-	fieldErrors = append(fieldErrors, validateRequiredFieldsOmitEmpty(rfc.OmitEmpty, fldPath.Child("omitempty"))...)
-	fieldErrors = append(fieldErrors, validateRequiredFieldsOmitZero(rfc.OmitZero, fldPath.Child("omitzero"))...)
+	fieldErrors := slices.Concat(
+		validateRequiredFieldsPointers(rfc.Pointers, fldPath.Child("pointers")),
+		validateRequiredFieldsOmitEmpty(rfc.OmitEmpty, fldPath.Child("omitempty")),
+		validateRequiredFieldsOmitZero(rfc.OmitZero, fldPath.Child("omitzero")),
+	)
 
 	return fieldErrors
 }
