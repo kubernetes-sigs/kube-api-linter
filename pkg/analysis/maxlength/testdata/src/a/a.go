@@ -9,16 +9,16 @@ type MaxLength struct {
 
 	StringAliasWithMaxLengthOnAlias StringAliasWithMaxLength
 
-	StringAliasFromAnotherFile StringAliasB // want "field MaxLength.StringAliasFromAnotherFile type StringAliasB must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	StringAliasFromAnotherFile StringAliasB // want "field MaxLength.StringAliasFromAnotherFile type StringAliasB must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 
 	// +kubebuilder:validation:MaxLength:=128
 	StringAliasFromAnotherFileWithMaxLengthOnField StringAliasB
 
 	StringAliasWithMaxLengthFromAnotherFile StringAliasWithMaxLengthB
 
-	StringWithoutMaxLength string // want "field MaxLength.StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	StringWithoutMaxLength string // want "field MaxLength.StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 
-	StringAliasWithoutMaxLength StringAlias // want "field MaxLength.StringAliasWithoutMaxLength type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	StringAliasWithoutMaxLength StringAlias // want "field MaxLength.StringAliasWithoutMaxLength type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 
 	// +kubebuilder:validation:Enum:="A";"B";"C"
 	EnumString string
@@ -37,14 +37,14 @@ type MaxLength struct {
 	// +kubebuilder:validation:MaxItems:=256
 	ArrayWithMaxItems []int
 
-	ArrayWithoutMaxItems []int // want "field MaxLength.ArrayWithoutMaxItems must have a maximum items, add kubebuilder:validation:MaxItems"
+	ArrayWithoutMaxItems []int // want "field MaxLength.ArrayWithoutMaxItems must have a maximum items, add kubebuilder:validation:MaxItems or k8s:maxItems"
 
-	ByteSlice []byte // want "field MaxLength.ByteSlice must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	ByteSlice []byte // want "field MaxLength.ByteSlice must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 
 	// +kubebuilder:validation:MaxLength:=512
 	ByteSliceWithMaxLength []byte
 
-	ByteSliceAlias ByteSliceAlias // want "field MaxLength.ByteSliceAlias type ByteSliceAlias must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	ByteSliceAlias ByteSliceAlias // want "field MaxLength.ByteSliceAlias type ByteSliceAlias must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 
 	// +kubebuilder:validation:MaxLength:=512
 	ByteSliceAliasWithMaxLength ByteSliceAlias
@@ -52,39 +52,39 @@ type MaxLength struct {
 	ByteSliceAliasWithMaxLengthOnAlias ByteSliceAliasWithMaxLength
 
 	// +kubebuilder:validation:MaxItems:=128
-	StringArrayWithMaxItemsWithoutMaxElementLength []string // want "field MaxLength.StringArrayWithMaxItemsWithoutMaxElementLength array element must have a maximum length, add kubebuilder:validation:items:MaxLength"
+	StringArrayWithMaxItemsWithoutMaxElementLength []string // want "field MaxLength.StringArrayWithMaxItemsWithoutMaxElementLength array element must have a maximum length, add kubebuilder:validation:items:MaxLength or k8s:items:maxLength marker"
 
-	StringArrayWithoutMaxItemsWithoutMaxElementLength []string // want "field MaxLength.StringArrayWithoutMaxItemsWithoutMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems" "field MaxLength.StringArrayWithoutMaxItemsWithoutMaxElementLength array element must have a maximum length, add kubebuilder:validation:items:MaxLength"
+	StringArrayWithoutMaxItemsWithoutMaxElementLength []string // want "field MaxLength.StringArrayWithoutMaxItemsWithoutMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems or k8s:maxItems" "field MaxLength.StringArrayWithoutMaxItemsWithoutMaxElementLength array element must have a maximum length, add kubebuilder:validation:items:MaxLength or k8s:items:maxLength marker"
 
 	// +kubebuilder:validation:MaxItems:=64
 	// +kubebuilder:validation:items:MaxLength:=64
 	StringArrayWithMaxItemsAndMaxElementLength []string
 
 	// +kubebuilder:validation:items:MaxLength:=512
-	StringArrayWithoutMaxItemsWithMaxElementLength []string // want  "field MaxLength.StringArrayWithoutMaxItemsWithMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems marker"
+	StringArrayWithoutMaxItemsWithMaxElementLength []string // want  "field MaxLength.StringArrayWithoutMaxItemsWithMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems or k8s:maxItems marker"
 
 	// +kubebuilder:validation:MaxItems:=128
-	StringAliasArrayWithMaxItemsWithoutMaxElementLength []StringAlias // want "field MaxLength.StringAliasArrayWithMaxItemsWithoutMaxElementLength array element type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength marker"
+	StringAliasArrayWithMaxItemsWithoutMaxElementLength []StringAlias // want "field MaxLength.StringAliasArrayWithMaxItemsWithoutMaxElementLength array element type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 
-	StringAliasArrayWithoutMaxItemsWithoutMaxElementLength []StringAlias // want "field MaxLength.StringAliasArrayWithoutMaxItemsWithoutMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems" "field MaxLength.StringAliasArrayWithoutMaxItemsWithoutMaxElementLength array element type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength"
+	StringAliasArrayWithoutMaxItemsWithoutMaxElementLength []StringAlias // want "field MaxLength.StringAliasArrayWithoutMaxItemsWithoutMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems or k8s:maxItems" "field MaxLength.StringAliasArrayWithoutMaxItemsWithoutMaxElementLength array element type StringAlias must have a maximum length, add kubebuilder:validation:MaxLength"
 
 	// +kubebuilder:validation:MaxItems:=64
 	// +kubebuilder:validation:items:MaxLength:=64
 	StringAliasArrayWithMaxItemsAndMaxElementLength []StringAlias
 
 	// +kubebuilder:validation:items:MaxLength:=512
-	StringAliasArrayWithoutMaxItemsWithMaxElementLength []StringAlias // want  "field MaxLength.StringAliasArrayWithoutMaxItemsWithMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems"
+	StringAliasArrayWithoutMaxItemsWithMaxElementLength []StringAlias // want  "field MaxLength.StringAliasArrayWithoutMaxItemsWithMaxElementLength must have a maximum items, add kubebuilder:validation:MaxItems or k8s:maxItems"
 
 	// +kubebuilder:validation:MaxItems:=64
 	StringAliasArrayWithMaxItemsAndMaxElementLengthOnAlias []StringAliasWithMaxLength
 
-	StringAliasArrayWithoutMaxItemsWithMaxElementLengthOnAlias []StringAliasWithMaxLength // want  "field MaxLength.StringAliasArrayWithoutMaxItemsWithMaxElementLengthOnAlias must have a maximum items, add kubebuilder:validation:MaxItems"
+	StringAliasArrayWithoutMaxItemsWithMaxElementLengthOnAlias []StringAliasWithMaxLength // want  "field MaxLength.StringAliasArrayWithoutMaxItemsWithMaxElementLengthOnAlias must have a maximum items, add kubebuilder:validation:MaxItems or k8s:maxItems"
 
 	Struct struct {
 		// +kubebuilder:validation:MaxLength:=256
 		StringWithMaxLength string
 
-		StringWithoutMaxLength string // want "field StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength marker"
+		StringWithoutMaxLength string // want "field StringWithoutMaxLength must have a maximum length, add kubebuilder:validation:MaxLength or k8s:maxLength marker"
 	} `json:"struct"`
 
 	// +optional

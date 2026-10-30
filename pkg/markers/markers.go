@@ -211,4 +211,22 @@ const (
 
 	// K8sDefaultMarker is the marker that indicates the default value for a field in k8s declarative validation.
 	K8sDefaultMarker = "k8s:default"
+
+	// K8sMinPropertiesMarker is the marker that indicates that a field has a minimum number of properties in k8s declarative validation.
+	K8sMinPropertiesMarker = "k8s:minProperties"
+
+	// K8sMaxPropertiesMarker is the marker that indicates that a field has a maximum number of properties in k8s declarative validation.
+	K8sMaxPropertiesMarker = "k8s:maxProperties"
+
+	// K8sItemsMinLengthMarker is the marker that indicates that array items have a minimum length in k8s declarative validation.
+	K8sItemsMinLengthMarker = "k8s:items:minLength"
+
+	// K8sItemsEnumMarker is the marker that indicates that array items have an enum in k8s declarative validation.
+	K8sItemsEnumMarker = "k8s:items:enum"
+
+	// K8sItemsFormatMarker is the marker that indicates that array items have a format in k8s declarative validation.
+	K8sItemsFormatMarker = "k8s:items:format"
+
+	// K8sItemsMaxLengthMarker is the marker that indicates that array items have a maximum length in k8s declarative validation.
+	K8sItemsMaxLengthMarker = "k8s:items:maxLength"
 )
