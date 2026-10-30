@@ -68,12 +68,13 @@ var _ = Describe("Registry", func() {
 		type initLintersTableInput struct {
 			config        config.Linters
 			lintersConfig config.LintersConfig
+			presetLinters []string
 
 			expectedLinters []string
 		}
 
 		DescribeTable("Initialize Linters", func(in initLintersTableInput) {
-			linters, err := r.InitializeLinters(in.config, in.lintersConfig)
+			linters, err := r.InitializeLinters(in.config, in.lintersConfig, in.presetLinters)
 			Expect(err).NotTo(HaveOccurred())
 
 			toLinterNames := func(a []*analysis.Analyzer) []string {
@@ -123,18 +124,58 @@ var _ = Describe("Registry", func() {
 				lintersConfig:   config.LintersConfig{},
 				expectedLinters: []string{"jsontags"},
 			}),
+			Entry("With preset, default linters replaced by preset", initLintersTableInput{
+				config:          config.Linters{},
+				lintersConfig:   config.LintersConfig{},
+				presetLinters:   []string{"nobools", "jsontags"},
+				expectedLinters: []string{"nobools", "jsontags"},
+			}),
+			Entry("With preset and user enable adds to preset", initLintersTableInput{
+				config: config.Linters{
+					Enable: []string{"conditions"},
+				},
+				lintersConfig:   config.LintersConfig{},
+				presetLinters:   []string{"nobools", "jsontags"},
+				expectedLinters: []string{"nobools", "jsontags", "conditions"},
+			}),
+			Entry("With preset and user disable removes from preset", initLintersTableInput{
+				config: config.Linters{
+					Disable: []string{"jsontags"},
+				},
+				lintersConfig:   config.LintersConfig{},
+				presetLinters:   []string{"nobools", "jsontags"},
+				expectedLinters: []string{"nobools"},
+			}),
+			Entry("With preset and wildcard enable overrides preset", initLintersTableInput{
+				config: config.Linters{
+					Enable: []string{config.Wildcard},
+				},
+				lintersConfig:   config.LintersConfig{},
+				presetLinters:   []string{"nobools"},
+				expectedLinters: []string{"conditions", "jsontags", "optionalorrequired", "nobools"},
+			}),
+			Entry("With preset and wildcard disable plus explicit enable", initLintersTableInput{
+				config: config.Linters{
+					Disable: []string{config.Wildcard},
+					Enable:  []string{"conditions"},
+				},
+				lintersConfig:   config.LintersConfig{},
+				presetLinters:   []string{"nobools", "jsontags"},
+				expectedLinters: []string{"conditions"},
+			}),
 		)
 	})
 
 	Context("Config validation", func() {
 		type validateLintersConfigTableInput struct {
-			linters     config.Linters
-			config      config.LintersConfig
-			expectedErr string
+			linters       config.Linters
+			config        config.LintersConfig
+			presetLinters []string
+			expectedErr   string
 		}
 
 		DescribeTable("Validate Linters Configuration through Initialization", func(in validateLintersConfigTableInput) {
-			_, err := r.InitializeLinters(in.linters, in.config)
+			_, err := r.InitializeLinters(in.linters, in.config, in.presetLinters)
 			if len(in.expectedErr) > 0 {
 				Expect(err).To(MatchError(in.expectedErr))
 			} else {

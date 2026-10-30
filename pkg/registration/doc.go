@@ -55,4 +55,5 @@ import (
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/statusoptional"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/statussubresource"
 	_ "sigs.k8s.io/kube-api-linter/pkg/analysis/uniquemarkers"
+	_ "sigs.k8s.io/kube-api-linter/pkg/config/presets"
 )
