@@ -119,6 +119,10 @@ func (s *serializationCheck) Check(pass *analysis.Pass, field *ast.Field, marker
 		s.handleFieldOmitZero(pass, field, fieldName, jsonTags, underlying, hasOmitZero, hasValidZeroValue, isPointer, isStruct, markersAccess, qualifiedFieldName)
 
 		if s.omitEmptyPolicy != OmitEmptyPolicyIgnore || hasOmitEmpty {
+			if s.isOmittedByOmitZero(pass, jsonTags, underlying) {
+				return
+			}
+
 			// If we require omitempty, or the field has omitempty, we can check the field properties based on it being an omitempty field.
 			s.checkFieldPropertiesWithOmitEmptyRequired(pass, field, fieldName, jsonTags, underlying, hasOmitEmpty, hasValidZeroValue, completeValidation, isPointer, isStruct, markersAccess, qualifiedFieldName)
 		} else {
@@ -174,6 +178,14 @@ func (s *serializationCheck) checkFieldPropertiesWithOmitEmptyRequired(pass *ana
 
 	// In this case, we should always add the omitempty if it isn't present.
 	s.handleFieldShouldHaveOmitEmpty(pass, field, qualifiedFieldName, hasOmitEmpty, jsonTags)
+}
+
+func (s *serializationCheck) isOmittedByOmitZero(pass *analysis.Pass, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr) bool {
+	if !jsonTags.OmitZero || s.omitZeroPolicy == OmitZeroPolicyForbid {
+		return false
+	}
+
+	return utils.IsExternalStructType(pass, underlying) || utils.HasIsZeroMethod(pass, underlying)
 }
 
 func (s *serializationCheck) checkFieldPropertiesWithoutOmitEmpty(pass *analysis.Pass, field *ast.Field, fieldName string, jsonTags extractjsontags.FieldTagInfo, underlying ast.Expr, hasValidZeroValue, completeValidation, isPointer, isStruct bool, markersAccess markershelper.Markers, qualifiedFieldName string) {
