@@ -150,6 +150,24 @@ func TestWithConfiguration(t *testing.T) {
 					},
 				},
 			},
+			{
+				Identifier: "k8s:forbidden",
+			},
+			{
+				Identifier: "k8s:forbiddenWithAttr",
+				RuleSets: []RuleSet{
+					{
+						Attributes: []MarkerAttribute{
+							{
+								Name: "fruit",
+								Values: []string{
+									"apple",
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}), "a/...")
 }
