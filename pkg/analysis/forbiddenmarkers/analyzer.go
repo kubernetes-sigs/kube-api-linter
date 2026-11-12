@@ -16,6 +16,7 @@ limitations under the License.
 package forbiddenmarkers
 
 import (
+	"cmp"
 	"fmt"
 	"go/ast"
 	"slices"
@@ -91,7 +92,7 @@ func checkType(pass *analysis.Pass, typeSpec *ast.TypeSpec, markersAccess marker
 
 func check(markerSet markers.MarkerSet, forbiddenMarkers []Marker, reportFunc func(marker markers.Marker)) {
 	for _, marker := range forbiddenMarkers {
-		marks := markerSet.Get(marker.Identifier)
+		marks := markersWithIdentifier(markerSet, marker.Identifier)
 		for _, mark := range marks {
 			if len(marker.RuleSets) == 0 {
 				reportFunc(mark)
@@ -105,6 +106,39 @@ func check(markerSet markers.MarkerSet, forbiddenMarkers []Marker, reportFunc fu
 			}
 		}
 	}
+}
+
+// markersWithIdentifier returns all markers in the marker set with the given identifier,
+// including markers nested within a declarative validation chain.
+//
+// Declarative validation markers may wrap other markers, for example
+// `+k8s:alpha(since: "1.36")=+k8s:customValidation`. The MarkerSet indexes markers
+// only by their outermost identifier (k8s:alpha in this example), with the nested
+// marker stored in Payload.Marker. To ensure forbidden markers cannot be bypassed by
+// nesting them, each marker chain is walked and every link in the chain is compared
+// against the identifier.
+//
+// Nested markers share the Pos, End and RawComment of the comment they were parsed from,
+// so reporting a nested marker removes the whole comment line.
+//
+// The returned markers are sorted by position so that diagnostics are deterministic,
+// as nested matches may originate from markers stored under different identifiers.
+func markersWithIdentifier(markerSet markers.MarkerSet, identifier string) []markers.Marker {
+	matches := []markers.Marker{}
+
+	for _, topLevel := range markerSet.UnsortedList() {
+		for m := &topLevel; m != nil; m = m.Payload.Marker {
+			if m.Identifier == identifier {
+				matches = append(matches, *m)
+			}
+		}
+	}
+
+	slices.SortStableFunc(matches, func(a, b markers.Marker) int {
+		return cmp.Compare(a.Pos, b.Pos)
+	})
+
+	return matches
 }
 
 func markerMatchesAttributeRules(marker markers.Marker, attrRules ...MarkerAttribute) bool {
